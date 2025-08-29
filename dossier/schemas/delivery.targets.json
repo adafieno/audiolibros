@@ -1,0 +1,42 @@
+{
+  "$id": "https://example.org/schemas/dossier/delivery.targets.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Delivery Targets",
+  "type": "object",
+  "properties": {
+    "apple": {
+      "type": "object",
+      "properties": {
+        "format": { "type": "string", "enum": ["m4b"] },
+        "cover_px": { "type": "integer", "minimum": 1000 },
+        "chapter_markers": { "type": "boolean", "default": true }
+      },
+      "additionalProperties": false
+    },
+    "google": {
+      "type": "object",
+      "properties": {
+        "format": { "type": "string", "enum": ["mp3_256_cbr","flac","wav"] },
+        "cover_px": { "type": "integer", "minimum": 1000 }
+      },
+      "additionalProperties": false
+    },
+    "spotify": {
+      "type": "object",
+      "properties": {
+        "format": { "type": "string", "enum": ["mp3_256_cbr","flac","wav"] },
+        "cover_px": { "type": "integer", "minimum": 1000 },
+        "digital_voice": { "type": "boolean", "default": true }
+      },
+      "additionalProperties": false
+    },
+    "audible_kdp": {
+      "type": "object",
+      "properties": {
+        "virtual_voice": { "type": "boolean", "default": false }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

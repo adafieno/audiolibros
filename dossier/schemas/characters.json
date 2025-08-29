@@ -1,0 +1,27 @@
+{
+  "$id": "https://example.org/schemas/dossier/characters.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Characters",
+  "type": "object",
+  "required": ["characters"],
+  "properties": {
+    "characters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+          "name": { "type": "string", "minLength": 1 },
+          "aliases": { "type": "array", "items": { "type": "string" } },
+          "role": { "type": "string" },
+          "voice_traits": { "type": "string" },
+          "cultural_notes": { "type": "string" },
+          "requires_review": { "type": "boolean", "default": true }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

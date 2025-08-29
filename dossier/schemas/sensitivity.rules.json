@@ -1,0 +1,25 @@
+{
+  "$id": "https://example.org/schemas/dossier/sensitivity.rules.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sensitivity Rules",
+  "type": "object",
+  "required": ["reviewer", "adapt_phrases"],
+  "properties": {
+    "reviewer": { "type": "string" },
+    "banned_phrases": { "type": "array", "items": { "type": "string" } },
+    "adapt_phrases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["from", "to"],
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "rationale": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

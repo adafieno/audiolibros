@@ -1,0 +1,18 @@
+{
+  "$id": "https://example.org/schemas/dossier/book.meta.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Book Meta",
+  "type": "object",
+  "required": ["book_id", "title", "language"],
+  "properties": {
+    "book_id": { "type": "string", "pattern": "^[a-z0-9_\\-]+$" },
+    "title": { "type": "string", "minLength": 1 },
+    "subtitle": { "type": "string" },
+    "authors": { "type": "array", "items": { "type": "string" } },
+    "language": { "type": "string", "pattern": "^[a-z]{2}(?:-[A-Z]{2})?$" },
+    "isbn": { "type": "string" },
+    "rights": { "type": "string" },
+    "description": { "type": "string" }
+  },
+  "additionalProperties": false
+}

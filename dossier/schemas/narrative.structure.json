@@ -1,0 +1,28 @@
+{
+  "$id": "https://example.org/schemas/dossier/narrative.structure.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Narrative Structure",
+  "type": "object",
+  "required": ["chapters"],
+  "properties": {
+    "chapters": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "word_count"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^ch[0-9]{2}$" },
+          "title": { "type": "string", "minLength": 1 },
+          "word_count": { "type": "integer", "minimum": 0 },
+          "cast_presence": {
+            "type": "object",
+            "additionalProperties": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,29 @@
+{
+  "$id": "https://example.org/schemas/dossier/pronunciations.sensitive.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sensitive Pronunciations",
+  "type": "object",
+  "required": ["items"],
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["grapheme"],
+        "properties": {
+          "grapheme": { "type": "string" },
+          "ipa": { "type": "string" },
+          "ssml_phoneme": { "type": "string" },
+          "note": { "type": "string" },
+          "source": { "type": "string" }
+        },
+        "anyOf": [
+          { "required": ["ipa"] },
+          { "required": ["ssml_phoneme"] }
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

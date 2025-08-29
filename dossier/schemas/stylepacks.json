@@ -1,0 +1,39 @@
+{
+  "$id": "https://example.org/schemas/dossier/stylepacks.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Stylepacks",
+  "type": "object",
+  "required": ["packs"],
+  "properties": {
+    "packs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9_\\-]+$" },
+          "prosody": {
+            "type": "object",
+            "properties": {
+              "rate": { "type": "string", "enum": ["x-slow","slow","medium","fast","x-fast"] },
+              "pitch": { "type": "string" },
+              "volume": { "type": "string" }
+            },
+            "additionalProperties": false
+          },
+          "breaks": {
+            "type": "object",
+            "properties": {
+              "comma_ms": { "type": "integer", "minimum": 0 },
+              "paragraph_ms": { "type": "integer", "minimum": 0 }
+            },
+            "additionalProperties": false
+          },
+          "notes": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

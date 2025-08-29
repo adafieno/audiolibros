@@ -1,0 +1,26 @@
+{
+  "$id": "https://example.org/schemas/dossier/lexicon.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Lexicon",
+  "type": "object",
+  "required": ["locale", "terms"],
+  "properties": {
+    "locale": { "type": "string", "pattern": "^[a-z]{2}(?:-[A-Z]{2})?$" },
+    "terms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["grapheme"],
+        "properties": {
+          "grapheme": { "type": "string" },
+          "ipa": { "type": "string" },
+          "rules": { "type": "string" },
+          "type": { "type": "string", "enum": ["personaje","toponimo","prestamo","desconocido","otro"], "default": "desconocido" },
+          "requires_review": { "type": "boolean", "default": true }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

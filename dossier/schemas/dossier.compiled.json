@@ -1,0 +1,26 @@
+{
+  "$id": "https://example.org/schemas/dossier/compiled.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Compiled Dossier",
+  "type": "object",
+  "required": ["meta","narrative","characters","voices","lexicon","stylepacks","production","delivery"],
+  "properties": {
+    "meta": { "$ref": "book.meta.schema.json" },
+    "narrative": {
+      "type": "object",
+      "required": ["structure","paratext"],
+      "properties": {
+        "structure": { "$ref": "narrative.structure.schema.json" },
+        "paratext": { "$ref": "paratext.front_matter.schema.json" }
+      }
+    },
+    "characters": { "$ref": "characters.schema.json" },
+    "voices": { "$ref": "voices.cast.schema.json" },
+    "lexicon": { "$ref": "lexicon.schema.json" },
+    "stylepacks": { "$ref": "stylepacks.schema.json" },
+    "production": { "$ref": "production.settings.schema.json" },
+    "qc": { "$ref": "qc.checklist.schema.json" },
+    "delivery": { "$ref": "delivery.targets.schema.json" }
+  },
+  "additionalProperties": false
+}

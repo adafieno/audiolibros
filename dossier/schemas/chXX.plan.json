@@ -1,0 +1,35 @@
+{
+  "$id": "https://example.org/schemas/dossier/ssml.plan.chapter.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SSML Plan (Chapter)",
+  "type": "object",
+  "required": ["chapter_id", "chunks"],
+  "properties": {
+    "chapter_id": { "type": "string", "pattern": "^ch[0-9]{2}$" },
+    "chunks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "start_char", "end_char", "voice", "stylepack"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9_\\-]+$" },
+          "start_char": { "type": "integer", "minimum": 0 },
+          "end_char": { "type": "integer", "minimum": 1 },
+          "voice": { "type": "string", "minLength": 1 },
+          "stylepack": { "type": "string", "minLength": 1 },
+          "notes": { "type": "string" }
+        },
+        "allOf": [
+          { "properties": { "end_char": { "minimum": 1 } } },
+          {
+            "if": { "properties": { "start_char": { "type": "integer" }, "end_char": { "type": "integer" } }, "required": ["start_char","end_char"] },
+            "then": { "properties": { "end_char": { "exclusiveMinimum": { "$data": "1/start_char" } } } }
+          }
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,41 @@
+{
+  "$id": "https://example.org/schemas/dossier/production.settings.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Production Settings",
+  "type": "object",
+  "required": ["tts_engine", "wav_spec", "chunking"],
+  "properties": {
+    "tts_engine": { "type": "string", "enum": ["Azure TTS"] },
+    "wav_spec": {
+      "type": "object",
+      "required": ["sr_hz", "bit_depth", "channels"],
+      "properties": {
+        "sr_hz": { "type": "integer", "enum": [44100, 48000] },
+        "bit_depth": { "type": "integer", "enum": [16, 24] },
+        "channels": { "type": "integer", "enum": [1, 2] }
+      },
+      "additionalProperties": false
+    },
+    "chunking": {
+      "type": "object",
+      "required": ["target_minutes", "hard_cap_minutes", "azure_soft_limit_kb"],
+      "properties": {
+        "target_minutes": { "type": "number", "minimum": 1 },
+        "hard_cap_minutes": { "type": "number", "minimum": 1 },
+        "azure_soft_limit_kb": { "type": "integer", "minimum": 10 }
+      },
+      "additionalProperties": false
+    },
+    "loudness": {
+      "type": "object",
+      "properties": {
+        "rms_dbfs_min": { "type": "number" },
+        "rms_dbfs_max": { "type": "number" },
+        "true_peak_dbfs_max": { "type": "number" },
+        "noise_floor_dbfs_max": { "type": "number" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

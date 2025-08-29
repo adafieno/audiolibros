@@ -1,0 +1,37 @@
+{
+  "$id": "https://example.org/schemas/dossier/paratext.front_matter.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Front Matter",
+  "type": "object",
+  "required": ["word_count", "spans"],
+  "properties": {
+    "word_count": { "type": "integer", "minimum": 0 },
+    "spans": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["text"],
+        "properties": {
+          "text": { "type": "string" },
+          "italics_ranges": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "prefixItems": [{ "type": "integer" }, { "type": "integer" }],
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
+          "source_offsets": {
+            "type": "array",
+            "prefixItems": [{ "type": "integer" }, { "type": "integer" }],
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

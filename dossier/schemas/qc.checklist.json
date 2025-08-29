@@ -1,0 +1,38 @@
+{
+  "$id": "https://example.org/schemas/dossier/qc.checklist.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "QC Checklist",
+  "type": "object",
+  "required": ["items"],
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "status"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9_\\-]+$" },
+          "label": { "type": "string" },
+          "owner": { "type": "string" },
+          "status": { "type": "string", "enum": ["todo","doing","done","na"] },
+          "notes": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "audit_trail": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["timestamp", "action", "by"],
+        "properties": {
+          "timestamp": { "type": "string", "format": "date-time" },
+          "action": { "type": "string" },
+          "by": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
