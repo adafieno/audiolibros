@@ -79,12 +79,12 @@ python -m ingest.manuscript_parser \
 python -m dossier.build_from_manuscript \
   --chapters-dir analysis/chapters_txt \
   --structure dossier/narrative.structure.json \
-  --dossier-dir dossier
+  --dossier-dir dossier --use-llm true
 # O sin LLM (heurístico)
 python -m dossier.build_from_manuscript \
   --chapters-dir analysis/chapters_txt \
   --structure dossier/narrative.structure.json \
-  --dossier-dir dossier --no-llm
+  --dossier-dir dossier --use-llm false
 ```
 
 > Edita a mano: `characters.json`, `voices.cast.json`, `stylepacks.json`, `lexicon.json`, `pronunciations.sensitive.json`.

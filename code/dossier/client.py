@@ -27,6 +27,15 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from openai import OpenAI, APIConnectionError, RateLimitError, APIError, BadRequestError  # type: ignore
 
+import os
+import sys
+
+# Ensure the project root (parent directory of this file) is on sys.path so the "core" package can be imported
+# when running this file directly (e.g., python client.py).
+_pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if _pkg_root not in sys.path:
+    sys.path.insert(0, _pkg_root)
+
 from core.config import load_config
 from core.errors import LLMCallError, LLMContractViolation
 from core.logging import get_logger, log_span, set_component
@@ -70,7 +79,25 @@ def _sleep_backoff(attempt: int, base: float = 0.75, cap: float = 8.0) -> None:
     time.sleep(delay)
 
 def _finalize_content(choice) -> str:
-    return getattr(choice, "message", {}).get("content") if hasattr(choice, "message") else choice.get("message", {}).get("content")
+    # OpenAI Python SDK v1: objects, not dicts
+    if hasattr(choice, "message"):
+        msg = choice.message  # ChatCompletionMessage or None
+        content = getattr(msg, "content", None)
+
+        # If content comes back as structured parts, flatten any text parts
+        if isinstance(content, list):
+            parts = []
+            for p in content:
+                # p may be an object or a dict
+                t = getattr(p, "type", None) or (p.get("type") if isinstance(p, dict) else None)
+                if t == "text":
+                    parts.append(getattr(p, "text", None) or (p.get("text") if isinstance(p, dict) else ""))
+            return "".join(parts)
+
+        return content or ""
+
+    # Fallback for dict-shaped responses (older codepaths/mocks)
+    return (choice.get("message", {}) or {}).get("content", "") or ""
 
 
 # --------------- API pública ---------------
