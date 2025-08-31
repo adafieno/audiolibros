@@ -1,49 +1,35 @@
 # ssml/xml_generator.py
 # -*- coding: utf-8 -*-
 """
-SSML XML generator (Azure TTS) — dossier-aware, book-config-first defaults.
+SSML XML generator (Azure TTS) — dossier-aware, sentence cadence, per-line voices.
 
-What this version does:
-- Reads principals from dossier/voices.cast.json (NEW map format) with legacy support.
-- Assigns minors/extras from dossier/voices.variants.json deterministically (--use-variants).
-- Applies style/styledegree (mstts:express-as) + small per-character prosody deltas (rate/pitch)
-  layered on top of stylepack prosody.
-- Resolves defaults in this order:
-    DEFAULT VOICE:
-      1) dossier/ssml.config.json (or book.config.json / book.json / config.json) → default_voice
-         (accepts either an Azure voice id or a character key present in voices.cast.json)
-      2) narrator-like entries in voices.cast.json (e.g., "Narrador", "Narrator", etc.)
-      3) --default-voice CLI flag (if provided)
-      4) "es-ES-ElviraNeural"
-    LOCALE:
-      1) same config files as above → keys: locale | xml_lang | language | lang
-      2) inferred from resolved default voice id (e.g., "es-PE-*" → "es-PE")
-      3) --locale CLI flag (if provided)
-      4) "es-ES"
+What it does
+- Supports plan chunks with optional lines[] (multi-voice switching inside a chunk).
+- Sentence-level cadence: wraps sentences in <s> and injects <break> for punctuation.
+- Applies style/styledegree (mstts:express-as) and per-character prosody deltas.
+- Uses voices.variants.json to assign voices for “desconocido” / minor roles.
+- Resolves default voice and locale from dossier config or inferred from voice id.
+- Skips punctuation-only lines (e.g., a stray “—”) to avoid narrator speaking them.
 
-Inputs
-- Plan JSON: {"chapter_id","chunks":[{id,start_char,end_char,voice,stylepack}]}
-- Chapter text
-- Dossier files:
-    dossier/voices.cast.json
-    dossier/voices.variants.json   (optional)
-    dossier/stylepacks.json
-    dossier/ssml.config.json       (optional; may contain {"default_voice": "...", "locale": "..."} )
-    dossier/lexicon.json           (optional)
-    dossier/pronunciations.sensitive.json (optional)
-
-Output
-- One SSML file per chunk to --out dir.
+Optional config: dossier/stylepacks.json
+  {
+    "default": {
+      "prosody": {"rate":"0%","pitch":"0%","volume":"medium"},
+      "cadence": {
+        "comma_ms": 50, "period_ms": 70, "colon_ms": 80, "ellipsis_ms": 70,
+        "dash_ms": 50, "sentence_ms": 0, "paragraph_ms": 500, "after_block_ms": 500,
+        "long_word_threshold": 35, "long_rate": "-3%"
+      }
+    }
+  }
 """
-
 from __future__ import annotations
 import json
 import re
+import os, sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 import xml.etree.ElementTree as ET
-import os
-import sys
 
 _pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if _pkg_root not in sys.path:
@@ -65,8 +51,8 @@ def read_json(p: Path, *, allow_jsonc: bool = True, required_keys: Optional[List
     if not raw.strip():
         raise SSMLRenderError(f"{label} is empty", path=str(p))
     if allow_jsonc:
-        raw = re.sub(r"/\*.*?\*/", "", raw, flags=re.S)       # /* ... */
-        raw = re.sub(r"(?m)//.*?$", "", raw)                  # // ...
+        raw = re.sub(r"/\*.*?\*/", "", raw, flags=re.S)
+        raw = re.sub(r"(?m)//.*?$", "", raw)
     try:
         obj = json.loads(raw)
     except json.JSONDecodeError as e:
@@ -78,7 +64,7 @@ def read_json(p: Path, *, allow_jsonc: bool = True, required_keys: Optional[List
                 raise SSMLRenderError(f"{label} missing key '{k}'", path=str(p))
     return obj
 
-# ------------------------------- SSML NS ------------------------------
+# ------------------------------- Namespaces ---------------------------
 
 SSML_NS = "http://www.w3.org/2001/10/synthesis"
 MSTTS_NS = "https://www.w3.org/2001/mstts"
@@ -86,54 +72,106 @@ XML_NS = "http://www.w3.org/XML/1998/namespace"
 ET.register_namespace("", SSML_NS)
 ET.register_namespace("mstts", MSTTS_NS)
 
-# ------------------------- Stylepacks / Lexicon ------------------------
+# --------------------------- Stylepacks / Cadence ---------------------
+
+_DEFAULT_STYLEPACK = {
+    "default": {
+        "prosody": {},
+        "breaks": { "paragraph_ms": 0 },  # legacy compat
+        "cadence": {
+            "comma_ms": 50,
+            "period_ms": 70,
+            "colon_ms": 80,
+            "ellipsis_ms": 70,
+            "dash_ms": 50,
+            "sentence_ms": 0,
+            "paragraph_ms": 500,
+            "after_block_ms": 500,
+            "long_word_threshold": 35,
+            "long_rate": "-3%"
+        }
+    }
+}
+
+def _deep_merge(dst: Dict[str, Any], src: Dict[str, Any]) -> Dict[str, Any]:
+    out = dict(dst)
+    for k, v in (src or {}).items():
+        if isinstance(v, dict) and isinstance(out.get(k), dict):
+            out[k] = _deep_merge(out[k], v)
+        else:
+            out[k] = v
+    return out
 
 def pack_for(stylepack_id: str, stylepacks: Dict[str, Any]) -> Dict[str, Any]:
-    default = stylepacks.get("default") or {}
-    if not stylepack_id:
-        return default
-    pack = stylepacks.get(stylepack_id) or {}
-    # shallow merge: pack overrides default
-    merged = {}
-    merged.update(default)
-    for k, v in pack.items():
-        if isinstance(v, dict) and isinstance(default.get(k), dict):
-            dv = dict(default.get(k))
-            dv.update(v)
-            merged[k] = dv
-        else:
-            merged[k] = v
-    return merged
+    base = stylepacks if isinstance(stylepacks, dict) else {}
+    merged_default = _deep_merge(_DEFAULT_STYLEPACK["default"], base.get("default") or {})
+    pack = base.get(stylepack_id) or {}
+    return _deep_merge(merged_default, pack)
 
-def apply_lexicon_and_breaks(text: str, *, breaks: Dict[str, Any]) -> List[ET.Element]:
-    """
-    Extremely light touch:
-      - splits paragraphs by double newline
-      - inserts <break time="...ms"> between paragraphs if configured
-    Returns a list of SSML <p> nodes (already populated with text and breaks).
-    """
+# --------------------------- Cadence helpers --------------------------
+
+def _words_count(s: str) -> int:
+    return len(re.findall(r"\w+", s, flags=re.UNICODE))
+
+def _inject_break_markup(text: str, cad: Dict[str, Any]) -> str:
+    # ellipsis
+    text = re.sub(r"\.\.\.", f'<break time="{cad["ellipsis_ms"]}ms"/>…', text)
+    text = re.sub(r"…",        f'<break time="{cad["ellipsis_ms"]}ms"/>…', text)
+    # em-dash
+    text = re.sub(r"—\s*", f'—<break time="{cad["dash_ms"]}ms"/> ', text)
+    # sentence end
+    text = re.sub(r'(?<=\S)([.?!])\s+', rf'\1 <break time="{cad["period_ms"]}ms"/> ', text)
+    # comma/colon
+    text = re.sub(r',\s+', f', <break time="{cad["comma_ms"]}ms"/> ', text)
+    text = re.sub(r':\s+', f': <break time="{cad["colon_ms"]}ms"/> ', text)
+    return text
+
+def _split_to_s_sentences(text: str) -> List[str]:
+    parts = re.split(r'(?<=[.?!])\s+(?=[A-ZÁÉÍÓÚÑ0-9"“(—])', text)
+    return [p.strip() for p in parts if p.strip()]
+
+def _string_to_nodes(fragment_xml: str) -> List[ET.Element]:
+    # Wrap to allow <break/> fragments to be parsed as XML nodes
+    root = ET.fromstring(f"<wrap>{fragment_xml}</wrap>")
+    return list(root)
+
+def _build_s_nodes(text: str, cad: Dict[str, Any]) -> List[ET.Element]:
+    text = _inject_break_markup(text, cad)
+    sentences = _split_to_s_sentences(text)
+    nodes: List[ET.Element] = []
+    for s in sentences:
+        s_el = ET.Element(f"{{{SSML_NS}}}s")
+        for child in _string_to_nodes(s):
+            s_el.append(child)
+        nodes.append(s_el)
+        if cad.get("sentence_ms", 0):
+            nodes.append(ET.Element(f"{{{SSML_NS}}}break", attrib={"time": f'{int(cad["sentence_ms"])}ms'}))
+    return nodes
+
+def build_content_nodes(text: str, *, cadence: Dict[str, Any]) -> List[ET.Element]:
     parts = re.split(r"\n\s*\n", text.strip())
-    paragraphs: List[ET.Element] = []
+    out: List[ET.Element] = []
     for i, para in enumerate(parts):
-        p = ET.Element(f"{{{SSML_NS}}}p")
-        p.text = para
-        paragraphs.append(p)
-        if i < len(parts)-1 and breaks.get("paragraph_ms"):
-            br = ET.Element(f"{{{SSML_NS}}}break", attrib={"time": f'{int(breaks["paragraph_ms"])}ms'})
-            p.append(br)
-    return paragraphs
+        if not para.strip():
+            continue
+        nodes = _build_s_nodes(para.strip(), cadence)
+        wc = _words_count(para)
+        if wc >= int(cadence.get("long_word_threshold", 10)):
+            pros = ET.Element(f"{{{SSML_NS}}}prosody", attrib={"rate": cadence.get("long_rate", "-3%")})
+            for n in nodes: pros.append(n)
+            out.append(pros)
+        else:
+            out.extend(nodes)
+        if i < len(parts)-1 and cadence.get("paragraph_ms", 0):
+            out.append(ET.Element(f"{{{SSML_NS}}}break", attrib={"time": f'{int(cadence["paragraph_ms"])}ms'}))
+    return out
 
-# ------------------------- Voice resolution ---------------------------
+# --------------------------- Voice resolution -------------------------
 
 def _lookup_cast_profile(voices_cast: Dict[str, Any], key: str) -> Optional[Dict[str, Any]]:
-    """
-    Supports:
-      NEW: { "<display_name>": {...} }
-      LEGACY: { "cast":[{"character_id": "...", "voice_id": "...", "style": "..."}] }
-    """
     if not voices_cast:
         return None
-    # NEW map
+    # Map-style cast: {"Rosa": {...}, "Sánchez": {...}}
     if isinstance(voices_cast, dict) and "cast" not in voices_cast:
         if key in voices_cast and isinstance(voices_cast[key], dict):
             return voices_cast[key]
@@ -145,7 +183,7 @@ def _lookup_cast_profile(voices_cast: Dict[str, Any], key: str) -> Optional[Dict
             if isinstance(v, dict) and v.get("id", "").split("::")[-1].lower() == low:
                 return v
         return None
-    # LEGACY list
+    # List-style cast: {"cast":[{character_id, voice_id, ...}, ...]}
     for it in (voices_cast.get("cast") or []):
         if it.get("character_id") == key:
             return {
@@ -163,30 +201,23 @@ def _stable_index(key: str, n: int, seed: int = 17) -> int:
     return int(h[:8], 16) % max(1, n)
 
 def _pick_variant_for(name: str, variants: Dict[str, Any], *, seed: int, chapter_usage: Dict[str, int]) -> Optional[Dict[str, Any]]:
-    """Deterministically pick from variants['pools']['neutral_any'] honoring (softly) max_reuse_per_chapter."""
     if not variants or "pools" not in variants:
         return None
     policy = variants.get("policy") or {}
     pool_name = policy.get("default_pool") or "neutral_any"
     pool = (variants.get("pools") or {}).get(pool_name) or []
     if not pool:
-        # fall back to any first pool
         pools = variants.get("pools") or {}
         if pools:
             pool = next(iter(pools.values()))
     if not pool:
         return None
-
     idx = _stable_index(name or "?", len(pool), seed=policy.get("assignment", {}).get("hash_seed", seed))
     cand = pool[idx]
-
-    # soft reuse limit
     max_reuse = (policy.get("assignment", {}) or {}).get("max_reuse_per_chapter", 999999)
     spins = 0
     while chapter_usage.get(cand["id"], 0) >= max_reuse and spins < len(pool):
-        idx = (idx + 1) % len(pool)
-        cand = pool[idx]
-        spins += 1
+        idx = (idx + 1) % len(pool); cand = pool[idx]; spins += 1
     chapter_usage[cand["id"]] = chapter_usage.get(cand["id"], 0) + 1
     return cand
 
@@ -200,18 +231,10 @@ def resolve_voice(
     seed: int = 17,
     chapter_usage: Optional[Dict[str, int]] = None,
 ) -> Tuple[str, Optional[str], Optional[float], int, int, str]:
-    """
-    Returns (voice_id, style, styledegree, rate_pct, pitch_pct, source)
-    - If voice_field looks like an Azure voice id (contains 'Neural'), use as-is.
-    - Else try to resolve from voices_cast map.
-    - Else if use_variants, pick from voices.variants.json deterministically.
-    - Else fall back to default_voice.
-    """
-    # direct Azure id?
+    # If voice_field is a direct Azure voice id, use it verbatim
     if isinstance(voice_field, str) and "Neural" in voice_field and "-" in voice_field:
         return voice_field, None, None, 0, 0, "direct"
-
-    # cast lookup
+    # Else, try cast lookup by character key
     prof = _lookup_cast_profile(voices_cast or {}, voice_field)
     if prof:
         return (
@@ -222,8 +245,7 @@ def resolve_voice(
             int(prof.get("pitch_pct", 0) or 0),
             "cast"
         )
-
-    # variants (minors)
+    # Else variants for unknown/minor roles
     if use_variants and variants:
         chosen = _pick_variant_for(voice_field, variants, seed=seed, chapter_usage=(chapter_usage or {}))
         if chosen:
@@ -235,20 +257,16 @@ def resolve_voice(
                 int(chosen.get("pitch_pct", 0) or 0),
                 "variant"
             )
-
-    # default
+    # Fallback
     return default_voice, None, None, 0, 0, "default"
 
-# -------------------- Default voice & locale from config ---------------
+# -------------------- Defaults from dossier (voice & locale) ----------
 
 def _infer_locale_from_voice_id(voice_id: Optional[str]) -> Optional[str]:
     if not voice_id or not isinstance(voice_id, str):
         return None
-    # Expect patterns like: es-ES-ElviraNeural, en-US-JennyNeural, pt-BR-AntonioNeural
     m = re.match(r"^([a-z]{2,3}-[A-Z]{2})-", voice_id)
-    if m:
-        return m.group(1)
-    return None
+    return m.group(1) if m else None
 
 def resolve_default_voice(
     dossier_dir: Path,
@@ -256,15 +274,6 @@ def resolve_default_voice(
     cli_default: Optional[str] = None,
     hard_fallback: str = "es-PE-AlexNeural"
 ) -> str:
-    """
-    Resolve default narrator voice with the following precedence:
-      1) dossier/ssml.config.json (or book.config.json / book.json / config.json) → default_voice
-         - If value is an Azure voice id, return it.
-         - If value is a character key present in voices_cast, return that character's voice.
-      2) Narrator-like keys in voices_cast (e.g., "Narrador", "Narrator", etc.)
-      3) CLI-provided default voice (if any)
-      4) Hard fallback.
-    """
     def _try_from_config_file(fname: str) -> Optional[str]:
         p = dossier_dir / fname
         if not p.exists():
@@ -279,26 +288,17 @@ def resolve_default_voice(
                 if prof and isinstance(prof.get("voice"), str):
                     return prof["voice"]
         return None
-
-    # 1) try known config files
     for fname in ("ssml.config.json", "book.config.json", "book.json", "config.json"):
         val = _try_from_config_file(fname)
-        if val:
-            return val
-
-    # 2) narrator-like keys inside cast
-    narrator_keys = ("NARRADOR", "Narrador", "narrador", "Narrator", "NARRATOR", "Narración", "Narracion", "Narración Principal")
+        if val: return val
+    narrator_keys = ("NARRADOR","Narrador","narrador","Narrator","NARRATOR","Narración","Narracion","Narración Principal")
     if voices_cast:
         for key in narrator_keys:
             prof = _lookup_cast_profile(voices_cast, key)
             if prof and isinstance(prof.get("voice"), str):
                 return prof["voice"]
-
-    # 3) CLI default if present
     if cli_default:
         return cli_default
-
-    # 4) hard fallback
     return hard_fallback
 
 def resolve_locale(
@@ -308,44 +308,130 @@ def resolve_locale(
     cli_locale: Optional[str] = None,
     hard_fallback: str = "es-PE"
 ) -> str:
-    """
-    Resolve xml:lang locale with the following precedence:
-      1) dossier/ssml.config.json (or book.config.json / book.json / config.json):
-         keys: 'locale' | 'xml_lang' | 'language' | 'lang'
-      2) inferred from default_voice_resolved (e.g., 'es-PE-AlexNeural' → 'es-PE')
-      3) CLI-provided --locale (if any)
-      4) Hard fallback ('es-PE')
-    """
     def _try_cfg(fname: str) -> Optional[str]:
         p = dossier_dir / fname
         if not p.exists():
             return None
         cfg = read_json(p, allow_jsonc=True, label=fname)
-        for k in ("locale", "xml_lang", "language", "lang"):
+        for k in ("locale","xml_lang","language","lang"):
             v = cfg.get(k)
             if isinstance(v, str) and v.strip():
                 return v.strip()
         return None
-
-    # 1) configs
     for fname in ("ssml.config.json", "book.config.json", "book.json", "config.json"):
         val = _try_cfg(fname)
-        if val:
-            return val
-
-    # 2) infer from default voice id
+        if val: return val
     loc = _infer_locale_from_voice_id(default_voice_resolved)
-    if loc:
-        return loc
-
-    # 3) CLI locale
+    if loc: return loc
     if cli_locale and cli_locale.strip():
         return cli_locale.strip()
-
-    # 4) fallback
     return hard_fallback
 
 # --------------------------- SSML building ----------------------------
+
+# Punctuation-only safeguard (so we never voice a lone em-dash, etc.)
+_PUNCT_ONLY_RE = re.compile(r'^[\s\.,!?:;«»"“”\'\(\)\[\]\{\}/\\\-–—…]+$', re.UNICODE)
+def _is_punct_only(s: str) -> bool:
+    s = (s or "").strip()
+    return (not s) or bool(_PUNCT_ONLY_RE.match(s))
+
+def _begin_speak(locale: str) -> ET.Element:
+    speak = ET.Element(f"{{{SSML_NS}}}speak", attrib={"version": "1.0"})
+    speak.set(f"{{{XML_NS}}}lang", locale)
+    return speak
+
+def _append_voiced_block(
+    parent: ET.Element,
+    *,
+    voice_id: str,
+    cast_style: Optional[str],
+    cast_styledeg: Optional[float],
+    base_prosody: Dict[str, Any],
+    deltas: Dict[str, str],
+    content_nodes: List[ET.Element],
+) -> None:
+    voice_el = ET.SubElement(parent, f"{{{SSML_NS}}}voice", attrib={"name": voice_id})
+    container = voice_el
+    if cast_style:
+        attrs = {"style": cast_style}
+        if cast_styledeg is not None:
+            attrs["styledegree"] = str(cast_styledeg)
+        container = ET.SubElement(container, f"{{{MSTTS_NS}}}express-as", attrib=attrs)
+    attrib = {k: v for k, v in {
+        "rate": base_prosody.get("rate"),
+        "pitch": base_prosody.get("pitch"),
+        "volume": base_prosody.get("volume"),
+    }.items() if v}
+    if attrib:
+        container = ET.SubElement(container, f"{{{SSML_NS}}}prosody", attrib=attrib)
+    if deltas:
+        container = ET.SubElement(container, f"{{{SSML_NS}}}prosody", attrib=deltas)
+    for n in content_nodes:
+        container.append(n)
+
+def _resolve_deltas(rate_pct: int, pitch_pct: int) -> Dict[str, str]:
+    delta = {}
+    if rate_pct:  delta["rate"]  = f"{rate_pct:+d}%"
+    if pitch_pct: delta["pitch"] = f"{pitch_pct:+d}%"
+    return delta
+
+def _render_lines_in_chunk(
+    chapter_text: str,
+    lines: List[Dict[str, Any]],
+    *,
+    locale: str,
+    voices_cast: Optional[Dict[str, Any]],
+    stylepacks: Dict[str, Any],
+    cadence: Dict[str, Any],
+    default_voice: str,
+    use_variants: bool,
+    variants: Optional[Dict[str, Any]],
+    seed: int,
+    chapter_usage: Dict[str, int],
+) -> str:
+    speak = _begin_speak(locale)
+    for ln in lines:
+        ltype = (ln.get("type") or "").lower()
+        if ltype in ("sfx", "audio"):
+            src = ln.get("src")
+            if src:
+                ET.SubElement(speak, f"{{{SSML_NS}}}audio", attrib={"src": src})
+            if cadence.get("after_block_ms", 0):
+                ET.SubElement(speak, f"{{{SSML_NS}}}break", attrib={"time": f'{int(cadence["after_block_ms"])}ms'})
+            continue
+
+        text: Optional[str] = ln.get("text")
+        if text is None:
+            sc = int(ln.get("start_char", -1)); ec = int(ln.get("end_char", -2))
+            text = chapter_text[sc:ec+1] if ec >= sc >= 0 else ""
+
+        # NEW: skip punctuation-only / blank fragments
+        if _is_punct_only(text):
+            continue
+
+        stylepack_id = ln.get("stylepack") or "default"
+        pack = pack_for(stylepack_id, stylepacks)
+        prosody = pack.get("prosody", {}) or {}
+
+        voice_key = ln.get("voice") or ""
+        v_id, cast_style, cast_styledeg, rate_pct, pitch_pct, _src = resolve_voice(
+            voice_key, voices_cast or {}, default_voice=default_voice, use_variants=use_variants,
+            variants=variants, seed=seed, chapter_usage=chapter_usage
+        )
+
+        content_nodes = build_content_nodes(text, cadence=cadence)
+        _append_voiced_block(
+            speak,
+            voice_id=v_id,
+            cast_style=cast_style,
+            cast_styledeg=cast_styledeg,
+            base_prosody=prosody,
+            deltas=_resolve_deltas(rate_pct, pitch_pct),
+            content_nodes=content_nodes,
+        )
+        if cadence.get("after_block_ms", 0):
+            ET.SubElement(speak, f"{{{SSML_NS}}}break", attrib={"time": f'{int(cadence["after_block_ms"])}ms'})
+    return ET.tostring(speak, encoding="utf-8").decode("utf-8")
 
 def render_chunk_xml(
     chapter_text: str,
@@ -357,67 +443,57 @@ def render_chunk_xml(
     locale: str,
     voices_cast: Optional[Dict[str, Any]],
     stylepacks: Dict[str, Any],
-    lexicon: Optional[Dict[str, Any]] = None,
-    pronunciations_sensitive: Optional[Dict[str, Any]] = None,
+    lexicon: Optional[Dict[str, Any]] = None,                  # reserved for future use
+    pronunciations_sensitive: Optional[Dict[str, Any]] = None, # reserved for future use
     default_voice: str = "es-PE-AlexNeural",
     use_variants: bool = True,
     variants: Optional[Dict[str, Any]] = None,
     seed: int = 17,
     chapter_usage: Optional[Dict[str, int]] = None,
+    lines: Optional[List[Dict[str, Any]]] = None,
 ) -> str:
-    """Generate SSML for a text span (chunk)."""
+    """
+    Generate SSML for a chunk.
+    - If `lines[]` is present, alternate voices per line.
+    - Otherwise, render the whole chunk with one voice, sentence-level cadence.
+    """
+    pack = pack_for(stylepack_id, stylepacks)
+    prosody = pack.get("prosody", {}) or {}
+    cadence = pack.get("cadence", {}) or {}
+    chapter_usage = chapter_usage or {}
+
+    if lines:
+        return _render_lines_in_chunk(
+            chapter_text, lines,
+            locale=locale, voices_cast=voices_cast, stylepacks=stylepacks,
+            cadence=cadence, default_voice=default_voice, use_variants=use_variants,
+            variants=variants, seed=seed, chapter_usage=chapter_usage
+        )
+
     if end_char < start_char:
         raise SSMLRenderError("Invalid chunk range", start_char=start_char, end_char=end_char)
     segment = chapter_text[start_char:end_char+1]
 
-    # resolve voice
-    v_id, cast_style, cast_styledeg, rate_pct, pitch_pct, source = resolve_voice(
+    v_id, cast_style, cast_styledeg, rate_pct, pitch_pct, _ = resolve_voice(
         voice, voices_cast or {}, default_voice=default_voice, use_variants=use_variants,
         variants=variants, seed=seed, chapter_usage=chapter_usage
     )
-    pack = pack_for(stylepack_id, stylepacks)
-    prosody = pack.get("prosody", {}) or {}
-    breaks = pack.get("breaks", {}) or {}
 
-    # root
     speak = ET.Element(f"{{{SSML_NS}}}speak", attrib={"version": "1.0"})
     speak.set(f"{{{XML_NS}}}lang", locale)
 
-    voice_el = ET.SubElement(speak, f"{{{SSML_NS}}}voice", attrib={"name": v_id})
-    container = voice_el
-
-    # style (mstts:express-as) from cast/variant
-    if cast_style:
-        attrs = {"style": cast_style}
-        if cast_styledeg is not None:
-            attrs["styledegree"] = str(cast_styledeg)
-        container = ET.SubElement(container, f"{{{MSTTS_NS}}}express-as", attrib=attrs)
-
-    # stylepack prosody
-    prosody_attrib = {k: v for k, v in {
-        "rate": prosody.get("rate"),
-        "pitch": prosody.get("pitch"),
-        "volume": prosody.get("volume"),
-    }.items() if v}
-    if prosody_attrib:
-        container = ET.SubElement(container, f"{{{SSML_NS}}}prosody", attrib=prosody_attrib)
-
-    # character deltas (small percent shifts)
-    delta = {}
-    if rate_pct:
-        delta["rate"] = f"{rate_pct:+d}%"
-    if pitch_pct:
-        delta["pitch"] = f"{pitch_pct:+d}%"
-    if delta:
-        container = ET.SubElement(container, f"{{{SSML_NS}}}prosody", attrib=delta)
-
-    # paragraphs and optional breaks
-    for node in apply_lexicon_and_breaks(segment, breaks=breaks):
-        container.append(node)
-
-    # done
-    xml_bytes = ET.tostring(speak, encoding="utf-8")
-    return xml_bytes.decode("utf-8")
+    content_nodes = build_content_nodes(segment, cadence=cadence)
+    deltas = _resolve_deltas(rate_pct, pitch_pct)
+    _append_voiced_block(
+        speak,
+        voice_id=v_id,
+        cast_style=cast_style,
+        cast_styledeg=cast_styledeg,
+        base_prosody=prosody,
+        deltas=deltas,
+        content_nodes=content_nodes,
+    )
+    return ET.tostring(speak, encoding="utf-8").decode("utf-8")
 
 # ---------------------------- Top-level API ---------------------------
 
@@ -431,33 +507,21 @@ def render_plan_to_files(
     stylepacks: Dict[str, Any],
     lexicon: Optional[Dict[str, Any]] = None,
     pronunciations_sensitive: Optional[Dict[str, Any]] = None,
-    default_voice: str = "es-ES-ElviraNeural",
+    default_voice: str = "es-PE-AlexNeural",
     dossier_dir: Optional[Path] = None,
     use_variants: bool = True,
     seed: int = 17,
 ) -> List[Path]:
-    """
-    Given a plan JSON and chapter text, render one XML file per chunk to out_dir.
-    If `use_variants` is True, tries dossier/voices.variants.json to resolve unknown speakers.
-    """
-    out_dir = Path(out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
-
+    out_dir = Path(out_dir); out_dir.mkdir(parents=True, exist_ok=True)
     dossier = dossier_dir or Path(".")
-    # resolve default narrator voice from config/cast/cli
     default_voice_resolved = resolve_default_voice(dossier, voices_cast, cli_default=default_voice)
-    # resolve locale (config → infer from voice → CLI → fallback)
     locale_resolved = resolve_locale(dossier, voices_cast, default_voice_resolved, cli_locale=locale)
 
-    # load variants if requested
     variants = None
     if use_variants:
         var_path = dossier / "voices.variants.json"
         if var_path.exists():
-            try:
-                variants = read_json(var_path, allow_jsonc=True, label="voices.variants.json")
-            except Exception as e:
-                raise SSMLRenderError("Failed to read variants", error=str(e), path=str(var_path))
+            variants = read_json(var_path, allow_jsonc=True, label="voices.variants.json")
 
     chapter_usage: Dict[str, int] = {}
     chapter_id = plan.get("chapter_id") or "chapter"
@@ -481,6 +545,7 @@ def render_plan_to_files(
             variants=variants,
             seed=seed,
             chapter_usage=chapter_usage,
+            lines=ch.get("lines") if isinstance(ch.get("lines"), list) else None,
         )
         out_path = out_dir / f"{chapter_id}.{chunk_id}.ssml.xml"
         out_path.write_text(xml, encoding="utf-8")
@@ -491,34 +556,30 @@ def render_plan_to_files(
 
 def _main_cli():
     import argparse
-    ap = argparse.ArgumentParser(description="Generate SSML XML files per chunk (Azure TTS)")
-    ap.add_argument("--plan", required=True, help="Path to plan JSON for chapter")
-    ap.add_argument("--text", required=True, help="Path to full chapter text (utf-8)")
-    ap.add_argument("--out", required=True, help="Output directory for SSML files")
-    ap.add_argument("--dossier", default="dossier", help="Dossier directory (voices.cast.json, voices.variants.json, stylepacks.json, etc)")
-    ap.add_argument("--locale", help="xml:lang locale (optional). If omitted, read from dossier config or infer from voice.")
-    ap.add_argument("--default-voice", help="Fallback Azure voice id (optional). If omitted, read from dossier config/cast.")
-    ap.add_argument("--use-variants", action="store_true", help="Use dossier/voices.variants.json when speaker not in cast")
-    ap.add_argument("--seed", type=int, default=17, help="Deterministic seed for variant assignment")
+    ap = argparse.ArgumentParser(description="Genera SSML por chunk (Azure TTS) con voces por línea.")
+    ap.add_argument("--plan", required=True, help="Ruta al plan JSON del capítulo")
+    ap.add_argument("--text", required=True, help="Ruta al texto del capítulo (utf-8)")
+    ap.add_argument("--out", required=True, help="Directorio de salida para los XML")
+    ap.add_argument("--dossier", default="dossier", help="Dossier (voices.cast.json, variants, stylepacks, config)")
+    ap.add_argument("--locale", help="xml:lang (opcional). Si no, se lee de config o se infiere.")
+    ap.add_argument("--default-voice", help="Voz de fallback (opcional). Si no, se lee de config/cast.")
+    ap.add_argument("--use-variants", action="store_true", help="Usar voices.variants.json para desconocidos/minores")
+    ap.add_argument("--seed", type=int, default=17, help="Semilla determinista para variantes")
     args = ap.parse_args()
 
     plan = read_json(Path(args.plan), allow_jsonc=True, label="plan")
     chapter_text = Path(args.text).read_text(encoding="utf-8")
 
     dossier = Path(args.dossier)
-    # cast
     cast_path = dossier / "voices.cast.json"
     voices = read_json(cast_path, allow_jsonc=True, label="voices.cast.json") if cast_path.exists() else {}
-    # stylepacks
     sp_path = dossier / "stylepacks.json"
     stylepacks = read_json(sp_path, allow_jsonc=True, label="stylepacks.json") if sp_path.exists() else {"default":{}}
-    # lexicons (optional)
     lex_path = dossier / "lexicon.json"
     sens_path = dossier / "pronunciations.sensitive.json"
     lexicon = read_json(lex_path, allow_jsonc=True, label="lexicon.json") if lex_path.exists() else None
     sensitive = read_json(sens_path, allow_jsonc=True, label="pronunciations.sensitive.json") if sens_path.exists() else None
 
-    # resolve defaults using book configuration first
     cli_default = args.default_voice if args.default_voice else None
     default_voice_resolved = resolve_default_voice(dossier, voices, cli_default=cli_default)
     locale_resolved = resolve_locale(dossier, voices, default_voice_resolved, cli_locale=args.locale)

@@ -1,30 +1,12 @@
 # ssml/plan_builder.py
 # -*- coding: utf-8 -*-
 """
-Planificador de SSML por capítulo — con detección de diálogos y LLM para desambiguar speakers.
-
-Qué hace:
-- Crea chunks con límites naturales (párrafos/oraciones/kB/duración).
-- Dentro de cada chunk, añade `lines[]` con voz por línea:
-  * Heurísticas rápidas para detectar diálogos (—, “”, «», "") y atribuir speaker (verbos: dijo, preguntó, etc.).
-  * Si sigue siendo desconocido (o si se pide), consulta un LLM para elegir speaker entre personajes conocidos.
-- Usa dossier/characters.json para mapear alias → nombre canónico.
-- Escribe plan JSON compatible con el xml_generator actual.
-
-LLM:
-- Usa tu cliente unificado `chat_json` (sin pasar modelo).
-- Cachea resultados en dossier/.cache/llm_speaker_cache.json (clave por texto+contexto+candidatos).
-- Umbral de confianza configurable; si el LLM no está seguro, mantiene 'desconocido'.
-
-CLI (ejemplos):
-  # 1) Normal, LLM sólo para líneas desconocidas
-  python -m ssml.plan_builder --analysis-dir analysis --out-dir dossier/ssml.plan \
-    --dossier dossier --voice narrador --stylepack chapter_default --llm-attribution unknown
-
-  # 2) Forzar LLM en todas las líneas de diálogo
-  python -m ssml.plan_builder --analysis-dir analysis --out-dir dossier/ssml.plan \
-    --dossier dossier --llm-attribution all --llm-threshold 0.7 --llm-window-chars 240
+Planificador de SSML por capítulo — con detección de diálogos y LLM para speakers.
+Parcheado para:
+  - Incluir la raya de diálogo (y espacios previos) dentro del span del diálogo.
+  - No crear líneas del narrador que sean SOLO puntuación (p.ej. "—").
 """
+
 from __future__ import annotations
 
 import json
@@ -35,22 +17,19 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Iterable
 
-# repo-level logging/errors (deja como estaban en tu proyecto)
 from core.logging import get_logger, log_span
 from core.errors import SSMLPlanError
 _LOG = get_logger("ssml.plan")
 
 # ------------------ LLM unified client ------------------
 try:
-    # si está empaquetado
     from dossier.client import chat_json  # type: ignore
 except Exception:
-    # fallback a client.py en root
     from dossier.client import chat_json  # type: ignore
 
 # ------------------ Parámetros y regex ------------------
 
-WPM_DEFAULT = 165.0  # palabras/min para narrativa es*
+WPM_DEFAULT = 165.0
 _END_SENTENCE_RE = re.compile(r"[\.!\?…]+[\"”»)]*\s+", re.UNICODE)
 _BLOCK_BREAK_RE   = re.compile(r"\n{2,}")
 _LINE_BREAK_RE    = re.compile(r"\n")
@@ -59,9 +38,11 @@ EM_DASH = "—"
 QUOTE   = r"[«“\"]"
 UNQUOTE = r"[»”\"]"
 
-# verbos de atribución (extiende si hace falta)
 SAY_VERBS = r"(dijo|preguntó|respondió|susurró|murmuró|exclamó|replicó|contestó|añadió|gritó|insistió|afirmó|observó|apuntó|indicó|comentó)"
 VERB_RE   = re.compile(SAY_VERBS, re.IGNORECASE | re.UNICODE)
+
+# Sólo puntuación (sin letras ni dígitos)
+_PUNCT_ONLY_RE = re.compile(r'^[\s\.,!?:;«»"“”\'\(\)\[\]\{\}/\\\-–—…]+$', re.UNICODE)
 
 # ------------------ Utilidades ------------------
 
@@ -72,6 +53,10 @@ def estimate_minutes(text: str, wpm: float = WPM_DEFAULT) -> float:
 def estimate_kb(text: str, overhead: float = 0.15) -> int:
     approx_bytes = int(len(text.encode("utf-8")) * (1.0 + max(0.0, overhead)))
     return math.ceil(approx_bytes / 1024)
+
+def _is_punct_only(s: str) -> bool:
+    s = (s or "").strip()
+    return (not s) or bool(_PUNCT_ONLY_RE.match(s))
 
 @dataclass
 class Boundary:
@@ -126,10 +111,6 @@ def _load_json(p: Path) -> dict:
     return json.loads(p.read_text(encoding="utf-8"))
 
 def _build_name_lexicon(characters_json: dict) -> Dict[str, str]:
-    """
-    alias_lower -> display_name. Espera dossier/characters.json con:
-      {"characters":[{"id","display_name","aliases":[...]}, ...]}
-    """
     out: Dict[str, str] = {}
     for c in characters_json.get("characters", []):
         disp = c.get("display_name") or c.get("id")
@@ -142,16 +123,34 @@ def _build_name_lexicon(characters_json: dict) -> Dict[str, str]:
 
 def _find_dialogue_spans(text: str) -> List[Tuple[int,int]]:
     spans: List[Tuple[int,int]] = []
-    # líneas con raya
+    # líneas con raya; capturamos el contenido (sin la raya) ...
     for m in re.finditer(rf"(^|\n)\s*{EM_DASH}([^\n]+)", text, flags=re.UNICODE):
-        s = m.start(2)
+        s = m.start(2)  # empieza DESPUÉS de la raya
         eol = text.find("\n", s)
         e = (eol if eol != -1 else len(text)) - 1
         spans.append((s, max(s, e)))
-    # entre comillas
+    # ... y diálogos entre comillas (solo contenido interno)
     for m in re.finditer(rf"{QUOTE}(.+?){UNQUOTE}", text, flags=re.UNICODE | re.DOTALL):
         spans.append((m.start(1), m.end(1)-1))
-    return sorted({(s,e) for s,e in spans})
+    spans = sorted({(s,e) for s,e in spans})
+    return spans
+
+def _expand_dialogue_spans_swallow_leading_delims(text: str, spans: List[Tuple[int,int]]) -> List[Tuple[int,int]]:
+    """
+    Extiende cada span hacia la izquierda para incluir delimitadores recientes:
+      espacios, em/en dash, guion, y NO cruza saltos de línea.
+    Así evitamos que la raya '—' quede como hueco del narrador.
+    """
+    if not spans:
+        return spans
+    delims = set([" ", "\t", EM_DASH, "–", "-"])
+    out: List[Tuple[int,int]] = []
+    for (s, e) in spans:
+        ss = s
+        while ss > 0 and text[ss-1] in delims and text[ss-1] != "\n":
+            ss -= 1
+        out.append((ss, e))
+    return out
 
 def _nearest_attr_window(text: str, end_idx: int, max_chars: int = 160) -> str:
     return text[end_idx+1 : min(len(text), end_idx + 1 + max_chars)]
@@ -159,22 +158,16 @@ def _nearest_attr_window(text: str, end_idx: int, max_chars: int = 160) -> str:
 def _guess_speaker(text: str, span: Tuple[int,int], name_lex: Dict[str,str]) -> Optional[str]:
     s, e = span
     window = _nearest_attr_window(text, e)
-    # verbo + Nombre
     m = re.search(rf"{SAY_VERBS}\s+([A-ZÁÉÍÓÚÑ][\wÁÉÍÓÚÜÑáéíóúüñ'-]+)", window, flags=re.UNICODE|re.IGNORECASE)
     if m:
-        cand = m.group(2).lower()
-        return name_lex.get(cand)
-    # Nombre + verbo
+        return name_lex.get(m.group(2).lower())
     m = re.search(rf"([A-ZÁÉÍÓÚÑ][\wÁÉÍÓÚÜÑáéíóúüñ'-]+)\s+{SAY_VERBS}", window, flags=re.UNICODE|re.IGNORECASE)
     if m:
-        cand = m.group(1).lower()
-        return name_lex.get(cand)
-    # mirar un poco hacia atrás (—dijo Rosa.)
+        return name_lex.get(m.group(1).lower())
     back = text[max(0, s-120):s]
     m = re.search(rf"{SAY_VERBS}\s+([A-ZÁÉÍÓÚÑ][\wÁÉÍÓÚÜÑáéíóúüñ'-]+)$", back, flags=re.UNICODE|re.IGNORECASE)
     if m:
-        cand = m.group(2).lower()
-        return name_lex.get(cand)
+        return name_lex.get(m.group(2).lower())
     return None
 
 def _subtract_spans(total_s: int, total_e: int, spans: List[Tuple[int,int]]) -> List[Tuple[int,int]]:
@@ -196,31 +189,23 @@ def _sha(s: str) -> str:
 
 def _load_cache(p: Path) -> Dict[str, dict]:
     try:
-        if p.exists():
+        if p and p.exists():
             return json.loads(p.read_text(encoding="utf-8"))
     except Exception:
         pass
     return {}
 
 def _save_cache(p: Path, obj: Dict[str, dict]) -> None:
+    if not p:
+        return
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(obj, ensure_ascii=False, indent=2), encoding="utf-8")
 
-def _llm_choose_speaker(
-    speech_text: str,
-    context_left: str,
-    context_right: str,
-    allowed: List[str],
-) -> dict:
-    """
-    Llama a tu cliente unificado para elegir speaker. Retorna dict:
-      {"speaker": "<uno de allowed|desconocido>", "confidence": 0..1, "reason": "..."}
-    """
+def _llm_choose_speaker(speech_text: str, context_left: str, context_right: str, allowed: List[str]) -> dict:
     system = (
         "Eres un etiquetador de turnos de diálogo para una novela en español. "
-        "Debes identificar QUIÉN habla en el fragmento de diálogo dado, "
-        "eligiendo únicamente de la lista de 'candidatos'. No inventes nombres. "
-        "Si no es posible saberlo, usa 'desconocido'. Responde SOLO JSON válido."
+        "Elige un único 'speaker' desde la lista de 'candidatos' o 'desconocido'. "
+        "Responde SOLO JSON válido."
     )
     user = {
         "dialogo": speech_text.strip(),
@@ -228,18 +213,13 @@ def _llm_choose_speaker(
         "contexto_derecha": context_right.strip(),
         "candidatos": allowed,
         "instrucciones": [
-            "Elige un único 'speaker' que esté en 'candidatos' o 'desconocido'.",
-            "Devuelve también 'confidence' entre 0 y 1.",
-            "Usa el contexto para pistas como 'dijo Rosa', 'preguntó Sánchez'.",
-            "Si el narrador habla (monólogo sin comillas), podría ser 'narrador'."
+            "Devuelve campos: speaker (string), confidence (0..1), reason (string corta).",
+            "Usa el contexto y pistas como 'dijo Rosa'.",
+            "No inventes nombres; si dudas, 'desconocido'."
         ]
     }
-    messages = [
-        {"role": "system", "content": system},
-        {"role": "user", "content": json.dumps(user, ensure_ascii=False)},
-    ]
-    # Tu cliente unificado gestiona el modelo y parámetros:
-    return chat_json(messages, strict=True)  # -> dict con keys esperadas
+    messages = [{"role":"system","content":system},{"role":"user","content":json.dumps(user, ensure_ascii=False)}]
+    return chat_json(messages, strict=True)
 
 def _refine_speakers_with_llm(
     lines: List[Dict[str, object]],
@@ -255,33 +235,26 @@ def _refine_speakers_with_llm(
 ) -> List[Dict[str, object]]:
     if not lines:
         return lines
-
-    cache = _load_cache(cache_path) if cache_path else {}
+    cache = _load_cache(cache_path)
     refined: List[Dict[str, object]] = []
     processed = 0
-
     for ln in lines:
         v = str(ln.get("voice") or "")
         is_dialogue_span = "start_char" in ln and "end_char" in ln
         if not is_dialogue_span:
             refined.append(ln); continue
-
-        # Selección de cuándo llamar al LLM
         call_llm = (mode == "all") or (mode == "unknown" and v == unknown_label)
-        if not call_llm:
-            refined.append(ln); continue
-        if processed >= max_lines:
+        if not call_llm or processed >= max_lines:
             refined.append(ln); continue
 
         sc = int(ln["start_char"]); ec = int(ln["end_char"])
         speech_text = chapter_text[sc:ec+1]
+        if _is_punct_only(speech_text):  # NO llamar al LLM por basura de puntuación
+            refined.append(ln); continue
+
         left = chapter_text[max(0, sc - window_chars):sc]
         right = chapter_text[ec+1: ec+1+window_chars]
-
-        # cache key = sha1 of inputs
-        key = _sha(json.dumps({
-            "speech": speech_text, "L": left, "R": right, "allowed": allowed_speakers
-        }, ensure_ascii=False))
+        key = _sha(json.dumps({"speech": speech_text, "L": left, "R": right, "allowed": allowed_speakers}, ensure_ascii=False))
         if key in cache:
             res = cache[key]
         else:
@@ -291,21 +264,17 @@ def _refine_speakers_with_llm(
                 _LOG.warning("LLM attribution failed; keeping original", extra={"err": str(e)})
                 refined.append(ln); continue
             cache[key] = res
-            if cache_path:
-                _save_cache(cache_path, cache)
+            _save_cache(cache_path, cache)
 
         speaker = str(res.get("speaker") or unknown_label)
         conf = float(res.get("confidence") or 0.0)
-        # normaliza a candidato válido
         if speaker not in allowed_speakers and speaker != unknown_label:
             speaker = unknown_label
-
         if conf >= threshold:
             ln2 = dict(ln); ln2["voice"] = speaker; refined.append(ln2)
         else:
             refined.append(ln)
         processed += 1
-
     return refined
 
 # ------------------ Construcción del plan ------------------
@@ -323,16 +292,11 @@ def build_chapter_plan(
     dossier_dir: Optional[Path] = None,
     dialogue: bool = True,
     unknown_voice_label: str = "desconocido",
-    # --- LLM options ---
     llm_attribution: str = "unknown",   # "off" | "unknown" | "all"
     llm_threshold: float = 0.66,
     llm_max_lines: int = 200,
     llm_window_chars: int = 240,
 ) -> Dict[str, object]:
-    """
-    Devuelve un plan de chunks; si dialogue=True añade lines[] por voz,
-    y si llm_attribution != 'off' usa LLM para mejorar speakers.
-    """
     if not chapter_id or not isinstance(chapter_id, str):
         raise SSMLPlanError("chapter_id inválido")
 
@@ -340,7 +304,6 @@ def build_chapter_plan(
     if not text:
         return {"chapter_id": chapter_id, "chunks": []}
 
-    # cargar nombres
     name_lex: Dict[str,str] = {}
     if dossier_dir:
         chars_p = Path(dossier_dir) / "characters.json"
@@ -350,7 +313,6 @@ def build_chapter_plan(
             except Exception as e:
                 _LOG.warning("No se pudo leer characters.json", extra={"err": str(e)})
 
-    # candidatos (cast + narrador + desconocido)
     allowed_speakers = sorted(set(list(name_lex.values()) + [default_voice, "narrador", unknown_voice_label]))
 
     max_kb = int(limits.get("max_kb_per_request", 0)) if limits else 0
@@ -358,7 +320,9 @@ def build_chapter_plan(
     positions = [b.pos for b in boundaries]
     kinds     = [b.kind for b in boundaries]
 
-    dialogue_spans: List[Tuple[int,int]] = _find_dialogue_spans(text) if dialogue else []
+    base_dialogue_spans: List[Tuple[int,int]] = _find_dialogue_spans(text) if dialogue else []
+    # NUEVO: expandir spans para tragarse la raya (—) previa y espacios
+    dialogue_spans = _expand_dialogue_spans_swallow_leading_delims(text, base_dialogue_spans) if dialogue else []
 
     chunks: List[Dict[str, object]] = []
     cursor = 0
@@ -404,23 +368,24 @@ def build_chapter_plan(
             end_pos = cut_pos if cut_pos is not None else min(N, cursor + len(segment))
             chunk_id = f"{chapter_id}_{idx:03d}"
 
-            # construir lines[] (heurística)
             lines: List[Dict[str, object]] = []
             if dialogue:
                 in_chunk = [(ds,de) for (ds,de) in dialogue_spans if not (de < cursor or ds > end_pos - 1)]
                 in_chunk.sort()
-                # narrador para huecos
+                # narrador para huecos — pero filtrando basura de puntuación
                 for gs, ge in _subtract_spans(cursor, end_pos - 1, in_chunk):
-                    seg = text[gs:ge+1].strip()
-                    if seg:
+                    seg = text[gs:ge+1]
+                    if not _is_punct_only(seg):
                         lines.append({"voice": default_voice, "start_char": gs, "end_char": ge})
-                # diálogos con heurística
+                # diálogos — también saltar si el contenido resultara ser solo puntuación
                 for ds,de in in_chunk:
+                    seg = text[ds:de+1]
+                    if _is_punct_only(seg):
+                        continue
                     spk = _guess_speaker(text, (ds,de), name_lex) or "desconocido"
                     lines.append({"voice": spk, "start_char": ds, "end_char": de})
                 lines.sort(key=lambda d: d.get("start_char", 0))
 
-                # LLM refinement (opcional)
                 if use_llm and lines:
                     lines = _refine_speakers_with_llm(
                         lines, text,
@@ -458,7 +423,7 @@ def build_chapter_plan(
 
     return {"chapter_id": chapter_id, "chunks": chunks}
 
-# ------------------ Batch helper ------------------
+# ------------------ Batch + CLI (igual que antes) ------------------
 
 def _sort_key_natural(p: Path) -> tuple:
     parts = re.split(r"(\d+)", p.stem)
@@ -525,22 +490,17 @@ def build_plans_from_dir(
         _LOG.warning("No se encontraron archivos .txt.", extra={"dir": str(analysis_dir)})
     return written
 
-# ------------------ CLI ------------------
-
 def _main_cli():
     import argparse
     ap = argparse.ArgumentParser(description="Construye plan SSML (con diálogos) y LLM para speakers (opcional).")
 
-    # single
-    ap.add_argument("--chapter-id", help="ID del capítulo (p.ej. ch01)")
-    ap.add_argument("--in", dest="infile", help="Ruta a TXT con el capítulo")
-    ap.add_argument("--out", help="Ruta de salida .plan.json (archivo)")
+    ap.add_argument("--chapter-id")
+    ap.add_argument("--in", dest="infile")
+    ap.add_argument("--out")
 
-    # batch
-    ap.add_argument("--analysis-dir", help="Directorio con .txt")
-    ap.add_argument("--out-dir", help="Directorio de salida para *.plan.json")
+    ap.add_argument("--analysis-dir")
+    ap.add_argument("--out-dir")
 
-    # shared
     ap.add_argument("--voice", default="narrador")
     ap.add_argument("--stylepack", default="chapter_default")
     ap.add_argument("--target-min", type=float, default=7.0)
@@ -549,22 +509,19 @@ def _main_cli():
     ap.add_argument("--wpm", type=float, default=None)
     ap.add_argument("--pattern", default="*.txt")
 
-    ap.add_argument("--dossier", default="dossier", help="Carpeta con characters.json")
-    ap.add_argument("--no-dialogue", action="store_true", help="No añadir lines[] (modo legacy)")
-    ap.add_argument("--unknown-voice", default="desconocido", help="Etiqueta para desconocidos")
+    ap.add_argument("--dossier", default="dossier")
+    ap.add_argument("--no-dialogue", action="store_true")
+    ap.add_argument("--unknown-voice", default="desconocido")
 
-    # LLM
-    ap.add_argument("--llm-attribution", choices=["off", "unknown", "all"], default="unknown",
-                    help="Cuándo usar LLM: nunca | sólo desconocidos | todas las líneas de diálogo")
-    ap.add_argument("--llm-threshold", type=float, default=0.66, help="Umbral de confianza para aceptar la predicción")
-    ap.add_argument("--llm-max-lines", type=int, default=200, help="Líneas máximas a consultar al LLM por capítulo")
-    ap.add_argument("--llm-window-chars", type=int, default=240, help="Contexto (chars) antes/después de la cita")
+    ap.add_argument("--llm-attribution", choices=["off", "unknown", "all"], default="unknown")
+    ap.add_argument("--llm-threshold", type=float, default=0.66)
+    ap.add_argument("--llm-max-lines", type=int, default=200)
+    ap.add_argument("--llm-window-chars", type=int, default=240)
 
     args = ap.parse_args()
     dossier_dir = Path(args.dossier) if args.dossier else None
     dialogue = not args.no_dialogue
 
-    # batch
     if args.analysis_dir:
         if not args.out_dir:
             raise SSMLPlanError("En modo batch especifica --out-dir")
@@ -589,7 +546,6 @@ def _main_cli():
         print(f"Escritos {len(written)} planes en {args.out_dir}")
         return
 
-    # single
     if not (args.chapter_id and args.infile and args.out):
         raise SSMLPlanError("Modo capítulo único requiere --chapter-id, --in y --out")
 
