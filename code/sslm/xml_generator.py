@@ -42,6 +42,12 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 import xml.etree.ElementTree as ET
+import os
+import sys
+
+_pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if _pkg_root not in sys.path:
+    sys.path.insert(0, _pkg_root)
 
 # ------------------------------- Errors -------------------------------
 
