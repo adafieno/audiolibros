@@ -3,40 +3,45 @@
 """
 SSML Linter (Azure-friendly)
 
-Chequea:
-  - XML bien formado y <speak> como raíz.
-  - Tamaño del request (KB) y caracteres dentro de <speak>.
-  - Etiquetas/atributos válidos (subset común de Azure SSML).
-  - <voice name=".."> con forma esperada (xx-XX-NameNeural).
-  - <break time=".."> dentro de rangos (ms/s).
-  - <prosody rate|pitch|volume> con valores soportados o porcentuales válidos.
-  - <phoneme alphabet="ipa|x-sampa"> con contenido no vacío.
-  - Advertencias sobre anidamientos extraños y namespaces.
-  - Estimación de duración (wpm) para detectar chunks demasiado largos.
+Checks:
+  - Well-formed XML and <speak> root.
+  - Request size (KB) and characters inside <speak>.
+  - Allowed tags / attributes (common Azure SSML subset).
+  - <voice name=".."> shape (xx-XX-NameNeural).
+  - <break time=".."> ranges (ms/s).
+  - <prosody rate|pitch|volume> values (keywords or valid % / dB / st).
+  - <phoneme alphabet="ipa|x-sampa"> non-empty ph.
+  - Warnings for odd nesting and namespaces.
+  - Duration estimate (wpm) to catch overly-long chunks.
 
-Integración opcional:
-  - --voices-cast dossier/voices.cast.json → avisa si se usa una voz que no está en el *dossier*.
-  - --stylepacks dossier/stylepacks.json → avisa si aparecen estilos MSTTS no definidos (si los declaras).
+Integrations:
+  - --voices-cast dossier/voices.cast.json → warn if a voice isn’t declared in the cast (supports list or map formats).
+  - --stylepacks dossier/stylepacks.json → optional (informational).
+  - --fail-on-error / --warn-as-error for CI pipelines.
 
-Config por defecto (puedes sobreescribir con --config):
+Defaults can be overridden via --config:
 {
   "max_request_kb": 48,
   "max_speak_chars": 5000,
   "min_break_ms": 50,
   "max_break_ms": 5000,
-  "estimate_wpm": 165,
+  "estimate_wpm": 165.0,
   "hard_cap_minutes": 8.0,
-  "allowed_tags": ["speak","voice","p","s","break","prosody","phoneme","say-as","sub","emphasis","mstts:express-as"],
+  "allowed_tags": ["speak","voice","p","s","break","prosody","phoneme","say-as","sub","emphasis","mstts:express-as","audio"],
   "allowed_phoneme_alphabet": ["ipa","x-sampa"],
   "voice_neural_suffix": "Neural",
   "require_lang_on_speak": true,
-  "preferred_lang_prefix": "es-",  # avisa si no es español
-  "warn_nested_voice": true
+  "preferred_lang_prefix": "es-",
+  "warn_nested_voice": true,
+  "azure_mstts_namespaces": ["https://www.w3.org/2001/mstts","https://www.microsoft.com/2001/mstts","http://www.w3.org/2001/mstts"],
+  "style_whitelist": [],            # leave empty to just do a light sanity check
+  "styledegree_min": 0.0,           # inclusive
+  "styledegree_max": 2.0            # inclusive
 }
 
 CLI:
   python -m qa.ssml_linter --in ssml/ch01_0001.xml --out-json analysis/ssml_lint/ch01_0001.json
-  python -m qa.ssml_linter --dir ssml --voices-cast dossier/voices.cast.json --out-json analysis/ssml_lint/report.json --md analysis/ssml_lint/report.md
+  python -m qa.ssml_linter --dir ssml --voices-cast dossier/voices.cast.json --out-json analysis/ssml_lint/report.json --md analysis/ssml_lint/report.md --fail-on-error
 """
 from __future__ import annotations
 
@@ -44,7 +49,7 @@ import json
 import math
 import re
 import sys
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 import xml.etree.ElementTree as ET
@@ -58,12 +63,18 @@ _DEFAULT_CFG = {
     "max_break_ms": 5000,
     "estimate_wpm": 165.0,
     "hard_cap_minutes": 8.0,
-    "allowed_tags": ["speak","voice","p","s","break","prosody","phoneme","say-as","sub","emphasis","mstts:express-as"],
+    "allowed_tags": ["speak","voice","p","s","break","prosody","phoneme","say-as","sub","emphasis","mstts:express-as","audio"],
     "allowed_phoneme_alphabet": ["ipa","x-sampa"],
     "voice_neural_suffix": "Neural",
     "require_lang_on_speak": True,
     "preferred_lang_prefix": "es-",
     "warn_nested_voice": True,
+    # NEW: recognize the MSTTS namespace variants used by Azure and by our generator
+    "azure_mstts_namespaces": ["https://www.w3.org/2001/mstts","https://www.microsoft.com/2001/mstts","http://www.w3.org/2001/mstts"],
+    # Optional checks for mstts:express-as
+    "style_whitelist": [],           # if empty, we only sanity-check presence/format
+    "styledegree_min": 0.0,
+    "styledegree_max": 2.0,
 }
 
 # ---------------- Utilidades ----------------
@@ -76,15 +87,16 @@ def _read_json(path: Optional[str|Path]) -> Optional[Dict[str, Any]]:
         return None
     return json.loads(p.read_text(encoding="utf-8"))
 
-def _localname(tag: str) -> str:
-    # "{ns}tag" → "ns:tag" o "tag" si no hay ns
-    if tag.startswith("{"):
-        ns, name = tag[1:].split("}", 1)
-        # mapear algunos conocidos → prefijo corto
-        if "microsoft.com" in ns or "schemas.microsoft.com" in ns:
-            return f"mstts:{name}"
-        return name  # conserva solo local si no sabemos prefijo
-    return tag
+def _localname(tag: str, cfg: Optional[Dict[str,Any]] = None) -> str:
+    """ turn '{ns}tag' into either 'mstts:tag' when ns matches Azure, else 'tag' """
+    if not tag.startswith("{"):
+        return tag
+    ns, name = tag[1:].split("}", 1)
+    cfg = cfg or _DEFAULT_CFG
+    mstts_ns_list = [s.lower() for s in (cfg.get("azure_mstts_namespaces") or [])]
+    if ns.lower() in mstts_ns_list or "microsoft.com" in ns.lower():
+        return f"mstts:{name}"
+    return name
 
 def _text_len(elem: ET.Element) -> int:
     n = len(elem.text or "")
@@ -105,22 +117,18 @@ def _parse_xml(path: Path) -> ET.Element:
 
 def _to_ms(val: str) -> Optional[int]:
     s = val.strip().lower()
-    # admite "500ms" o "0.5s" o "500"
     m = re.match(r"^(\d+(?:\.\d+)?)(ms|s)?$", s)
     if not m:
         return None
     num = float(m.group(1))
     unit = m.group(2) or "ms"
-    if unit == "s":
-        return int(round(num * 1000))
-    return int(round(num))
+    return int(round(num * 1000)) if unit == "s" else int(round(num))
 
 def _percent_or_keyword(val: str, keywords: List[str]) -> bool:
     v = val.strip().lower()
     if v in keywords:
         return True
-    # -99%..+99%
-    if re.match(r"^-?\d{1,2}%$", v) or re.match(r"^-?100%$", v):
+    if re.match(r"^-?(\d{1,2}|100)%$", v):
         return True
     return False
 
@@ -128,7 +136,6 @@ def _pitch_ok(val: str) -> bool:
     v = val.strip().lower()
     if _percent_or_keyword(v, ["default","x-low","low","medium","high","x-high"]):
         return True
-    # ±Nst (semitonos)
     if re.match(r"^[\+\-]?\d+st$", v):
         return True
     return False
@@ -144,6 +151,28 @@ def _volume_ok(val: str) -> bool:
 def _rate_ok(val: str) -> bool:
     return _percent_or_keyword(val, ["default","x-slow","slow","medium","fast","x-fast"])
 
+def _collect_cast_voices(cast: Dict[str, Any]) -> List[str]:
+    """Support both formats:
+       - {"cast":[{"character_id":..., "voice_id":"es-..Neural"}, ...]}
+       - {"Rosa":{"voice":"es-..Neural", ...}, "Sánchez":{"voice":"..."}}
+    """
+    voices: List[str] = []
+    if not isinstance(cast, dict):
+        return voices
+    if "cast" in cast and isinstance(cast["cast"], list):
+        for it in cast["cast"]:
+            v = it.get("voice_id")
+            if isinstance(v, str):
+                voices.append(v)
+    else:
+        # map-style
+        for v in cast.values():
+            if isinstance(v, dict):
+                vid = v.get("voice") or v.get("voice_id")
+                if isinstance(vid, str):
+                    voices.append(vid)
+    return voices
+
 # ---------------- Lógica principal ----------------
 
 @dataclass
@@ -157,7 +186,7 @@ def _push(issues: List[LintIssue], level: str, code: str, message: str, stack: L
     issues.append(LintIssue(level=level, code=code, message=message, path=">".join(stack)))
 
 def _walk(elem: ET.Element, cfg: Dict[str, Any], issues: List[LintIssue], stack: List[str], seen_voices: List[str], cast: Optional[Dict[str, Any]]):
-    name = _localname(elem.tag)
+    name = _localname(elem.tag, cfg)
     stack.append(name)
 
     # Etiquetas válidas
@@ -177,7 +206,7 @@ def _walk(elem: ET.Element, cfg: Dict[str, Any], issues: List[LintIssue], stack:
             _push(issues, "error", "voice.name.missing", "Falta atributo name en <voice>.", stack[:])
         else:
             seen_voices.append(vname)
-            # chequeo de forma "xx-XX-NameNeural"
+            # forma "xx-XX-NameNeural"
             if cfg.get("voice_neural_suffix"):
                 if not vname.endswith(cfg["voice_neural_suffix"]):
                     _push(issues, "warning", "voice.name.form", f"La voz debería terminar en '{cfg['voice_neural_suffix']}' (Azure Neural). Recibido: {vname}.", stack[:])
@@ -185,11 +214,11 @@ def _walk(elem: ET.Element, cfg: Dict[str, Any], issues: List[LintIssue], stack:
                 if not vname.lower().startswith(cfg["preferred_lang_prefix"].lower()):
                     _push(issues, "info", "voice.lang.mismatch", f"La voz ({vname}) no parece {cfg['preferred_lang_prefix']} (solo aviso).", stack[:])
 
-            # cruzar con cast (si se pasó)
-            if cast and "cast" in cast:
-                allowed = {c.get("voice_id") for c in cast.get("cast", []) if c.get("voice_id")}
+            # cruzar con cast (list o map)
+            if cast:
+                allowed = set(_collect_cast_voices(cast))
                 if allowed and vname not in allowed:
-                    _push(issues, "warning", "voice.not_in_cast", f"La voz '{vname}' no está en dossier/voices.cast.json.", stack[:])
+                    _push(issues, "warning", "voice.not_in_cast", f"La voz '{vname}' no está declarada en voices.cast.json.", stack[:])
 
             # voz anidada
             if cfg.get("warn_nested_voice", True):
@@ -230,6 +259,22 @@ def _walk(elem: ET.Element, cfg: Dict[str, Any], issues: List[LintIssue], stack:
         if not ph:
             _push(issues, "warning", "phoneme.ph.missing", "Falta atributo 'ph' en <phoneme>.", stack[:])
 
+    elif name == "mstts:express-as":
+        style = (elem.attrib.get("style") or "").strip()
+        if not style:
+            _push(issues, "info", "mstts.style.missing", "Falta atributo 'style' en <mstts:express-as> (opcional pero recomendable).", stack[:])
+        else:
+            wl = cfg.get("style_whitelist") or []
+            if wl and style not in wl:
+                _push(issues, "info", "mstts.style.unknown", f"Estilo no listado en whitelist: '{style}'.", stack[:])
+        if "styledegree" in elem.attrib:
+            try:
+                deg = float(str(elem.attrib["styledegree"]))
+                if not (float(cfg.get("styledegree_min", 0.0)) <= deg <= float(cfg.get("styledegree_max", 2.0))):
+                    _push(issues, "info", "mstts.styledegree.range", f"styledegree fuera de rango habitual ({deg}).", stack[:])
+            except ValueError:
+                _push(issues, "warning", "mstts.styledegree.bad", f"Valor no numérico para styledegree: '{elem.attrib['styledegree']}'.", stack[:])
+
     # Recorrido recursivo
     for child in list(elem):
         _walk(child, cfg, issues, stack, seen_voices, cast)
@@ -237,7 +282,6 @@ def _walk(elem: ET.Element, cfg: Dict[str, Any], issues: List[LintIssue], stack:
     stack.pop()
 
 def _estimate_minutes(chars: int, wpm: float) -> float:
-    # Aproximación grosera: palabras ≈ chars / 5.5 → min = palabras / wpm
     words_est = chars / 5.5
     return words_est / max(wpm, 1.0)
 
@@ -261,8 +305,9 @@ def lint_ssml_file(path: str|Path, cfg: Optional[Dict[str, Any]] = None, cast: O
         }
 
     # 2) speak raíz
-    if _localname(root.tag) != "speak":
+    if _localname(root.tag, cfg) != "speak":
         issues.append(LintIssue("error","root.speak.missing","El documento no tiene <speak> como raíz.", ""))
+
     # 3) tamaño de request
     kb = _kb_size(p)
     if kb > int(cfg["max_request_kb"]):
@@ -281,7 +326,7 @@ def lint_ssml_file(path: str|Path, cfg: Optional[Dict[str, Any]] = None, cast: O
     if est_min > float(cfg["hard_cap_minutes"]):
         issues.append(LintIssue("warning","duration.estimate.long", f"Duración estimada {est_min:.2f} min > {cfg['hard_cap_minutes']} min.", "speak"))
 
-    # 7) deduplicar/ordenar
+    # 7) empaquetado
     def _pack(level: str) -> List[str]:
         return [f"[{it.code}] {it.message} @ {it.path}" for it in issues if it.level == level]
 
@@ -309,7 +354,6 @@ def lint_path(path: str|Path, cfg: Optional[Dict[str, Any]] = None, voices_cast_
     cast = _read_json(voices_cast_path) if voices_cast_path else None
     stylepacks = _read_json(stylepacks_path) if stylepacks_path else None
 
-    files = []
     if p.is_file():
         files = [p]
     else:
@@ -373,12 +417,15 @@ def main():
     ap.add_argument("--stylepacks", help="dossier/stylepacks.json (opcional, informativo).")
     ap.add_argument("--out-json", help="Escribe el reporte JSON.")
     ap.add_argument("--md", help="Escribe un resumen en Markdown.")
+    ap.add_argument("--fail-on-error", action="store_true", help="Devuelve exit code 2 si hay errores en algún archivo.")
+    ap.add_argument("--warn-as-error", action="store_true", help="Trata warnings como errores para el exit code.")
     args = ap.parse_args()
 
     cfg = _read_json(args.config) or {}
     target = args.infile or args.indir
     rep = lint_path(target, cfg=cfg, voices_cast_path=args.voices_cast, stylepacks_path=args.stylepacks)
 
+    # stdout (JSON if no --out-json)
     if args.out_json:
         Path(args.out_json).parent.mkdir(parents=True, exist_ok=True)
         Path(args.out_json).write_text(json.dumps(rep, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -391,6 +438,12 @@ def main():
         Path(args.md).parent.mkdir(parents=True, exist_ok=True)
         Path(args.md).write_text(md, encoding="utf-8")
         print(f"MD → {args.md}")
+
+    # CI-friendly exit code
+    fail = rep["summary"]["fail"]
+    warn = rep["summary"]["warnings"]
+    if args.fail_on_error and (fail > 0 or (args.warn_as_error and warn > 0)):
+        sys.exit(2)
 
 if __name__ == "__main__":
     main()
