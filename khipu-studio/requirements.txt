@@ -1,0 +1,5 @@
+﻿numpy
+scipy
+soundfile
+openai
+azure-cognitiveservices-speech

@@ -1,0 +1,19 @@
+{
+  "voices": [
+    { "id":"es-PE-AlexNeural",   "locale":"es-PE", "gender":"M", "age_hint":"adult", "accent_tags":["peru"],    "styles":["narration-relaxed","cheerful","sad"] },
+    { "id":"es-EC-AndreaNeural", "locale":"es-EC", "gender":"F", "age_hint":"adult", "accent_tags":["ecuador"], "styles":["serious","empathetic","calm"] },
+    { "id":"es-EC-LuisNeural",   "locale":"es-EC", "gender":"M", "age_hint":"adult", "accent_tags":["ecuador"], "styles":["serious","shouting","angry"] },
+    { "id":"es-MX-DaliaNeural",  "locale":"es-MX", "gender":"F", "age_hint":"adult", "accent_tags":["mexico"],  "styles":["empathetic","cheerful","sad"] },
+    { "id":"es-US-PalomaNeural", "locale":"es-US", "gender":"F", "age_hint":"adult", "accent_tags":["us_latam"],"styles":["empathetic","calm","sad"] },
+    { "id":"es-US-AlonsoNeural", "locale":"es-US", "gender":"M", "age_hint":"adult", "accent_tags":["us_latam"],"styles":["hopeful","serious","chat"] },
+    { "id":"es-BO-MarceloNeural","locale":"es-BO", "gender":"M", "age_hint":"adult", "accent_tags":["bolivia"], "styles":["serious"] },
+    { "id":"es-BO-SofiaNeural",  "locale":"es-BO", "gender":"F", "age_hint":"adult", "accent_tags":["bolivia"], "styles":["sad","empathetic"] },
+    { "id":"es-MX-JorgeNeural",  "locale":"es-MX", "gender":"M", "age_hint":"adult", "accent_tags":["mexico"], "styles":["curious","deep","confident"] },
+    { "id":"es-MX-GerardoNeural",  "locale":"es-MX", "gender":"M", "age_hint":"adult", "accent_tags":["mexico"], "styles":["serious"] },
+    { "id":"es-MX-CecilioNeural",  "locale":"es-MX", "gender":"M", "age_hint":"adult", "accent_tags":["mexico"], "styles":["serious"] },
+    { "id":"es-MX-CarlotaNeural",  "locale":"es-MX", "gender":"F", "age_hint":"adult", "accent_tags":["mexico"], "styles":["serious"] },
+    { "id":"es-MX-LarissaNeural",  "locale":"es-MX", "gender":"F", "age_hint":"adult", "accent_tags":["mexico"], "styles":["serious"] },
+    { "id":"es-MX-LibertoNeural",  "locale":"es-MX", "gender":"M", "age_hint":"adult", "accent_tags":["mexico"], "styles":["serious"] },
+    { "id":"es-MX-LucianoNeural",  "locale":"es-MX", "gender":"M", "age_hint":"adult", "accent_tags":["mexico"], "styles":["serious"] }
+  ]
+}
