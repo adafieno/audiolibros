@@ -1,0 +1,37 @@
+{
+  "app.title": "Khipu Studio",
+  "nav.home": "Home",
+  "nav.project": "Project",
+  "nav.manuscript": "Manuscript",
+  "nav.dossier": "Dossier",
+  "nav.planning": "Planning",
+  "nav.casting": "Casting",
+  "nav.ssml": "SSML",
+  "nav.voice": "Voice",
+  "nav.export": "Export",
+  "nav.settings": "Settings",
+
+  "status.ready": "Ready",
+  "status.generating": "Generating…",
+  "status.planUpdated": "Plan updated",
+  "status.progress": "Progress: {{pct, number}}% {{note}}",
+  "status.openProject": "Open a project to continue.",
+  "status.planLoaded": "Plan loaded",
+  "status.planMissing": "Plan not found",
+
+  "manu.save": "Save chapter",
+  "manu.loaded": "Chapter loaded",
+  "manu.saved": "Chapter saved. Regenerate the plan to see changes.",
+  "manu.characters": "Characters: {{count, number}}",
+
+  "plan.regen": "Regenerate plan",
+  "plan.view": "View plan",
+  "plan.editChapter": "Edit chapter",
+  "plan.locked": "Locked",
+  "plan.editable": "Editable",
+  "plan.readonly": "Text (read-only)",
+
+  "footer.route": "Route: {{path}}",
+  "home.welcome": "Welcome to Khipu Studio",
+  "home.cta": "Select a project and start with Manuscript → Planning."
+}

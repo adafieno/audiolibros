@@ -1,116 +1,56 @@
-import { useEffect, useMemo, useState } from "react";
-import type { JobEvent, PlanBuildPayload } from "./global";
-import { useProject } from "./store/project";
-import PlanBoard from "./features/plan/PlanBoard";
+import { useTranslation } from "react-i18next";
+import { Routes, Route, useLocation} from "react-router-dom";
+import { AppShell } from "./components/layout/AppShell";
+import Home from "./pages/Home";
+import ManuscriptPage from "./pages/Manuscript";
+import PlanningPage from "./pages/Planning";
+import { useState } from "react";
+import { t } from "i18next";
 
-function join(...xs: string[]) { return xs.join("/").replace(/\/+/g, "/"); }
 
-function ProjectGate() {
-  const root = useProject((s) => s.root);
-  const setRoot = useProject((s) => s.setRoot);
-  return (
-    <div style={{ padding: 24, fontFamily: "Segoe UI, system-ui, sans-serif", color: "#e5e7eb" }}>
-      <h1 style={{ marginTop: 0 }}>Khipu Studio</h1>
-      <p>Selecciona o crea una carpeta de proyecto local.</p>
-      <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={async () => {
-          const picked = await window.khipu!.call("project:choose", undefined as unknown as undefined);
-          if (picked) setRoot(picked);
-        }}>Elegir carpeta…</button>
-        {root && <span>Actual: <code style={{ color: "#a7f3d0" }}>{root}</code></span>}
-      </div>
-    </div>
-  );
-}
+// simple placeholders (feel free to create separate files later)
+const Placeholder = ({ name }: { name: string }) => <div>{name} — Coming soon…</div>;
 
 export default function App() {
-  const root = useProject((s) => s.root);
-  const [running, setRunning] = useState(false);
-  const [lastMsg, setLastMsg] = useState<string>("");
-  const [events, setEvents] = useState<JobEvent[]>([]);
-  const [showBoard, setShowBoard] = useState(false);
-
-  useEffect(() => {
-    window.khipu?.onJob((data: JobEvent) => {
-      setEvents((prev) => [...prev.slice(-200), data]);
-      if (data.event === "progress" && typeof data.pct === "number") setLastMsg(`Progreso: ${data.pct}% ${data.note ?? ""}`.trim());
-      else if (data.event === "output" && data.path) setLastMsg(`Plan creado: ${data.path}`);
-      else if (data.event === "done") { setLastMsg(data.ok ? "Completado ✔" : "Falló ❌"); setRunning(false); }
-    });
-  }, []);
-
-  // RELATIVE paths the IPC expects
-  const rel = useMemo(() => ({
-    infile: "analysis/chapters_txt/ch01.txt",
-    out:    "ssml/plans/ch01.plan.json",
-    dossier:"dossier",
-  }), []);
-
-  // Absolute paths for display only
-  const abs = useMemo(() => {
-    const base = root ?? "";
-    const j = (...xs: string[]) => (base ? join(base, ...xs) : join(...xs));
-    return {
-      infile: j(rel.infile),
-      out:    j(rel.out),
-    };
-  }, [root, rel]);
-
-  async function runPlan() {
-    if (!root) { setLastMsg("Selecciona primero una carpeta de proyecto."); return; }
-    setRunning(true); setEvents([]); setLastMsg("Preparando…");
-
-    const payload: PlanBuildPayload = {
-      projectRoot: root,                 // <- add this
-      chapterId: "ch01",
-      // pass RELATIVE paths to IPC
-      infile: rel.infile,
-      out: rel.out,
-      opts: { dossier: rel.dossier, "llm-attribution": "off", "max-kb": 48 },
-    };
-
-    try {
-      await window.khipu!.call("plan:build", payload);
-      setRunning(false);
-      setLastMsg(`Plan listo: ${abs.out}`);
-      setShowBoard(true);
-    } catch (err) {
-      setRunning(false);
-      setLastMsg(`Error: ${err instanceof Error ? err.message : String(err)}`);
-    }
-  }
-
-  if (!root) return <ProjectGate />;
+  const { t } = useTranslation();
+  const loc = useLocation();
+  const title = routeTitle(loc.pathname);
+  const [status, setStatus] = useState("");
 
   return (
-    <div style={{ padding: 24, fontFamily: "Segoe UI, system-ui, sans-serif", color: "#e5e7eb" }}>
-      <h1 style={{ marginTop: 0 }}>Khipu Studio</h1>
-      <div>Proyecto: <code style={{ color: "#a7f3d0" }}>{root}</code></div>
-
-      <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
-        <button onClick={runPlan} disabled={running}>{running ? "Generando…" : "Generar plan"}</button>
-        <button onClick={() => setShowBoard(true)}>Abrir plan</button>
-      </div>
-
-      <div style={{ marginTop: 12, color: "#9ca3af" }}>
-        Entrada: <code>{abs.infile}</code> — Salida: <code>{abs.out}</code>
-      </div>
-
-      <div style={{ marginTop: 20, padding: 12, background: "#111827", borderRadius: 8 }}>
-        <strong>Estado:</strong> {lastMsg || "—"}
-      </div>
-
-      {showBoard && (
-        <div style={{ marginTop: 16 }}>
-          {/* hand RELATIVE path to PlanBoard */}
-          <PlanBoard projectRoot={root} planRelPath={rel.out} />
-        </div>
-      )}
-
-      <div style={{ marginTop: 12, padding: 12, background: "#0b1220", borderRadius: 8, maxHeight: 220, overflow: "auto" }}>
-        <strong>Eventos (stream):</strong>
-        <pre style={{ whiteSpace: "pre-wrap" }}>{events.map((e) => JSON.stringify(e)).join("\n")}</pre>
-      </div>
-    </div>
+    <AppShell
+      title={title}
+      status={status}
+    >
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/project" element={<Placeholder name={t("nav.project")} />} />
+        <Route path="/manuscript" element={<ManuscriptPage />} />
+        <Route path="/dossier" element={<Placeholder name={t("nav.dossier")} />} />
+        <Route path="/planning" element={<PlanningPage onStatus={setStatus} />} />
+        <Route path="/casting" element={<Placeholder name={t("nav.casting")} />} />
+        <Route path="/ssml" element={<Placeholder name={t("nav.ssml")} />} />
+        <Route path="/voice" element={<Placeholder name={t("nav.voice")} />} />
+        <Route path="/export" element={<Placeholder name={t("nav.export")} />} />
+        <Route path="/settings" element={<Placeholder name={t("nav.settings")} />} />
+      </Routes>
+    </AppShell>
   );
 }
+
+
+
+function routeTitle(path: string): string {
+  
+  if (path === "/") return t("nav.home");
+  if (path.startsWith("/project")) return t("nav.project");
+  if (path.startsWith("/manuscript")) return t("nav.manuscript");
+  if (path.startsWith("/dossier")) return t("nav.dossier");
+  if (path.startsWith("/planning")) return t("nav.planning");
+  if (path.startsWith("/casting")) return t("nav.casting");
+  if (path.startsWith("/ssml")) return t("nav.ssml");
+  if (path.startsWith("/voice")) return t("nav.voice");
+  if (path.startsWith("/export")) return t("nav.export");
+  if (path.startsWith("/settings")) return t("nav.settings");
+  return "Khipu Studio";
+  }

@@ -4,7 +4,7 @@
     {
       "id": "ch01_001",
       "start_char": 0,
-      "end_char": 58,
+      "end_char": 92,
       "voice": "narrador",
       "stylepack": "chapter_default",
       "lines": [
@@ -21,21 +21,21 @@
         {
           "voice": "narrador",
           "start_char": 45,
-          "end_char": 58
+          "end_char": 92
         }
       ]
     },
     {
       "id": "ch01_002",
-      "start_char": 59,
-      "end_char": 91,
+      "start_char": 93,
+      "end_char": 108,
       "voice": "narrador",
       "stylepack": "chapter_default",
       "lines": [
         {
           "voice": "narrador",
-          "start_char": 59,
-          "end_char": 91
+          "start_char": 93,
+          "end_char": 108
         }
       ]
     }

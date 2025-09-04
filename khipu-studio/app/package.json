@@ -1,71 +1,76 @@
-﻿{
-    "private":  true,
-    "version":  "0.0.0",
-    "type":  "module",
-    "scripts":  {
-                    "lint":  "eslint .",
-                    "preview":  "vite preview",
-                    "dev":  "concurrently -k \"vite\" \"cross-env VITE_DEV=1 electron .\"",
-                    "build:ui":  "vite build",
-                    "build":  "npm run build:ui \u0026\u0026 electron-builder"
-                },
-    "dependencies":  {
-                         "@tanstack/react-table":  "^8.21.3",
-                         "howler":  "^2.2.4",
-                         "react":  "^19.1.1",
-                         "react-dom":  "^19.1.1",
-                         "react-hook-form":  "^7.62.0",
-                         "wavesurfer.js":  "^7.10.1",
-                         "zustand":  "^5.0.8"
-                     },
-    "devDependencies":  {
-                            "@eslint/js":  "^9.33.0",
-                            "@types/react":  "^19.1.10",
-                            "@types/react-dom":  "^19.1.7",
-                            "@vitejs/plugin-react":  "^5.0.0",
-                            "concurrently":  "^9.2.1",
-                            "cross-env":  "^10.0.0",
-                            "electron":  "^38.0.0",
-                            "electron-builder":  "^26.0.12",
-                            "eslint":  "^9.33.0",
-                            "eslint-plugin-react-hooks":  "^5.2.0",
-                            "eslint-plugin-react-refresh":  "^0.4.20",
-                            "globals":  "^16.3.0",
-                            "typescript":  "~5.8.3",
-                            "typescript-eslint":  "^8.39.1",
-                            "vite":  "^7.1.2"
-                        },
-    "name":  "khipu-studio",
-    "productName":  "Khipu Studio",
-    "main":  "./electron/main.cjs",
-    "build":  {
-                  "appId":  "com.khipu.studio",
-                  "files":  [
-                                "dist/**",
-                                "electron/**",
-                                "../py/**",
-                                "../bin/**",
-                                "!**/*.map"
-                            ],
-                  "asar":  true,
-                  "extraResources":  [
-                                         {
-                                             "from":  "../py",
-                                             "to":  "py"
-                                         },
-                                         {
-                                             "from":  "../bin",
-                                             "to":  "bin"
-                                         }
-                                     ],
-                  "mac":  {
-                              "icon":  "assets/icons/khipu.icns"
-                          },
-                  "win":  {
-                              "icon":  "assets/icons/khipu.ico"
-                          },
-                  "linux":  {
-                                "icon":  "assets/icons/khipu.png"
-                            }
-              }
+{
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+        "lint": "eslint .",
+        "preview": "vite preview",
+        "dev": "concurrently -k \"vite\" \"cross-env VITE_DEV=1 electron .\"",
+        "build:ui": "vite build",
+        "build": "npm run build:ui && electron-builder"
+    },
+    "dependencies": {
+        "@tanstack/react-table": "^8.21.3",
+        "howler": "^2.2.4",
+        "i18next": "^25.5.0",
+        "i18next-browser-languagedetector": "^8.2.0",
+        "i18next-icu": "^2.4.0",
+        "react": "^19.1.1",
+        "react-dom": "^19.1.1",
+        "react-hook-form": "^7.62.0",
+        "react-i18next": "^15.7.3",
+        "react-router-dom": "^7.8.2",
+        "wavesurfer.js": "^7.10.1",
+        "zustand": "^5.0.8"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.33.0",
+        "@types/react": "^19.1.10",
+        "@types/react-dom": "^19.1.7",
+        "@vitejs/plugin-react": "^5.0.0",
+        "concurrently": "^9.2.1",
+        "cross-env": "^10.0.0",
+        "electron": "^38.0.0",
+        "electron-builder": "^26.0.12",
+        "eslint": "^9.33.0",
+        "eslint-plugin-react-hooks": "^5.2.0",
+        "eslint-plugin-react-refresh": "^0.4.20",
+        "globals": "^16.3.0",
+        "typescript": "~5.8.3",
+        "typescript-eslint": "^8.39.1",
+        "vite": "^7.1.2"
+    },
+    "name": "khipu-studio",
+    "productName": "Khipu Studio",
+    "main": "./electron/main.cjs",
+    "build": {
+        "appId": "com.khipu.studio",
+        "files": [
+            "dist/**",
+            "electron/**",
+            "../py/**",
+            "../bin/**",
+            "!**/*.map"
+        ],
+        "asar": true,
+        "extraResources": [
+            {
+                "from": "../py",
+                "to": "py"
+            },
+            {
+                "from": "../bin",
+                "to": "bin"
+            }
+        ],
+        "mac": {
+            "icon": "assets/icons/khipu.icns"
+        },
+        "win": {
+            "icon": "assets/icons/khipu.ico"
+        },
+        "linux": {
+            "icon": "assets/icons/khipu.png"
+        }
+    }
 }
