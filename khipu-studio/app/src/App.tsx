@@ -4,6 +4,8 @@ import { AppShell } from "./components/layout/AppShell";
 import Home from "./pages/Home";
 import ManuscriptPage from "./pages/Manuscript";
 import PlanningPage from "./pages/Planning";
+import SettingsPage from "./pages/Settings";
+import ProjectPage from "./pages/Project";
 import { useState } from "react";
 import { t } from "i18next";
 
@@ -24,7 +26,7 @@ export default function App() {
     >
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/project" element={<Placeholder name={t("nav.project")} />} />
+        <Route path="/project" element={<ProjectPage />} />
         <Route path="/manuscript" element={<ManuscriptPage />} />
         <Route path="/dossier" element={<Placeholder name={t("nav.dossier")} />} />
         <Route path="/planning" element={<PlanningPage onStatus={setStatus} />} />
@@ -32,7 +34,7 @@ export default function App() {
         <Route path="/ssml" element={<Placeholder name={t("nav.ssml")} />} />
         <Route path="/voice" element={<Placeholder name={t("nav.voice")} />} />
         <Route path="/export" element={<Placeholder name={t("nav.export")} />} />
-        <Route path="/settings" element={<Placeholder name={t("nav.settings")} />} />
+        <Route path="/settings" element={<SettingsPage />} />
       </Routes>
     </AppShell>
   );

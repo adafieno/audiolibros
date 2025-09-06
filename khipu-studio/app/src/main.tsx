@@ -5,6 +5,8 @@ import App from "./App";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import "./index.css";
 import i18n from "./i18n"; // single import is enough
+import { applyTheme } from "./lib/theme";
+import { loadAppConfig } from "./lib/config";
 
 // Map OS locale → one of our supported ones
 function pickSupported(sys: unknown): string {
@@ -21,6 +23,8 @@ function pickSupported(sys: unknown): string {
     const sys = await window.khipu?.call?.("app:locale");
     const lang = pickSupported(sys);
     await i18n.changeLanguage(lang);
+    const c = await loadAppConfig();
+    applyTheme(c.theme);
     localStorage.setItem("khipu.lang", lang);
   } catch {
     // fall back to default in i18n.ts (es-PE)

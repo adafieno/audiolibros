@@ -1,8 +1,30 @@
 /* Kill Vite template constraints if they exist */
-#root {
-  max-width: none !important;
-  text-align: initial !important;
-  padding: 0 !important;
+:root {
+  --bg: #0f172a;         /* slate-900 */
+  --panel: #111827;      /* slate-800 */
+  --border: #1f2937;     /* slate-700 */
+  --text: #e5e7eb;       /* gray-200 */
+  --muted: #9ca3af;      /* gray-400 */
+  --accent: #14b8a6;     /* teal-500 */
+  --accent-600: #0d9488; /* teal-600 */
+  --accent-700: #0f766e; /* teal-700 */
+  --btn-fg: #0b1220;     /* dark fg on light-ish button */
+  --btn-bg: #34d399;     /* emerald-400 */
+  --btn-bg-h: #10b981;   /* emerald-500 */
+}
+
+:root[data-theme="light"] {
+  --bg: #f8fafc;         /* slate-50 */
+  --panel: #ffffff;
+  --border: #e5e7eb;
+  --text: #0f172a;
+  --muted: #6b7280;
+  --accent: #0ea5a6;
+  --accent-600: #0d9488;
+  --accent-700: #0f766e;
+  --btn-fg: white;
+  --btn-bg: #0ea5a6;     /* teal-500 */
+  --btn-bg-h: #0d9488;   /* teal-600 */
 }
 
 a {
@@ -29,29 +51,23 @@ h1 {
   line-height: 1.1;
 }
 
-button {
-  border-radius: 8px;
+/* Buttons: better contrast across themes */
+button, .btn {
+  background: var(--btn-bg);
+  color: var(--btn-fg);
   border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-weight: 600;
   cursor: pointer;
-  transition: border-color 0.25s;
 }
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
+button:hover, .btn:hover { background: var(--btn-bg-h); }
+button:disabled, .btn:disabled { opacity: 0.6; cursor: default; }
 
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
-    background-color: #ffffff;
+    background-color: #ffffffbe;
   }
   a:hover {
     color: #747bff;
@@ -63,12 +79,9 @@ button:focus-visible {
 }
 
 /* Fill viewport & remove default margins */
-html, body, #root {
-  height: 100%;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-}
+html, body, #root { height: 100%; width: 100%; margin: 0; padding: 0; }
+body { overflow: hidden; background: var(--bg); color: var(--text); }
+* { box-sizing: border-box; }
 
 .langSelect {
   background: #0b1220;       /* dark */
@@ -85,3 +98,27 @@ html, body, #root {
   outline: 2px solid #0ea5a6;   /* teal-500 */
   outline-offset: 1px;
 }
+
+/* Inputs */
+input, select, textarea {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
+/* input::placeholder, textarea::placeholder { color: var(--muted); } */
+
+/* Lang selector */
+.langSelect {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.langSelect:hover { border-color: var(--accent-700); }
+.langSelect:focus { outline: 2px solid var(--accent); outline-offset: 1px; }

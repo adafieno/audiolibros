@@ -19,7 +19,7 @@ Características clave
 Depende de:
   core.config.load_config, AzureTTSCfg
   core.errors: TTSAuthError, TTSSynthesisError, TTSRateLimit
-  core.logging: get_logger, log_span
+  core.log_utils: get_logger, log_span
 """
 
 from __future__ import annotations
@@ -42,7 +42,7 @@ if _pkg_root not in sys.path:
 
 from core.config import load_config, AzureTTSCfg
 from core.errors import TTSAuthError, TTSSynthesisError, TTSRateLimit
-from core.logging import get_logger, log_span
+from core.log_utils import get_logger, log_span
 
 _LOG = get_logger("tts.azure")
 

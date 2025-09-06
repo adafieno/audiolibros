@@ -1,14 +1,13 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
 
 type ProjectState = {
   root: string | null;
   setRoot: (p: string | null) => void;
+  reset: () => void;
 };
 
-export const useProject = create<ProjectState>()(
-  persist(
-    (set) => ({ root: null, setRoot: (p) => set({ root: p }) }),
-    { name: 'khipu:project' }
-  )
-);
+export const useProject = create<ProjectState>()((set) => ({
+  root: null,
+  setRoot: (p) => set({ root: p }),
+  reset: () => set({ root: null }),
+}));

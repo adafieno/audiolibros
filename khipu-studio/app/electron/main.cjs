@@ -1,159 +1,378 @@
 ﻿// app/electron/main.cjs
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
-const { spawn } = require('node:child_process');
-const path = require('node:path');
-const fs = require('node:fs');
-const fsp = require('node:fs/promises');
+const { app, BrowserWindow, ipcMain, dialog } = require("electron");
+const { spawn } = require("node:child_process");
+const path = require("path");
+const fs = require("node:fs");
+const fsp = fs.promises;
 
-// Avoid rare Windows black-screen on GPU crashes
 app.disableHardwareAcceleration();
 
-const repoRoot = path.resolve(__dirname, '..', '..');
+const repoRoot = path.resolve(__dirname, "..", "..");
 
 function getPythonExe() {
   if (process.env.PYTHON && process.env.PYTHON.trim()) return process.env.PYTHON;
-  return process.platform === 'win32'
-    ? path.join(repoRoot, '.venv', 'Scripts', 'python.exe')
-    : path.join(repoRoot, '.venv', 'bin', 'python');
+  return process.platform === "win32"
+    ? path.join(repoRoot, ".venv", "Scripts", "python.exe")
+    : path.join(repoRoot, ".venv", "bin", "python");
 }
 
 function runPy(args, onLine) {
   const exe = getPythonExe();
   const child = spawn(exe, args, { cwd: repoRoot, windowsHide: true });
-  child.on('error', (err) => console.error('[PY spawn error]', exe, err));
-  child.stdout.on('data', (buf) => {
+  child.on("error", (err) => console.error("[PY spawn error]", exe, err));
+  child.stdout.on("data", (buf) => {
     buf.toString().split(/\r?\n/).forEach((l) => {
       if (!l.trim()) return;
-      try { onLine?.(JSON.parse(l)); } catch (_) { /* allow non-JSON lines */ }
+      try { onLine?.(JSON.parse(l)); } catch { /* tolerate non-JSON */ }
     });
   });
-  child.stderr.on('data', (b) => console.log('[PY]', b.toString()));
-  return new Promise((res) => child.on('close', (code) => res(code ?? 0)));
+  child.stderr.on("data", (b) => console.log("[PY]", b.toString()));
+  return new Promise((res) => child.on("close", (code) => res(code ?? 0)));
 }
 
+/* ---------------- App config (userData) ---------------- */
+function appConfigPath() {
+  const userData = app.getPath("userData");
+  return path.join(userData, "app.config.json");
+}
+async function readJsonSafe(p) {
+  try { return JSON.parse(await fsp.readFile(p, "utf-8")); } catch { return null; }
+}
+async function writeJson(p, obj) {
+  await fsp.mkdir(path.dirname(p), { recursive: true });
+  await fsp.writeFile(p, JSON.stringify(obj, null, 2), "utf-8");
+}
+async function getAppConfig() {
+  const p = appConfigPath();
+  return (await readJsonSafe(p)) || { version: 1, theme: "dark", telemetry: false, recentProjects: [] };
+}
+async function setAppConfig(cfg) {
+  await writeJson(appConfigPath(), cfg);
+}
+
+/* ---------------- Project helpers ---------------- */
+function safeName(name) {
+  return String(name).trim().replace(/[^a-zA-Z0-9._-]+/g, "_").replace(/^_+|_+$/g, "");
+}
+async function ensureDirs(root, rels) {
+  for (const r of rels) await fsp.mkdir(path.join(root, r), { recursive: true });
+}
+
+async function readJsonIf(pathAbs) {
+  try { return JSON.parse(await fsp.readFile(pathAbs, "utf-8")); } catch { return null; }
+}
+
+function resolveUnder(root, relOrAbs) {
+  if (!relOrAbs) return null;
+  const abs = path.isAbsolute(relOrAbs) ? relOrAbs : path.join(root, relOrAbs);
+  const rel = path.relative(root, abs);
+  if (rel.startsWith("..") || path.isAbsolute(rel)) throw new Error("Path escapes project root");
+  return abs;
+}
+
+// Small helpers
+function wordsCount(txt) {
+  const m = String(txt || "").trim().match(/\b[\p{L}\p{N}'’-]+\b/gu);
+  return m ? m.length : 0;
+}
+async function pushRecent(projectPath) {
+  const cfg = await getAppConfig();
+  const arr = Array.isArray(cfg.recentProjects) ? cfg.recentProjects.slice() : [];
+  const cleaned = projectPath.replace(/[/\\]+$/, "");
+  const idx = arr.findIndex((p) => p === cleaned);
+  if (idx >= 0) arr.splice(idx, 1);
+  arr.unshift(cleaned);
+  cfg.recentProjects = arr.slice(0, 8);
+  await setAppConfig(cfg);
+}
+async function createScaffold(root) {
+  await ensureDirs(root, [
+    "analysis/chapters_txt",
+    "dossier",
+    "ssml/plans",
+    "ssml/xml",
+    "cache/tts",
+    "audio/chapters",
+    "audio/book",
+    "exports",
+  ]);
+
+  // project.khipu.json — minimal & consistent
+  const projectCfg = {
+    version: 1,
+    language: "es-PE",
+    paths: { bookMeta: "book.meta.json", production: "production.settings.json" },
+    planning: { maxKb: 48, llmAttribution: "off" },
+    ssml: {},
+    tts: { engine: { name: "azure", voice: "es-PE-CamilaNeural" }, cache: true },
+    llm: { engine: { name: "openai", model: "gpt-4o" } },
+    export: { outputDir: "exports", platforms: { apple: false, google: false, spotify: false } },
+    creds: { useAppAzure: false, useAppOpenAI: false },
+  };
+  await writeJson(path.join(root, "project.khipu.json"), projectCfg);
+
+  // book.meta.json — blank but valid
+  await writeJson(path.join(root, "book.meta.json"), {
+    title: "",
+    subtitle: "",
+    authors: [],
+    narrators: [],
+    language: "es-PE",
+    description: "",
+    keywords: [],
+    categories: [],
+    publisher: "",
+    publication_date: "",
+    rights: "",
+    series: { name: "", number: null },
+    sku: "",
+    isbn: "",
+    disclosure_digital_voice: false,
+  });
+
+  // production.settings.json — safe defaults
+  await writeJson(path.join(root, "production.settings.json"), {
+    ssml: {
+      target_minutes: 7,
+      hard_cap_minutes: 8,
+      max_kb_per_request: 48,
+      default_voice: "es-PE-AlexNeural",
+      default_stylepack: "chapter_default",
+      wpm: 165,
+      locale: "es-PE",
+    },
+    tts: { timeout_s: 30, retries: 4, max_workers: 4 },
+    concat: { gap_ms: 700, sr_hz: 44100, channels: 1, sample_width_bytes: 2 },
+    enhance: { enable_deesser: true, enable_tilt: true, enable_expander: true },
+    master: { rms_target_dbfs: -20, peak_ceiling_dbfs: -3 },
+    packaging: {
+      apple: { aac_bitrate: "128k" },
+      gplay_spotify: { mp3_bitrate: "256k", flac: false, sr_hz: 44100, channels: 1 },
+    },
+  });
+
+  // seed a sample chapter if empty
+  const chDir = path.join(root, "analysis/chapters_txt");
+  try {
+    const files = await fsp.readdir(chDir);
+    if (!files || files.length === 0) {
+      const sample = ["Capítulo 1", "", "Texto de ejemplo. Reemplázalo con el capítulo real."].join("\n");
+      await fsp.writeFile(path.join(chDir, "ch01.txt"), sample, "utf-8");
+    }
+  } catch {}
+}
+
+/* ---------------- BrowserWindow + IPC ---------------- */
 function createWin() {
   const win = new BrowserWindow({
     width: 1280,
     height: 800,
-    title: 'Khipu Studio',
-    backgroundColor: '#111827',
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.cjs'),
-      contextIsolation: true,
-    },
+    title: "Khipu Studio",
+    backgroundColor: "#111827",
+    webPreferences: { preload: path.join(__dirname, "preload.cjs"), contextIsolation: true },
   });
 
-  // Log renderer/gpu issues instead of silently blanking
-  win.webContents.on('render-process-gone', (_e, details) => {
-    console.error('[renderer gone]', details);
+  win.webContents.on("render-process-gone", (_e, d) => console.error("[renderer gone]", d));
+
+  if (process.env.VITE_DEV) win.loadURL("http://localhost:5173");
+  else win.loadFile(path.join(__dirname, "../dist/index.html"));
+
+  /* App config + locale */
+  ipcMain.handle("appConfig:get", async () => getAppConfig());
+  ipcMain.handle("appConfig:set", async (_e, cfg) => { await setAppConfig(cfg); return true; });
+  ipcMain.handle("app:locale", () => { try { return app.getLocale(); } catch { return "es-PE"; } });
+
+  /* Project: list, choose, create, open */
+  ipcMain.handle("project:listRecents", async () => {
+    const cfg = await getAppConfig();
+    return (cfg.recentProjects || []).map((p) => ({ path: p, name: path.basename(p) }));
   });
-  app.on('gpu-process-crashed', (_e, killed) => {
-    console.error('[gpu crashed]', { killed });
+  ipcMain.handle("project:browseForParent", async () => {
+    const res = await dialog.showOpenDialog({ properties: ["openDirectory", "createDirectory"] });
+    if (res.canceled || !res.filePaths?.[0]) return null;
+    return res.filePaths[0];
+  });
+  ipcMain.handle("project:choose", async () => {
+    const res = await dialog.showOpenDialog({ properties: ["openDirectory"] });
+    if (res.canceled || !res.filePaths?.[0]) return null;
+    return res.filePaths[0];
+  });
+  ipcMain.handle("project:create", async (_e, { parentDir, name }) => {
+    if (!parentDir || !name) return null;
+    const root = path.join(parentDir, safeName(name));
+    await fsp.mkdir(root, { recursive: true });
+    await createScaffold(root);
+    await pushRecent(root);
+    return { path: root };
+  });
+  ipcMain.handle("project:open", async (_e, { path: p }) => {
+    if (!p) return false;
+    try {
+      const stat = await fsp.stat(p);
+      if (!stat.isDirectory()) return false;
+      await pushRecent(p);
+      return true;
+    } catch { return false; }
   });
 
-  if (process.env.VITE_DEV) win.loadURL('http://localhost:5173');
-  else win.loadFile(path.join(__dirname, '../dist/index.html'));
+  /* FS helpers used by renderer */
+  ipcMain.handle("fs:read", async (_e, { projectRoot, relPath, json }) => {
+    try {
+      const abs = path.join(projectRoot, relPath);
+      const rel = path.relative(projectRoot, abs);
+      if (rel.startsWith("..") || path.isAbsolute(rel)) return null;
+      if (!fs.existsSync(abs)) return null;
+      const data = await fsp.readFile(abs, "utf-8");
+      return json ? JSON.parse(data) : data;
+    } catch (e) { console.error("[fs:read]", e); return null; }
+  });
+  ipcMain.handle("fs:write", async (_e, { projectRoot, relPath, json, content }) => {
+    try {
+      const abs = path.join(projectRoot, relPath);
+      const rel = path.relative(projectRoot, abs);
+      if (rel.startsWith("..") || path.isAbsolute(rel)) return false;
+      await fsp.mkdir(path.dirname(abs), { recursive: true });
+      const payload = json ? JSON.stringify(content, null, 2) : String(content);
+      await fsp.writeFile(abs, payload, "utf-8");
+      return true;
+    } catch (e) { console.error("[fs:write]", e); return false; }
+  });
+  ipcMain.handle("fs:readJson", async (_e, { root, rel }) => {
+    try {
+      const abs = path.join(root, rel);
+      const raw = await fsp.readFile(abs, "utf-8");
+      return { data: JSON.parse(raw), path: abs, raw };
+    } catch {
+      return { data: null, path: path.join(root, rel), raw: "" };
+    }
+  });
 
-  // ---------------- IPC HANDLERS (ALL SAFE) ----------------
+  ipcMain.handle("manuscript:chooseDocx", async () => {
+  const res = await dialog.showOpenDialog({
+    properties: ["openFile"],
+    filters: [{ name: "Word document", extensions: ["docx"] }],
+  });
+  if (res.canceled || !res.filePaths?.[0]) return null;
+  return res.filePaths[0];
+});
 
-  // Plan build — resolve under the SELECTED project root
-  ipcMain.handle('plan:build', async (_e, payload = {}) => {
+// ---- IPC: parse manuscript via Python module ----
+ipcMain.handle("manuscript:parse", async (_e, { projectRoot, docxPath }) => {
+  if (!projectRoot || !docxPath) return { code: -1 };
+  const root = path.resolve(projectRoot);
+
+  const dossierDir  = path.join(root, "dossier");
+  const chaptersDir = path.join(root, "analysis", "chapters_txt");
+  await fsp.mkdir(dossierDir,  { recursive: true });
+  await fsp.mkdir(chaptersDir, { recursive: true });
+
+  // We assume your module is importable as "py.ingest.manuscript_parser"
+  // Adjust flags if your script uses different ones.
+  const args = [
+    "-m", "py.ingest.manuscript_parser",
+    "--in", docxPath,
+    "--out-dossier", dossierDir,
+    "--out-chapters", chaptersDir,
+  ];
+
+  const code = await runPy(args, () => {/* parser may print JSON lines; we ignore */});
+  return { code: Number(code ?? 0) };
+});
+
+
+// ---- IPC: list chapters with titles + word counts ----
+ipcMain.handle("chapters:list", async (_e, { projectRoot }) => {
+  const root = path.resolve(projectRoot);
+  const chaptersDir = path.join(root, "analysis", "chapters_txt");
+  const dossierPath = path.join(root, "dossier", "narrative.structure.json");
+
+  const structure = await readJsonIf(dossierPath); // may be null if not yet parsed
+  let titleMap = {};
+  if (structure && Array.isArray(structure.chapters)) {
+    for (const ch of structure.chapters) {
+      // Expecting items like { id: "ch01", title: "Capítulo 1" }
+      if (ch?.id && ch?.title) titleMap[ch.id] = ch.title;
+    }
+  }
+
+  let items = [];
+  try {
+    const files = await fsp.readdir(chaptersDir);
+    for (const name of files) {
+      if (!/^ch\d+\.txt$/i.test(name)) continue;
+      const id = name.replace(/\.txt$/i, "");
+      const relPath = path.join("analysis", "chapters_txt", name);
+      const abs = path.join(chaptersDir, name);
+      const content = await fsp.readFile(abs, "utf-8");
+      const firstLine = (content.split(/\r?\n/)[0] || "").trim();
+      const title = titleMap[id] || (firstLine || id);
+      items.push({ id, title, relPath, words: wordsCount(content) });
+    }
+  } catch {
+    // If directory doesn't exist yet, empty list
+  }
+
+  // Sort by chapter number (ch01, ch02, …)
+  items.sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
+  return items;
+});
+
+// ---- IPC: chapter read/write ----
+ipcMain.handle("chapter:read", async (_e, { projectRoot, relPath }) => {
+  const abs = resolveUnder(path.resolve(projectRoot), relPath);
+  const text = await fsp.readFile(abs, "utf-8");
+  return { text };
+});
+
+ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
+  const abs = resolveUnder(path.resolve(projectRoot), relPath);
+  await fsp.mkdir(path.dirname(abs), { recursive: true });
+  await fsp.writeFile(abs, String(text ?? ""), "utf-8");
+  return true;
+});
+
+
+  /* Plan build (scoped to project root) */
+  ipcMain.handle("plan:build", async (_e, payload = {}) => {
     try {
       const { projectRoot, chapterId, infile, out, opts } = payload;
-      if (!projectRoot || typeof projectRoot !== 'string') {
-        console.error('[plan:build] missing projectRoot');
-        return -1;
-      }
+      if (!projectRoot || typeof projectRoot !== "string") return -1;
 
       const base = path.resolve(projectRoot);
       const resolveUnder = (p) => (p && !path.isAbsolute(p) ? path.join(base, p) : p);
       const inside = (p) => {
         const rel = path.relative(base, p);
-        return !rel.startsWith('..') && !path.isAbsolute(rel);
+        return !rel.startsWith("..") && !path.isAbsolute(rel);
       };
 
       const infileAbs = resolveUnder(String(infile));
-      const outAbs    = resolveUnder(String(out));
-      const optsAbs   = { ...(opts || {}) };
+      const outAbs = resolveUnder(String(out));
+      const optsAbs = { ...(opts || {}) };
       if (optsAbs.dossier) optsAbs.dossier = resolveUnder(String(optsAbs.dossier));
-
-      if (!inside(infileAbs) || !inside(outAbs)) {
-        console.error('[plan:build] path escapes project root', { base, infileAbs, outAbs });
-        return -2;
-      }
+      if (!inside(infileAbs) || !inside(outAbs)) return -2;
 
       try { fs.mkdirSync(path.dirname(outAbs), { recursive: true }); } catch {}
 
-      const args = ['-m', 'py.ssml.plan_builder',
-        '--chapter-id', String(chapterId),
-        '--in', infileAbs,
-        '--out', outAbs,
+      const args = [
+        "-m", "py.ssml.plan_builder",
+        "--chapter-id", String(chapterId),
+        "--in", infileAbs,
+        "--out", outAbs,
       ];
       for (const [k, v] of Object.entries(optsAbs)) {
-        const flag = '--' + k;
+        const flag = "--" + k;
         if (v === true) args.push(flag);
         else if (Array.isArray(v)) v.forEach((vv) => args.push(flag, String(vv)));
         else if (v !== undefined && v !== null) args.push(flag, String(v));
       }
 
-      console.log('[plan:build] base:', base);
-      console.log('[plan:build] infile exists?', fs.existsSync(infileAbs), infileAbs);
-      console.log('[plan:build] out:', outAbs);
-
-      return await runPy(args, (line) => _e.sender.send('job:event', line));
+      return await runPy(args, (line) => _e.sender.send("job:event", line));
     } catch (err) {
-      console.error('[plan:build] fatal:', err);
-      return -99; // never throw to renderer
-    }
-  });
-
-  ipcMain.handle('app:locale', () => {
-  try { return app.getLocale(); } catch { return 'es-PE'; }
-  });
-
-  // Folder picker
-  ipcMain.handle('project:choose', async () => {
-    try {
-      const res = await dialog.showOpenDialog({ properties: ['openDirectory'] });
-      if (res.canceled || !res.filePaths?.[0]) return null;
-      return res.filePaths[0];
-    } catch (e) {
-      console.error('[project:choose]', e);
-      return null;
-    }
-  });
-
-  // Read file (scoped to project root)
-  ipcMain.handle('fs:read', async (_e, { projectRoot, relPath, json }) => {
-    try {
-      const absPath = path.join(projectRoot, relPath);
-      const rel = path.relative(projectRoot, absPath);
-      if (rel.startsWith('..') || path.isAbsolute(rel)) return null;
-      if (!fs.existsSync(absPath)) return null;
-      const data = await fsp.readFile(absPath, 'utf-8');
-      return json ? JSON.parse(data) : data;
-    } catch (e) {
-      console.error('[fs:read]', e);
-      return null;
-    }
-  });
-
-  // Write file (scoped to project root)
-  ipcMain.handle('fs:write', async (_e, { projectRoot, relPath, json, content }) => {
-    try {
-      const absPath = path.join(projectRoot, relPath);
-      const rel = path.relative(projectRoot, absPath);
-      if (rel.startsWith('..') || path.isAbsolute(rel)) return false;
-      await fsp.mkdir(path.dirname(absPath), { recursive: true });
-      const data = json ? JSON.stringify(content, null, 2) : String(content);
-      await fsp.writeFile(absPath, data, 'utf-8');
-      return true;
-    } catch (e) {
-      console.error('[fs:write]', e);
-      return false;
+      console.error("[plan:build] fatal:", err);
+      return -99;
     }
   });
 }
 
 app.whenReady().then(createWin);
-app.on('window-all-closed', () => app.quit());
+app.on("window-all-closed", () => app.quit());

@@ -1,9 +1,10 @@
 // app/src/global.d.ts
+import type { AppConfig } from "./types/config";
 
 export type Primitive = string | number | boolean;
 
 export type JobEvent = {
-  event?: 'start' | 'progress' | 'output' | 'done' | string;
+  event?: "start" | "progress" | "output" | "done" | string;
   pct?: number;
   note?: string;
   path?: string;
@@ -13,43 +14,61 @@ export type JobEvent = {
 export type OptsValue = Primitive | Primitive[];
 
 export interface PlanBuildPayload {
-  projectRoot: string;        // <- add this
+  projectRoot: string;
   chapterId: string;
-  infile: string;             // relative to projectRoot
-  out: string;                // relative to projectRoot
-  opts?: Record<string, OptsValue>; // opts like { dossier: 'dossier', ... } also relative
-}
-
-export interface FsReadPayload {
-  projectRoot: string; relPath: string; json?: boolean;
-}
-export interface FsWritePayload {
-  projectRoot: string; relPath: string; json?: boolean; content: unknown;
+  infile: string; // relative to projectRoot
+  out: string;    // relative to projectRoot
+  opts?: Record<string, OptsValue>;
 }
 
 export interface KhipuRequestMap {
-  'plan:build': PlanBuildPayload;
-  'project:choose': undefined;
-  'fs:read': FsReadPayload;
-  'fs:write': FsWritePayload;
+  // App
+  "app:locale":        { in: undefined; out: string };
+  "appConfig:get":     { in: undefined; out: AppConfig };
+  "appConfig:set":     { in: AppConfig;  out: boolean };
+
+  // Projects
+  "project:listRecents":   { in: undefined; out: { path: string; name: string }[] };
+  "project:browseForParent":{ in: undefined; out: string | null };
+  "project:choose":         { in: undefined; out: string | null };
+  "project:create":         { in: { parentDir: string; name: string }; out: { path: string } | null };
+  "project:open":           { in: { path: string }; out: boolean };
+
+  // FS
+  "fs:read":    { in: { projectRoot: string; relPath: string; json?: boolean }; out: unknown };
+  "fs:write":   { in: { projectRoot: string; relPath: string; json?: boolean; content: unknown }; out: boolean };
+  "fs:readJson":{ in: { root: string; rel: string }; out: { data: unknown; path: string; raw: string } };
+
+  // Plan
+  "plan:build": { in: PlanBuildPayload; out: number };
 }
 
-export interface KhipuResponseMap {
-  'plan:build': number;
-  'project:choose': string | null;
-  'fs:read': unknown;
-  'fs:write': boolean;
+export interface Khipu {
+  call<K extends keyof KhipuRequestMap>(
+    key: K,
+    payload: KhipuRequestMap[K]["in"]
+  ): Promise<KhipuRequestMap[K]["out"]>;
+  onJob(cb: (e: JobEvent) => void): void;
 }
 
-export interface KhipuBridge {
-  call<C extends keyof KhipuRequestMap>(c: C, p: KhipuRequestMap[C]): Promise<KhipuResponseMap[C]>;
-  onJob(cb: (data: JobEvent) => void): void;
+export interface ChapterItem {
+  id: string;           // "ch01"
+  title: string;        // from dossier or first line
+  relPath: string;      // e.g. "analysis/chapters_txt/ch01.txt"
+  words: number;
 }
 
 declare global {
-  interface Window {
-    khipu?: KhipuBridge;
+  interface Window { khipu?: Khipu; }
+    interface KhipuRequestMap {
+    // Manuscript
+    "manuscript:chooseDocx": { in: undefined; out: string | null };
+    "manuscript:parse": { in: { projectRoot: string; docxPath: string }; out: { code: number } };
+
+    // Chapters
+    "chapters:list": { in: { projectRoot: string }; out: ChapterItem[] };
+    "chapter:read": { in: { projectRoot: string; relPath: string }; out: { text: string } };
+    "chapter:write": { in: { projectRoot: string; relPath: string; text: string }; out: boolean };
   }
 }
-
 export {};
