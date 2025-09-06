@@ -6,6 +6,7 @@ import ManuscriptPage from "./pages/Manuscript";
 import PlanningPage from "./pages/Planning";
 import SettingsPage from "./pages/Settings";
 import ProjectPage from "./pages/Project";
+import CastingPage from "./pages/Casting";
 import { useState } from "react";
 import { t } from "i18next";
 import { useProject } from "./store/project";
@@ -34,7 +35,7 @@ export default function App() {
         <Route path="/manuscript" element={<ManuscriptPage />} />
         <Route path="/dossier" element={<Placeholder name={t("nav.dossier")} />} />
         <Route path="/planning" element={<PlanningPage onStatus={setStatus} />} />
-        <Route path="/casting" element={<Placeholder name={t("nav.casting")} />} />
+        <Route path="/casting" element={<CastingPage />} />
         <Route path="/ssml" element={<Placeholder name={t("nav.ssml")} />} />
         <Route path="/voice" element={<Placeholder name={t("nav.voice")} />} />
         <Route path="/export" element={<Placeholder name={t("nav.export")} />} />

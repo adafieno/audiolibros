@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useProject } from "../store/project";
+import { bootstrapVoiceInventory } from "../lib/voice";
 
 type RecentItem = { path: string; name: string };
 
@@ -59,6 +60,14 @@ export default function Home() {
     if (!res?.path) {
       setMsg(t("home.createError"));
       return;
+    }
+
+    // Bootstrap default voice inventory for the new project
+    try {
+      await bootstrapVoiceInventory(res.path);
+    } catch (error) {
+      console.warn('Failed to bootstrap voice inventory:', error);
+      // Continue with project creation even if voice inventory fails
     }
 
     await window.khipu!.call("project:open", { path: res.path });

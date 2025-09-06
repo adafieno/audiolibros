@@ -20,9 +20,9 @@ const settingsRoute: RouteItem = { to: "/settings", key: "nav.settings", icon: "
 const projectRoutes: RouteItem[] = [
   { to: "/project",    key: "nav.project",    icon: "📄", workflowStep: "project" },
   { to: "/manuscript", key: "nav.manuscript", icon: "✍️", workflowStep: "manuscript" },
+  { to: "/casting",    key: "nav.casting",    icon: "🗣️", workflowStep: "casting" },
   { to: "/dossier",    key: "nav.dossier",    icon: "📚", workflowStep: "dossier" },
   { to: "/planning",   key: "nav.planning",   icon: "🧭", workflowStep: "planning" },
-  { to: "/casting",    key: "nav.casting",    icon: "👥", workflowStep: "casting" },
   { to: "/ssml",       key: "nav.ssml",       icon: "🧩", workflowStep: "ssml" },
   { to: "/voice",      key: "nav.voice",      icon: "🎙️", workflowStep: "voice" },
   { to: "/export",     key: "nav.export",     icon: "📦", workflowStep: "export" },
@@ -54,32 +54,33 @@ export function AppShell(props: { title?: string; pageName?: string; projectName
   const getWorkflowStatus = () => {
     if (!root) return "";
     
-    const steps: { step: WorkflowStep; label: string }[] = [
-      { step: "project", label: "Project" },
-      { step: "manuscript", label: "Manuscript" },
-      { step: "dossier", label: "Dossier" },
-      { step: "planning", label: "Planning" },
-      { step: "casting", label: "Casting" },
-      { step: "ssml", label: "SSML" },
-      { step: "voice", label: "Voice" },
-      { step: "export", label: "Export" },
+    const steps: { step: WorkflowStep; labelKey: string }[] = [
+      { step: "project", labelKey: "nav.project" },
+      { step: "manuscript", labelKey: "nav.manuscript" },
+      { step: "dossier", labelKey: "nav.dossier" },
+      { step: "planning", labelKey: "nav.planning" },
+      { step: "casting", labelKey: "nav.casting" },
+      { step: "ssml", labelKey: "nav.ssml" },
+      { step: "voice", labelKey: "nav.voice" },
+      { step: "export", labelKey: "nav.export" },
     ];
 
     const completed = steps.filter(s => isStepCompleted(s.step));
     const available = steps.filter(s => isStepAvailable(s.step));
     
     if (completed.length === 0) {
-      return "Workflow: Ready to start";
+      return t("workflow.readyToStart");
     }
     
-    const completedLabels = completed.map(s => s.label).join(", ");
+    const completedLabels = completed.map(s => t(s.labelKey)).join(", ");
     const nextStep = available.find(s => !isStepCompleted(s.step));
     
-    let statusText = `Completed: ${completedLabels}`;
+    // Build status text using manual string concatenation
+    let statusText = `${t("workflow.completedLabel")}: ${completedLabels}`;
     if (nextStep) {
-      statusText += ` • Next: ${nextStep.label}`;
+      statusText += ` • ${t("workflow.nextLabel")}: ${t(nextStep.labelKey)}`;
     } else if (completed.length === steps.length) {
-      statusText = "🎉 All workflow steps completed!";
+      statusText = t("workflow.allComplete");
     }
     
     return statusText;

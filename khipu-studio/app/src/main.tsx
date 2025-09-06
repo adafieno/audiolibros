@@ -18,14 +18,23 @@ function pickSupported(sys: unknown): string {
 
 (async () => {
   try {
-    // If running inside Electron with preload, ask for OS locale
-    // @ts-expect-error: khipu is injected by preload
-    const sys = await window.khipu?.call?.("app:locale");
-    const lang = pickSupported(sys);
-    await i18n.changeLanguage(lang);
+    // Check if user has already set a language preference
+    const savedLang = localStorage.getItem("khipu.lang");
+    
+    if (savedLang && ["es-PE", "en-US"].includes(savedLang)) {
+      // Use saved language preference
+      await i18n.changeLanguage(savedLang);
+    } else {
+      // If no saved preference, use OS locale as default
+      // @ts-expect-error: khipu is injected by preload
+      const sys = await window.khipu?.call?.("app:locale");
+      const lang = pickSupported(sys);
+      await i18n.changeLanguage(lang);
+      localStorage.setItem("khipu.lang", lang);
+    }
+    
     const c = await loadAppConfig();
     applyTheme(c.theme);
-    localStorage.setItem("khipu.lang", lang);
   } catch {
     // fall back to default in i18n.ts (es-PE)
   }

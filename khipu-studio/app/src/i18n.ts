@@ -21,7 +21,8 @@ i18n
     },
     detection: {
       order: ["localStorage", "navigator"],
-      lookupLocalStorage: "khipu.lang"
+      lookupLocalStorage: "khipu.lang",
+      caches: ["localStorage"]
     },
     interpolation: { escapeValue: false }
   });
