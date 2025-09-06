@@ -162,6 +162,14 @@ async function createScaffold(root) {
   } catch {}
 }
 
+const crypto = require("node:crypto");
+function resolveUnder(root, p) {
+  const abs = path.isAbsolute(p) ? p : path.join(root, p);
+  const rel = path.relative(root, abs);
+  if (rel.startsWith("..") || path.isAbsolute(rel)) throw new Error("Path escapes project root");
+  return abs;
+}
+
 /* ---------------- BrowserWindow + IPC ---------------- */
 function createWin() {
   const win = new BrowserWindow({
@@ -256,26 +264,41 @@ function createWin() {
   return res.filePaths[0];
 });
 
-// ---- IPC: parse manuscript via Python module ----
+// ---- IPC: parse manuscript via Python module (FIXED FLAGS) ----
 ipcMain.handle("manuscript:parse", async (_e, { projectRoot, docxPath }) => {
   if (!projectRoot || !docxPath) return { code: -1 };
   const root = path.resolve(projectRoot);
 
-  const dossierDir  = path.join(root, "dossier");
-  const chaptersDir = path.join(root, "analysis", "chapters_txt");
-  await fsp.mkdir(dossierDir,  { recursive: true });
+  const chaptersDir  = resolveUnder(root, path.join("analysis", "chapters_txt"));
+  const structureOut = resolveUnder(root, path.join("dossier", "narrative.structure.json"));
+
+  await fsp.mkdir(path.dirname(structureOut), { recursive: true });
   await fsp.mkdir(chaptersDir, { recursive: true });
 
-  // We assume your module is importable as "py.ingest.manuscript_parser"
-  // Adjust flags if your script uses different ones.
+  // optional: create a tiny temp file with effective config for the parser
+  const tmpCfgPath = path.join(app.getPath("temp"), `khipu_cfg_${crypto.randomUUID()}.json`);
+  try {
+    // If you prefer, read and merge here before writing; or just pass projectRoot.
+    await fsp.writeFile(tmpCfgPath, JSON.stringify({ projectRoot: root }, null, 2), "utf-8");
+  } catch {/* ignore */}
+
   const args = [
     "-m", "py.ingest.manuscript_parser",
     "--in", docxPath,
-    "--out-dossier", dossierDir,
     "--out-chapters", chaptersDir,
+    "--out-structure", structureOut,       // <— FIX
+    "--project-root", root,                 // <— lets parser load project.khipu.json if needed
+    "--min-words", "20",
+    "--config-json", tmpCfgPath             // <— optional; parser will ignore if not given
   ];
 
-  const code = await runPy(args, () => {/* parser may print JSON lines; we ignore */});
+  const code = await runPy(args, (line) => {
+    // Expect JSON lines like: {event:"progress", note:"Reading …"} from the parser
+    // You already have job event plumbing; here we just log for now:
+    console.log("[PY-manuscript]", line);
+  });
+  try { await fsp.unlink(tmpCfgPath); } catch {}
+
   return { code: Number(code ?? 0) };
 });
 

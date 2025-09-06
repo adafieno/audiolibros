@@ -21,6 +21,13 @@ export interface PlanBuildPayload {
   opts?: Record<string, OptsValue>;
 }
 
+export interface ChapterItem {
+  id: string;        // "ch01"
+  title: string;     // title from structure or first line
+  relPath: string;   // "analysis/chapters_txt/ch01.txt"
+  words: number;
+}
+
 export interface KhipuRequestMap {
   // App
   "app:locale":        { in: undefined; out: string };
@@ -41,6 +48,15 @@ export interface KhipuRequestMap {
 
   // Plan
   "plan:build": { in: PlanBuildPayload; out: number };
+
+  // Manuscript import
+  "manuscript:chooseDocx": { in: undefined; out: string | null };
+  "manuscript:parse": { in: { projectRoot: string; docxPath: string }; out: { code: number } };
+
+  // Chapters list/read/write
+  "chapters:list": { in: { projectRoot: string }; out: ChapterItem[] };
+  "chapter:read":  { in: { projectRoot: string; relPath: string }; out: { text: string } };
+  "chapter:write": { in: { projectRoot: string; relPath: string; text: string }; out: boolean };
 }
 
 export interface Khipu {

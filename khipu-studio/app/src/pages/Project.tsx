@@ -1,194 +1,326 @@
-// app/src/pages/Project.tsx
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import type { ChangeEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { useProject } from "../store/project";
+import { WorkflowCompleteButton } from "../components/WorkflowCompleteButton";
 import {
   loadProjectConfig, saveProjectConfig,
-  loadBookMeta,    saveBookMeta,
-  loadProduction,  saveProduction,
 } from "../lib/config";
-import type { ProjectConfig } from "../types/config";
-import type { BookMeta, ProductionSettings } from "../types/config";
+import type {
+  ProjectConfig,
+  LlmEngine, TtsEngine,
+} from "../types/config";
 
-type WithPaths = { paths?: { bookMeta?: string; production?: string } };
+export default function Project() {
+  const { t } = useTranslation();
+  const { root } = useProject();
+  const [cfg, setCfg] = useState<ProjectConfig | null>(null);
+  const [msg, setMsg] = useState("");
 
-export default function ProjectPage() {
-  // Mount log to confirm component is rendered
-  console.log("[ProjectPage] mounted");
-  const root = useProject((s) => s.root);
-
-
-  const [cfg,  setCfg]  = useState<ProjectConfig | null>(null);
-  const [book, setBook] = useState<BookMeta | null>(null);
-  const [prod, setProd] = useState<ProductionSettings | null>(null);
-  const [msg,  setMsg]  = useState("");
-  const [err,  setErr]  = useState<string | null>(null);
-
-
-  // 1) Load project.khipu.json when root changes
+  // Load config on mount or project change
   useEffect(() => {
-    let alive = true;
-    (async () => {
-      setErr(null);
-      setBook(null);
-      setProd(null);
-      if (!root) { setCfg(null); return; }
-      try {
-        const pc = await loadProjectConfig(root);
-        if (!alive) return;
-        setCfg(pc);
-      } catch (e) {
-        if (!alive) return;
-        setErr(`No se pudo cargar la configuración del proyecto: ${String(e)}`);
-      }
-    })();
-    return () => { alive = false; };
-  }, [root]);
-
-  // Resolve relative JSON names once cfg exists
-  const { bookRel, prodRel } = useMemo(() => {
-    const p = (cfg as ProjectConfig & WithPaths) || ({} as ProjectConfig & WithPaths);
-    return {
-      bookRel: p.paths?.bookMeta ?? "book.meta.json",
-      prodRel: p.paths?.production ?? "production.settings.json",
-    };
-  }, [cfg]);
-
-  // 2) After cfg, load book.meta.json + production.settings.json
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      if (!root || !cfg) return;
-      setErr(null);
-      try {
-        const [b, pr] = await Promise.all([
-          loadBookMeta(root, bookRel),
-          loadProduction(root, prodRel),
-        ]);
-        if (!alive) return;
-        setBook(b);
-        setProd(pr);
-      } catch (e) {
-        if (!alive) return;
-        setErr(`No se pudo cargar metadata/producción: ${String(e)}`);
-      }
-    })();
-    return () => { alive = false; };
-  }, [root, cfg, bookRel, prodRel]);
-
-  if (!root) return <div>Abre un proyecto.</div>;
-  if (!cfg)  return <div>Cargando…</div>;
-
-
-
-  async function saveAll() {
-    if (!root || !cfg) return;
-    setMsg("Guardando…");
-    try {
-      if (book) await saveBookMeta(root, bookRel, book);
-      if (prod) await saveProduction(root, prodRel, prod);
-      const ok = await saveProjectConfig(root, cfg);
-      setMsg(ok ? "Guardado ✔" : "Error al guardar");
-    } catch (e) {
-      setMsg(`Error: ${String(e)}`);
+    if (!root) {
+      setCfg(null);
+      return;
     }
+    
+    loadProjectConfig(root)
+      .then(setCfg)
+      .catch(err => {
+        console.error("Failed to load project config:", err);
+        setMsg(t("project.loadError"));
+      });
+  }, [root, t]);
+
+  // Helper to update nested config properties
+  const update = <K extends keyof ProjectConfig>(
+    key: K,
+    value: ProjectConfig[K]
+  ) => {
+    if (!cfg) return;
+    setCfg({ ...cfg, [key]: value });
+  };
+
+  // Helper for number inputs
+  const onNumber = (fn: (n: number) => void) => (e: ChangeEvent<HTMLInputElement>) => {
+    const n = parseInt(e.target.value, 10);
+    if (!isNaN(n)) fn(n);
+  };
+
+  const saveAll = async () => {
+    if (!root || !cfg) return;
+    try {
+      await saveProjectConfig(root, cfg);
+      setMsg(t("project.saved"));
+      setTimeout(() => setMsg(""), 2000);
+    } catch (err) {
+      console.error("Failed to save config:", err);
+      setMsg(t("project.saveError"));
+    }
+  };
+
+  if (!root) {
+    return <div>{t("status.openProject")}</div>;
   }
 
+  if (!cfg) {
+    return <div>{t("project.loading")}</div>;
+  }
+
+  // Extract project settings with defaults
+  const llm = cfg?.llm || { engine: { name: "openai", model: "gpt-4o" } };
+  const tts = cfg?.tts || { engine: { name: "azure", voice: "es-PE-CamilaNeural" }, cache: true };
+
+  // Type guard functions
+  const isOpenAI = (engine: LlmEngine): engine is Extract<LlmEngine, { name: "openai" }> => 
+    engine.name === "openai";
+  const isLocalLLM = (engine: LlmEngine): engine is Extract<LlmEngine, { name: "local" }> => 
+    engine.name === "local";
+  const isAzureTTS = (engine: TtsEngine): engine is Extract<TtsEngine, { name: "azure" }> => 
+    engine.name === "azure";
+  const is11LabsTTS = (engine: TtsEngine): engine is Extract<TtsEngine, { name: "elevenlabs" }> => 
+    engine.name === "elevenlabs";
+  const isLocalTTS = (engine: TtsEngine): engine is Extract<TtsEngine, { name: "local" }> => 
+    engine.name === "local";
+
   return (
-    <div style={{ maxWidth: 820 }}>
-      <h2 style={{ marginTop: 0 }}>Configuración del proyecto</h2>
-
-      {err && <div style={{ color: "#fca5a5", marginBottom: 12 }}>{err}</div>}
-
-      {/* Libro (book.meta.json) */}
+    <div>
+      <h2>{t("project.title")}</h2>
+      
+      {/* Project Language */}
       <section style={{ marginTop: 24 }}>
-        <h3>Libro (metadata)</h3>
-        {book ? (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            <input placeholder="Título" value={book.title}
-              onChange={(e) => setBook({ ...book, title: e.target.value })} />
-            <input placeholder="Subtítulo" value={book.subtitle ?? ""}
-              onChange={(e) => setBook({ ...book, subtitle: e.target.value })} />
-            <input placeholder="Autores (coma)" value={book.authors.join(", ")}
-              onChange={(e) =>
-                setBook({ ...book, authors: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })
-              } />
-            <input placeholder="Narradores (coma)" value={(book.narrators ?? []).join(", ")}
-              onChange={(e) =>
-                setBook({ ...book, narrators: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })
-              } />
-            <input placeholder="Idioma" value={book.language}
-              onChange={(e) => setBook({ ...book, language: e.target.value })} />
-            <input placeholder="Palabras clave (coma)" value={(book.keywords ?? []).join(", ")}
-              onChange={(e) =>
-                setBook({ ...book, keywords: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })
-              } />
-            <input placeholder="Categorías (coma)" value={(book.categories ?? []).join(", ")}
-              onChange={(e) =>
-                setBook({ ...book, categories: e.target.value.split(",").map(s => s.trim()).filter(Boolean) })
-              } />
-            <input placeholder="Editorial" value={book.publisher ?? ""}
-              onChange={(e) => setBook({ ...book, publisher: e.target.value })} />
-            <input placeholder="Fecha publicación (YYYY-MM-DD)" value={book.publication_date ?? ""}
-              onChange={(e) => setBook({ ...book, publication_date: e.target.value })} />
-            <input placeholder="Derechos" value={book.rights ?? ""}
-              onChange={(e) => setBook({ ...book, rights: e.target.value })} />
-            <input placeholder="Serie (nombre)" value={book.series?.name ?? ""}
-              onChange={(e) => setBook({ ...book, series: { ...(book.series ?? {}), name: e.target.value } })}
+        <h3>{t("project.general")}</h3>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <label>
+            <div>{t("project.language")}</div>
+            <input
+              value={cfg?.language || ""}
+              onChange={(e) => update("language", e.target.value)}
             />
-            <input placeholder="Serie (número)" value={String(book.series?.number ?? "")}
-              onChange={(e) =>
-                setBook({ ...book, series: { ...(book.series ?? {}), number: e.target.value ? Number(e.target.value) : null } })
-              } />
-            <input placeholder="SKU" value={book.sku ?? ""}
-              onChange={(e) => setBook({ ...book, sku: e.target.value })} />
-            <input placeholder="ISBN" value={book.isbn ?? ""}
-              onChange={(e) => setBook({ ...book, isbn: e.target.value })} />
-            <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <input type="checkbox" checked={!!book.disclosure_digital_voice}
-                onChange={(e) => setBook({ ...book, disclosure_digital_voice: e.target.checked })} />
-              Divulgación “voz digital”
-            </label>
-            <textarea placeholder="Descripción" value={book.description ?? ""}
-              onChange={(e) => setBook({ ...book, description: e.target.value })}
-              style={{ gridColumn: "1 / span 2", minHeight: 120 }} />
-          </div>
-        ) : (
-          <div style={{ color: "#9ca3af" }}>Cargando metadata…</div>
-        )}
+          </label>
+        </div>
       </section>
 
-      {/* Producción (production.settings.json) */}
+      {/* Planning */}
       <section style={{ marginTop: 24 }}>
-        <h3>Producción (audio/paquetes)</h3>
-        {prod ? (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            <input placeholder="SSML voz por defecto" value={prod.ssml.default_voice}
-              onChange={(e) => setProd({ ...prod, ssml: { ...prod.ssml, default_voice: e.target.value } })} />
-            <input placeholder="WPM" value={String(prod.ssml.wpm)}
-              onChange={(e) => setProd({ ...prod, ssml: { ...prod.ssml, wpm: Number(e.target.value) || 0 } })} />
-            <input placeholder="Max KB por solicitud" value={String(prod.ssml.max_kb_per_request)}
-              onChange={(e) => setProd({ ...prod, ssml: { ...prod.ssml, max_kb_per_request: Number(e.target.value) || 0 } })} />
-            <input placeholder="Gap entre trozos (ms)" value={String(prod.concat.gap_ms)}
-              onChange={(e) => setProd({ ...prod, concat: { ...prod.concat, gap_ms: Number(e.target.value) || 0 } })} />
-            <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <input type="checkbox" checked={prod.enhance.enable_deesser}
-                onChange={(e) => setProd({ ...prod, enhance: { ...prod.enhance, enable_deesser: e.target.checked } })} />
-              De-esser
-            </label>
-            <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <input type="checkbox" checked={prod.enhance.enable_expander}
-                onChange={(e) => setProd({ ...prod, enhance: { ...prod.enhance, enable_expander: e.target.checked } })} />
-              Expander
-            </label>
-          </div>
-        ) : (
-          <div style={{ color: "#9ca3af" }}>Cargando producción…</div>
-        )}
+        <h3>{t("project.planning")}</h3>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <label>
+            <div>{t("project.maxKb")}</div>
+            <input
+              type="number"
+              value={cfg?.planning?.maxKb || 4}
+              onChange={onNumber((n) => update("planning", { 
+                maxKb: n, 
+                llmAttribution: cfg?.planning?.llmAttribution || "on" 
+              }))}
+            />
+          </label>
+          <label>
+            <div>{t("project.llmAttribution")}</div>
+            <select
+              value={cfg?.planning?.llmAttribution || "on"}
+              onChange={(e) => update("planning", { 
+                maxKb: cfg?.planning?.maxKb || 4, 
+                llmAttribution: e.target.value as "on" | "off" 
+              })}
+            >
+              <option value="on">{t("project.attributionOn")}</option>
+              <option value="off">{t("project.attributionOff")}</option>
+            </select>
+          </label>
+        </div>
       </section>
 
-      <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
-        <button className="btn" onClick={saveAll}>Guardar todo</button>
-        <span style={{ color: "var(--muted)" }}>{msg}</span>
+      {/* SSML Settings */}
+      <section style={{ marginTop: 24 }}>
+        <h3>{t("project.ssml")}</h3>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <label>
+            <div>{t("project.rate")}</div>
+            <input
+              value={cfg?.ssml?.rate || ""}
+              onChange={(e) => update("ssml", { 
+                ...cfg?.ssml, 
+                rate: e.target.value 
+              })}
+            />
+          </label>
+          <label>
+            <div>{t("project.pitch")}</div>
+            <input
+              value={cfg?.ssml?.pitch || ""}
+              onChange={(e) => update("ssml", { 
+                ...cfg?.ssml, 
+                pitch: e.target.value 
+              })}
+            />
+          </label>
+          <label>
+            <div>{t("project.breaks")}</div>
+            <input
+              type="number"
+              value={cfg?.ssml?.breaksMs || 0}
+              onChange={onNumber((n) => update("ssml", { 
+                ...cfg?.ssml, 
+                breaksMs: n 
+              }))}
+            />
+          </label>
+        </div>
+      </section>
+
+      {/* LLM Engine */}
+      <section style={{ marginTop: 24 }}>
+        <h3>{t("project.llm")}</h3>
+        <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: 8, alignItems: "center" }}>
+          <select
+            value={llm.engine.name}
+            onChange={(e) => {
+              const name = e.target.value as LlmEngine["name"];
+              if (name === "openai") {
+                update("llm", { engine: { name: "openai", model: isOpenAI(llm.engine) ? llm.engine.model : "gpt-4o" } });
+              } else {
+                update("llm", { engine: { name: "local", model: isLocalLLM(llm.engine) ? llm.engine.model : "llama3.1", endpoint: isLocalLLM(llm.engine) ? llm.engine.endpoint : "http://localhost:8000" } });
+              }
+            }}
+          >
+            <option value="openai">OpenAI</option>
+            <option value="local">Local</option>
+          </select>
+          {isOpenAI(llm.engine) ? (
+            <input
+              placeholder={t("project.llmModel")}
+              value={llm.engine.model}
+              onChange={(e) => update("llm", { engine: { name: "openai", model: e.target.value } })}
+            />
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <input
+                placeholder={t("project.llmModelLocal")}
+                value={llm.engine.model}
+                onChange={(e) => update("llm", { engine: { name: "local", model: e.target.value, endpoint: isLocalLLM(llm.engine) ? llm.engine.endpoint : "http://localhost:8000" } })}
+              />
+              <input
+                placeholder={t("project.llmEndpoint")}
+                value={isLocalLLM(llm.engine) ? llm.engine.endpoint : ""}
+                onChange={(e) => update("llm", { engine: { name: "local", model: llm.engine.model, endpoint: e.target.value } })}
+              />
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* TTS Engine */}
+      <section style={{ marginTop: 24 }}>
+        <h3>{t("project.tts")}</h3>
+        <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: 8, alignItems: "center" }}>
+          <select
+            value={tts.engine.name}
+            onChange={(e) => {
+              const name = e.target.value as TtsEngine["name"];
+              if (name === "azure") {
+                update("tts", { engine: { name: "azure", voice: isAzureTTS(tts.engine) ? tts.engine.voice : "es-PE-CamilaNeural" }, cache: tts.cache });
+              } else if (name === "elevenlabs") {
+                update("tts", { engine: { name: "elevenlabs", voiceId: is11LabsTTS(tts.engine) ? tts.engine.voiceId : "" }, cache: tts.cache });
+              } else {
+                update("tts", { engine: { name: "local", model: isLocalTTS(tts.engine) ? (tts.engine.model ?? "") : "" }, cache: tts.cache });
+              }
+            }}
+          >
+            <option value="azure">Azure</option>
+            <option value="elevenlabs">ElevenLabs</option>
+            <option value="local">Local</option>
+          </select>
+          {isAzureTTS(tts.engine) && (
+            <input
+              placeholder={t("project.ttsVoiceAzure")}
+              value={tts.engine.voice}
+              onChange={(e) => update("tts", { engine: { name: "azure", voice: e.target.value }, cache: tts.cache })}
+            />
+          )}
+          {is11LabsTTS(tts.engine) && (
+            <input
+              placeholder={t("project.ttsVoiceElevenlabs")}
+              value={tts.engine.voiceId}
+              onChange={(e) => update("tts", { engine: { name: "elevenlabs", voiceId: e.target.value }, cache: tts.cache })}
+            />
+          )}
+          {isLocalTTS(tts.engine) && (
+            <input
+              placeholder={t("project.ttsModelLocal")}
+              value={tts.engine.model ?? ""}
+              onChange={(e) => update("tts", { engine: { name: "local", model: e.target.value }, cache: tts.cache })}
+            />
+          )}
+          <label>
+            <input
+              type="checkbox"
+              checked={tts.cache}
+              onChange={(e) => update("tts", { engine: tts.engine, cache: e.target.checked })}
+            />
+            <span style={{ marginLeft: 8 }}>{t("project.ttsCacheEnabled")}</span>
+          </label>
+        </div>
+      </section>
+
+      {/* Credentials */}
+      <section style={{ marginTop: 24 }}>
+        <h3>{t("project.creds")}</h3>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <label>
+            <div>{t("project.azureKey")}</div>
+            <input
+              type="text"
+              value={cfg.creds?.azure?.key ?? ""}
+              onChange={e => update("creds", {
+                ...cfg.creds,
+                azure: { ...cfg.creds?.azure, key: e.target.value }
+              })}
+            />
+          </label>
+          <label>
+            <div>{t("project.azureRegion")}</div>
+            <input
+              type="text"
+              value={cfg.creds?.azure?.region ?? ""}
+              onChange={e => update("creds", {
+                ...cfg.creds,
+                azure: { ...cfg.creds?.azure, region: e.target.value }
+              })}
+            />
+          </label>
+          <label>
+            <div>{t("project.openaiKey")}</div>
+            <input
+              type="text"
+              value={cfg.creds?.openai?.apiKey ?? ""}
+              onChange={e => update("creds", {
+                ...cfg.creds,
+                openai: { ...cfg.creds?.openai, apiKey: e.target.value }
+              })}
+            />
+          </label>
+          <label>
+            <div>{t("project.openaiBaseUrl")}</div>
+            <input
+              type="text"
+              value={cfg.creds?.openai?.baseUrl ?? ""}
+              onChange={e => update("creds", {
+                ...cfg.creds,
+                openai: { ...cfg.creds?.openai, baseUrl: e.target.value }
+              })}
+            />
+          </label>
+        </div>
+      </section>
+
+      <div style={{ marginTop: 24, display: "flex", gap: 12, alignItems: "center" }}>
+        <button onClick={saveAll}>{t("project.save")}</button>
+        <WorkflowCompleteButton step="project">
+          {t("project.markComplete")}
+        </WorkflowCompleteButton>
+        <div style={{ fontSize: 12, color: "#9ca3af" }}>{msg}</div>
       </div>
     </div>
   );

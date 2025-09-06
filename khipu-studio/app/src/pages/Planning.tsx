@@ -13,15 +13,15 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
   useEffect(() => {
     window.khipu?.onJob((data: JobEvent) => {
       if (data.event === "progress" && typeof data.pct === "number") {
-        onStatus(`Progreso: ${data.pct}% ${data.note ?? ""}`.trim());
+        onStatus(t("status.progress", { pct: data.pct, note: data.note ?? "" }));
       } else if (data.event === "done") {
-        onStatus(data.ok ? "Completado ✔" : "Falló ❌");
+        onStatus(data.ok ? t("status.completed") : t("status.failed"));
         setRunning(false);
       }
     });
-  }, [onStatus]);
+  }, [onStatus, t]);
 
-  if (!root) return <div>Open a project from Home / Project.</div>;
+  if (!root) return <div>{t("status.openProject")}</div>;
 
   const buildPlan = async () => {
     setRunning(true);
@@ -42,7 +42,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
     <>
       <div style={{ marginBottom: 12, display: "flex", gap: 8 }}>
         <button onClick={buildPlan} disabled={running}>
-          {running ? "Generando…" : "Regenerar plan"}
+          {running ? t("plan.generating") : t("plan.regen")}
         </button>
       </div>
       <PlanBoard

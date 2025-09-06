@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useProject } from "../store/project";
+import { WorkflowCompleteButton } from "../components/WorkflowCompleteButton";
 
 type ChapterItem = {
   id: string;
@@ -9,23 +11,22 @@ type ChapterItem = {
 };
 
 export default function ManuscriptPage() {
+  const { t } = useTranslation();
   const root = useProject((s) => s.root);
-
-  const [docx, setDocx] = useState<string | null>(null);
   const [chapters, setChapters] = useState<ChapterItem[]>([]);
   const [selected, setSelected] = useState<ChapterItem | null>(null);
   const [text, setText] = useState("");
   const [msg, setMsg] = useState<string>("");
 
-  const canWork = useMemo(() => !!root, [root]);
-
   async function refreshList() {
     if (!root) return;
+    setMsg("Cargando capítulos…");
     const items = await window.khipu!.call("chapters:list", { projectRoot: root });
     setChapters(items);
-    // auto-select first on refresh if none is selected
+    setMsg("");
+    // auto-select first if none
     if (items.length && !selected) {
-      handleSelect(items[0]);
+      void handleSelect(items[0]);
     } else if (!items.length) {
       setSelected(null);
       setText("");
@@ -36,14 +37,16 @@ export default function ManuscriptPage() {
     if (!root) return;
     const picked = await window.khipu!.call("manuscript:chooseDocx", undefined);
     if (!picked) return;
-    setDocx(picked);
     setMsg("Procesando manuscrito…");
-    const { code } = await window.khipu!.call("manuscript:parse", { projectRoot: root, docxPath: picked });
-    if (code === 0) {
+    const res = await window.khipu!.call("manuscript:parse", {
+      projectRoot: root,
+      docxPath: picked,
+    });
+    if (res.code === 0) {
       setMsg("Listo ✔");
       await refreshList();
     } else {
-      setMsg(`Error al procesar (código ${code})`);
+      setMsg(`Error al procesar (código ${res.code})`);
     }
   }
 
@@ -51,30 +54,34 @@ export default function ManuscriptPage() {
     if (!root) return;
     setSelected(ch);
     setMsg("Cargando capítulo…");
-    const { text } = await window.khipu!.call("chapter:read", { projectRoot: root, relPath: ch.relPath });
-    setText(String(text ?? ""));
+    const { text } = await window.khipu!.call("chapter:read", {
+      projectRoot: root,
+      relPath: ch.relPath,
+    });
+    setText(text ?? "");
     setMsg("");
   }
 
   async function saveChapter() {
     if (!root || !selected) return;
-    setMsg("Guardando…");
-    const ok = await window.khipu!.call("chapter:write", { projectRoot: root, relPath: selected.relPath, text });
-    setMsg(ok ? "Guardado ✔" : "Error al guardar");
-    // refresh word counts after save
-    await refreshList();
+    setMsg(t("manu.saving"));
+    const ok = await window.khipu!.call("chapter:write", {
+      projectRoot: root,
+      relPath: selected.relPath,
+      text,
+    });
+    setMsg(ok ? t("manu.saved") : t("manu.saveError"));
+    if (ok) await refreshList(); // update word counts
   }
 
   useEffect(() => {
-    // load chapter list when a project opens
-    if (root) refreshList();
+    if (root) void refreshList();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [root]);
 
-  if (!canWork) return <div>Abre un proyecto para gestionar el manuscrito.</div>;
-
   return (
     <div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: 12, height: "100%" }}>
+      {/* Left: chapters */}
       <aside style={{ borderRight: "1px solid var(--border)", paddingRight: 12, overflow: "auto" }}>
         <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
           <button className="btn" onClick={chooseDocxAndParse}>Importar .docx…</button>
@@ -117,6 +124,7 @@ export default function ManuscriptPage() {
         )}
       </aside>
 
+      {/* Right: editor */}
       <section style={{ display: "grid", gridTemplateRows: "auto 1fr auto", gap: 8, minHeight: 0 }}>
         <div>
           <h3 style={{ margin: 0 }}>
@@ -147,6 +155,12 @@ export default function ManuscriptPage() {
 
         <div style={{ display: "flex", gap: 8 }}>
           <button className="btn" disabled={!selected} onClick={saveChapter}>Guardar capítulo</button>
+          <WorkflowCompleteButton 
+            step="manuscript" 
+            disabled={chapters.length === 0}
+          >
+            Marcar manuscrito como completo
+          </WorkflowCompleteButton>
           <span style={{ color: "var(--muted)", fontSize: 12 }}>{msg}</span>
         </div>
       </section>

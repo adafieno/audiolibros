@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useProject } from "../store/project";
 
 type RecentItem = { path: string; name: string };
 
 export default function Home() {
+  const { t } = useTranslation();
   const nav = useNavigate();
   const setRoot = useProject((s) => s.setRoot);
-
+  
   const [recents, setRecents] = useState<RecentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState("");
@@ -55,14 +57,14 @@ export default function Home() {
     })) as { path?: string } | null;
 
     if (!res?.path) {
-      setMsg("No se pudo crear el proyecto.");
+      setMsg(t("home.createError"));
       return;
     }
 
     await window.khipu!.call("project:open", { path: res.path });
     setRoot(res.path);
     setProjName("");
-    setMsg("Proyecto creado ✔");
+    setMsg(t("home.createSuccess"));
     nav("/project", { replace: true });
   }
 
@@ -70,16 +72,14 @@ export default function Home() {
 
   return (
     <div>
-      <h2 style={{ marginTop: 0 }}>Khipu Studio</h2>
-      <p>Abre un proyecto existente o crea uno nuevo con la estructura recomendada.</p>
-
+      <p>{t("home.instructions")}</p>
       {/* Open existing */}
       <section style={{ marginTop: 16 }}>
-        <h3>Proyectos recientes</h3>
+        <h3>{t("home.existingProjects")}</h3>
         {loading ? (
-          <div style={{ color: "var(--muted)" }}>Cargando…</div>
+          <div style={{ color: "var(--muted)" }}>{t("home.loading")}</div>
         ) : recents.length === 0 ? (
-          <div style={{ color: "var(--muted)" }}>No hay proyectos recientes.</div>
+          <div style={{ color: "var(--muted)" }}>{t("home.noRecents")}</div>
         ) : (
           <ul
             style={{
@@ -116,7 +116,7 @@ export default function Home() {
                       nav("/project", { replace: true });
                     }}
                   >
-                    Abrir
+                    {t("home.open")}
                   </button>
                 </div>
               </li>
@@ -125,14 +125,13 @@ export default function Home() {
         )}
         <div style={{ marginTop: 8 }}>
           <button className="btn" onClick={chooseExisting}>
-            Abrir otra carpeta…
+            {t("home.openExisting")}
           </button>
         </div>
       </section>
-
       {/* Create new */}
       <section style={{ marginTop: 24 }}>
-        <h3>Crear nuevo proyecto</h3>
+        <h3>{t("home.createNew")}</h3>
         <div
           style={{
             display: "grid",
@@ -142,7 +141,7 @@ export default function Home() {
           }}
         >
           <div>
-            <label style={{ display: "block", marginBottom: 4 }}>Carpeta base</label>
+            <label style={{ display: "block", marginBottom: 4 }}>{t("home.baseFolder")}</label>
             <div style={{ display: "flex", gap: 8 }}>
               <input
                 value={parentDir}
@@ -150,12 +149,12 @@ export default function Home() {
                 placeholder="C:\\proyectos\\audio"
               />
               <button className="btn" onClick={browseParent}>
-                Examinar…
+                {t("home.browse")}
               </button>
             </div>
           </div>
           <div>
-            <label style={{ display: "block", marginBottom: 4 }}>Nombre del proyecto</label>
+            <label style={{ display: "block", marginBottom: 4 }}>{t("home.projectName")}</label>
             <input
               value={projName}
               onChange={(e) => setProjName(e.target.value)}
@@ -165,12 +164,12 @@ export default function Home() {
         </div>
         <div style={{ marginTop: 12 }}>
           <button className="btn" onClick={createNew} disabled={disabledCreate}>
-            Crear proyecto
+            {t("home.create")}
           </button>
           <span style={{ marginLeft: 12, color: "var(--muted)" }}>{msg}</span>
         </div>
         <details style={{ marginTop: 12 }}>
-          <summary>Estructura que se creará</summary>
+          <summary>{t("home.structurePreview")}</summary>
           <pre style={{ whiteSpace: "pre-wrap" }}>
 {`analysis/chapters_txt/
 dossier/

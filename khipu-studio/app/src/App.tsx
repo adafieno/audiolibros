@@ -8,6 +8,7 @@ import SettingsPage from "./pages/Settings";
 import ProjectPage from "./pages/Project";
 import { useState } from "react";
 import { t } from "i18next";
+import { useProject } from "./store/project";
 
 
 // simple placeholders (feel free to create separate files later)
@@ -16,12 +17,15 @@ const Placeholder = ({ name }: { name: string }) => <div>{name} â€” Coming soonâ
 export default function App() {
   const { t } = useTranslation();
   const loc = useLocation();
-  const title = routeTitle(loc.pathname);
+  const { root } = useProject();
+  const pageName = routeTitle(loc.pathname);
+  const projectName = root ? root.split('\\').pop() || root.split('/').pop() : undefined;
   const [status, setStatus] = useState("");
 
   return (
     <AppShell
-      title={title}
+      pageName={pageName}
+      projectName={projectName}
       status={status}
     >
       <Routes>
@@ -43,7 +47,6 @@ export default function App() {
 
 
 function routeTitle(path: string): string {
-  
   if (path === "/") return t("nav.home");
   if (path.startsWith("/project")) return t("nav.project");
   if (path.startsWith("/manuscript")) return t("nav.manuscript");
@@ -54,5 +57,5 @@ function routeTitle(path: string): string {
   if (path.startsWith("/voice")) return t("nav.voice");
   if (path.startsWith("/export")) return t("nav.export");
   if (path.startsWith("/settings")) return t("nav.settings");
-  return "Khipu Studio";
-  }
+  return "";
+}

@@ -1,297 +1,422 @@
-# ingest/manuscript_parser.py
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Parsea un manuscrito (DOCX o TXT), detecta capítulos y emite:
-    - analysis/chapters_txt/chXX.txt
-    - dossier/narrative.structure.json
+Khipu Studio - Manuscript parser (non-LLM, no keywords)
 
-Uso:
-    python -m ingest.manuscript_parser \
-        --in /ruta/Puntajada.docx \
-        --out-chapters analysis/chapters_txt \
-        --out-structure dossier/narrative.structure.json \
-        --min-words 300
+Parses a .docx (or .txt) manuscript into:
+  - analysis/chapters_txt/chXX.txt
+  - dossier/narrative.structure.json
 
-Se añadió detección preferente de capítulos a partir del estilo "Heading 1" en DOCX.
+Heuristics (no “Capítulo/Chapter” keywords):
+  1) DOCX Heading-1 style (robust matcher for localized/variant names)
+  2) Spanish-friendly “titleish” line (short, no terminal punctuation, content-words capitalized)
+  3) Numeral-only line (e.g., “III”, “12”)
+
+A block starts a chapter when any 2 of those 3 signals fire.
 """
-from __future__ import annotations
 
-import json
-import re
-import sys
+from __future__ import annotations
+import argparse, json, os, re, sys, traceback
 from dataclasses import dataclass, asdict
 from pathlib import Path
-from typing import List, Tuple, Optional
+from typing import Any, Dict, List, Optional, Tuple
+from pathlib import Path
+import json
 
-# ----------------- Lectura DOCX/TXT -----------------
-
-def _read_docx(path: Path) -> Tuple[List[str], List[bool]]:
-        """
-        Lee un .docx y devuelve:
-            - blocks: lista de bloques de texto (separados por párrafos en blanco)
-            - heading_flags: lista booleana (por bloque) True si el primer párrafo del bloque tiene estilo Heading 1
-        La detección del estilo intenta ser robusta ante nombres localizados ('Heading 1', 'Título 1', etc).
-        """
+def _load_effective_config(project_root: Optional[Path], cfg_json_path: Optional[Path]) -> dict:
+    eff: dict = {}
+    # optional JSON blob handed in by the app (temp file)
+    if cfg_json_path and cfg_json_path.is_file():
         try:
-                import docx  # python-docx
-        except Exception as e:
-                raise SystemExit("Instala 'python-docx' para procesar .docx (pip install python-docx)") from e
+            eff.update(json.loads(cfg_json_path.read_text(encoding="utf-8")))
+        except Exception:
+            pass
+    # optional project root (you might later read project.khipu.json here)
+    if project_root:
+        pj = project_root / "project.khipu.json"
+        try:
+            if pj.is_file():
+                eff.setdefault("project", {})
+                eff["project"].update(json.loads(pj.read_text(encoding="utf-8")))
+        except Exception:
+            pass
+    return eff
 
-        doc = docx.Document(str(path))
-        paras: List[str] = []
-        para_heading_flags: List[bool] = []
 
-        def _style_looks_like_h1(style_name: Optional[str]) -> bool:
-                if not style_name:
-                        return False
-                s = style_name.strip().lower()
-                # explicit patterns for common localized names
-                if re.search(r'heading\s*1', s) or re.search(r'\bt[ií]tulo\s*1\b', s) or re.search(r'\btitle\s*1\b', s) or re.search(r'\btitre\s*1\b', s) or re.search(r'\bcap[ií]tulo\s*1\b', s):
-                        return True
-                # if style contains a known heading word and '1' somewhere
-                if '1' in s and any(k in s for k in ['heading', 'título', 'titulo', 'title', 'titre', 'capítulo', 'capitulo']):
-                        return True
-                # accept generic names that often map to a top-level heading/title
-                if s in ('heading', 'title', 'titulo', 'título', 'titre', 'capítulo', 'capitulo'):
-                        return True
-                return False
+# ----------------------------- Logging (JSONL) -----------------------------
 
-        for p in doc.paragraphs:
-                t = p.text.replace("\r", "").strip()
-                if t:
-                        paras.append(t)
-                        try:
-                                style_name = getattr(p.style, "name", "") or ""
-                        except Exception:
-                                style_name = ""
-                        para_heading_flags.append(_style_looks_like_h1(style_name))
-                else:
-                        # preserva saltos
-                        paras.append("")
-                        para_heading_flags.append(False)
+def jlog(event: str, **kw: Any) -> None:
+    obj = {"event": event}
+    obj.update(kw)
+    print(json.dumps(obj, ensure_ascii=False), flush=True)
 
-        # compacta a bloques usando párrafos en blanco como separadores
-        blocks: List[str] = []
-        block_heading_flags: List[bool] = []
-        i = 0
-        n = len(paras)
-        while i < n:
-                if paras[i] == "":
-                        i += 1
-                        continue
-                # inicia bloque
-                j = i
-                first_para_heading = para_heading_flags[i]
-                lines: List[str] = []
-                while j < n and paras[j] != "":
-                        lines.append(paras[j])
-                        j += 1
-                blocks.append("\n".join(lines).strip())
-                block_heading_flags.append(first_para_heading)
-                i = j
+def fail(code: int, msg: str) -> int:
+    jlog("error", note=msg)
+    return code
 
-        return blocks, block_heading_flags
+# ----------------------------- Utilities ----------------------------------
 
-def _read_txt(path: Path) -> Tuple[List[str], List[bool]]:
-        raw = path.read_text(encoding="utf-8", errors="ignore")
-        blocks = re.split(r"\n{2,}", raw)
-        blocks = [b.strip() for b in blocks if b.strip()]
-        heading_flags = [False] * len(blocks)
-        return blocks, heading_flags
+_SP_STOPWORDS = {"a","al","de","del","la","las","el","los","y","o","en","con","por","para",
+                 "un","una","uno","unos","unas","que","se","e"}
 
-def _load_blocks(path: Path) -> Tuple[List[str], List[bool]]:
-        if path.suffix.lower() == ".docx":
-                return _read_docx(path)
-        return _read_txt(path)
+RE_ROMAN = re.compile(
+    r"^(?=[IVXLCDM]+$)I{0,3}(?:IV|VI{0,3}|IX|X{0,3})(?:L|XL|LX|XC|C{0,3})(?:D|CD|DC|CM|M{0,4})$",
+    re.IGNORECASE,
+)
 
-# ----------------- Heurísticas de capítulo -----------------
+def _strip_bom(s: str) -> str:
+    return s.lstrip("\ufeff").strip()
 
-_ROMAN = r"(?:M{0,4}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3}))"
-_NUM = r"(?:[0-9]{1,3})"
-_WORDNUM = r"(?:Uno|Dos|Tres|Cuatro|Cinco|Seis|Siete|Ocho|Nueve|Diez|Once|Doce|Trece|Catorce|Quince|Dieciséis|Diecisiete|Dieciocho|Diecinueve|Veinte)"
-_CHAP_PREFIX = r"(?:Cap[ií]tulo|Chapter)\s*(?:\:|\-)?\s*"
-_CHAP_LINE = re.compile(rf"^(?:{_CHAP_PREFIX}(?:{_NUM}|{_ROMAN}|{_WORDNUM})|(?:{_CHAP_PREFIX})$)", re.IGNORECASE)
+def _safe_read(path: Path) -> str:
+    return path.read_text(encoding="utf-8", errors="ignore")
 
-_UPPER_TITLE = re.compile(r"^[A-ZÁÉÍÓÚÜÑ0-9][A-ZÁÉÍÓÚÜÑ0-9\s\.\-:,;\'\"¡!¿?\(\)]{4,80}$")
-_BARE_NUMERAL = re.compile(rf"^({_NUM}|{_ROMAN})$", re.IGNORECASE)
+# ----------------------------- DOCX loader --------------------------------
 
-_TOC_HINT = re.compile(r"(índice|contenido|tabla de contenido|table of contents)", re.IGNORECASE)
-_PRO_EPILOGUE = re.compile(r"^(pr[oó]logo|ep[íi]logo|ap[ée]ndice)$", re.IGNORECASE)
+def _require_python_docx():
+    try:
+        import docx  # python-docx
+        return docx
+    except Exception as e:
+        raise SystemExit("Falta 'python-docx'. Instala: pip install python-docx") from e
+
+def _is_h1_style(style_name: Optional[str]) -> bool:
+    """
+    Robust detector for Heading 1 variants (localized/Char-style forms).
+    """
+    if not style_name:
+        return False
+    s = style_name.strip().lower()
+    # normalize diacritics for matching
+    s = (s.replace("í","i").replace("ú","u").replace("ó","o")
+           .replace("é","e").replace("á","a").replace("ñ","n"))
+
+    # explicit matches
+    if re.search(r"\bheading\s*1\b", s): return True
+    if re.search(r"\btitulo\s*1\b", s):  return True
+    if re.search(r"\btitle\s*1\b", s):   return True
+    if re.search(r"\btitre\s*1\b", s):   return True
+    if re.search(r"\bcapitulo\s*1\b", s):return True
+
+    # character-style variants (e.g., “… 1 char/car”)
+    if ("1" in s) and any(k in s for k in ["heading","titulo","title","titre","capitulo"]):
+        return True
+
+    # generic “top heading” names sometimes used by templates
+    if s in ("heading", "titulo", "title", "titre", "capitulo"):
+        return True
+
+    return False
+
+def _paragraphs_from_docx(infile: Path) -> List[Tuple[str, str, Dict[str, bool]]]:
+    """
+    Returns list of (text, style_name, fmt_flags) for each paragraph.
+    fmt_flags: {'has_bold': bool, 'all_caps': bool, 'center': bool}
+    Empty paragraphs are preserved with empty text.
+    """
+    docx = _require_python_docx()
+    doc = docx.Document(str(infile))
+    out: List[Tuple[str, str, Dict[str, bool]]] = []
+
+    for p in doc.paragraphs:
+        t = _strip_bom(p.text or "")
+        style = ""
+        try:
+            style = getattr(p.style, "name", "") or ""
+        except Exception:
+            style = ""
+
+        # light typography hints
+        has_bold = False
+        all_caps = False
+        for r in p.runs:
+            try:
+                if r.bold:
+                    has_bold = True
+                if r.text and r.text.isupper():
+                    all_caps = True
+            except Exception:
+                pass
+        center = False
+        try:
+            align = getattr(getattr(p, "paragraph_format", None), "alignment", None)
+            # 1 == CENTER in python-docx, but compare by name if available
+            center = (str(align).endswith(".CENTER") or align == 1)
+        except Exception:
+            pass
+
+        out.append((t, style, {"has_bold": has_bold, "all_caps": all_caps, "center": bool(center)}))
+
+    return out
+
+# ----------------------------- TXT loader ---------------------------------
+
+def _blocks_from_txt(path: Path) -> List[str]:
+    raw = _safe_read(path)
+    blocks = [b.strip() for b in re.split(r"\n{2,}", raw) if b.strip()]
+    return blocks
+
+# ----------------------------- Block builder ------------------------------
+
+@dataclass
+class Block:
+    text: str
+    first_style: str
+    fmt: Dict[str, bool]  # from first paragraph
+    start_para: int
+    end_para: int
+
+def _build_blocks_from_docx(paras: List[Tuple[str, str, Dict[str, bool]]]) -> List[Block]:
+    """
+    Group paragraphs into blocks:
+      - split on blank paragraphs
+      - ALSO start a new block whenever we hit a paragraph with H1-style
+        (even if there wasn't a preceding blank line), so we don't swallow headings.
+    The 'first paragraph' metadata is captured per block.
+    """
+    blocks: List[Block] = []
+    i = 0
+    n = len(paras)
+    while i < n:
+        t, style, fmt = paras[i]
+        if t == "":
+            i += 1
+            continue
+
+        # If this is an H1-style, skip any consecutive H1-style paragraphs (only treat the first as a boundary)
+        if _is_h1_style(style):
+            # Find the end of the run of consecutive H1-style paragraphs
+            j = i + 1
+            while j < n and _is_h1_style(paras[j][1]):
+                j += 1
+            # The block is just the first H1 paragraph (chapter title)
+            block_text = paras[i][0].strip()
+            blocks.append(Block(text=block_text, first_style=style, fmt=fmt, start_para=i, end_para=i))
+            i = j
+            continue
+
+        # Start a new block at i (normal logic)
+        j = i + 1
+        while j < n:
+            tj, sj, _ = paras[j]
+            if tj == "":
+                # natural block boundary
+                break
+            # force a new block if the next paragraph is an H1-style
+            # (so the current block ends before the next heading)
+            if _is_h1_style(sj):
+                break
+            j += 1
+
+        block_text = "\n".join([paras[k][0] for k in range(i, j)]).strip()
+        blocks.append(Block(text=block_text, first_style=style, fmt=fmt, start_para=i, end_para=j - 1))
+        i = j + 1 if j < n and paras[j][0] == "" else j  # skip the blank separator if present
+
+    return blocks
+
+def _build_blocks_from_txt(blocks_text: List[str]) -> List[Block]:
+    blocks: List[Block] = []
+    for idx, b in enumerate(blocks_text):
+        blocks.append(Block(text=b, first_style="", fmt={"has_bold": False, "all_caps": b.isupper(), "center": False},
+                            start_para=idx, end_para=idx))
+    return blocks
+
+# ----------------------- Keyword-free title heuristic ---------------------
+
+def _is_probable_title(line: str) -> bool:
+    s = (line or "").strip()
+
+    if not s or len(s) > 80:
+        return False
+    # reject sentence-like lines
+    if s.endswith((".", "…", "?", "!", ":", ";")):
+        return False
+
+    # numeral-only: arabic or roman (e.g., "III", "12")
+    if re.fullmatch(r"\d{1,3}", s):
+        return True
+    if RE_ROMAN.fullmatch(s):
+        return True
+
+    # ALL CAPS short lines are often headings
+    if s.isupper() and len(s) >= 3:
+        return True
+
+    words = re.findall(r"[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+", s)
+    if not words:
+        return False
+
+    def is_capitalized(w: str) -> bool:
+        return w[:1].isupper()
+
+    content = [w for w in words if w.lower() not in _SP_STOPWORDS]
+    caps = sum(1 for w in content if is_capitalized(w))
+    # Most content words capitalized OR short “First & Last” capitalized
+    if content and (caps / max(1, len(content)) >= 0.6):
+        return True
+    if len(words) <= 5 and is_capitalized(words[0]) and is_capitalized(words[-1]):
+        return True
+
+    return False
+
+# ----------------------- Scoring & boundary decision ----------------------
 
 @dataclass
 class Chapter:
-        id: str
-        title: str
-        start_idx: int
-        end_idx: int
-        word_count: int
+    title: str
+    text: str
+    start_block: int
+    end_block: int
 
-def _is_probably_title(line: str) -> bool:
-        s = line.strip()
-        if _CHAP_LINE.match(s):
-                return True
-        if _UPPER_TITLE.match(s) and not _TOC_HINT.search(s):
-                return True
-        if _BARE_NUMERAL.match(s):
-                return True
-        return False
+def _signals_for_block(b: Block) -> Tuple[bool, bool, bool]:
+    """
+    Returns (is_h1_style, is_titleish, is_numeral_only)
+    """
+    first_line = b.text.splitlines()[0] if b.text else ""
+    is_h1 = _is_h1_style(b.first_style)
+    is_title = _is_probable_title(first_line)
+    is_num = bool(re.fullmatch(r"\d{1,3}", first_line) or RE_ROMAN.fullmatch(first_line))
+    return (is_h1, is_title, is_num)
 
-def _word_count(text: str) -> int:
-        return len(re.findall(r"\b[\wÁÉÍÓÚÜÑáéíóúüñ'-]+\b", text))
+def _choose_boundaries(blocks: List[Block]) -> List[int]:
+    """
+    Pick chapter-start block indexes. Use consensus: any 2 of the 3 signals.
+    Also enforce minimum gap between starts to avoid jitter (>= 1 block).
+    """
+    # Force a chapter boundary at every H1-style block
+    starts: List[int] = [i for i, b in enumerate(blocks) if _is_h1_style(b.first_style)]
+    if not starts:
+        # fallback: original consensus logic
+        last_start = -999
+        for i, b in enumerate(blocks):
+            s_h1, s_title, s_num = _signals_for_block(b)
+            score = int(s_h1) + int(s_title) + int(s_num)
+            if score >= 2 and i > last_start:
+                starts.append(i)
+                last_start = i
+        if not starts:
+            for i, b in enumerate(blocks):
+                s_h1, s_title, s_num = _signals_for_block(b)
+                if s_h1 or s_title or s_num:
+                    starts.append(i)
+            starts = sorted(set(starts))
+    if starts and starts[0] != 0:
+        # if first block looks like front-matter, keep as preface unless it's very short, else prepend 0
+        pass
+    return sorted(starts)
 
-def _normalize_title(raw: str) -> str:
-        s = re.sub(r"\s+", " ", raw.strip())
-        # Capitaliza “Capítulo” + número
-        m = _CHAP_LINE.match(s)
-        if m:
-                # Formatea “Capítulo N”
-                num = s.split()[-1]
-                return f"Capítulo {num}"
-        return s[:120]
+def _chapters_from_blocks(blocks: List[Block], min_words: int) -> List[Chapter]:
+    starts = _choose_boundaries(blocks)
+    if not starts:
+        # single chapter fallback
+        return [Chapter(title="Inicio", text="\n\n".join(b.text for b in blocks).strip(), start_block=0, end_block=len(blocks)-1)]
 
-def _detect_chapters(blocks: List[str], min_words_per_chapter: int, heading_flags: Optional[List[bool]] = None) -> List[Chapter]:
-        """
-        Detecta capítulos. Si heading_flags contiene al menos un True, prioriza
-        las marcas de Heading 1 del DOCX como candidatos de capítulo.
-        """
-        candidates: List[int] = []
+    chapters: List[Chapter] = []
+    for idx, s in enumerate(starts):
+        e = (starts[idx + 1] - 1) if idx + 1 < len(starts) else len(blocks) - 1
+        chunk = blocks[s:e+1]
+        text = "\n\n".join(b.text for b in chunk).strip()
+        title = (chunk[0].text.splitlines()[0] if chunk and chunk[0].text else f"Capítulo {len(chapters)+1}").strip()
+        chapters.append(Chapter(title=title, text=text, start_block=s, end_block=e))
 
-        # Preferir encabezados tipo Heading 1 si están disponibles
-        if heading_flags and any(heading_flags):
-                candidates = [i for i, f in enumerate(heading_flags) if f]
-                # asegura inicio si no hay candidato al principio
-                if 0 not in candidates:
-                        if len(blocks) > 0 and heading_flags[0]:
-                                candidates.insert(0, 0)
-                        else:
-                                if _word_count(blocks[0]) >= min(200, min_words_per_chapter // 2):
-                                        candidates.insert(0, 0)
+    # Merge too-short chapters forward
+    def _word_count(s: str) -> int:
+        return len(re.findall(r"\w+", s, flags=re.UNICODE))
+
+    merged: List[Chapter] = []
+    i = 0
+    while i < len(chapters):
+        ch = chapters[i]
+        if _word_count(ch.text) < min_words and i + 1 < len(chapters):
+            nxt = chapters[i+1]
+            merged_text = (ch.text + "\n\n" + nxt.text).strip()
+            merged.append(Chapter(title=ch.title, text=merged_text, start_block=ch.start_block, end_block=nxt.end_block))
+            i += 2
         else:
-                # heurística anterior basada en contenido
-                for i, b in enumerate(blocks):
-                        first_line = b.splitlines()[0].strip()
-                        if _is_probably_title(first_line):
-                                candidates.append(i)
+            merged.append(ch)
+            i += 1
 
-                # asegura inicio si no hay candidato al principio
-                if 0 not in candidates:
-                        # si el primer bloque es muy corto y parece título, acéptalo
-                        if len(blocks) > 0 and _is_probably_title(blocks[0].splitlines()[0]):
-                                candidates.insert(0, 0)
-                        else:
-                                # crea pseudo-título "Prólogo" si primer bloque es grande
-                                if _word_count(blocks[0]) >= min(200, min_words_per_chapter // 2):
-                                        candidates.insert(0, 0)
+    return merged
 
-        # construir capítulos por rangos [start, next_start)
-        chapters: List[Chapter] = []
-        for j, start in enumerate(candidates):
-                end = candidates[j + 1] if j + 1 < len(candidates) else len(blocks)
-                content_blocks = blocks[start:end]
-                # título: primera línea si cumple criterio, si no, genera uno
-                first_line = content_blocks[0].splitlines()[0].strip()
-                is_heading_style = bool(heading_flags and start < len(heading_flags) and heading_flags[start])
+# ----------------------------- I/O helpers --------------------------------
 
-                if is_heading_style or _is_probably_title(first_line):
-                        title = _normalize_title(first_line)
-                        # si el "título" es sólo número romano/arábigo, prefija "Capítulo"
-                        if _BARE_NUMERAL.match(first_line) or first_line.upper().startswith("CHAPTER"):
-                                title = f"Capítulo {first_line.strip()}"
-                else:
-                        # si el bloque es inicial y parece prólogo
-                        title = "Prólogo" if _PRO_EPILOGUE.match(first_line) else f"Sección {j+1}"
+def _ensure_dir(p: Path) -> None:
+    p.mkdir(parents=True, exist_ok=True)
 
-                # texto sin la primera línea si era título “puro”
-                body_blocks = content_blocks[:]
-                if (is_heading_style or _is_probably_title(first_line)) and len(content_blocks) > 1:
-                        # Si el bloque de título NO contiene más que la línea de título, ignóralo en cuerpo
-                        if is_heading_style or _CHAP_LINE.match(first_line) or _BARE_NUMERAL.match(first_line) or _UPPER_TITLE.match(first_line):
-                                body_blocks = content_blocks[1:]
+def _write_chapters(out_dir: Path, chapters: List[Chapter]) -> List[str]:
+    _ensure_dir(out_dir)
+    out_paths: List[str] = []
+    for i, ch in enumerate(chapters, start=1):
+        name = f"ch{i:02d}.txt"
+        dst = out_dir / name
+        dst.write_text(ch.text, encoding="utf-8")
+        out_paths.append(str(dst))
+    return out_paths
 
-                body_text = "\n\n".join(body_blocks).strip()
-                wc = _word_count(body_text)
+def _write_structure(out_json: Path, chapters: List[Chapter]) -> None:
+    _ensure_dir(out_json.parent)
+    items = []
+    for i, ch in enumerate(chapters, start=1):
+        words = len(re.findall(r"\w+", ch.text, flags=re.UNICODE))
+        items.append({
+            "id": f"ch{i:02d}",
+            "title": ch.title,
+            "words": words,
+            "start_block": ch.start_block,
+            "end_block": ch.end_block,
+            "file": f"analysis/chapters_txt/ch{i:02d}.txt",
+        })
+    payload = {
+        "chapters": items,
+        "total_words": sum(it["words"] for it in items),
+        "count": len(items),
+        "version": 1,
+    }
+    out_json.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
-                # Filtros anti-fantasma:
-                if wc < min_words_per_chapter and not _PRO_EPILOGUE.match(title):
-                        # Saltar micro-secciones (p.ej., un índice)
-                        continue
-                if _TOC_HINT.search(title):
-                        continue
+# ------------------------------- CLI --------------------------------------
 
-                cid = f"ch{len(chapters)+1:02d}"
-                chapters.append(Chapter(id=cid, title=title, start_idx=start, end_idx=end-1, word_count=wc))
+def main(argv: Optional[List[str]] = None) -> int:
+    ap = argparse.ArgumentParser(description="Parse manuscript into chapters & structure (no LLM, no keywords).")
+    ap.add_argument("--in", dest="infile", required=True, help="Input file (.docx or .txt)")
+    ap.add_argument("--out-chapters", dest="out_chapters", required=True, help="Output dir for chXX.txt")
+    ap.add_argument("--out-structure", dest="out_structure", required=True, help="Output JSON (narrative.structure.json)")
+    ap.add_argument("--min-words", dest="min_words", type=int, default=300, help="Min words per chapter (merge tiny ones)")
+    ap.add_argument("--project-root", dest="project_root", default=None, help="(opcional) Raíz del proyecto Khipu; usado para leer config si se desea")
+    ap.add_argument("--config-json", dest="config_json", default=None, help="(opcional) Ruta a un JSON temporal con opciones efectivas")
+    args = ap.parse_args(argv)
 
-        # Si por filtros nos quedamos sin nada, crea un único capítulo
-        if not chapters and blocks:
-                cid = "ch01"
-                wc = _word_count("\n\n".join(blocks))
-                chapters = [Chapter(id=cid, title="Capítulo 1", start_idx=0, end_idx=len(blocks)-1, word_count=wc)]
+    try:
+        src = Path(args.infile)
+        out_dir = Path(args.out_chapters)
+        out_json = Path(args.out_structure)
+        jlog("start", infile=str(src))
 
-        return chapters
+        if not src.exists():
+            return fail(2, f"No existe el archivo de entrada: {src}")
 
-# ----------------- Escritura de salidas -----------------
+        if src.suffix.lower() == ".docx":
+            paras = _paragraphs_from_docx(src)
+            blocks = _build_blocks_from_docx(paras)
+        else:
+            blocks_txt = _blocks_from_txt(src)
+            blocks = _build_blocks_from_txt(blocks_txt)
 
-def _write_chapter_txts(chapters: List[Chapter], blocks: List[str], out_dir: Path, heading_flags: Optional[List[bool]] = None) -> List[Path]:
-        """
-        Escribe archivos de texto por capítulo. Si heading_flags indica
-        que el inicio de capítulo proviene de un Heading 1, se quita esa línea
-        del cuerpo para evitar duplicados con el título.
-        """
-        out_dir.mkdir(parents=True, exist_ok=True)
-        paths: List[Path] = []
-        for ch in chapters:
-                # cuerpo = bloques del rango, excluyendo la primera línea si era título puro ya extraído
-                seg = blocks[ch.start_idx: ch.end_idx + 1]
-                # detectar si el primer bloque tenía estilo heading1
-                first = seg[0].splitlines()
-                is_heading_style = bool(heading_flags and ch.start_idx < len(heading_flags) and heading_flags[ch.start_idx])
+        jlog("progress", note=f"Bloques leídos: {len(blocks)}")
+        chapters = _chapters_from_blocks(blocks, args.min_words)
+        jlog("progress", note=f"Capítulos detectados: {len(chapters)}")
 
-                if first and ( _is_probably_title(first[0]) or is_heading_style ):
-                        # si solo era la línea, quítalo
-                        if len(first) == 1:
-                                seg = seg[1:] if len(seg) > 1 else seg
-                        else:
-                                # quita esa primera línea del primer bloque
-                                first = first[1:]
-                                seg[0] = "\n".join(first).strip()
-                body = "\n\n".join([s for s in seg if s.strip()]).strip()
-                p = out_dir / f"{ch.id}.txt"
-                p.write_text(body, encoding="utf-8")
-                paths.append(p)
-        return paths
+        out_paths = _write_chapters(out_dir, chapters)
+        _write_structure(out_json, chapters)
+        jlog("done", ok=True, chapters=len(chapters), files=out_paths, structure=str(out_json))
+        return 0
 
-def _write_structure_json(chapters: List[Chapter], out_path: Path, manuscript_path: Path) -> Path:
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        data = {
-                "source_file": str(manuscript_path),
-                "chapters": [asdict(ch) for ch in chapters],
-                "total_words": sum(ch.word_count for ch in chapters),
-                "version": 1,
-        }
-        out_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
-        return out_path
-
-# ----------------- CLI -----------------
-
-def main():
-        import argparse
-        ap = argparse.ArgumentParser(description="Parser de manuscrito a capítulos TXT + estructura narrativa JSON.")
-        ap.add_argument("--in", dest="infile", required=True)
-        ap.add_argument("--out-chapters", required=True)
-        ap.add_argument("--out-structure", required=True)
-        ap.add_argument("--min-words", type=int, default=300, help="Mínimo de palabras por capítulo (evita capítulos fantasma).")
-        args = ap.parse_args()
-
-        in_path = Path(args.infile)
-        blocks, heading_flags = _load_blocks(in_path)
-        chapters = _detect_chapters(blocks, min_words_per_chapter=max(120, args.min_words), heading_flags=heading_flags)
-
-        out_ch_dir = Path(args.out_chapters)
-        _ = _write_chapter_txts(chapters, blocks, out_ch_dir, heading_flags=heading_flags)
-
-        out_struct = _write_structure_json(chapters, Path(args.out_structure), in_path)
-        print(f"Capítulos: {len(chapters)}")
-        print(f"Estructura: {out_struct}")
+    except SystemExit as se:
+        # propagated dependency error (e.g., python-docx)
+        jlog("error", note=str(se))
+        return int(getattr(se, "code", 1) or 1)
+    except Exception:
+        jlog("error", note="Excepción no controlada", detail=traceback.format_exc())
+        return 1
 
 if __name__ == "__main__":
-        main()
+    sys.exit(main())

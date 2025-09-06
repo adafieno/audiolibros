@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { ReactNode } from "react";
-import { useProject } from "../../store/project";
+import { useProject, type WorkflowStep } from "../../store/project";
 
 const STRIP_W = 88;
 const ICON_SIZE = 28;
@@ -11,33 +11,79 @@ type RouteItem = {
   key: string;
   icon: string;
   exact?: boolean;
+  workflowStep?: WorkflowStep;
 };
 
 const homeRoute: RouteItem = { to: "/", key: "nav.home", icon: "🏠", exact: true };
 const settingsRoute: RouteItem = { to: "/settings", key: "nav.settings", icon: "⚙️" };
 
 const projectRoutes: RouteItem[] = [
-  { to: "/project",    key: "nav.project",    icon: "📄" },
-  { to: "/manuscript", key: "nav.manuscript", icon: "✍️" },
-  { to: "/dossier",    key: "nav.dossier",    icon: "📚" },
-  { to: "/planning",   key: "nav.planning",   icon: "🧭" },
-  { to: "/casting",    key: "nav.casting",    icon: "👥" },
-  { to: "/ssml",       key: "nav.ssml",       icon: "🧩" },
-  { to: "/voice",      key: "nav.voice",      icon: "🎙️" },
-  { to: "/export",     key: "nav.export",     icon: "📦" },
+  { to: "/project",    key: "nav.project",    icon: "📄", workflowStep: "project" },
+  { to: "/manuscript", key: "nav.manuscript", icon: "✍️", workflowStep: "manuscript" },
+  { to: "/dossier",    key: "nav.dossier",    icon: "📚", workflowStep: "dossier" },
+  { to: "/planning",   key: "nav.planning",   icon: "🧭", workflowStep: "planning" },
+  { to: "/casting",    key: "nav.casting",    icon: "👥", workflowStep: "casting" },
+  { to: "/ssml",       key: "nav.ssml",       icon: "🧩", workflowStep: "ssml" },
+  { to: "/voice",      key: "nav.voice",      icon: "🎙️", workflowStep: "voice" },
+  { to: "/export",     key: "nav.export",     icon: "📦", workflowStep: "export" },
 ];
 
-export function AppShell(props: { title: string; status?: string; children: ReactNode }) {
-  const { title, status, children } = props;
+export function AppShell(props: { title?: string; pageName?: string; projectName?: string; status?: string; children: ReactNode }) {
+  const { title, pageName, projectName, status, children } = props;
   const { t } = useTranslation();
-  const root = useProject((s) => s.root);
+  const { root, isStepAvailable, isStepCompleted } = useProject();
 
-  // Dynamic menu:
+  // Dynamic menu based on workflow progression:
   // - No project: [Home, Settings]
-  // - With project: [Home, ...project routes..., Settings]
+  // - With project: [Home, ...available project routes..., Settings]
+  const availableProjectRoutes = projectRoutes.filter(route => 
+    route.workflowStep ? isStepAvailable(route.workflowStep) : true
+  );
+  
   const routes: RouteItem[] = root
-    ? [homeRoute, ...projectRoutes, settingsRoute]
+    ? [homeRoute, ...availableProjectRoutes, settingsRoute]
     : [homeRoute, settingsRoute];
+
+  // Compose top bar: "Khipu Studio — Page Name — Project Name"
+  let barTitle = "Khipu Studio";
+  if (pageName) barTitle += ` — ${pageName}`;
+  if (projectName) barTitle += ` — ${projectName}`;
+  if (title) barTitle = title; // fallback for legacy usage
+
+  // Compose workflow status for footer
+  const getWorkflowStatus = () => {
+    if (!root) return "";
+    
+    const steps: { step: WorkflowStep; label: string }[] = [
+      { step: "project", label: "Project" },
+      { step: "manuscript", label: "Manuscript" },
+      { step: "dossier", label: "Dossier" },
+      { step: "planning", label: "Planning" },
+      { step: "casting", label: "Casting" },
+      { step: "ssml", label: "SSML" },
+      { step: "voice", label: "Voice" },
+      { step: "export", label: "Export" },
+    ];
+
+    const completed = steps.filter(s => isStepCompleted(s.step));
+    const available = steps.filter(s => isStepAvailable(s.step));
+    
+    if (completed.length === 0) {
+      return "Workflow: Ready to start";
+    }
+    
+    const completedLabels = completed.map(s => s.label).join(", ");
+    const nextStep = available.find(s => !isStepCompleted(s.step));
+    
+    let statusText = `Completed: ${completedLabels}`;
+    if (nextStep) {
+      statusText += ` • Next: ${nextStep.label}`;
+    } else if (completed.length === steps.length) {
+      statusText = "🎉 All workflow steps completed!";
+    }
+    
+    return statusText;
+  };
 
   return (
     <div
@@ -62,7 +108,7 @@ export function AppShell(props: { title: string; status?: string; children: Reac
           background: "#111827",
         }}
       >
-        <div style={{ fontSize: 18, fontWeight: 600 }}>{title}</div>
+        <div style={{ fontSize: 18, fontWeight: 600 }}>{barTitle}</div>
         <div style={{ fontSize: 12, color: "#9ca3af" }}>{status ?? ""}</div>
       </header>
 
@@ -76,40 +122,46 @@ export function AppShell(props: { title: string; status?: string; children: Reac
           minWidth: 0,
         }}
       >
-        {routes.map((r) => (
-          <NavLink
-            key={r.to}
-            to={r.to}
-            end={!!r.exact}
-            style={({ isActive }) => ({
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              textDecoration: "none",
-              color: isActive ? "#a7f3d0" : "#e5e7eb",
-              background: isActive ? "rgba(88, 95, 109, 1)" : "transparent",
-              borderRadius: 12,
-              padding: "12px 8px",
-            })}
-            title={t(r.key)}
-            aria-label={t(r.key)}
-          >
-            <span
-              aria-hidden="true"
-              style={{
-                fontSize: ICON_SIZE,
-                lineHeight: 1,
-                width: ICON_SIZE,
-                height: ICON_SIZE,
-                display: "inline-flex",
+        {routes.map((r) => {
+          const isActive = r.exact ? 
+            window.location.pathname === r.to : 
+            window.location.pathname.startsWith(r.to);
+          
+          return (
+            <NavLink
+              key={r.to}
+              to={r.to}
+              end={!!r.exact}
+              style={() => ({
+                display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-              }}
+                textDecoration: "none",
+                color: isActive ? "#a7f3d0" : "#e5e7eb",
+                background: isActive ? "rgba(88, 95, 109, 1)" : "transparent",
+                borderRadius: 12,
+                padding: "12px 8px",
+              })}
+              title={t(r.key)}
+              aria-label={t(r.key)}
             >
-              {r.icon}
-            </span>
-          </NavLink>
-        ))}
+              <span
+                aria-hidden="true"
+                style={{
+                  fontSize: ICON_SIZE,
+                  lineHeight: 1,
+                  width: ICON_SIZE,
+                  height: ICON_SIZE,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {r.icon}
+              </span>
+            </NavLink>
+          );
+        })}
       </aside>
 
       <main style={{ padding: 16, overflow: "auto", minWidth: 0, width: "100%" }}>{children}</main>
@@ -128,7 +180,7 @@ export function AppShell(props: { title: string; status?: string; children: Reac
         }}
       >
         <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", width: "100%" }}>
-          {/* footer info / status */}
+          {status ? status : getWorkflowStatus()}
         </div>
       </footer>
     </div>

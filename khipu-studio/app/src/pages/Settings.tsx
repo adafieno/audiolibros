@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { loadAppConfig, saveAppConfig } from "../lib/config";
 import type { AppConfig, Theme } from "../types/config";
 import LangSelector from "../components/LangSelector";
 import { applyTheme } from "../lib/theme";
+// ...existing code...
 
 export default function SettingsPage() {
+  const { t } = useTranslation();
   const [cfg, setCfg] = useState<AppConfig | null>(null);
   const [msg, setMsg] = useState("");
 
@@ -16,43 +19,42 @@ export default function SettingsPage() {
 
   async function save() {
     if (!cfg) return;
-    setMsg("Guardando…");
+    setMsg(t("settings.saving"));
     const ok = await saveAppConfig(cfg);
     applyTheme(cfg.theme);               // re-apply after save
-    setMsg(ok ? "Guardado ✔" : "Error");
+    setMsg(ok ? t("settings.saved") : t("settings.error"));
   }
 
-  if (!cfg) return <div>Cargando…</div>;
+  if (!cfg) return <div>{t("settings.loading")}</div>;
 
   return (
-    <div style={{ maxWidth: 720 }}>
-      <h2 style={{ marginTop: 0 }}>Ajustes de la aplicación</h2>
+    <>
+      <p>{t("settings.description")}</p>
 
       <section style={{ marginTop: 16 }}>
-        <label style={{ display: "block", marginBottom: 8 }}>Tema</label>
+        <label style={{ display: "block", marginBottom: 8 }}>{t("settings.theme")}</label>
         <select
           value={cfg.theme}
           onChange={(e) => setCfg({ ...cfg, theme: e.target.value as Theme })}
         >
-          <option value="system">Sistema</option>
-          <option value="dark">Oscuro</option>
-          <option value="light">Claro</option>
+          <option value="system">{t("settings.themeSystem")}</option>
+          <option value="dark">{t("settings.themeDark")}</option>
+          <option value="light">{t("settings.themeLight")}</option>
         </select>
         <div style={{ marginTop: 8, fontSize: 12, color: "#9ca3af" }}>
-          El tema se aplica globalmente.
+          {t("settings.themeNote")}
         </div>
       </section>
 
       <section style={{ marginTop: 16 }}>
-        <label style={{ display: "block", marginBottom: 8 }}>Idioma</label>
+        <label style={{ display: "block", marginBottom: 8 }}>{t("settings.language")}</label>
         <LangSelector />
       </section>
 
-
       <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
-        <button className="btn" onClick={save}>Guardar</button>
+        <button className="btn" onClick={save}>{t("settings.save")}</button>
         <div style={{ color: "var(--muted)" }}>{msg}</div>
       </div>
-    </div>
+    </>
   );
 }
