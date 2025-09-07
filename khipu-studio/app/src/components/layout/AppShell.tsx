@@ -95,8 +95,8 @@ export function AppShell(props: { title?: string; pageName?: string; projectName
         gridTemplateRows: "56px 1fr 48px",
         gridTemplateColumns: `${STRIP_W}px 1fr`,
         height: "100vh",
-        background: "#0f172a",
-        color: "#e5e7eb",
+        background: "var(--bg)",
+        color: "var(--text)",
         fontFamily: "Segoe UI, system-ui, sans-serif",
       }}
     >
@@ -107,17 +107,17 @@ export function AppShell(props: { title?: string; pageName?: string; projectName
           alignItems: "center",
           justifyContent: "space-between",
           padding: "0 16px",
-          borderBottom: "1px solid #1f2937",
-          background: "#111827",
+          borderBottom: "1px solid var(--border)",
+          background: "var(--panel)",
         }}
       >
-        <div style={{ fontSize: 18, fontWeight: 600 }}>{barTitle}</div>
-        <div style={{ fontSize: 12, color: "#9ca3af" }}>{status ?? ""}</div>
+        <div style={{ fontSize: 18, fontWeight: 600, color: "var(--text)" }}>{barTitle}</div>
+        <div style={{ fontSize: 12, color: "var(--muted)" }}>{status ?? ""}</div>
       </header>
 
       <aside
         style={{
-          borderRight: "1px solid #1f2937",
+          borderRight: "1px solid var(--border)",
           padding: "8px 6px",
           display: "flex",
           flexDirection: "column",
@@ -140,8 +140,8 @@ export function AppShell(props: { title?: string; pageName?: string; projectName
                 alignItems: "center",
                 justifyContent: "center",
                 textDecoration: "none",
-                color: isActive ? "#a7f3d0" : "#e5e7eb",
-                background: isActive ? "rgba(88, 95, 109, 1)" : "transparent",
+                color: isActive ? "#ffffff" : "var(--muted)",
+                background: isActive ? "var(--accent)" : "transparent",
                 borderRadius: 12,
                 padding: "12px 8px",
               })}
@@ -172,11 +172,11 @@ export function AppShell(props: { title?: string; pageName?: string; projectName
       <footer
         style={{
           gridColumn: "1 / span 2",
-          borderTop: "1px solid #1f2937",
-          background: "#111827",
+          borderTop: "1px solid var(--border)",
+          background: "var(--panel)",
           padding: "8px 12px",
           fontSize: 12,
-          color: "#9ca3af",
+          color: "var(--muted)",
           display: "flex",
           alignItems: "center",
           overflow: "hidden",

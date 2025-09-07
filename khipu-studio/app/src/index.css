@@ -3,6 +3,7 @@
   /* Dark Theme - High Contrast */
   --bg: #0d1117;           /* GitHub dark background */
   --panel: #161b22;        /* Panel background with good contrast */
+  --panelAccent: #21262d;  /* Slightly lighter panel for active states */
   --border: #30363d;       /* Subtle borders */
   --text: #f0f6fc;         /* High contrast white text (15.8:1 ratio) */
   --muted: #8b949e;        /* Muted text (7.9:1 ratio) */
@@ -16,25 +17,32 @@
   --warning: #d29922;      /* Warning orange (6.1:1 ratio) */
   --error: #f85149;        /* Error red (5.9:1 ratio) */
   --focus: #58a6ff;        /* Focus outline color */
+  --shadow: 0 0 0 rgba(0,0,0,0); /* No shadows in dark */
+  --shadow-sm: 0 0 0 rgba(0,0,0,0);
+  --shadow-md: 0 0 0 rgba(0,0,0,0);
 }
 
 :root[data-theme="light"] {
-  /* Light Theme - High Contrast */
-  --bg: #ffffff;           /* Pure white background */
-  --panel: #f6f8fa;        /* Light gray panel */
-  --border: #d0d7de;       /* Clear borders */
-  --text: #1f2328;         /* Near-black text (15.3:1 ratio) */
-  --muted: #656d76;        /* Muted text (7.0:1 ratio) */
-  --accent: #0969da;       /* Accessible blue (8.9:1 ratio) */
-  --accent-600: #0550ae;   /* Darker blue for hover */
-  --accent-700: #033d8b;   /* Even darker for active states */
+  /* Light Theme - Clean & Modern */
+  --bg: #f9fafb;           /* Light gray background */
+  --panel: #ffffff;        /* Pure white panels */
+  --panelAccent: #f3f4f6;  /* Light gray for active/selected states */
+  --border: #d1d5db;       /* Clear gray borders */
+  --text: #111827;         /* Dark text for strong contrast */
+  --muted: #6b7280;        /* Medium gray for muted text */
+  --accent: #2563eb;       /* Blue accent */
+  --accent-600: #1d4ed8;   /* Darker blue for hover */
+  --accent-700: #1e40af;   /* Even darker for active */
   --btn-fg: #ffffff;       /* White text on buttons */
-  --btn-bg: #1f883d;       /* Accessible green (4.9:1 ratio) */
-  --btn-bg-h: #1a7f37;     /* Hover state */
-  --success: #1a7f37;      /* Success green (6.8:1 ratio) */
-  --warning: #9a6700;      /* Warning orange (7.1:1 ratio) */
-  --error: #d1242f;        /* Error red (6.2:1 ratio) */
-  --focus: #0969da;        /* Focus outline color */
+  --btn-bg: #059669;       /* Green buttons */
+  --btn-bg-h: #047857;     /* Darker green on hover */
+  --success: #10b981;      /* Success green */
+  --warning: #f59e0b;      /* Warning orange */
+  --error: #ef4444;        /* Error red */
+  --focus: #3b82f6;        /* Focus blue */
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 /* Clean link styles that work with themes */
@@ -100,12 +108,13 @@ button, .btn {
   transition: all 0.2s ease;
   min-height: 44px; /* Touch target size for accessibility */
   min-width: 44px;
+  box-shadow: var(--shadow-sm);
 }
 
 button:hover, .btn:hover { 
   background: var(--btn-bg-h);
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 button:focus, .btn:focus {
@@ -116,7 +125,7 @@ button:focus, .btn:focus {
 
 button:active, .btn:active {
   transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 button:disabled, .btn:disabled { 
@@ -153,6 +162,7 @@ input, select, textarea {
   font-size: 14px;
   transition: all 0.2s ease;
   min-height: 44px; /* Touch target size */
+  box-shadow: var(--shadow-sm);
 }
 
 input:hover, select:hover, textarea:hover {
@@ -183,6 +193,110 @@ input[type="checkbox"], input[type="radio"] {
   accent-color: var(--accent);
 }
 
+/* Enhanced panel styling for light theme */
+[data-theme="light"] {
+  /* Make light theme very obvious */
+  background: var(--bg) !important;
+}
+
+[data-theme="light"] body {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+}
+
+[data-theme="light"] .panel,
+[data-theme="light"] [style*="background: var(--panel)"] {
+  box-shadow: var(--shadow) !important;
+  border: 1px solid var(--border) !important;
+  background: var(--panel) !important;
+}
+
+[data-theme="light"] .card {
+  box-shadow: var(--shadow-md) !important;
+  border: 1px solid var(--border) !important;
+  background: var(--panel) !important;
+}
+
+/* Improved visual hierarchy for light theme */
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3 {
+  color: var(--text) !important;
+  font-weight: 700;
+}
+
+[data-theme="light"] button,
+[data-theme="light"] .btn {
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  font-weight: 600;
+  background: var(--btn-bg) !important;
+  color: var(--btn-fg) !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-theme="light"] button *,
+[data-theme="light"] .btn * {
+  color: inherit !important;
+}
+
+[data-theme="light"] button:hover,
+[data-theme="light"] .btn:hover {
+  background: var(--btn-bg-h) !important;
+  color: var(--btn-fg) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="light"] button:hover *,
+[data-theme="light"] .btn:hover * {
+  color: inherit !important;
+}
+
+/* Fix for selected/active button states */
+[data-theme="light"] button.active,
+[data-theme="light"] .btn.active,
+[data-theme="light"] button[data-active="true"],
+[data-theme="light"] .btn[data-active="true"] {
+  background: var(--accent) !important;
+  color: #ffffff !important;
+  border-color: var(--accent) !important;
+}
+
+[data-theme="light"] button.active *,
+[data-theme="light"] .btn.active *,
+[data-theme="light"] button[data-active="true"] *,
+[data-theme="light"] .btn[data-active="true"] * {
+  color: #ffffff !important;
+}
+
+/* Fix for secondary/outline buttons */
+[data-theme="light"] button.secondary,
+[data-theme="light"] .btn.secondary {
+  background: var(--panel) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+}
+
+[data-theme="light"] button.secondary *,
+[data-theme="light"] .btn.secondary * {
+  color: var(--text) !important;
+}
+
+[data-theme="light"] input,
+[data-theme="light"] select,
+[data-theme="light"] textarea {
+  border: 1.5px solid var(--border) !important;
+  background: #fafafa !important;
+  color: var(--text) !important;
+}
+
+[data-theme="light"] input:focus,
+[data-theme="light"] select:focus,
+[data-theme="light"] textarea:focus {
+  background: #ffffff !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+}
+
 /* Accessible Language Selector */
 .langSelect {
   background: var(--panel);
@@ -193,6 +307,7 @@ input[type="checkbox"], input[type="radio"] {
   font-size: 14px;
   min-height: 40px;
   transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
 }
 
 .langSelect:hover { 
