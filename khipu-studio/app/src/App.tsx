@@ -6,6 +6,7 @@ import ManuscriptPage from "./pages/Manuscript";
 import PlanningPage from "./pages/Planning";
 import SettingsPage from "./pages/Settings";
 import ProjectPage from "./pages/Project";
+import BookPage from "./pages/Book";
 import CastingPage from "./pages/Casting";
 import { useState } from "react";
 import { t } from "i18next";
@@ -32,6 +33,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/project" element={<ProjectPage />} />
+        <Route path="/book" element={<BookPage />} />
         <Route path="/manuscript" element={<ManuscriptPage />} />
         <Route path="/dossier" element={<Placeholder name={t("nav.dossier")} />} />
         <Route path="/planning" element={<PlanningPage onStatus={setStatus} />} />
@@ -50,6 +52,7 @@ export default function App() {
 function routeTitle(path: string): string {
   if (path === "/") return t("nav.home");
   if (path.startsWith("/project")) return t("nav.project");
+  if (path.startsWith("/book")) return t("nav.book");
   if (path.startsWith("/manuscript")) return t("nav.manuscript");
   if (path.startsWith("/dossier")) return t("nav.dossier");
   if (path.startsWith("/planning")) return t("nav.planning");

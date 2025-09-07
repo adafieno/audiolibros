@@ -27,6 +27,7 @@ export type LlmEngine =
 export interface ProjectConfig {
   version: 1;
   language: string;                  // UI/locale for the project (e.g., "es-PE")
+  bookMeta?: BookMeta;               // Book metadata information
   manuscript?: { chapterGlob: string }; // usually analysis/chapters_txt/*.txt
   planning: { maxKb: number; llmAttribution: "on" | "off" };
   ssml: { rate?: string; pitch?: string; breaksMs?: number };
@@ -59,6 +60,7 @@ export interface BookMeta {
   series?: { name?: string; number?: number | null };
   sku?: string;
   isbn?: string;
+  coverImage?: string; // Path to cover image (3000x3000 JPEG)
   disclosure_digital_voice?: boolean;
 }
 

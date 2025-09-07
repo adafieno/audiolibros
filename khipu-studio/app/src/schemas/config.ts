@@ -14,6 +14,25 @@ export const appConfigSchema = z.object({
   defaults: z.object({ language: z.string().optional() }).optional(),
 });
 
+export const bookMetaSchema = z.object({
+  title: z.string(),
+  subtitle: z.string().optional(),
+  authors: z.array(z.string()).default([]),
+  narrators: z.array(z.string()).default([]),
+  language: z.string().default("es-PE"),
+  description: z.string().optional(),
+  keywords: z.array(z.string()).default([]),
+  categories: z.array(z.string()).default([]),
+  publisher: z.string().optional(),
+  publication_date: z.string().optional(),
+  rights: z.string().optional(),
+  series: z.object({ name: z.string().optional(), number: z.number().nullable().optional() }).optional(),
+  sku: z.string().optional(),
+  isbn: z.string().optional(),
+  coverImage: z.string().optional(),
+  disclosure_digital_voice: z.boolean().optional(),
+});
+
 export const projectConfigSchema = z.object({
   version: z.literal(1),
   language: z.string().default("es-PE"),
@@ -48,25 +67,9 @@ export const projectConfigSchema = z.object({
     bookMeta: z.string().default("book.meta.json"),
     production: z.string().default("production.settings.json"),
   }).partial().default({}),
+  bookMeta: bookMetaSchema.optional(),
 });
 
-export const bookMetaSchema = z.object({
-  title: z.string(),
-  subtitle: z.string().optional(),
-  authors: z.array(z.string()).default([]),
-  narrators: z.array(z.string()).default([]),
-  language: z.string().default("es-PE"),
-  description: z.string().optional(),
-  keywords: z.array(z.string()).default([]),
-  categories: z.array(z.string()).default([]),
-  publisher: z.string().optional(),
-  publication_date: z.string().optional(),
-  rights: z.string().optional(),
-  series: z.object({ name: z.string().optional(), number: z.number().nullable().optional() }).optional(),
-  sku: z.string().optional(),
-  isbn: z.string().optional(),
-  disclosure_digital_voice: z.boolean().optional(),
-});
 
 export const productionSchema = z.object({
   ssml: z.object({

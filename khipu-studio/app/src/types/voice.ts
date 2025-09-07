@@ -13,6 +13,7 @@ export interface Voice {
 
 export interface VoiceInventory {
   voices: Voice[];
+  selectedVoiceIds?: string[]; // Track which voices are selected for the project
 }
 
 export interface CharacterVoiceMapping {

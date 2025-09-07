@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useProject } from "../store/project";
 import { loadProjectConfig } from "../lib/config";
 import { loadVoiceInventory, saveVoiceInventory, filterVoicesForProject } from "../lib/voice";
+import { generateAudition, cleanupAudioUrl } from "../lib/tts-audition";
 import type { Voice, VoiceInventory } from "../types/voice";
 import type { ProjectConfig } from "../types/config";
 
@@ -14,6 +15,8 @@ export default function CastingPage() {
   const [selectedVoices, setSelectedVoices] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [auditioningVoices, setAuditioningVoices] = useState<Set<string>>(new Set());
+  const [playingAudio, setPlayingAudio] = useState<{ voiceId: string; audio: HTMLAudioElement } | null>(null);
 
   useEffect(() => {
     if (!root) return;
@@ -29,6 +32,11 @@ export default function CastingPage() {
         setConfig(projectConfig);
         setInventory(voiceInventory);
         
+        // Load previously selected voices
+        if (voiceInventory?.selectedVoiceIds) {
+          setSelectedVoices(new Set(voiceInventory.selectedVoiceIds));
+        }
+        
       } catch (error) {
         console.error("Failed to load casting data:", error);
         setMessage(t("casting.loadError"));
@@ -37,6 +45,84 @@ export default function CastingPage() {
       }
     })();
   }, [root, t]);
+
+  // Cleanup audio when component unmounts or playingAudio changes
+  useEffect(() => {
+    return () => {
+      if (playingAudio) {
+        playingAudio.audio.pause();
+        playingAudio.audio.src = "";
+        if (playingAudio.audio.src.startsWith("blob:")) {
+          cleanupAudioUrl(playingAudio.audio.src);
+        }
+      }
+    };
+  }, [playingAudio]);
+
+  const handleAudition = async (voice: Voice) => {
+    if (!config) return;
+
+    // Stop any currently playing audio
+    if (playingAudio) {
+      playingAudio.audio.pause();
+      playingAudio.audio.src = "";
+      if (playingAudio.audio.src.startsWith("blob:")) {
+        cleanupAudioUrl(playingAudio.audio.src);
+      }
+      setPlayingAudio(null);
+    }
+
+    // If already auditioning this voice, stop
+    if (auditioningVoices.has(voice.id)) {
+      return;
+    }
+
+    setAuditioningVoices(prev => new Set(prev).add(voice.id));
+    
+    try {
+      const result = await generateAudition({
+        voice,
+        config,
+      });
+
+      if (result.success && result.audioUrl) {
+        const audio = new Audio(result.audioUrl);
+        audio.onloadeddata = () => {
+          setPlayingAudio({ voiceId: voice.id, audio });
+          audio.play().catch(err => {
+            console.error("Failed to play audio:", err);
+            setMessage(t("casting.audition.playError"));
+            setTimeout(() => setMessage(""), 3000);
+          });
+        };
+        
+        audio.onended = () => {
+          setPlayingAudio(null);
+          cleanupAudioUrl(result.audioUrl!);
+        };
+        
+        audio.onerror = () => {
+          setMessage(t("casting.audition.loadError"));
+          setTimeout(() => setMessage(""), 3000);
+          setPlayingAudio(null);
+          cleanupAudioUrl(result.audioUrl!);
+        };
+      } else {
+        setMessage(result.error || t("casting.audition.error"));
+        setTimeout(() => setMessage(""), 5000);
+      }
+    } catch (error) {
+      console.error("Audition error:", error);
+      setMessage(t("casting.audition.error"));
+      setTimeout(() => setMessage(""), 3000);
+    } finally {
+      setAuditioningVoices(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(voice.id);
+        return newSet;
+      });
+    }
+  };
 
   const handleVoiceToggle = (voiceId: string) => {
     const newSelected = new Set(selectedVoices);
@@ -66,12 +152,13 @@ export default function CastingPage() {
     try {
       setMessage(t("casting.saving"));
       
-      // Filter inventory to only include selected voices
-      const filteredInventory: VoiceInventory = {
-        voices: inventory.voices.filter(voice => selectedVoices.has(voice.id))
+      // Update inventory with current selection
+      const updatedInventory: VoiceInventory = {
+        voices: inventory.voices, // Keep all available voices
+        selectedVoiceIds: Array.from(selectedVoices) // Save current selection
       };
       
-      await saveVoiceInventory(root, filteredInventory);
+      await saveVoiceInventory(root, updatedInventory);
       setMessage(t("casting.saved"));
       
       setTimeout(() => setMessage(""), 2000);
@@ -189,6 +276,74 @@ export default function CastingPage() {
                         {t("casting.accents")}: {voice.accent_tags.join(", ")}
                       </div>
                     )}
+                    
+                    {/* Audition Button */}
+                    <div style={{ marginTop: "8px", display: "flex", gap: "8px", alignItems: "center" }}>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleAudition(voice);
+                        }}
+                        disabled={auditioningVoices.has(voice.id)}
+                        style={{
+                          padding: "4px 8px",
+                          fontSize: "12px",
+                          backgroundColor: auditioningVoices.has(voice.id) ? "#6b7280" : "#3b82f6",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: auditioningVoices.has(voice.id) ? "not-allowed" : "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px"
+                        }}
+                      >
+                        {auditioningVoices.has(voice.id) ? (
+                          <>
+                            <span style={{ 
+                              display: "inline-block", 
+                              width: "12px", 
+                              height: "12px", 
+                              border: "2px solid #ffffff", 
+                              borderTop: "2px solid transparent", 
+                              borderRadius: "50%", 
+                              animation: "spin 1s linear infinite" 
+                            }}></span>
+                            {t("casting.audition.loading")}
+                          </>
+                        ) : playingAudio?.voiceId === voice.id ? (
+                          <>🔊 {t("casting.audition.playing")}</>
+                        ) : (
+                          <>🎵 {t("casting.audition.button")}</>
+                        )}
+                      </button>
+                      
+                      {playingAudio?.voiceId === voice.id && (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (playingAudio) {
+                              playingAudio.audio.pause();
+                              playingAudio.audio.src = "";
+                              setPlayingAudio(null);
+                            }
+                          }}
+                          style={{
+                            padding: "4px 8px",
+                            fontSize: "12px",
+                            backgroundColor: "#ef4444",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "4px",
+                            cursor: "pointer"
+                          }}
+                        >
+                          ⏹️ {t("casting.audition.stop")}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </label>
               </div>
@@ -206,7 +361,7 @@ export default function CastingPage() {
         alignItems: "center"
       }}>
         <div style={{ fontSize: "14px", color: "#6b7280" }}>
-          {t("casting.selectedCount", { count: selectedVoices.size })}
+          {selectedVoices.size} {selectedVoices.size === 1 ? "voice" : "voices"} selected
         </div>
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
           {message && (

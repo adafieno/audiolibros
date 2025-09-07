@@ -245,6 +245,19 @@ function createWin() {
       return true;
     } catch (e) { console.error("[fs:write]", e); return false; }
   });
+
+  // ---- IPC: write binary file ----
+  ipcMain.handle("fs:writeBinary", async (_e, { projectRoot, relPath, content }) => {
+    try {
+      const abs = path.join(projectRoot, relPath);
+      const rel = path.relative(projectRoot, abs);
+      if (rel.startsWith("..") || path.isAbsolute(rel)) return false;
+      await fsp.mkdir(path.dirname(abs), { recursive: true });
+      const buffer = Buffer.from(content);
+      await fsp.writeFile(abs, buffer);
+      return true;
+    } catch (e) { console.error("[fs:writeBinary]", e); return false; }
+  });
   ipcMain.handle("fs:readJson", async (_e, { root, rel }) => {
     try {
       const abs = path.join(root, rel);
@@ -256,15 +269,75 @@ function createWin() {
   });
 
   ipcMain.handle("manuscript:chooseDocx", async () => {
-  const res = await dialog.showOpenDialog({
-    properties: ["openFile"],
-    filters: [{ name: "Word document", extensions: ["docx"] }],
+    const res = await dialog.showOpenDialog({
+      properties: ["openFile"],
+      filters: [{ name: "Word document", extensions: ["docx"] }],
+    });
+    if (res.canceled || !res.filePaths?.[0]) return null;
+    return res.filePaths[0];
   });
-  if (res.canceled || !res.filePaths?.[0]) return null;
-  return res.filePaths[0];
-});
 
-// ---- IPC: parse manuscript via Python module (FIXED FLAGS) ----
+  // ---- IPC: choose image file ----
+  ipcMain.handle("file:chooseImage", async () => {
+    const res = await dialog.showOpenDialog({
+      properties: ["openFile"],
+      filters: [{ name: "JPEG Images", extensions: ["jpg", "jpeg"] }],
+    });
+    if (res.canceled || !res.filePaths?.[0]) return null;
+    return res.filePaths[0];
+  });
+
+  // ---- IPC: validate and copy image ----
+  ipcMain.handle("file:validateAndCopyImage", async (_e, { filePath, projectRoot }) => {
+    try {
+      if (!filePath || !projectRoot) return { success: false, error: "Missing file path or project root" };
+      
+      const path = require('path');
+      
+      // Check if file exists and is a JPEG
+      const ext = path.extname(filePath).toLowerCase();
+      if (ext !== '.jpg' && ext !== '.jpeg') {
+        return { success: false, error: "File must be a JPEG image" };
+      }
+      
+      // Copy file to project directory
+      const fileName = `cover_${Date.now()}.jpg`;
+      const destPath = path.join(projectRoot, fileName);
+      
+      await fsp.copyFile(filePath, destPath);
+      
+      return { 
+        success: true, 
+        fileName,
+        message: "Image copied successfully. Validation will occur in the UI."
+      };
+      
+    } catch (error) {
+      console.error("Error copying image:", error);
+      return { success: false, error: "Failed to copy image file" };
+    }
+  });
+
+  // ---- IPC: get image as data URL for preview ----
+  ipcMain.handle("file:getImageDataUrl", async (_e, { projectRoot, fileName }) => {
+    try {
+      const path = require('path');
+      const imagePath = path.join(projectRoot, fileName);
+      
+      // Read the image file
+      const imageBuffer = await fsp.readFile(imagePath);
+      
+      // Convert to base64 data URL
+      const base64 = imageBuffer.toString('base64');
+      const dataUrl = `data:image/jpeg;base64,${base64}`;
+      
+      return { success: true, dataUrl };
+      
+    } catch (error) {
+      console.error("Error reading image:", error);
+      return { success: false, error: "Failed to read image file" };
+    }
+  });// ---- IPC: parse manuscript via Python module (FIXED FLAGS) ----
 ipcMain.handle("manuscript:parse", async (_e, { projectRoot, docxPath }) => {
   if (!projectRoot || !docxPath) return { code: -1 };
   const root = path.resolve(projectRoot);

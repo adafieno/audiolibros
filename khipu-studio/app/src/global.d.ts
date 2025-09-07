@@ -44,7 +44,19 @@ export interface KhipuRequestMap {
   // FS
   "fs:read":    { in: { projectRoot: string; relPath: string; json?: boolean }; out: unknown };
   "fs:write":   { in: { projectRoot: string; relPath: string; json?: boolean; content: unknown }; out: boolean };
+  "fs:writeBinary": { in: { projectRoot: string; relPath: string; content: number[] }; out: boolean };
   "fs:readJson":{ in: { root: string; rel: string }; out: { data: unknown; path: string; raw: string } };
+
+  // File operations
+  "file:chooseImage": { in: undefined; out: string | null };
+  "file:validateAndCopyImage": { 
+    in: { filePath: string; projectRoot: string }; 
+    out: { success: boolean; fileName?: string; dimensions?: { width: number; height: number }; error?: string; warning?: string } 
+  };
+  "file:getImageDataUrl": {
+    in: { projectRoot: string; fileName: string };
+    out: { success: boolean; dataUrl?: string; error?: string }
+  };
 
   // Plan
   "plan:build": { in: PlanBuildPayload; out: number };

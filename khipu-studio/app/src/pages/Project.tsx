@@ -101,6 +101,21 @@ export default function Project() {
         </div>
       </section>
 
+      {/* Manuscript Settings */}
+      <section style={{ marginTop: 24 }}>
+        <h3>{t("project.manuscript")}</h3>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
+          <label>
+            <div>{t("project.chapterGlob")}</div>
+            <input
+              value={cfg?.manuscript?.chapterGlob || "analysis/chapters_txt/*.txt"}
+              placeholder="analysis/chapters_txt/*.txt"
+              onChange={(e) => update("manuscript", { chapterGlob: e.target.value })}
+            />
+          </label>
+        </div>
+      </section>
+
       {/* Planning */}
       <section style={{ marginTop: 24 }}>
         <h3>{t("project.planning")}</h3>
@@ -309,6 +324,115 @@ export default function Project() {
               onChange={e => update("creds", {
                 ...cfg.creds,
                 openai: { ...cfg.creds?.openai, baseUrl: e.target.value }
+              })}
+            />
+          </label>
+        </div>
+      </section>
+
+      {/* Export Settings */}
+      <section style={{ marginTop: 24 }}>
+        <h3>{t("project.export")}</h3>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
+          <label>
+            <div>{t("project.outputDir")}</div>
+            <input
+              value={cfg?.export?.outputDir || "output"}
+              placeholder="output"
+              onChange={(e) => update("export", { 
+                outputDir: e.target.value,
+                platforms: cfg?.export?.platforms || {}
+              })}
+            />
+          </label>
+          <div style={{ marginTop: 8 }}>
+            <div style={{ marginBottom: 8 }}>{t("project.platforms")}</div>
+            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <input
+                  type="checkbox"
+                  checked={cfg?.export?.platforms?.apple || false}
+                  onChange={(e) => update("export", {
+                    outputDir: cfg?.export?.outputDir || "output",
+                    platforms: { ...cfg?.export?.platforms, apple: e.target.checked }
+                  })}
+                />
+                <span>{t("project.platformApple")}</span>
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <input
+                  type="checkbox"
+                  checked={cfg?.export?.platforms?.google || false}
+                  onChange={(e) => update("export", {
+                    outputDir: cfg?.export?.outputDir || "output",
+                    platforms: { ...cfg?.export?.platforms, google: e.target.checked }
+                  })}
+                />
+                <span>{t("project.platformGoogle")}</span>
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <input
+                  type="checkbox"
+                  checked={cfg?.export?.platforms?.spotify || false}
+                  onChange={(e) => update("export", {
+                    outputDir: cfg?.export?.outputDir || "output",
+                    platforms: { ...cfg?.export?.platforms, spotify: e.target.checked }
+                  })}
+                />
+                <span>{t("project.platformSpotify")}</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Additional Credentials & Paths */}
+      <section style={{ marginTop: 24 }}>
+        <h3>{t("project.advancedCreds")}</h3>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <input
+              type="checkbox"
+              checked={cfg?.creds?.useAppAzure || false}
+              onChange={(e) => update("creds", {
+                ...cfg.creds,
+                useAppAzure: e.target.checked
+              })}
+            />
+            <span>{t("project.useAppAzure")}</span>
+          </label>
+          <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <input
+              type="checkbox"
+              checked={cfg?.creds?.useAppOpenAI || false}
+              onChange={(e) => update("creds", {
+                ...cfg.creds,
+                useAppOpenAI: e.target.checked
+              })}
+            />
+            <span>{t("project.useAppOpenAI")}</span>
+          </label>
+          <label>
+            <div>{t("project.bookMetaPath")}</div>
+            <input
+              type="text"
+              value={cfg?.creds?.paths?.bookMeta ?? ""}
+              placeholder="path/to/book_meta.json"
+              onChange={e => update("creds", {
+                ...cfg.creds,
+                paths: { ...cfg.creds?.paths, bookMeta: e.target.value }
+              })}
+            />
+          </label>
+          <label>
+            <div>{t("project.productionPath")}</div>
+            <input
+              type="text"
+              value={cfg?.creds?.paths?.production ?? ""}
+              placeholder="path/to/production.json"
+              onChange={e => update("creds", {
+                ...cfg.creds,
+                paths: { ...cfg.creds?.paths, production: e.target.value }
               })}
             />
           </label>

@@ -293,4 +293,10 @@ a:focus {
 .text-lg { font-size: 1.125rem; line-height: 1.4; }
 .text-xl { font-size: 1.25rem; line-height: 1.4; }
 
+/* Animation for loading spinner */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 

@@ -19,6 +19,7 @@ const settingsRoute: RouteItem = { to: "/settings", key: "nav.settings", icon: "
 
 const projectRoutes: RouteItem[] = [
   { to: "/project",    key: "nav.project",    icon: "📄", workflowStep: "project" },
+  { to: "/book",       key: "nav.book",       icon: "📖", workflowStep: "project" },
   { to: "/manuscript", key: "nav.manuscript", icon: "✍️", workflowStep: "manuscript" },
   { to: "/casting",    key: "nav.casting",    icon: "🗣️", workflowStep: "casting" },
   { to: "/dossier",    key: "nav.dossier",    icon: "📚", workflowStep: "dossier" },
@@ -56,6 +57,7 @@ export function AppShell(props: { title?: string; pageName?: string; projectName
     
     const steps: { step: WorkflowStep; labelKey: string }[] = [
       { step: "project", labelKey: "nav.project" },
+      { step: "project", labelKey: "nav.book" },
       { step: "manuscript", labelKey: "nav.manuscript" },
       { step: "dossier", labelKey: "nav.dossier" },
       { step: "planning", labelKey: "nav.planning" },
