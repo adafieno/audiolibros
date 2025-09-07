@@ -30,6 +30,34 @@ function runPy(args, onLine) {
   return new Promise((res) => child.on("close", (code) => res(code ?? 0)));
 }
 
+/** Run character detection script (build_from_manuscript) */
+async function runCharacterDetection(projectRoot) {
+  const script = path.join(repoRoot, "py", "dossier", "build_from_manuscript.py");
+  // Basic existence check
+  try { await fsp.access(script); } catch { throw new Error("Character detection script not found"); }
+
+  // We assume structure + chapters already exist; script itself handles missing gracefully.
+  const exe = getPythonExe();
+  return new Promise((resolve, reject) => {
+    const proc = spawn(exe, [script], { cwd: projectRoot || repoRoot, windowsHide: true });
+    let stderr = ""; let stdout = "";
+    proc.stdout.on("data", d => { stdout += d.toString(); });
+    proc.stderr.on("data", d => { const s = d.toString(); stderr += s; BrowserWindow.getAllWindows().forEach(w=> w.webContents.send("characters:detection:log", s)); });
+    proc.on("error", err => reject(err));
+    proc.on("close", async (code) => {
+      if (code !== 0) return reject(new Error(`Detection exited with code ${code}. stderr: ${stderr.split(/\n/).slice(-8).join("\n")}`));
+      // Try reading characters.json
+      try {
+        const jsonPath = path.join(projectRoot, "dossier", "characters.json");
+        const data = await readJsonIf(jsonPath) || [];
+        resolve({ characters: data, raw: stdout });
+      } catch (e) {
+        reject(new Error("Detection finished but characters.json not readable"));
+      }
+    });
+  });
+}
+
 /* ---------------- App config (userData) ---------------- */
 function appConfigPath() {
   const userData = app.getPath("userData");
@@ -267,6 +295,16 @@ function createWin() {
       return { data: null, path: path.join(root, rel), raw: "" };
     }
   });
+        // Character detection trigger (runs python script inside project root)
+        ipcMain.handle("characters:detect", async (_e, { projectRoot }) => {
+          if (!projectRoot) throw new Error("Missing projectRoot");
+          try {
+            const result = await runCharacterDetection(projectRoot);
+            return { ok: true, ...result };
+          } catch (e) {
+            return { ok: false, error: String(e.message || e) };
+          }
+        });
 
   ipcMain.handle("manuscript:chooseDocx", async () => {
     const res = await dialog.showOpenDialog({

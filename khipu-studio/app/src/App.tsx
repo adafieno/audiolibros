@@ -8,6 +8,7 @@ import SettingsPage from "./pages/Settings";
 import ProjectPage from "./pages/Project";
 import BookPage from "./pages/Book";
 import CastingPage from "./pages/Casting";
+import CharactersPage from "./pages/Characters";
 import { useState } from "react";
 import { t } from "i18next";
 import { useProject } from "./store/project";
@@ -35,9 +36,10 @@ export default function App() {
         <Route path="/project" element={<ProjectPage />} />
         <Route path="/book" element={<BookPage />} />
         <Route path="/manuscript" element={<ManuscriptPage />} />
+        <Route path="/casting" element={<CastingPage />} />
+        <Route path="/characters" element={<CharactersPage />} />
         <Route path="/dossier" element={<Placeholder name={t("nav.dossier")} />} />
         <Route path="/planning" element={<PlanningPage onStatus={setStatus} />} />
-        <Route path="/casting" element={<CastingPage />} />
         <Route path="/ssml" element={<Placeholder name={t("nav.ssml")} />} />
         <Route path="/voice" element={<Placeholder name={t("nav.voice")} />} />
         <Route path="/export" element={<Placeholder name={t("nav.export")} />} />
@@ -54,9 +56,10 @@ function routeTitle(path: string): string {
   if (path.startsWith("/project")) return t("nav.project");
   if (path.startsWith("/book")) return t("nav.book");
   if (path.startsWith("/manuscript")) return t("nav.manuscript");
+  if (path.startsWith("/casting")) return t("nav.casting");
+  if (path.startsWith("/characters")) return t("nav.characters");
   if (path.startsWith("/dossier")) return t("nav.dossier");
   if (path.startsWith("/planning")) return t("nav.planning");
-  if (path.startsWith("/casting")) return t("nav.casting");
   if (path.startsWith("/ssml")) return t("nav.ssml");
   if (path.startsWith("/voice")) return t("nav.voice");
   if (path.startsWith("/export")) return t("nav.export");

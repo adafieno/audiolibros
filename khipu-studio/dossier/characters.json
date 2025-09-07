@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Narrator",
+    "type": "narrator",
+    "gender": "neutral",
+    "age": "adult",
+    "personality": [
+      "observant",
+      "thoughtful"
+    ],
+    "speaking_style": [
+      "descriptive",
+      "measured"
+    ],
+    "frequency": 1.0,
+    "importance": "primary",
+    "accent": "neutral",
+    "description": "The story narrator",
+    "confidence": 1.0,
+    "has_dialogue": true,
+    "dialogue_frequency": "high"
+  }
+]

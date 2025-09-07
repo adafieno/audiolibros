@@ -4,9 +4,10 @@ import { loadWorkflowState, saveWorkflowState } from "../lib/workflow";
 export type WorkflowStep = 
   | "project"      // Project configuration completed
   | "manuscript"   // Chapters created in manuscript
+  | "casting"      // Casting work completed
+  | "characters"   // Characters detected and voices assigned
   | "dossier"      // Dossier work completed
   | "planning"     // Planning work completed  
-  | "casting"      // Casting work completed
   | "ssml"         // SSML work completed
   | "voice"        // Voice work completed
   | "export";      // Export work completed
@@ -75,15 +76,19 @@ export const useProject = create<ProjectState>()((set, get) => ({
       case "manuscript":
         return true; // Always available when project is loaded
         
-      case "dossier":
-      case "planning": 
       case "casting":
         return completedSteps.has("manuscript"); // Available after manuscript
         
+      case "characters":
+        return completedSteps.has("casting"); // Available after casting
+        
+      case "dossier":
+      case "planning": 
+        return completedSteps.has("characters"); // Available after characters
+        
       case "ssml":
         return completedSteps.has("dossier") && 
-               completedSteps.has("planning") && 
-               completedSteps.has("casting"); // Available after all three
+               completedSteps.has("planning"); // Available after dossier and planning
                
       case "voice":
         return completedSteps.has("ssml"); // Available after SSML

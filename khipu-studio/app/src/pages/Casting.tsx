@@ -9,7 +9,7 @@ import type { ProjectConfig } from "../types/config";
 
 export default function CastingPage() {
   const { t } = useTranslation();
-  const { root } = useProject();
+  const { root, isStepCompleted } = useProject();
   const [config, setConfig] = useState<ProjectConfig | null>(null);
   const [inventory, setInventory] = useState<VoiceInventory | null>(null);
   const [selectedVoices, setSelectedVoices] = useState<Set<string>>(new Set());
@@ -17,6 +17,8 @@ export default function CastingPage() {
   const [message, setMessage] = useState("");
   const [auditioningVoices, setAuditioningVoices] = useState<Set<string>>(new Set());
   const [playingAudio, setPlayingAudio] = useState<{ voiceId: string; audio: HTMLAudioElement } | null>(null);
+
+  const isCastingCompleted = isStepCompleted("casting");
 
   useEffect(() => {
     if (!root) return;
@@ -165,6 +167,25 @@ export default function CastingPage() {
     } catch (error) {
       console.error("Failed to save voice selection:", error);
       setMessage(t("casting.saveError"));
+    }
+  };
+
+  const handleComplete = async () => {
+    if (!root || !inventory) return;
+    
+    try {
+      // Save first if there are unsaved changes
+      await handleSave();
+      
+      // Mark casting step as completed to enable Characters workflow step
+      const { markStepCompleted } = useProject.getState();
+      markStepCompleted("casting");
+      
+      setMessage(t("casting.completed"));
+      setTimeout(() => setMessage(""), 2000);
+    } catch (error) {
+      console.error("Failed to complete casting:", error);
+      setMessage(t("casting.completeError"));
     }
   };
 
@@ -360,8 +381,15 @@ export default function CastingPage() {
         justifyContent: "space-between",
         alignItems: "center"
       }}>
-        <div style={{ fontSize: "14px", color: "#6b7280" }}>
-          {selectedVoices.size} {selectedVoices.size === 1 ? "voice" : "voices"} selected
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "4px" }}>
+          <div style={{ fontSize: "14px", color: "#6b7280" }}>
+            {selectedVoices.size} {selectedVoices.size === 1 ? "voice" : "voices"} selected
+          </div>
+          {isCastingCompleted && (
+            <div style={{ fontSize: "12px", color: "#10b981", display: "flex", alignItems: "center", gap: "4px" }}>
+              ✓ {t("workflow.buttonCompleted")}
+            </div>
+          )}
         </div>
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
           {message && (
@@ -377,7 +405,7 @@ export default function CastingPage() {
             disabled={selectedVoices.size === 0}
             style={{
               padding: "8px 16px",
-              backgroundColor: selectedVoices.size > 0 ? "#10b981" : "#6b7280",
+              backgroundColor: selectedVoices.size > 0 ? "#3b82f6" : "#6b7280",
               color: "white",
               border: "none",
               borderRadius: "6px",
@@ -385,6 +413,23 @@ export default function CastingPage() {
             }}
           >
             {t("casting.save")}
+          </button>
+          <button
+            onClick={handleComplete}
+            disabled={selectedVoices.size === 0 || isCastingCompleted}
+            style={{
+              padding: "8px 16px",
+              backgroundColor: isCastingCompleted ? "#10b981" : (selectedVoices.size > 0 ? "#10b981" : "#6b7280"),
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              cursor: (selectedVoices.size > 0 && !isCastingCompleted) ? "pointer" : "not-allowed",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px"
+            }}
+          >
+            {isCastingCompleted ? "✓ " + t("workflow.buttonCompleted") : "✓ " + t("casting.complete")}
           </button>
         </div>
       </section>

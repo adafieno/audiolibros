@@ -1,0 +1,42 @@
+[
+  {
+    "name": "Rosa",
+    "type": "secondary",
+    "importance": "primary",
+    "gender": "female",
+    "age": "adult",
+    "description": "Rosa engages in dialogue with Luis, asking if he arrived early.",
+    "personality": [
+      "curious",
+      "friendly"
+    ],
+    "speaking_style": [
+      "conversational"
+    ],
+    "confidence": 1.0,
+    "has_dialogue": true,
+    "dialogue_frequency": "medium",
+    "frequency": 0.7,
+    "accent": "neutral"
+  },
+  {
+    "name": "Luis",
+    "type": "secondary",
+    "importance": "primary",
+    "gender": "male",
+    "age": "adult",
+    "description": "Luis responds to Rosa's question about his arrival time.",
+    "personality": [
+      "calm",
+      "reflective"
+    ],
+    "speaking_style": [
+      "concise"
+    ],
+    "confidence": 1.0,
+    "has_dialogue": true,
+    "dialogue_frequency": "medium",
+    "frequency": 0.7,
+    "accent": "neutral"
+  }
+]

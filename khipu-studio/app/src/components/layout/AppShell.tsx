@@ -22,9 +22,10 @@ const projectRoutes: RouteItem[] = [
   { to: "/book",       key: "nav.book",       icon: "📖", workflowStep: "project" },
   { to: "/manuscript", key: "nav.manuscript", icon: "✍️", workflowStep: "manuscript" },
   { to: "/casting",    key: "nav.casting",    icon: "🗣️", workflowStep: "casting" },
+  { to: "/characters", key: "nav.characters", icon: "🎭", workflowStep: "characters" },
   { to: "/dossier",    key: "nav.dossier",    icon: "📚", workflowStep: "dossier" },
-  { to: "/planning",   key: "nav.planning",   icon: "🧭", workflowStep: "planning" },
-  { to: "/ssml",       key: "nav.ssml",       icon: "🧩", workflowStep: "ssml" },
+  { to: "/planning",   key: "nav.planning",   icon: "🗃️", workflowStep: "planning" },
+  { to: "/ssml",       key: "nav.ssml",       icon: "🏷️", workflowStep: "ssml" },
   { to: "/voice",      key: "nav.voice",      icon: "🎙️", workflowStep: "voice" },
   { to: "/export",     key: "nav.export",     icon: "📦", workflowStep: "export" },
 ];
@@ -59,9 +60,10 @@ export function AppShell(props: { title?: string; pageName?: string; projectName
       { step: "project", labelKey: "nav.project" },
       { step: "project", labelKey: "nav.book" },
       { step: "manuscript", labelKey: "nav.manuscript" },
+      { step: "casting", labelKey: "nav.casting" },
+      { step: "characters", labelKey: "nav.characters" },
       { step: "dossier", labelKey: "nav.dossier" },
       { step: "planning", labelKey: "nav.planning" },
-      { step: "casting", labelKey: "nav.casting" },
       { step: "ssml", labelKey: "nav.ssml" },
       { step: "voice", labelKey: "nav.voice" },
       { step: "export", labelKey: "nav.export" },
@@ -130,6 +132,10 @@ export function AppShell(props: { title?: string; pageName?: string; projectName
             window.location.pathname === r.to : 
             window.location.pathname.startsWith(r.to);
           
+          // Check workflow step status
+          const isCompleted = r.workflowStep ? isStepCompleted(r.workflowStep) : false;
+          const isAvailable = r.workflowStep ? isStepAvailable(r.workflowStep) : true;
+          
           return (
             <NavLink
               key={r.to}
@@ -140,13 +146,21 @@ export function AppShell(props: { title?: string; pageName?: string; projectName
                 alignItems: "center",
                 justifyContent: "center",
                 textDecoration: "none",
-                color: isActive ? "#ffffff" : "var(--muted)",
+                color: isActive ? "#ffffff" : isAvailable ? "var(--text)" : "var(--muted)",
                 background: isActive ? "var(--accent)" : "transparent",
                 borderRadius: 12,
                 padding: "12px 8px",
+                opacity: isAvailable ? 1 : 0.5,
+                position: "relative",
+                cursor: isAvailable ? "pointer" : "not-allowed",
               })}
               title={t(r.key)}
               aria-label={t(r.key)}
+              onClick={(e) => {
+                if (!isAvailable) {
+                  e.preventDefault();
+                }
+              }}
             >
               <span
                 aria-hidden="true"
@@ -162,6 +176,24 @@ export function AppShell(props: { title?: string; pageName?: string; projectName
               >
                 {r.icon}
               </span>
+              {/* Completion indicator */}
+              {isCompleted && (
+                <span
+                  style={{
+                    position: "absolute",
+                    top: "2px",
+                    right: "2px",
+                    fontSize: "10px",
+                    lineHeight: 1,
+                    color: "#10b981",
+                    fontWeight: "bold",
+                    textShadow: "0 0 2px rgba(0,0,0,0.8)",
+                  }}
+                  title={t("workflow.stepCompleted")}
+                >
+                  ✓
+                </span>
+              )}
             </NavLink>
           );
         })}
