@@ -29,6 +29,7 @@
   "manu.saved": "Capítulo guardado. Regenera el plan para ver cambios.",
   "manu.saveError": "Error al guardar capítulo",
   "manu.characters": "Caracteres: {{count, number}}",
+  "manu.title": "Manuscrito",
 
   "plan.regen": "Regenerar plan",
   "plan.generating": "Generando…",

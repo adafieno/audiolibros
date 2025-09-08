@@ -111,6 +111,11 @@ function CharactersPage() {
       });
       
       setProjectConfig(updatedConfig);
+      
+      // Update the project store to mark the step as completed
+      const { markStepCompleted } = useProject.getState();
+      markStepCompleted("characters");
+      
       console.log("Characters page marked as complete");
     } catch (error) {
       console.error("Failed to mark characters as complete:", error);
@@ -270,8 +275,8 @@ function CharactersPage() {
   }
 
   return (
-    <div style={{ padding: "16px", maxWidth: "1200px" }}>
-      <h1 style={{ fontSize: "32px", fontWeight: "bold", color: "var(--text)", marginBottom: "8px" }}>Characters</h1>
+    <div style={{ padding: "2px", maxWidth: "90%" }}>
+      <h2>Characters</h2>
       <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "24px" }}>Detection, editing & voice preparation.</p>
 
       {/* Action buttons */}
@@ -320,17 +325,19 @@ function CharactersPage() {
             </button>
             
             <button 
-              disabled={loading || characters.length === 0} 
+              onClick={handleMarkComplete}
+              disabled={loading || characters.length === 0 || isComplete} 
               style={{ 
                 padding: "6px 12px", 
                 fontSize: "14px",
-                backgroundColor: "var(--success)",
+                backgroundColor: isComplete ? "var(--success)" : "var(--success)",
                 color: "white",
-                border: "1px solid var(--success)",
-                borderRadius: "4px"
+                border: `1px solid var(--success)`,
+                borderRadius: "4px",
+                opacity: isComplete ? 0.7 : 1
               }}
             >
-              Mark Complete
+              {isComplete ? "✓ Completed" : "Mark Complete"}
             </button>
           </>
         )}

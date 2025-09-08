@@ -82,13 +82,11 @@ export const useProject = create<ProjectState>()((set, get) => ({
       case "characters":
         return completedSteps.has("casting"); // Available after casting
         
-      case "dossier":
       case "planning": 
         return completedSteps.has("characters"); // Available after characters
         
       case "ssml":
-        return completedSteps.has("dossier") && 
-               completedSteps.has("planning"); // Available after dossier and planning
+        return completedSteps.has("planning"); // Available after planning
                
       case "voice":
         return completedSteps.has("ssml"); // Available after SSML

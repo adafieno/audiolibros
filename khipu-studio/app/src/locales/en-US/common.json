@@ -29,6 +29,7 @@
   "manu.saved": "Chapter saved. Regenerate the plan to see changes.",
   "manu.saveError": "Error saving chapter",
   "manu.characters": "Characters: {{count, number}}",
+  "manu.title": "Manuscript",
 
   "plan.regen": "Regenerate plan",
   "plan.generating": "Generating…",

@@ -86,7 +86,6 @@ export default function Project() {
   return (
     <div>
       <h2>{t("project.title")}</h2>
-      
       {/* Project Language */}
       <section style={{ marginTop: 24 }}>
         <h3>{t("project.general")}</h3>

@@ -81,10 +81,10 @@ export default function Home() {
 
   return (
     <div>
-      <p>{t("home.instructions")}</p>
       {/* Open existing */}
       <section style={{ marginTop: 16 }}>
-        <h3>{t("home.existingProjects")}</h3>
+        <h2>{t("home.existingProjects")}</h2>
+        <p>{t("home.instructions")}</p>
         {loading ? (
           <div style={{ color: "var(--muted)" }}>{t("home.loading")}</div>
         ) : recents.length === 0 ? (

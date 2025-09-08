@@ -91,7 +91,6 @@ export default function Book() {
   return (
     <div>
       <h2>{t("book.title")}</h2>
-
       {/* Basic Information */}
       <section style={{ marginTop: 24 }}>
         <h3>{t("book.basicInfo")}</h3>
@@ -100,6 +99,7 @@ export default function Book() {
             <label>
               <div>{t("book.title.label")}</div>
               <input
+                style={{ width: "80%" }}
                 value={cfg?.bookMeta?.title || ""}
                 onChange={(e) => updateBookMeta({ title: e.target.value })}
               />
@@ -107,6 +107,7 @@ export default function Book() {
             <label>
               <div>{t("book.subtitle.label")}</div>
               <input
+                style={{ width: "80%" }}
                 value={cfg?.bookMeta?.subtitle || ""}
                 onChange={(e) => updateBookMeta({ subtitle: e.target.value })}
               />
@@ -114,6 +115,7 @@ export default function Book() {
             <label>
               <div>{t("book.authors.label")}</div>
               <input
+                style={{ width: "80%" }}
                 value={cfg?.bookMeta?.authors?.join(", ") || ""}
                 placeholder="Author 1, Author 2"
                 onChange={(e) => updateBookMeta({ 
@@ -124,6 +126,7 @@ export default function Book() {
             <label>
               <div>{t("book.narrators.label")}</div>
               <input
+                style={{ width: "80%" }}
                 value={cfg?.bookMeta?.narrators?.join(", ") || ""}
                 placeholder="Narrator 1, Narrator 2"
                 onChange={(e) => updateBookMeta({ 
@@ -157,7 +160,8 @@ export default function Book() {
           <label>
             <div>{t("book.description.label")}</div>
             <textarea
-              rows={6}
+              style={{ width: "80%" }}
+              rows={10}
               value={cfg?.bookMeta?.description || ""}
               onChange={(e) => updateBookMeta({ description: e.target.value })}
             />
@@ -165,6 +169,7 @@ export default function Book() {
           <label>
             <div>{t("book.keywords.label")}</div>
             <input
+              style={{ width: "40%" }}
               value={cfg?.bookMeta?.keywords?.join(", ") || ""}
               placeholder="keyword1, keyword2, keyword3"
               onChange={(e) => updateBookMeta({ 
@@ -175,6 +180,7 @@ export default function Book() {
           <label>
             <div>{t("book.categories.label")}</div>
             <input
+              style={{ width: "40%" }}
               value={cfg?.bookMeta?.categories?.join(", ") || ""}
               placeholder="Fiction / Literary, Suspense"
               onChange={(e) => updateBookMeta({ 
@@ -192,6 +198,7 @@ export default function Book() {
           <label>
             <div>{t("book.publisher.label")}</div>
             <input
+              style={{ width: "80%" }}
               value={cfg?.bookMeta?.publisher || ""}
               onChange={(e) => updateBookMeta({ publisher: e.target.value })}
             />
@@ -207,6 +214,7 @@ export default function Book() {
           <label>
             <div>{t("book.isbn.label")}</div>
             <input
+              style={{ width: "80%" }}
               value={cfg?.bookMeta?.isbn || ""}
               placeholder="978-0-000000-00-0"
               onChange={(e) => updateBookMeta({ isbn: e.target.value })}
@@ -215,6 +223,7 @@ export default function Book() {
           <label>
             <div>{t("book.sku.label")}</div>
             <input
+              style={{ width: "80%" }}
               value={cfg?.bookMeta?.sku || ""}
               onChange={(e) => updateBookMeta({ sku: e.target.value })}
             />
@@ -222,6 +231,7 @@ export default function Book() {
           <label>
             <div>{t("book.rights.label")}</div>
             <input
+              style={{ width: "80%" }}
               value={cfg?.bookMeta?.rights || ""}
               placeholder="© 2025 Author Name"
               onChange={(e) => updateBookMeta({ rights: e.target.value })}
@@ -233,10 +243,11 @@ export default function Book() {
       {/* Series Information */}
       <section style={{ marginTop: 24 }}>
         <h3>{t("book.series")}</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           <label>
             <div>{t("book.seriesName.label")}</div>
             <input
+              style={{ width: "80%" }}  
               value={cfg?.bookMeta?.series?.name || ""}
               onChange={(e) => updateBookMeta({ 
                 series: { 

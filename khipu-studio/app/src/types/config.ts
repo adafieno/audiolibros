@@ -42,7 +42,18 @@ export interface ProjectConfig {
     openai?: { apiKey?: string; baseUrl?: string }; 
     paths?: { bookMeta?: string; production?: string };    // only if not using app creds
   };
-
+  // Workflow completion tracking
+  workflow?: {
+    project?: { complete?: boolean; completedAt?: string };
+    manuscript?: { complete?: boolean; completedAt?: string };
+    casting?: { complete?: boolean; completedAt?: string };
+    characters?: { complete?: boolean; completedAt?: string };
+    dossier?: { complete?: boolean; completedAt?: string };
+    planning?: { complete?: boolean; completedAt?: string };
+    ssml?: { complete?: boolean; completedAt?: string };
+    voice?: { complete?: boolean; completedAt?: string };
+    export?: { complete?: boolean; completedAt?: string };
+  };
 }
 
 export interface BookMeta {

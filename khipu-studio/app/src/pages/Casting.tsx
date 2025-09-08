@@ -205,14 +205,13 @@ export default function CastingPage() {
   const availableVoices = filterVoicesForProject(inventory.voices, projectEngine, projectLocale);
 
   return (
-    <div style={{ padding: "16px", maxWidth: "1200px" }}>
-      <h1>{t("casting.title")}</h1>
+    <div style={{ padding: "2px", maxWidth: "90%" }}>
+      <h2>{t("casting.title")}</h2>
       <p>{t("casting.description")}</p>
-
       {/* Current Engine Display */}
       <section style={{ marginBottom: "24px" }}>
-        <h2>{t("casting.currentEngine")}</h2>
-        <p>{t("casting.engineDescription")}</p>
+        <h3>{t("casting.currentEngine")}</h3>
+          <p>{t("casting.engineDescription")}</p>
         
         <div style={{ 
           padding: "12px 16px",
@@ -230,7 +229,7 @@ export default function CastingPage() {
       {/* Voice Selection */}
       <section>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-          <h2>{t("casting.voicesTitle")} ({availableVoices.length})</h2>
+          <h3>{t("casting.voicesTitle")} ({availableVoices.length})</h3>
           <div style={{ display: "flex", gap: "8px" }}>
             <button
               onClick={() => handleSelectAll(availableVoices)}
