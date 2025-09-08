@@ -1,0 +1,29 @@
+﻿{
+  "name": "vscode-ssml-voice-studio",
+  "displayName": "SSML Voice Studio",
+  "description": "Grid-first SSML plan editor (webview) for audiobooks",
+  "publisher": "local-dev",
+  "version": "0.0.1",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Other"],
+  "activationEvents": ["onCommand:ssmlVoiceStudio.open"],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "ssmlVoiceStudio.open", "title": "SSML Voice Studio: Open" }
+    ]
+  },
+  "scripts": {
+    "build:webview": "npm --prefix webview-ui run build",
+    "dev:webview": "npm --prefix webview-ui run dev",
+    "build:ext": "tsc -p .",
+    "watch:ext": "tsc -w -p .",
+    "dev": "concurrently -k \"npm:dev:webview\" \"npm:watch:ext\"",
+    "build": "npm run build:webview && npm run build:ext"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "concurrently": "^8.2.2",
+    "typescript": "^5.4.0"
+  }
+}
