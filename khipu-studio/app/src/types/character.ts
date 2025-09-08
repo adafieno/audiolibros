@@ -8,6 +8,26 @@ export interface Character {
   quotes: string[]; // Sample quotes/dialogue
   isNarrator?: boolean;
   isMainCharacter?: boolean;
+  voiceAssignment?: VoiceAssignment;
+}
+
+export interface VoiceAssignment {
+  voiceId: string;
+  style?: string;
+  styledegree?: number; // 0.1 to 1.0
+  rate_pct?: number; // -50 to 50
+  pitch_pct?: number; // -50 to 50
+  confidence: number;
+  method: "llm_auto" | "manual";
+}
+
+export interface Voice {
+  id: string;
+  locale: string;
+  gender: "M" | "F";
+  age_hint: string;
+  accent_tags: string[];
+  styles: string[];
 }
 
 export interface CharacterTraits {

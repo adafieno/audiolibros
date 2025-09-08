@@ -106,7 +106,7 @@ async function runCharacterDetection(projectRoot) {
       
       // Try reading characters.json
       try {
-        // The Python script saves to analysis/dossier/characters.json (relative to project root)
+        // The Python script saves to dossier/characters.json (relative to project root)
         const jsonPath = path.join(projectRoot, "analysis", "dossier", "characters.json");
         console.log("📖 Reading results from:", jsonPath);
         const data = await readJsonIf(jsonPath) || [];
@@ -115,6 +115,81 @@ async function runCharacterDetection(projectRoot) {
       } catch (e) {
         console.error("❌ Failed to read results:", e);
         reject(new Error("Detection finished but characters.json not readable"));
+      }
+    });
+  });
+}
+
+/** Run voice assignment script (assign_voices) */
+async function runVoiceAssignment(projectRoot) {
+  console.log("🎤 Starting voice assignment:", projectRoot);
+  
+  const script = path.join(repoRoot, "py", "characters", "assign_voices.py");
+  console.log("📜 Script path:", script);
+  
+  // Basic existence check
+  try { 
+    await fsp.access(script); 
+    console.log("✅ Script exists");
+  } catch { 
+    console.error("❌ Script not found:", script);
+    throw new Error("Voice assignment script not found"); 
+  }
+
+  // Check if characters file exists
+  const charactersFile = path.join(projectRoot, "dossier", "characters.json");
+  console.log("📁 Characters file:", charactersFile);
+  
+  try {
+    await fsp.access(charactersFile);
+    console.log("✅ Characters file exists");
+  } catch {
+    console.error("❌ Characters file not found:", charactersFile);
+    throw new Error("Characters file not found. Please run character detection first.");
+  }
+
+  const exe = getPythonExe();
+  console.log("🐍 Python executable:", exe);
+  
+  return new Promise((resolve, reject) => {
+    console.log("🚀 Spawning Python process for voice assignment...");
+    const proc = spawn(exe, [script, projectRoot], { cwd: repoRoot, windowsHide: true });
+    let stderr = ""; let stdout = "";
+    
+    proc.stdout.on("data", d => { 
+      const output = d.toString();
+      stdout += output;
+      console.log("📤 Python stdout:", output.trim());
+    });
+    
+    proc.stderr.on("data", d => { 
+      const s = d.toString(); 
+      stderr += s; 
+      console.log("📢 Python stderr:", s.trim());
+    });
+    
+    proc.on("error", err => {
+      console.error("💥 Process error:", err);
+      reject(err);
+    });
+    
+    proc.on("close", async (code) => {
+      console.log("🏁 Voice assignment process closed with code:", code);
+      
+      if (code !== 0) {
+        const error = `Voice assignment exited with code ${code}. stderr: ${stderr.split(/\n/).slice(-8).join("\n")}`;
+        console.error("❌ Voice assignment failed:", error);
+        return reject(new Error(error));
+      }
+      
+      // Try parsing the output JSON
+      try {
+        const result = JSON.parse(stdout.trim());
+        console.log("✅ Voice assignment result:", result);
+        resolve(result);
+      } catch (e) {
+        console.error("❌ Failed to parse voice assignment output:", e);
+        reject(new Error("Voice assignment finished but output not parseable"));
       }
     });
   });
@@ -376,6 +451,17 @@ function createWin() {
             return { ok: true, ...result };
           } catch (e) {
             return { ok: false, error: String(e.message || e) };
+          }
+        });
+
+        // Voice assignment for characters
+        ipcMain.handle("characters:assignVoices", async (_e, { projectRoot }) => {
+          if (!projectRoot) throw new Error("Missing projectRoot");
+          try {
+            const result = await runVoiceAssignment(projectRoot);
+            return { success: true, ...result };
+          } catch (e) {
+            return { success: false, error: String(e.message || e) };
           }
         });
 

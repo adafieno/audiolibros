@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { Character, CharacterDetection } from "../types/character";
+import type { Character, CharacterDetection, Voice, VoiceAssignment } from "../types/character";
 
 interface RawDetectedCharacter {
   id?: string;
@@ -47,7 +47,8 @@ interface WindowKhipu {
   khipu?: {
     characters?: {
       detect: (r: string) => Promise<DetectionIPCResult>
-    }
+    };
+    call?: (method: string, params: Record<string, unknown>) => Promise<Record<string, unknown>>;
   }
 }
 import { useProject } from "../store/project";
@@ -99,6 +100,9 @@ export interface UseCharactersApi extends UseCharactersState {
   sortByFrequency: () => void;
   exportJson: () => void;
   importJson: (file: File) => Promise<void>;
+  assignVoices: () => Promise<void>;
+  updateVoiceAssignment: (characterId: string, voiceId: string, style?: string, prosodyAdjustments?: Partial<VoiceAssignment>) => void;
+  availableVoices: Voice[];
 }
 
 const emptyDetection: CharacterDetection = {
@@ -119,6 +123,7 @@ export function useCharacters(): UseCharactersApi {
   const [message, setMessage] = useState("");
   const [filter, setFilter] = useState("");
   const [selectedIds, setSelected] = useState<Set<string>>(new Set());
+  const [availableVoices, setAvailableVoices] = useState<Voice[]>([]);
   const mounted = useRef(false);
 
   const safeProjectRoot = root || "";
@@ -133,25 +138,39 @@ export function useCharacters(): UseCharactersApi {
         throw new Error("File existence check not available");
       }
       
-      const charactersPath = `${safeProjectRoot}/analysis/dossier/characters.json`;
+      const charactersPath = `${safeProjectRoot}/dossier/characters.json`;
       const exists = await api.fileExists(charactersPath);
       
       if (exists) {
         // Load existing characters from file
         console.log("📖 Loading existing characters from:", charactersPath);
         
-        // Load directly as array (Python detection script format)
+        // Load characters data (handle both array and dictionary formats)
         const charactersResult = await window.khipu!.call("fs:read", {
           projectRoot: safeProjectRoot,
-          relPath: "analysis/dossier/characters.json",
+          relPath: "dossier/characters.json",
           json: true,
         });
         
-        if (Array.isArray(charactersResult) && charactersResult.length > 0) {
-          console.log(`✅ Loaded ${charactersResult.length} characters from file`);
+        // Handle both formats: direct array or dictionary with "characters" key
+        let charactersArray: SavedCharacter[] = [];
+        if (Array.isArray(charactersResult)) {
+          // Direct array format
+          charactersArray = charactersResult;
+        } else if (charactersResult && typeof charactersResult === 'object' && 'characters' in charactersResult) {
+          // Dictionary format with "characters" key
+          const charactersData = charactersResult as Record<string, unknown>;
+          const characters = charactersData.characters;
+          if (Array.isArray(characters)) {
+            charactersArray = characters;
+          }
+        }
+        
+        if (Array.isArray(charactersArray) && charactersArray.length > 0) {
+          console.log(`✅ Loaded ${charactersArray.length} characters from file`);
           
           // Convert to frontend format
-          const formattedCharacters: Character[] = charactersResult.map((char: SavedCharacter, index: number) => {
+          const formattedCharacters: Character[] = charactersArray.map((char: SavedCharacter, index: number) => {
             const mapAge = (age: string): "elderly" | "adult" | "child" | "teen" => {
               switch (age?.toLowerCase()) {
                 case 'elderly': return 'elderly';
@@ -444,7 +463,7 @@ export function useCharacters(): UseCharactersApi {
       // Save as plain array (same format as Python script output)
       await window.khipu!.call("fs:write", {
         projectRoot: safeProjectRoot,
-        relPath: "analysis/dossier/characters.json",
+        relPath: "dossier/characters.json",
         json: true,
         content: savedCharacters
       });
@@ -503,6 +522,60 @@ export function useCharacters(): UseCharactersApi {
     }
   }, []);
 
+  const assignVoices = useCallback(async () => {
+    if (!safeProjectRoot) return;
+    setLoading(true);
+    setMessage("Assigning voices...");
+    
+    try {
+      // Use IPC to call voice assignment Python script
+      const api = (window as unknown as WindowKhipu).khipu;
+      if (!api?.call) {
+        throw new Error("IPC method not available");
+      }
+      
+      // Call voice assignment through IPC
+      const result = await api.call("characters:assignVoices", {
+        projectRoot: safeProjectRoot
+      }) as { success?: boolean; characters?: Character[]; availableVoices?: Voice[]; message?: string; error?: string };
+      
+      if (result.success) {
+        setCharacters(result.characters || []);
+        setAvailableVoices(result.availableVoices || []);
+        setDirty(false);
+        setMessage(result.message || "Voices assigned successfully");
+      } else {
+        setMessage(result.error || "Voice assignment failed");
+      }
+    } catch (e) {
+      console.error(e);
+      setMessage("Voice assignment failed");
+    } finally {
+      setLoading(false);
+    }
+  }, [safeProjectRoot]);
+
+  const updateVoiceAssignment = useCallback((characterId: string, voiceId: string, style?: string, prosodyAdjustments?: Partial<VoiceAssignment>) => {
+    setCharacters(prev => prev.map(char => {
+      if (char.id === characterId) {
+        return {
+          ...char,
+          voiceAssignment: {
+            voiceId,
+            style,
+            styledegree: prosodyAdjustments?.styledegree || 0.6,
+            rate_pct: prosodyAdjustments?.rate_pct || 0,
+            pitch_pct: prosodyAdjustments?.pitch_pct || 0,
+            confidence: 0.9,
+            method: "manual"
+          }
+        };
+      }
+      return char;
+    }));
+    setDirty(true);
+  }, []);
+
   const filtered = useMemo(() => {
     if (!filter.trim()) return characters;
     const q = filter.toLowerCase();
@@ -540,5 +613,8 @@ export function useCharacters(): UseCharactersApi {
     sortByFrequency,
     exportJson,
     importJson,
+    assignVoices,
+    updateVoiceAssignment,
+    availableVoices,
   };
 }
