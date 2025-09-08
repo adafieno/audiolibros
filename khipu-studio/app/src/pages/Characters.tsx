@@ -1,86 +1,336 @@
+import { useEffect, useState } from "react";
 import { useCharacters } from "../hooks/useCharacters";
+import { useProject } from "../store/project";
 
 function CharactersPage() {
+  const { root } = useProject();
   const {
     characters,
     loading,
     saving,
     dirty,
+    message,
     reloadDetection,
     addCharacter,
     removeCharacter,
-    updateCharacter,
     sortByFrequency,
     save,
     load,
   } = useCharacters();
 
-  const runDetection = () => void reloadDetection();
+  const [hasCharacterList, setHasCharacterList] = useState(false);
+  const [checkingFile, setCheckingFile] = useState(true);
+  const [detectionProgress, setDetectionProgress] = useState<{current: number, total: number} | null>(null);
+
+  useEffect(() => {
+    if (!root) {
+      setHasCharacterList(false);
+      setCheckingFile(false);
+      return;
+    }
+
+    // Listen for detection progress
+    const handleProgress = (progress: {current: number, total: number}) => {
+      setDetectionProgress(progress);
+    };
+
+    if (window.khipu?.characters?.onProgress) {
+      window.khipu.characters.onProgress(handleProgress);
+    }
+
+    if (window.khipu) {
+      window.khipu.fileExists("analysis/dossier/characters.json")
+        .then((exists: boolean) => {
+          setHasCharacterList(exists);
+          if (exists) {
+            // Load characters if file exists
+            load();
+          }
+        })
+        .catch(() => setHasCharacterList(false))
+        .finally(() => setCheckingFile(false));
+    } else {
+      console.error("Khipu object is not available in the renderer process.");
+      setHasCharacterList(false);
+      setCheckingFile(false);
+    }
+
+    return () => {
+      // Cleanup would go here if needed
+      setDetectionProgress(null);
+    };
+  }, [root, load]);
+
+  const runDetection = async () => {
+    try {
+      console.log("Starting character detection...");
+      
+      // Run the detection without timeout - let it complete naturally
+      await reloadDetection();
+      
+      console.log("Detection completed successfully!");
+      
+      // Clear progress when done
+      setDetectionProgress(null);
+      
+      // Update file existence flag
+      if (window.khipu) {
+        const charactersPath = `${root}/analysis/dossier/characters.json`;
+        const exists = await window.khipu.fileExists(charactersPath);
+        console.log("File exists:", exists, "at path:", charactersPath);
+        setHasCharacterList(exists);
+      }
+    } catch (error) {
+      console.error("Detection failed:", error);
+      // Ensure loading state is cleared even on error
+      setHasCharacterList(false);
+      setDetectionProgress(null);
+    }
+  };
   const saveCharacters = () => void save();
   const add = () => addCharacter();
   const remove = (id: string) => removeCharacter(id);
 
+  // Show loading while checking file existence
+  if (checkingFile) {
+    return (
+      <div style={{ padding: "16px", maxWidth: "1200px" }}>
+        <div style={{ textAlign: "center", padding: "64px 0" }}>
+          <p style={{ color: "var(--muted)" }}>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if no project is loaded
+  if (!root) {
+    return (
+      <div style={{ padding: "16px", maxWidth: "1200px" }}>
+        <div style={{ textAlign: "center", padding: "64px 0", backgroundColor: "var(--panel)", borderRadius: "8px", border: "1px dashed var(--border)" }}>
+          <p style={{ color: "var(--text)", fontSize: "18px", marginBottom: "8px" }}>No project loaded</p>
+          <p style={{ color: "var(--muted)", fontSize: "14px" }}>Please load a project first to manage characters.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Characters</h1>
-          <p className="text-gray-600 text-sm">Detection, editing & voice preparation.</p>
-        </div>
-        <div className="flex flex-wrap gap-2 items-center">
-          <button onClick={load} disabled={loading} className="px-3 py-2 text-sm bg-slate-200 hover:bg-slate-300 rounded disabled:opacity-50">Reload</button>
-          <button onClick={runDetection} disabled={loading} className="px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50">Detect / Refresh</button>
-          <button onClick={add} disabled={loading} className="px-3 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700">Add</button>
-          <button onClick={sortByFrequency} disabled={loading || characters.length === 0} className="px-3 py-2 text-sm bg-amber-500 text-white rounded hover:bg-amber-600 disabled:opacity-50">Sort by Frequency</button>
-          <button onClick={saveCharacters} disabled={saving || loading || !dirty} className="px-3 py-2 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50">{saving ? "Saving..." : "Save"}{dirty && !saving && <span className="ml-1" title="Unsaved changes">*</span>}</button>
-        </div>
+    <div style={{ padding: "16px", maxWidth: "1200px" }}>
+      <h1 style={{ fontSize: "32px", fontWeight: "bold", color: "var(--text)", marginBottom: "8px" }}>Characters</h1>
+      <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "24px" }}>Detection, editing & voice preparation.</p>
+
+      {/* Action buttons */}
+      <div style={{ display: "flex", gap: "8px", marginBottom: "24px", alignItems: "center" }}>
+        <button 
+          onClick={runDetection} 
+          disabled={loading} 
+          style={{ padding: "6px 12px", fontSize: "14px" }}
+        >
+          {loading ? "Detecting..." : "Detect / Refresh"}
+        </button>
+        
+        <button 
+          onClick={add} 
+          disabled={loading} 
+          style={{ padding: "6px 12px", fontSize: "14px" }}
+        >
+          Add
+        </button>
+        
+        {(hasCharacterList || characters.length > 0) && (
+          <>
+            <button 
+              onClick={sortByFrequency} 
+              disabled={loading || characters.length === 0} 
+              style={{ padding: "6px 12px", fontSize: "14px" }}
+            >
+              Sort by Frequency
+            </button>
+            
+            <button 
+              onClick={saveCharacters} 
+              disabled={saving || loading || !dirty} 
+              style={{ padding: "6px 12px", fontSize: "14px" }}
+            >
+              {saving ? "Saving..." : "Save"}
+              {dirty && !saving && " *"}
+            </button>
+          </>
+        )}
       </div>
 
       {loading && (
-        <div className="mb-4 p-4 bg-slate-50 border border-slate-200 rounded animate-pulse text-sm">Loading characters…</div>
-      )}
-
-      {!loading && characters.length === 0 && (
-        <div className="text-center py-16 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-          <p className="text-gray-600 text-lg mb-2">No characters yet</p>
-          <p className="text-gray-400 text-sm mb-4">Run detection or add manually.</p>
-          <div className="flex justify-center gap-2">
-            <button onClick={runDetection} className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">Detect</button>
-            <button onClick={add} className="px-4 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700">Add</button>
+        <div style={{ 
+          marginBottom: "16px", 
+          padding: "16px", 
+          backgroundColor: "var(--panelAccent)", 
+          border: "1px solid var(--border)", 
+          borderRadius: "6px", 
+          fontSize: "14px" 
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div style={{
+              display: "inline-block",
+              width: "16px",
+              height: "16px",
+              border: "2px solid var(--accent)",
+              borderTop: "2px solid transparent",
+              borderRadius: "50%",
+              animation: "spin 1s linear infinite"
+            }}></div>
+            <span style={{ color: "var(--text)" }}>Running character detection...</span>
           </div>
+          {detectionProgress && (
+            <div style={{ marginTop: "12px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "var(--muted)", marginBottom: "4px" }}>
+                <span>Processing chapter {detectionProgress.current} of {detectionProgress.total}</span>
+                <span>{Math.round((detectionProgress.current / detectionProgress.total) * 100)}%</span>
+              </div>
+              <div style={{ width: "100%", backgroundColor: "var(--border)", borderRadius: "9999px", height: "8px" }}>
+                <div 
+                  style={{ 
+                    backgroundColor: "var(--accent)", 
+                    height: "8px", 
+                    borderRadius: "9999px", 
+                    transition: "all 0.3s",
+                    width: `${(detectionProgress.current / detectionProgress.total) * 100}%` 
+                  }}
+                ></div>
+              </div>
+            </div>
+          )}
+          <div style={{ fontSize: "12px", color: "var(--accent)", marginTop: "4px" }}>This may take a moment while analyzing the manuscript...</div>
         </div>
       )}
 
-      <div className="grid gap-4">
-        {characters.map(c => (
-          <div key={c.id} className="border rounded-lg bg-white shadow-sm">
-            <div className="p-4 flex flex-col gap-3">
-              <div className="flex items-start gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <input
-                      value={c.name}
-                      onChange={e => updateCharacter(c.id, { name: e.target.value })}
-                      className="text-lg font-semibold bg-transparent border-b border-transparent focus:border-blue-400 focus:outline-none px-1"
-                    />
-                    <span className="ml-auto text-xs text-gray-400">Freq {c.frequency}%</span>
-                  </div>
-                  <textarea
-                    value={c.description || ''}
-                    onChange={e => updateCharacter(c.id, { description: e.target.value })}
-                    placeholder="Description…"
-                    rows={2}
-                    className="w-full text-sm resize vertical border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400"
-                  />
+          {message && !loading && (
+            <div style={{
+              marginBottom: "16px",
+              padding: "12px",
+              borderRadius: "6px",
+              fontSize: "14px",
+              ...(message.includes('failed') || message.includes('crashed') || message.includes('timed out')
+                ? { backgroundColor: "var(--panelAccent)", border: "1px solid var(--error)", color: "var(--error)" }
+                : message.includes('detected') || message.includes('Successfully')
+                ? { backgroundColor: "var(--panelAccent)", border: "1px solid var(--success)", color: "var(--success)" }
+                : { backgroundColor: "var(--panelAccent)", border: "1px solid var(--accent)", color: "var(--accent)" })
+            }}>
+              {message}
+              {(message.includes('failed') || message.includes('timed out')) && (
+                <div style={{ marginTop: "8px", fontSize: "12px" }}>
+                  <p><strong>💡 Troubleshooting tips:</strong></p>
+                  <ul style={{ marginLeft: "16px", marginTop: "4px", listStyleType: "disc" }}>
+                    <li>Ensure your project has manuscript files in <code>analysis/chapters_txt/</code></li>
+                    <li>Check that Python dependencies are installed</li>
+                    <li>Try adding characters manually using the "Add" button</li>
+                  </ul>
                 </div>
-                <div className="flex flex-col items-end gap-2">
-                  <button onClick={() => remove(c.id)} className="text-xs px-2 py-1 bg-red-50 text-red-600 rounded hover:bg-red-100">Remove</button>
+              )}
+            </div>
+          )}
+          
+      {!hasCharacterList && !loading && characters.length === 0 && (
+        <div style={{ textAlign: "center", padding: "64px 0", backgroundColor: "var(--panel)", borderRadius: "8px", border: "1px dashed var(--border)", marginBottom: "24px" }}>
+          <p style={{ color: "var(--text)", fontSize: "18px", marginBottom: "8px" }}>No characters yet</p>
+          <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "16px" }}>Run detection to generate a character list.</p>
+        </div>
+      )}
+
+      {(hasCharacterList || characters.length > 0) && !loading && (
+        <div style={{ 
+          display: "grid", 
+          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", 
+          gap: "12px",
+          marginBottom: "24px"
+        }}>
+            {characters.length === 0 ? (
+              <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "64px 0", backgroundColor: "var(--panel)", borderRadius: "12px", border: "1px dashed var(--border)" }}>
+                <p style={{ color: "var(--text)", fontSize: "18px", marginBottom: "8px" }}>Character list is empty</p>
+                <p style={{ color: "var(--muted)", fontSize: "14px" }}>Add characters manually or run detection again.</p>
+              </div>
+            ) : (
+              characters.map(c => (
+              <div
+                key={c.id}
+                style={{
+                  border: "1px solid var(--border)",
+                  borderRadius: "8px",
+                  padding: "12px",
+                  backgroundColor: "var(--panel)"
+                }}
+              >
+                <div>
+                  {/* Character name */}
+                  <div style={{ fontWeight: "500", marginBottom: "8px", fontSize: "16px", color: "var(--text)" }}>
+                    {c.name}
+                  </div>
+                  
+                  {/* Frequency */}
+                  <div style={{ fontSize: "12px", color: "var(--muted)", marginBottom: "8px" }}>
+                    Frequency: {c.frequency}%
+                  </div>
+                  
+                  {/* Basic info */}
+                  <div style={{ fontSize: "12px", color: "var(--muted)", marginBottom: "8px" }}>
+                    {c.traits.gender === 'M' ? 'Male' : c.traits.gender === 'F' ? 'Female' : 'Neutral'} • {(c.traits.age || 'Adult').charAt(0).toUpperCase() + (c.traits.age || 'adult').slice(1)}
+                  </div>
+
+                  {/* Character importance badges */}
+                  {(c.isNarrator || c.isMainCharacter) && (
+                    <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "8px" }}>
+                      {c.isNarrator && c.isMainCharacter 
+                        ? "Narrator, Main Character"
+                        : c.isNarrator 
+                        ? "Narrator"
+                        : "Main Character"
+                      }
+                    </div>
+                  )}
+
+                  {/* Description */}
+                  {c.description && (
+                    <div style={{ fontSize: "12px", color: "var(--text)", marginBottom: "8px" }}>
+                      {c.description}
+                    </div>
+                  )}
+
+                  {/* Personality */}
+                  {c.traits.personality && c.traits.personality.length > 0 && (
+                    <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "4px" }}>
+                      Personality: {Array.isArray(c.traits.personality) ? c.traits.personality.join(', ') : c.traits.personality}
+                    </div>
+                  )}
+
+                  {/* Speaking Style */}
+                  {c.traits.speaking_style && c.traits.speaking_style.length > 0 && (
+                    <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "8px" }}>
+                      Speaking Style: {Array.isArray(c.traits.speaking_style) ? c.traits.speaking_style.join(', ') : c.traits.speaking_style}
+                    </div>
+                  )}
+                  
+                  {/* Remove button */}
+                  <div style={{ marginTop: "8px" }}>
+                    <button
+                      onClick={() => remove(c.id)}
+                      style={{
+                        padding: "4px 8px",
+                        fontSize: "12px",
+                        backgroundColor: "var(--error)",
+                        color: "var(--btn-fg)",
+                        border: "none",
+                        borderRadius: "4px",
+                        cursor: "pointer"
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        ))}
-      </div>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }

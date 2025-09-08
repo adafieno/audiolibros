@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "language": "es-PE",
+  "paths": { 
+    "bookMeta": "book.meta.json", 
+    "production": "production.settings.json" 
+  },
+  "planning": { 
+    "maxKb": 48, 
+    "llmAttribution": "off" 
+  },
+  "ssml": {},
+  "tts": { 
+    "engine": { 
+      "name": "azure", 
+      "voice": "es-PE-CamilaNeural" 
+    }, 
+    "cache": true 
+  },
+  "llm": { 
+    "engine": { 
+      "name": "openai", 
+      "model": "gpt-4o" 
+    } 
+  },
+  "export": { 
+    "outputDir": "exports", 
+    "platforms": { 
+      "apple": false, 
+      "google": false, 
+      "spotify": false 
+    } 
+  },
+  "creds": { 
+    "useAppAzure": false, 
+    "useAppOpenAI": false 
+  }
+}

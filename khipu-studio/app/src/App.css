@@ -5,6 +5,28 @@
   text-align: center;
 }
 
+/* Character card borders that override theme styles */
+.character-card {
+  border: 3px solid #6B7280 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.character-card:hover {
+  border-color: #3B82F6 !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Spinner animation */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;

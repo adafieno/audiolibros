@@ -5,5 +5,8 @@ contextBridge.exposeInMainWorld('khipu', {
   onJob: (cb) => ipcRenderer.on('job:event', (_e, data) => cb?.(data)),
   characters: {
     detect: (projectRoot) => ipcRenderer.invoke('characters:detect', { projectRoot }),
+    onProgress: (cb) => ipcRenderer.on('characters:detection:progress', (_e, data) => cb?.(data)),
+    onLog: (cb) => ipcRenderer.on('characters:detection:log', (_e, data) => cb?.(data)),
   },
+  fileExists: (filePath) => ipcRenderer.invoke("file:exists", filePath),
 });

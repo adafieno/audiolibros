@@ -30,28 +30,90 @@ function runPy(args, onLine) {
   return new Promise((res) => child.on("close", (code) => res(code ?? 0)));
 }
 
-/** Run character detection script (build_from_manuscript) */
+/** Run character detection script (detect_characters) */
 async function runCharacterDetection(projectRoot) {
-  const script = path.join(repoRoot, "py", "dossier", "build_from_manuscript.py");
+  console.log("🔍 Starting character detection:", projectRoot);
+  
+  const script = path.join(repoRoot, "py", "characters", "detect_characters.py");
+  console.log("📜 Script path:", script);
+  
   // Basic existence check
-  try { await fsp.access(script); } catch { throw new Error("Character detection script not found"); }
+  try { 
+    await fsp.access(script); 
+    console.log("✅ Script exists");
+  } catch { 
+    console.error("❌ Script not found:", script);
+    throw new Error("Character detection script not found"); 
+  }
 
-  // We assume structure + chapters already exist; script itself handles missing gracefully.
+  // Check if manuscript directory exists
+  const manuscriptDir = path.join(projectRoot, "analysis", "chapters_txt");
+  console.log("📁 Manuscript dir:", manuscriptDir);
+  
+  try {
+    await fsp.access(manuscriptDir);
+    console.log("✅ Manuscript directory exists");
+  } catch {
+    console.error("❌ Manuscript directory not found:", manuscriptDir);
+    throw new Error("Manuscript directory not found. Please ensure analysis/chapters_txt exists with .txt files.");
+  }
+
   const exe = getPythonExe();
+  console.log("🐍 Python executable:", exe);
+  
   return new Promise((resolve, reject) => {
-    const proc = spawn(exe, [script], { cwd: projectRoot || repoRoot, windowsHide: true });
+    console.log("🚀 Spawning Python process...");
+    const proc = spawn(exe, [script, manuscriptDir], { cwd: projectRoot || repoRoot, windowsHide: true });
     let stderr = ""; let stdout = "";
-    proc.stdout.on("data", d => { stdout += d.toString(); });
-    proc.stderr.on("data", d => { const s = d.toString(); stderr += s; BrowserWindow.getAllWindows().forEach(w=> w.webContents.send("characters:detection:log", s)); });
-    proc.on("error", err => reject(err));
+    
+    proc.stdout.on("data", d => { 
+      const output = d.toString();
+      stdout += output;
+      console.log("📤 Python stdout:", output.trim());
+    });
+    
+    proc.stderr.on("data", d => { 
+      const s = d.toString(); 
+      stderr += s; 
+      console.log("📢 Python stderr:", s.trim());
+      
+      // Parse progress from messages like "Processing ch01.txt (1/11)..."
+      const progressMatch = s.match(/Processing .+ \((\d+)\/(\d+)\)/);
+      if (progressMatch) {
+        const current = parseInt(progressMatch[1]);
+        const total = parseInt(progressMatch[2]);
+        BrowserWindow.getAllWindows().forEach(w => 
+          w.webContents.send("characters:detection:progress", { current, total })
+        );
+      }
+      
+      BrowserWindow.getAllWindows().forEach(w=> w.webContents.send("characters:detection:log", s)); 
+    });
+    
+    proc.on("error", err => {
+      console.error("💥 Process error:", err);
+      reject(err);
+    });
+    
     proc.on("close", async (code) => {
-      if (code !== 0) return reject(new Error(`Detection exited with code ${code}. stderr: ${stderr.split(/\n/).slice(-8).join("\n")}`));
+      console.log("🏁 Process closed with code:", code);
+      
+      if (code !== 0) {
+        const error = `Detection exited with code ${code}. stderr: ${stderr.split(/\n/).slice(-8).join("\n")}`;
+        console.error("❌ Detection failed:", error);
+        return reject(new Error(error));
+      }
+      
       // Try reading characters.json
       try {
-        const jsonPath = path.join(projectRoot, "dossier", "characters.json");
+        // The Python script saves to analysis/dossier/characters.json (relative to project root)
+        const jsonPath = path.join(projectRoot, "analysis", "dossier", "characters.json");
+        console.log("📖 Reading results from:", jsonPath);
         const data = await readJsonIf(jsonPath) || [];
+        console.log("✅ Found", data.length, "characters");
         resolve({ characters: data, raw: stdout });
       } catch (e) {
+        console.error("❌ Failed to read results:", e);
         reject(new Error("Detection finished but characters.json not readable"));
       }
     });
@@ -217,6 +279,17 @@ function createWin() {
   ipcMain.handle("appConfig:get", async () => getAppConfig());
   ipcMain.handle("appConfig:set", async (_e, cfg) => { await setAppConfig(cfg); return true; });
   ipcMain.handle("app:locale", () => { try { return app.getLocale(); } catch { return "es-PE"; } });
+
+  /* File operations */
+  ipcMain.handle("file:exists", async (_event, filePath) => {
+    try {
+      const resolvedPath = path.resolve(repoRoot, filePath);
+      await fsp.access(resolvedPath);
+      return true;
+    } catch {
+      return false;
+    }
+  });
 
   /* Project: list, choose, create, open */
   ipcMain.handle("project:listRecents", async () => {

@@ -77,6 +77,12 @@ export interface Khipu {
     payload: KhipuRequestMap[K]["in"]
   ): Promise<KhipuRequestMap[K]["out"]>;
   onJob(cb: (e: JobEvent) => void): void;
+  characters: {
+    detect(projectRoot: string): Promise<unknown>;
+    onProgress(callback: (progress: {current: number, total: number}) => void): void;
+    onLog(callback: (log: string) => void): void;
+  };
+  fileExists(filePath: string): Promise<boolean>;
 }
 
 export interface ChapterItem {
@@ -99,4 +105,13 @@ declare global {
     "chapter:write": { in: { projectRoot: string; relPath: string; text: string }; out: boolean };
   }
 }
+
+declare global {
+  interface Window {
+    electron: {
+      invoke(channel: string, ...args: unknown[]): Promise<unknown>;
+    };
+  }
+}
+
 export {};

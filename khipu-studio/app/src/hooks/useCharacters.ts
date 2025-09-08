@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Character, CharacterDetection } from "../types/character";
-import { detectCharacters } from "../lib/characters";
 
 interface RawDetectedCharacter {
   id?: string;
@@ -8,6 +7,35 @@ interface RawDetectedCharacter {
   display_name?: string;
   bio?: string;
   description?: string;
+  frequency?: number;
+  gender?: string;
+  age?: string;
+  type?: string;
+  personality?: string[];
+  speaking_style?: string[];
+  accent?: string;
+  register?: string;
+  energy?: string;
+  chapters?: string[];
+  quotes?: string[];
+  isNarrator?: boolean;
+  isMainCharacter?: boolean;
+}
+
+interface SavedCharacter {
+  name?: string;
+  type?: string;
+  importance?: string;
+  gender?: string;
+  age?: string;
+  description?: string;
+  personality?: string[];
+  speaking_style?: string[];
+  frequency?: number;
+  accent?: string;
+  confidence?: number;
+  has_dialogue?: boolean;
+  dialogue_frequency?: string;
 }
 interface DetectionIPCResult {
   ok: boolean;
@@ -99,11 +127,96 @@ export function useCharacters(): UseCharactersApi {
     if (!safeProjectRoot) return;
     setLoading(true);
     try {
-      const det = await detectCharacters(safeProjectRoot);
-      setDetection(det || emptyDetection);
-      setCharacters(det.characters || []);
-      setDirty(false);
-      setMessage(`Loaded ${det.characters.length} characters`);
+      // Check if characters file exists first
+      const api = window.khipu;
+      if (!api?.fileExists) {
+        throw new Error("File existence check not available");
+      }
+      
+      const charactersPath = `${safeProjectRoot}/analysis/dossier/characters.json`;
+      const exists = await api.fileExists(charactersPath);
+      
+      if (exists) {
+        // Load existing characters from file
+        console.log("📖 Loading existing characters from:", charactersPath);
+        
+        // Load directly as array (Python detection script format)
+        const charactersResult = await window.khipu!.call("fs:read", {
+          projectRoot: safeProjectRoot,
+          relPath: "analysis/dossier/characters.json",
+          json: true,
+        });
+        
+        if (Array.isArray(charactersResult) && charactersResult.length > 0) {
+          console.log(`✅ Loaded ${charactersResult.length} characters from file`);
+          
+          // Convert to frontend format
+          const formattedCharacters: Character[] = charactersResult.map((char: SavedCharacter, index: number) => {
+            const mapAge = (age: string): "elderly" | "adult" | "child" | "teen" => {
+              switch (age?.toLowerCase()) {
+                case 'elderly': return 'elderly';
+                case 'child': return 'child';
+                case 'teenager': case 'teen': return 'teen';
+                case 'young_adult': case 'adult': 
+                default: return 'adult';
+              }
+            };
+
+            const mapGender = (gender: string): "M" | "F" | "N" => {
+              switch (gender?.toLowerCase()) {
+                case 'male': return 'M';
+                case 'female': return 'F';
+                default: return 'N';
+              }
+            };
+
+            return {
+              id: char.name?.toLowerCase().replace(/\s+/g, '_') || `char_${index}`,
+              name: char.name || `Character ${index + 1}`,
+              description: char.description || `Character: ${char.name}`,
+              traits: {
+                gender: mapGender(char.gender || 'unknown'),
+                age: mapAge(char.age || 'adult'),
+                register: char.type === 'narrator' ? 'formal' as const : 'informal' as const,
+                energy: char.age === 'elderly' ? 'low' as const : char.age === 'child' ? 'high' as const : 'medium' as const,
+                personality: char.personality || ['neutral'],
+                speaking_style: char.speaking_style || ['conversational'],
+                accent: char.accent || 'neutral',
+              },
+              frequency: Math.round((char.frequency || 0.5) * 100),
+              chapters: [],
+              quotes: [],
+              isNarrator: char.type === 'narrator',
+              isMainCharacter: char.importance === 'primary'
+            };
+          });
+          
+          setCharacters(formattedCharacters);
+          setDetection({
+            characters: formattedCharacters,
+            detectionMethod: "llm",
+            confidence: 0.9,
+            timestamp: new Date().toISOString(),
+            sourceChapters: []
+          });
+          setDirty(false);
+          // Characters loaded successfully - no need for message
+        } else {
+          // Empty or invalid file
+          console.log("📭 Characters file is empty or invalid");
+          setDetection(emptyDetection);
+          setCharacters([]);
+          setDirty(false);
+          setMessage("Characters file is empty");
+        }
+      } else {
+        // No characters file exists, set empty state
+        console.log("📭 No characters file found, setting empty state");
+        setDetection(emptyDetection);
+        setCharacters([]);
+        setDirty(false);
+        setMessage("No characters found. Click 'Detect/Refresh' to scan your manuscript.");
+      }
     } catch (e) {
       console.warn("Failed to load characters", e);
       setDetection(emptyDetection);
@@ -118,41 +231,113 @@ export function useCharacters(): UseCharactersApi {
     if (!safeProjectRoot) return;
     setLoading(true);
     setMessage("Running detection...");
+    
     try {
-      // Call IPC directly
-  const api = (window as unknown as WindowKhipu).khipu;
-  const res: DetectionIPCResult | undefined = await api?.characters?.detect(safeProjectRoot);
+      console.log("🚀 Starting IPC character detection for:", safeProjectRoot);
+      
+      // Call the IPC method directly - this will run the Python script
+      const api = (window as unknown as WindowKhipu).khipu;
+      if (!api?.characters?.detect) {
+        throw new Error("IPC detection method not available");
+      }
+      
+      const res: DetectionIPCResult = await api.characters.detect(safeProjectRoot);
+      console.log("📡 IPC detection result:", res);
+      console.log("📡 Characters data:", res.characters);
+      console.log("📡 Characters count:", res.characters?.length);
+      console.log("📡 res.ok:", res.ok);
+      console.log("📡 Is characters array?", Array.isArray(res.characters));
+      
       if (res?.ok && Array.isArray(res.characters)) {
-        // Convert minimal structure into Character[] (reuse addCharacter mapping logic simplified)
-  const mapped: Character[] = (res.characters as RawDetectedCharacter[]).map((c, i: number) => ({
-          id: c.id || c.name?.toLowerCase?.().replace(/\s+/g, "_") || `char_${Date.now()}_${i}`,
-          name: c.display_name || c.name || `Character ${i + 1}`,
-          description: c.bio || c.description || "",
-          traits: {
-            gender: 'N',
-            age: 'adult',
-            personality: [],
-            speaking_style: [],
-            accent: 'neutral',
-            register: 'informal',
-            energy: 'medium',
-          },
-          frequency: 50,
-          chapters: [],
-          quotes: [],
-          isNarrator: false,
-          isMainCharacter: false,
-        }));
+        console.log("🔄 Starting character mapping for", res.characters.length, "characters");
+        
+        // Convert detection results into Character[] format
+        const mapped: Character[] = (res.characters as RawDetectedCharacter[]).map((c, i: number) => {
+          console.log(`🔄 Mapping character ${i + 1}:`, c.name, c);
+          
+          const mapGender = (gender?: string): "M" | "F" | "N" => {
+            switch (gender?.toLowerCase()) {
+              case 'male': case 'm': return 'M';
+              case 'female': case 'f': return 'F';
+              default: return 'N';
+            }
+          };
+
+          const mapAge = (age?: string): "child" | "teen" | "adult" | "elderly" => {
+            switch (age?.toLowerCase()) {
+              case 'child': return 'child';
+              case 'teenager': case 'teen': case 'young': return 'teen';
+              case 'elderly': case 'old': return 'elderly';
+              default: return 'adult';
+            }
+          };
+
+          const mapRegister = (register?: string): "formal" | "informal" | "neutral" => {
+            switch (register?.toLowerCase()) {
+              case 'formal': return 'formal';
+              case 'neutral': return 'neutral';
+              default: return 'informal';
+            }
+          };
+
+          const mapEnergy = (energy?: string): "low" | "medium" | "high" => {
+            switch (energy?.toLowerCase()) {
+              case 'low': return 'low';
+              case 'high': return 'high';
+              default: return 'medium';
+            }
+          };
+
+          const mappedCharacter = {
+            id: c.id || c.name?.toLowerCase?.().replace(/\s+/g, "_") || `char_${Date.now()}_${i}`,
+            name: c.name || `Character ${i + 1}`,
+            description: c.description || c.bio || "",
+            traits: {
+              gender: mapGender(c.gender),
+              age: mapAge(c.age),
+              personality: Array.isArray(c.personality) ? c.personality : [],
+              speaking_style: Array.isArray(c.speaking_style) ? c.speaking_style : [],
+              accent: c.accent || 'neutral',
+              register: mapRegister(c.register),
+              energy: mapEnergy(c.energy),
+            },
+            frequency: typeof c.frequency === 'number' ? Math.round(c.frequency * 100) : 50,
+            chapters: Array.isArray(c.chapters) ? c.chapters : [],
+            quotes: Array.isArray(c.quotes) ? c.quotes : [],
+            isNarrator: c.type === 'narrator' || c.isNarrator === true,
+            isMainCharacter: c.type === 'protagonist' || c.type === 'primary' || c.isMainCharacter === true,
+          };
+          
+          console.log(`✅ Mapped character ${i + 1}:`, mappedCharacter.name, mappedCharacter);
+          return mappedCharacter;
+        });
+        
+        console.log(`🎯 Final mapped array:`, mapped);
+        console.log(`🎯 Final mapped count:`, mapped.length);
+        
+        console.log(`✅ Mapped ${mapped.length} characters from detection`);
+        
         setCharacters(mapped);
-        setDetection({ characters: mapped, detectionMethod: 'llm', confidence: 0.8, timestamp: new Date().toISOString(), sourceChapters: [] });
+        setDetection({ 
+          characters: mapped, 
+          detectionMethod: 'llm', 
+          confidence: 0.8, 
+          timestamp: new Date().toISOString(), 
+          sourceChapters: [] 
+        });
         setDirty(true);
-        setMessage(`Detected ${mapped.length} characters`);
+        setMessage(`Successfully detected ${mapped.length} characters`);
+        
+        console.log(`🎯 Characters set in state:`, mapped.length);
+        console.log(`🎯 First character:`, mapped[0]?.name);
       } else {
-        setMessage(res?.error ? `Detection failed: ${res.error}` : 'Detection returned no characters');
+        const errorMsg = res?.error || 'Detection returned no characters';
+        setMessage(`Detection failed: ${errorMsg}`);
+        console.error('🚫 Detection failed:', res);
       }
     } catch (e) {
-      console.error(e);
-      setMessage("Detection crashed");
+      console.error('💥 Detection crashed:', e);
+      setMessage(`Detection error: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setLoading(false);
     }
@@ -238,24 +423,33 @@ export function useCharacters(): UseCharactersApi {
     if (!safeProjectRoot) return;
     setSaving(true);
     try {
+      // Save in the same format as the Python detection script
+      // This maintains compatibility with both manual edits and detection results
+      const savedCharacters = characters.map(c => ({
+        name: c.name,
+        type: c.isNarrator ? "narrator" : "character",
+        importance: c.isMainCharacter ? "primary" : "secondary",
+        gender: c.traits.gender === "M" ? "male" : c.traits.gender === "F" ? "female" : "unknown",
+        age: c.traits.age || "adult",
+        description: c.description,
+        personality: c.traits.personality || [],
+        speaking_style: c.traits.speaking_style || [],
+        frequency: c.frequency / 100,
+        accent: c.traits.accent || "neutral",
+        confidence: 1.0,
+        has_dialogue: true,
+        dialogue_frequency: "medium"
+      }));
+
+      // Save as plain array (same format as Python script output)
       await window.khipu!.call("fs:write", {
         projectRoot: safeProjectRoot,
-        relPath: "dossier/characters.json",
+        relPath: "analysis/dossier/characters.json",
         json: true,
-        content: characters.map(c => ({
-          name: c.name,
-            type: c.isNarrator ? "narrator" : "character",
-            importance: c.isMainCharacter ? "primary" : "secondary",
-            gender: c.traits.gender === "M" ? "male" : c.traits.gender === "F" ? "female" : "unknown",
-            age: c.traits.age || "adult",
-            description: c.description,
-            personality: c.traits.personality || [],
-            speaking_style: c.traits.speaking_style || [],
-            frequency: c.frequency / 100,
-            accent: c.traits.accent || "neutral"
-        }))
+        content: savedCharacters
       });
-      setMessage("Saved characters");
+      
+      // Characters saved successfully - no need for message
       setDirty(false);
     } catch (e) {
       console.error(e);

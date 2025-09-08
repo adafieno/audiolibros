@@ -4,16 +4,15 @@
     "type": "secondary",
     "importance": "primary",
     "gender": "female",
-    "age": "adult",
-    "description": "Rosa engages in dialogue with Luis, asking if he arrived early.",
+    "age": "unknown",
+    "description": "Rosa pregunta a Luis si llegó temprano, mostrando interés en su llegada.",
     "personality": [
-      "curious",
-      "friendly"
+      "curious"
     ],
     "speaking_style": [
-      "conversational"
+      "inquisitive"
     ],
-    "confidence": 1.0,
+    "confidence": 0.95,
     "has_dialogue": true,
     "dialogue_frequency": "medium",
     "frequency": 0.7,
@@ -24,16 +23,15 @@
     "type": "secondary",
     "importance": "primary",
     "gender": "male",
-    "age": "adult",
-    "description": "Luis responds to Rosa's question about his arrival time.",
+    "age": "unknown",
+    "description": "Luis responde a Rosa sobre su llegada, indicando que llegó un poco temprano.",
     "personality": [
-      "calm",
-      "reflective"
+      "calm"
     ],
     "speaking_style": [
       "concise"
     ],
-    "confidence": 1.0,
+    "confidence": 0.95,
     "has_dialogue": true,
     "dialogue_frequency": "medium",
     "frequency": 0.7,

@@ -25,37 +25,218 @@ except ImportError as e:
 
 _LOG = get_logger("characters") if HAS_LLM else None
 
+def consolidate_characters_with_llm(characters: List[Dict[str, Any]], llm_model: str) -> List[Dict[str, Any]]:
+    """Use LLM to intelligently consolidate similar characters based on names and descriptions"""
+    if len(characters) <= 1:
+        return characters
+    
+    # Prepare character data for LLM analysis
+    character_data = []
+    for i, char in enumerate(characters):
+        character_data.append({
+            "id": i,
+            "name": char.get("name", ""),
+            "description": char.get("description", ""),
+            "personality": char.get("personality", []),
+            "speaking_style": char.get("speaking_style", []),
+            "gender": char.get("gender", ""),
+            "age": char.get("age", ""),
+            "type": char.get("type", ""),
+            "importance": char.get("importance", "")
+        })
+    
+    consolidation_prompt = f"""You are an expert at character analysis for audiobook production. 
+
+Analyze this list of characters and identify which ones represent the SAME PERSON who should be consolidated:
+
+{json.dumps(character_data, indent=2, ensure_ascii=False)}
+
+CONSOLIDATION METHODOLOGY:
+1. PRIMARY ANALYSIS - Character Descriptions:
+   - Compare character descriptions carefully
+   - Characters with identical or very similar descriptions are likely the same person
+   - Look for overlapping roles, relationships, and character traits
+   - Consider context clues that suggest the same individual
+
+2. NAME VARIATION ANALYSIS:
+   - Consider common name variations: nicknames, formal/informal versions, titles
+   - Family relationship terms: "Mamá", "Papá", "Abuela" may refer to the same person
+   - Professional titles: "Doctor", "Profesor", "Señor/Señora" with same base name
+   - Articles and honorifics: "Don/Doña", "El/La" are often just variations
+
+3. CONSOLIDATION CRITERIA (ALL must be met):
+   - Descriptions are compatible (not contradictory)
+   - Names suggest the same person (variations, not different people)
+   - No conflicting information (age, gender, role, relationships)
+   - Same or compatible personality traits and speaking styles
+
+4. KEEP SEPARATE when:
+   - Descriptions clearly indicate different people
+   - Names suggest family members (parent vs child, siblings)
+   - Contradictory information (different ages, genders, roles)
+   - Characters interact with each other in the text
+
+5. PRESERVE ORIGINAL LANGUAGE:
+   - Maintain character information in the original language of the text
+   - Use the most complete and descriptive name as canonical
+
+Return a JSON object with consolidation groups:
+{{
+  "consolidations": [
+    {{
+      "primary_id": 0,
+      "merge_ids": [2, 5],
+      "reason": "Same person - descriptions indicate identical role and characteristics, names are variations of the same individual",
+      "consolidated_name": "[Most complete name]"
+    }}
+  ],
+  "keep_separate": [
+    {{
+      "ids": [1, 3],
+      "reason": "Different people - descriptions indicate distinct individuals with different roles/relationships"
+    }}
+  ]
+}}
+
+Be LIBERAL with consolidation for name variations of the same person, but CONSERVATIVE for truly different people."""
+
+    try:
+        if _LOG:
+            _LOG.info("Starting LLM-based character consolidation...")
+        
+        messages = [
+            {"role": "system", "content": "You are an expert character analyst. Focus on character descriptions as the primary method for identifying duplicates. Be thorough in your analysis but only consolidate when evidence clearly indicates the same person."},
+            {"role": "user", "content": consolidation_prompt}
+        ]
+        
+        llm_response = chat_json(messages, model=llm_model, temperature=0.1, max_tokens=2000)
+        
+        if not isinstance(llm_response, dict) or "consolidations" not in llm_response:
+            if _LOG:
+                _LOG.warning("LLM consolidation failed - no valid response")
+            return characters
+            
+        consolidations = llm_response.get("consolidations", [])
+        
+        if _LOG:
+            _LOG.info(f"LLM suggested {len(consolidations)} consolidations")
+        
+        # Apply consolidations
+        consolidated_characters = []
+        used_ids = set()
+        
+        # Process consolidations
+        for consolidation in consolidations:
+            primary_id = consolidation.get("primary_id")
+            merge_ids = consolidation.get("merge_ids", [])
+            reason = consolidation.get("reason", "")
+            consolidated_name = consolidation.get("consolidated_name", "")
+            
+            if primary_id is None or not merge_ids:
+                continue
+                
+            if primary_id in used_ids or any(mid in used_ids for mid in merge_ids):
+                continue  # Skip if already processed
+                
+            # Merge characters
+            primary_char = characters[primary_id].copy()
+            primary_char["name"] = consolidated_name or primary_char["name"]
+            
+            # Merge information from other characters
+            for merge_id in merge_ids:
+                if merge_id < len(characters):
+                    merge_char = characters[merge_id]
+                    
+                    # Use longer description
+                    if len(merge_char.get("description", "")) > len(primary_char.get("description", "")):
+                        primary_char["description"] = merge_char["description"]
+                    
+                    # Merge personality traits
+                    primary_personality = set(primary_char.get("personality", []))
+                    merge_personality = set(merge_char.get("personality", []))
+                    primary_char["personality"] = list(primary_personality.union(merge_personality))[:4]
+                    
+                    # Merge speaking styles
+                    primary_styles = set(primary_char.get("speaking_style", []))
+                    merge_styles = set(merge_char.get("speaking_style", []))
+                    primary_char["speaking_style"] = list(primary_styles.union(merge_styles))[:3]
+                    
+                    # Use highest confidence
+                    primary_char["confidence"] = max(
+                        primary_char.get("confidence", 0.0),
+                        merge_char.get("confidence", 0.0)
+                    )
+                    
+                    # Increase frequency for multiple appearances
+                    primary_char["frequency"] = min(1.0, 
+                        primary_char.get("frequency", 0.0) + 0.1
+                    )
+            
+            consolidated_characters.append(primary_char)
+            used_ids.add(primary_id)
+            used_ids.update(merge_ids)
+            
+            if _LOG:
+                _LOG.info(f"Consolidated characters: {reason}")
+        
+        # Add non-consolidated characters
+        for i, char in enumerate(characters):
+            if i not in used_ids:
+                consolidated_characters.append(char)
+        
+        if _LOG:
+            _LOG.info(f"Character consolidation complete: {len(characters)} -> {len(consolidated_characters)} characters")
+        
+        return consolidated_characters
+        
+    except Exception as e:
+        if _LOG:
+            _LOG.error(f"LLM consolidation failed: {e}")
+        return characters
+
 def load_project_config(workspace_root: Path) -> Dict[str, Any]:
     """Load project-specific configuration that might override global LLM settings."""
     project_config_path = workspace_root / "project.khipu.json"
+    if _LOG:
+        _LOG.info(f"Looking for project config at: {project_config_path}")
+        _LOG.info(f"Config file exists: {project_config_path.exists()}")
+    
     if project_config_path.exists():
         try:
             with open(project_config_path, 'r', encoding='utf-8') as f:
-                return json.load(f)
+                config = json.load(f)
+                if _LOG:
+                    _LOG.info(f"Successfully loaded config with keys: {list(config.keys())}")
+                return config
         except Exception as e:
             if _LOG:
                 _LOG.warning(f"Failed to load project config: {e}")
     return {}
 
 def get_effective_llm_model(workspace_root: Path) -> str:
-    """Get the LLM model to use, preferring project-specific config over global."""
+    """Get the LLM model to use from project-specific config only."""
     project_config = load_project_config(workspace_root)
+    
+    # Debug logging
+    if _LOG:
+        _LOG.info(f"Project config loaded: {project_config}")
     
     # Check if project config specifies an LLM model
     if "llm" in project_config and "engine" in project_config["llm"]:
         engine = project_config["llm"]["engine"]
-        if engine.get("name") == "openai" and "model" in engine:
+        if _LOG:
+            _LOG.info(f"Found LLM engine config: {engine}")
+        if isinstance(engine, dict) and engine.get("name") == "openai" and "model" in engine:
             model = engine["model"]
             if _LOG:
                 _LOG.info(f"Using project-specific LLM model: {model}")
             return model
     
-    # Fall back to global config
-    global_config = load_config()
-    model = global_config.openai.model
+    # No valid project config found - fail gracefully
+    error_msg = "No valid project-specific LLM model configuration found. Please check your project.khipu.json file."
     if _LOG:
-        _LOG.info(f"Using global LLM model: {model}")
-    return model
+        _LOG.error(error_msg)
+    raise ValueError(error_msg)
 
 # Character detection prompt for LLM
 CHARACTER_DETECTION_PROMPT = """You are an expert at analyzing literary texts to identify characters for audiobook production.
@@ -88,7 +269,7 @@ For each character, provide:
 - age: "child", "teenager", "young_adult", "adult", "elderly", "unknown"
 - personality: Array of 2-4 personality traits (e.g., ["worried", "protective"], ["knowledgeable", "helpful"])
 - speaking_style: Array of 2-3 speaking style descriptors (e.g., ["concerned", "motherly"], ["professional", "informative"])
-- description: Brief description including their role and relevance to the story
+- description: Brief description including their role and relevance to the story. The description must be provided in the same language as the source text.
 - importance: "primary", "secondary", "minor"
 - frequency: Estimated speaking/appearance frequency (0.0 to 1.0)
 
@@ -99,23 +280,32 @@ Text to analyze:
 """
 
 # Per-chapter character detection prompt (more focused)
-CHAPTER_DETECTION_PROMPT = """Analyze this chapter text and identify characters who ACTUALLY SPEAK in dialogue or have significant presence, not just those mentioned in passing.
+CHAPTER_DETECTION_PROMPT = """Analyze this chapter text and identify characters who ACTUALLY SPEAK in dialogue or have significant presence.
 
-Focus on:
+CRITICAL LANGUAGE REQUIREMENT: 
+- You MUST write ALL character names and descriptions in THE SAME LANGUAGE as the source text
+- If the text is in Spanish, write names and descriptions in Spanish
+- If the text is in English, write names and descriptions in English  
+- PRESERVE the exact character names as they appear in the original text
+- DO NOT translate names or descriptions to English
+
+CHARACTER IDENTIFICATION:
 - Characters who have direct dialogue (speaking lines in quotes)
 - Characters who actively participate in scenes (not just mentioned)
 - The narrator (if present)
 - Characters with clear speaking roles for audiobook production
 
-Do NOT include:
-- Characters only briefly mentioned in passing
-- Groups or collective entities unless they speak
-- Historical figures or mythical beings unless they have dialogue
-- Characters mentioned in backstory without current presence
+For each character, provide:
+- name: EXACT name as it appears in the source text (preserve original language)
+- description: Brief description in the SAME LANGUAGE as the source text
+- confidence: 0.0 to 1.0 based on dialogue presence and scene participation
 
-For each character, provide a confidence level (0.0 to 1.0) based on:
-- 1.0: Character has multiple dialogue lines or major scene presence
-- 0.9: Character has dialogue or significant interaction
+EXAMPLES:
+- If text has "Mamá de Lucía", use "Mamá de Lucía" (not "Lucía's mother")
+- If text has "Don Carlos", use "Don Carlos" (not "Mr. Carlos")
+- If character speaks in Spanish, describe them in Spanish
+
+Text to analyze:
 - 0.8: Character appears actively in scene but limited dialogue
 - 0.7: Character has minor dialogue or brief active presence
 - Below 0.7: Should generally not be included
@@ -163,8 +353,16 @@ def detect_characters_from_manuscript(manuscript_dir: str) -> List[Dict[str, Any
         if not manuscript_path.exists():
             raise ValueError(f"Manuscript directory does not exist: {manuscript_dir}")
         
-        # Get workspace root (parent of manuscript dir)
-        workspace_root = manuscript_path.parent
+        # Get workspace root - find the directory containing project.khipu.json
+        # Start from manuscript dir and go up until we find project.khipu.json
+        workspace_root = manuscript_path
+        while workspace_root.parent != workspace_root:  # Not at filesystem root
+            workspace_root = workspace_root.parent
+            if (workspace_root / "project.khipu.json").exists():
+                break
+        else:
+            # If we didn't find project.khipu.json, use the parent of manuscript dir as fallback
+            workspace_root = manuscript_path.parent
         
         # Get the effective LLM model (project-specific or global)
         llm_model = get_effective_llm_model(workspace_root)
@@ -179,7 +377,7 @@ def detect_characters_from_manuscript(manuscript_dir: str) -> List[Dict[str, Any
         print(f"Analyzing {len(txt_files)} chapter files individually for character detection...", file=sys.stderr)
         
         # Collect characters from each chapter
-        all_characters = {}  # Use dict to automatically handle duplicates by name
+        all_characters = []  # Use list instead of dict for initial collection
         chapter_count = 0
         
         for txt_file in txt_files:
@@ -196,7 +394,7 @@ def detect_characters_from_manuscript(manuscript_dir: str) -> List[Dict[str, Any
             
             # Call LLM for this chapter
             messages = [
-                {"role": "system", "content": "You are an expert literary character analyst. Identify ALL characters that appear or are mentioned in this chapter text, including minor ones."},
+                {"role": "system", "content": "You are an expert literary character analyst. CRITICAL: Preserve the original language of the text - if the text is in Spanish, write ALL character names and descriptions in Spanish. If English, use English. Do NOT translate to English unless the source is English."},
                 {"role": "user", "content": CHAPTER_DETECTION_PROMPT + content}
             ]
             
@@ -212,7 +410,7 @@ def detect_characters_from_manuscript(manuscript_dir: str) -> List[Dict[str, Any
                     print(f"Warning: Unexpected response format for {txt_file.name}", file=sys.stderr)
                     continue
                 
-                # Add characters to our collection, merging duplicates
+                # Add high-confidence characters to our collection
                 for char in chapter_characters:
                     if isinstance(char, dict) and "name" in char:
                         char_name = char["name"].strip()
@@ -228,27 +426,10 @@ def detect_characters_from_manuscript(manuscript_dir: str) -> List[Dict[str, Any
                             continue
                         
                         if char_name:
-                            # If we've seen this character before, merge the information
-                            if char_name in all_characters:
-                                existing_char = all_characters[char_name]
-                                # Update confidence to highest seen
-                                existing_char["confidence"] = max(existing_char.get("confidence", 0.0), confidence)
-                                # Update description if this one is more detailed
-                                if len(char.get("description", "")) > len(existing_char.get("description", "")):
-                                    existing_char["description"] = char.get("description", existing_char.get("description", ""))
-                                # Update dialogue status
-                                existing_char["has_dialogue"] = existing_char.get("has_dialogue", False) or has_dialogue
-                                # Increase frequency if seen in multiple chapters
-                                existing_char["frequency"] = min(1.0, existing_char.get("frequency", 0.0) + 0.1)
-                                # Merge personality traits (avoid duplicates)
-                                existing_personality = set(existing_char.get("personality", []))
-                                new_personality = set(char.get("personality", []))
-                                existing_char["personality"] = list(existing_personality.union(new_personality))[:4]
-                            else:
-                                # New character - add confidence and dialogue info
-                                char["confidence"] = confidence
-                                char["has_dialogue"] = has_dialogue
-                                all_characters[char_name] = char
+                            # Add confidence and dialogue info
+                            char["confidence"] = confidence
+                            char["has_dialogue"] = has_dialogue
+                            all_characters.append(char)
                 
                 print(f"  Found {len(chapter_characters)} characters in {txt_file.name}", file=sys.stderr)
                 
@@ -256,9 +437,17 @@ def detect_characters_from_manuscript(manuscript_dir: str) -> List[Dict[str, Any
                 print(f"Warning: Failed to analyze {txt_file.name}: {e}", file=sys.stderr)
                 continue
         
-        # Convert to list and enhance characters
+        if not all_characters:
+            print("No characters detected from any chapter", file=sys.stderr)
+            return _get_fallback_narrator()
+        
+        # Use LLM-based consolidation to merge similar characters intelligently
+        print(f"Starting intelligent character consolidation for {len(all_characters)} characters...", file=sys.stderr)
+        consolidated_characters = consolidate_characters_with_llm(all_characters, llm_model)
+        
+        # Enhance consolidated characters
         enhanced_characters = []
-        for char_name, char in all_characters.items():
+        for char in consolidated_characters:
             if isinstance(char, dict) and "name" in char:
                 # Only include high-confidence characters
                 confidence = char.get("confidence", 0.0)
