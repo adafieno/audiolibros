@@ -82,6 +82,41 @@ function CharactersPage() {
       .catch((error: unknown) => console.warn("Failed to load project config:", error));
   }, [root]);
 
+  // Check if characters step is complete
+  const isComplete = projectConfig?.workflow?.characters?.complete || false;
+
+  // Handle marking completion
+  const handleMarkComplete = async () => {
+    if (!root || !projectConfig) return;
+    
+    try {
+      const updatedConfig = {
+        ...projectConfig,
+        workflow: {
+          ...projectConfig.workflow,
+          characters: {
+            ...projectConfig.workflow?.characters,
+            complete: true,
+            completedAt: new Date().toISOString()
+          }
+        }
+      };
+      
+      // Save the updated config
+      await window.khipu!.call("fs:write", { 
+        projectRoot: root, 
+        relPath: "project.khipu.json", 
+        json: true, 
+        content: updatedConfig 
+      });
+      
+      setProjectConfig(updatedConfig);
+      console.log("Characters page marked as complete");
+    } catch (error) {
+      console.error("Failed to mark characters as complete:", error);
+    }
+  };
+
   // Handle voice audition with real TTS
   const handleAudition = async (characterId: string) => {
     if (!projectConfig) {
@@ -282,6 +317,20 @@ function CharactersPage() {
             >
               {saving ? "Saving..." : "Save"}
               {dirty && !saving && " *"}
+            </button>
+            
+            <button 
+              disabled={loading || characters.length === 0} 
+              style={{ 
+                padding: "6px 12px", 
+                fontSize: "14px",
+                backgroundColor: "var(--success)",
+                color: "white",
+                border: "1px solid var(--success)",
+                borderRadius: "4px"
+              }}
+            >
+              Mark Complete
             </button>
           </>
         )}
