@@ -8,8 +8,14 @@ This script assigns voices to characters and returns the assignments for UI disp
 import json
 import sys
 import os
+import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Any
+
+# Disable logging to stdout to prevent interference with JSON output
+logging.getLogger().setLevel(logging.CRITICAL)
+logging.getLogger("audiobooks").setLevel(logging.CRITICAL)
+logging.getLogger("audiobooks.span").setLevel(logging.CRITICAL)
 
 # Add parent directory to path for imports
 _pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -130,7 +136,7 @@ def assign_voices_to_characters(project_root: str) -> Dict[str, Any]:
                 "error": f"Characters file has invalid format. Expected dict or list, got {type(characters_data).__name__}"
             }
         
-        # Ensure all characters have unique IDs
+        # Ensure all characters have sequential IDs (character_001, character_002, etc.)
         for i, character in enumerate(characters):
             # Debug: Check character type
             if not isinstance(character, dict):
@@ -138,15 +144,8 @@ def assign_voices_to_characters(project_root: str) -> Dict[str, Any]:
                     "success": False,
                     "error": f"Character at index {i} has invalid format. Expected dict, got {type(character).__name__}: {character}"
                 }
-            if not character.get("id"):
-                # Generate ID from name, fallback to index
-                name = character.get("name", f"character_{i}")
-                # Create a clean ID from the name
-                char_id = "".join(c.lower() if c.isalnum() else "_" for c in name)
-                char_id = char_id.strip("_")
-                if not char_id:
-                    char_id = f"character_{i}"
-                character["id"] = char_id
+            # Always use sequential IDs for consistency
+            character["id"] = f"character_{i+1:03d}"
         
         # Load voice inventory to get only the selected voices from casting
         with open(voice_inventory_file, 'r', encoding='utf-8') as f:
@@ -269,18 +268,10 @@ def assign_voices_to_characters(project_root: str) -> Dict[str, Any]:
         
         return {
             "success": True,
-            "characters": characters,
-            "availableVoices": selected_voices,  # Return only selected voices
-            "assignments": cast_assignments,
             "message": f"Successfully assigned voices to {len([c for c in characters if c.get('voiceAssignment')])} out of {len(characters)} characters",
-            "debug_info": {
-                "total_characters": len(characters),
-                "characters_with_assignments": len([c for c in characters if c.get('voiceAssignment')]),
-                "cast_assignments_keys": list(cast_assignments.keys()) if cast_assignments else [],
-                "character_ids": [c.get('id', 'NO_ID') for c in characters],
-                "character_names": [c.get('name', 'NO_NAME') for c in characters],
-                "llm_model_used": project_model if project_model else "default"
-            }
+            "total_characters": len(characters),
+            "characters_with_assignments": len([c for c in characters if c.get('voiceAssignment')]),
+            "llm_model_used": project_model if project_model else "default"
         }
         
     except Exception as e:

@@ -244,7 +244,7 @@ CHARACTER_DETECTION_PROMPT = """You are an expert at analyzing literary texts to
 Analyze the provided text and identify key characters that appear, including:
 - Named characters (e.g., "Patricia", "Don Cipriano")
 - Characters with roles (e.g., "la bibliotecaria", "Carmen la enfermera")
-- The narrator (if present)
+- The narrator (ALWAYS include the narrator as a character for audiobook casting)
 
 Return a JSON array with this format:
 [
@@ -255,6 +255,11 @@ Return a JSON array with this format:
     "description": "Brief description"
   }
 ]
+
+IMPORTANT FOR AUDIOBOOKS: 
+- ALWAYS include the narrator as a character (type: "narrator", importance: "primary")
+- The narrator reads all narrative text and descriptions, making them one of the most important "characters"
+- Even if this chapter is mostly dialogue, the narrator is still present and needed for audiobook production
 
 TEXT TO ANALYZE:
 - Characters mentioned in conversations or backstory
@@ -282,6 +287,12 @@ Text to analyze:
 # Per-chapter character detection prompt (more focused)
 CHAPTER_DETECTION_PROMPT = """Analyze this chapter text and identify characters who ACTUALLY SPEAK in dialogue or have significant presence.
 
+CRITICAL FOR AUDIOBOOK PRODUCTION:
+- ALWAYS include the narrator (type: "narrator", importance: "primary", confidence: 1.0)
+- The narrator reads all narrative text, descriptions, and scene-setting text
+- Even chapters that are mostly dialogue still need a narrator for audiobook production
+- The narrator is one of the most important "characters" for voice casting
+
 CRITICAL LANGUAGE REQUIREMENT: 
 - You MUST write ALL character names and descriptions in THE SAME LANGUAGE as the source text
 - If the text is in Spanish, write names and descriptions in Spanish
@@ -292,7 +303,7 @@ CRITICAL LANGUAGE REQUIREMENT:
 CHARACTER IDENTIFICATION:
 - Characters who have direct dialogue (speaking lines in quotes)
 - Characters who actively participate in scenes (not just mentioned)
-- The narrator (if present)
+- The narrator (ALWAYS include for audiobook production)
 - Characters with clear speaking roles for audiobook production
 
 For each character, provide:
@@ -462,9 +473,20 @@ def detect_characters_from_manuscript(manuscript_dir: str) -> List[Dict[str, Any
         if not enhanced_characters:
             print("No high-confidence speaking characters detected, using fallback narrator", file=sys.stderr)
             return _get_fallback_narrator()
-        
+
+        # CRITICAL: Always ensure narrator is included for audiobook production
+        has_narrator = any(char.get("type") == "narrator" for char in enhanced_characters)
+        if not has_narrator:
+            print("No narrator detected in character list, adding default narrator", file=sys.stderr)
+            narrator = _get_fallback_narrator()[0]  # Get the narrator dict
+            enhanced_characters.append(narrator)
+
         # Sort by confidence and importance for consistent output
         enhanced_characters.sort(key=lambda x: (x.get("confidence", 0.0), x.get("frequency", 0.0)), reverse=True)
+        
+        # Add sequential character IDs (character_001, character_002, etc.)
+        for i, char in enumerate(enhanced_characters, 1):
+            char["id"] = f"character_{i:03d}"
         
         print(f"Successfully detected {len(enhanced_characters)} high-confidence speaking characters", file=sys.stderr)
         print(f"Average confidence: {sum(c.get('confidence', 0) for c in enhanced_characters) / len(enhanced_characters):.2f}", file=sys.stderr)

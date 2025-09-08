@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { useCharacters } from "../hooks/useCharacters";
 import { useProject } from "../store/project";
+import { generateAudition, cleanupAudioUrl } from "../lib/tts-audition";
+import { loadProjectConfig } from "../lib/config";
+import type { ProjectConfig } from "../types/config";
+import type { Voice as VoiceType } from "../types/voice";
 
 function CharactersPage() {
   const { root } = useProject();
@@ -24,6 +28,11 @@ function CharactersPage() {
   const [hasCharacterList, setHasCharacterList] = useState(false);
   const [checkingFile, setCheckingFile] = useState(true);
   const [detectionProgress, setDetectionProgress] = useState<{current: number, total: number} | null>(null);
+  
+  // Audition state 
+  const [auditioningVoices, setAuditioningVoices] = useState<Set<string>>(new Set());
+  const [playingAudio, setPlayingAudio] = useState<{ voiceId: string; audio: HTMLAudioElement } | null>(null);
+  const [projectConfig, setProjectConfig] = useState<ProjectConfig | null>(null);
 
   useEffect(() => {
     if (!root) {
@@ -63,6 +72,114 @@ function CharactersPage() {
       setDetectionProgress(null);
     };
   }, [root, load]);
+
+  // Load project config for audition
+  useEffect(() => {
+    if (!root) return;
+    
+    loadProjectConfig(root)
+      .then((config: ProjectConfig) => setProjectConfig(config))
+      .catch((error: unknown) => console.warn("Failed to load project config:", error));
+  }, [root]);
+
+  // Handle voice audition with real TTS
+  const handleAudition = async (characterId: string) => {
+    if (!projectConfig) {
+      console.warn("Project config not loaded");
+      return;
+    }
+
+    const character = characters.find(c => c.id === characterId);
+    if (!character?.voiceAssignment) {
+      console.warn("No voice assigned to this character");
+      return;
+    }
+
+    // Convert character voice to TTS voice format
+    const characterVoice = availableVoices.find(v => v.id === character.voiceAssignment!.voiceId);
+    if (!characterVoice) {
+      console.warn("Voice not found in inventory:", character.voiceAssignment.voiceId);
+      return;
+    }
+
+    // Convert to full voice format needed by generateAudition
+    const voice: VoiceType = {
+      id: characterVoice.id,
+      engine: (characterVoice.engine as VoiceType["engine"]) || "azure", // Use voice engine or default to azure
+      locale: characterVoice.locale,
+      gender: characterVoice.gender === "M" ? "M" : characterVoice.gender === "F" ? "F" : "N",
+      age_hint: (characterVoice.age_hint as "child" | "teen" | "adult" | "elderly") || "adult",
+      accent_tags: characterVoice.accent_tags,
+      styles: characterVoice.styles,
+      description: `Voice for ${character.name}`
+    };
+
+    // Stop any currently playing audio
+    if (playingAudio) {
+      playingAudio.audio.pause();
+      playingAudio.audio.currentTime = 0;
+      cleanupAudioUrl(playingAudio.audio.src);
+      setPlayingAudio(null);
+    }
+
+    // If already auditioning this voice, stop
+    if (auditioningVoices.has(character.voiceAssignment.voiceId)) {
+      setAuditioningVoices(prev => {
+        const next = new Set(prev);
+        next.delete(character.voiceAssignment!.voiceId);
+        return next;
+      });
+      return;
+    }
+
+    setAuditioningVoices(prev => new Set(prev).add(character.voiceAssignment!.voiceId));
+
+    try {
+      const result = await generateAudition({
+        voice: voice,
+        config: projectConfig,
+        text: character.quotes?.[0] || character.description || `Hello, my name is ${character.name}.`,
+        style: character.voiceAssignment.style,
+        styledegree: character.voiceAssignment.styledegree,
+        rate_pct: character.voiceAssignment.rate_pct,
+        pitch_pct: character.voiceAssignment.pitch_pct
+      });
+
+      if (result.success && result.audioUrl) {
+        const audio = new Audio(result.audioUrl);
+        audio.onended = () => {
+          cleanupAudioUrl(result.audioUrl!);
+          setPlayingAudio(null);
+        };
+        audio.onerror = () => {
+          console.warn("Failed to play voice sample");
+          cleanupAudioUrl(result.audioUrl!);
+          setPlayingAudio(null);
+        };
+        
+        setPlayingAudio({ voiceId: character.voiceAssignment.voiceId, audio });
+        
+        try {
+          await audio.play();
+          console.log("🔊 Playing voice audition for", character.name);
+        } catch {
+          console.warn("Failed to play voice sample");
+          cleanupAudioUrl(result.audioUrl);
+          setPlayingAudio(null);
+        }
+      } else {
+        console.warn("Failed to generate voice sample:", result.error);
+      }
+    } catch (error) {
+      console.error("Audition error:", error);
+    } finally {
+      setAuditioningVoices(prev => {
+        const next = new Set(prev);
+        next.delete(character.voiceAssignment!.voiceId);
+        return next;
+      });
+    }
+  };
 
   const runDetection = async () => {
     try {
@@ -283,7 +400,7 @@ function CharactersPage() {
                   
                   {/* Basic info */}
                   <div style={{ fontSize: "12px", color: "var(--muted)", marginBottom: "8px" }}>
-                    {c.traits.gender === 'M' ? 'Male' : c.traits.gender === 'F' ? 'Female' : 'Neutral'} • {(c.traits.age || 'Adult').charAt(0).toUpperCase() + (c.traits.age || 'adult').slice(1)}
+                    {c.traits?.gender === 'M' ? 'Male' : c.traits?.gender === 'F' ? 'Female' : 'Neutral'} • {(c.traits?.age || 'Adult').charAt(0).toUpperCase() + (c.traits?.age || 'adult').slice(1)}
                   </div>
 
                   {/* Character importance badges */}
@@ -306,14 +423,14 @@ function CharactersPage() {
                   )}
 
                   {/* Personality */}
-                  {c.traits.personality && c.traits.personality.length > 0 && (
+                  {c.traits?.personality && c.traits.personality.length > 0 && (
                     <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "4px" }}>
                       Personality: {Array.isArray(c.traits.personality) ? c.traits.personality.join(', ') : c.traits.personality}
                     </div>
                   )}
 
                   {/* Speaking Style */}
-                  {c.traits.speaking_style && c.traits.speaking_style.length > 0 && (
+                  {c.traits?.speaking_style && c.traits.speaking_style.length > 0 && (
                     <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "8px" }}>
                       Speaking Style: {Array.isArray(c.traits.speaking_style) ? c.traits.speaking_style.join(', ') : c.traits.speaking_style}
                     </div>
@@ -353,6 +470,12 @@ function CharactersPage() {
                               {voice.id} ({voice.gender}, {voice.locale})
                             </option>
                           ))}
+                          {/* Debug: Show assigned voice if not in available list */}
+                          {c.voiceAssignment?.voiceId && !availableVoices.find(v => v.id === c.voiceAssignment?.voiceId) && (
+                            <option key={c.voiceAssignment.voiceId} value={c.voiceAssignment.voiceId} style={{color: 'red'}}>
+                              {c.voiceAssignment.voiceId} (Missing from inventory)
+                            </option>
+                          )}
                         </select>
                       </div>
 
@@ -438,8 +561,29 @@ function CharactersPage() {
                     </div>
                   )}
                   
-                  {/* Remove button */}
-                  <div style={{ marginTop: "8px" }}>
+                  {/* Action buttons */}
+                  <div style={{ marginTop: "8px", display: "flex", gap: "8px" }}>
+                    {/* Audition button - only show if voice is assigned */}
+                    {c.voiceAssignment && (
+                      <button
+                        onClick={() => handleAudition(c.id)}
+                        disabled={auditioningVoices.has(c.voiceAssignment.voiceId)}
+                        style={{
+                          padding: "4px 8px",
+                          fontSize: "12px",
+                          backgroundColor: auditioningVoices.has(c.voiceAssignment.voiceId) ? "#6b7280" : "#3b82f6",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: auditioningVoices.has(c.voiceAssignment.voiceId) ? "not-allowed" : "pointer",
+                          opacity: auditioningVoices.has(c.voiceAssignment.voiceId) ? 0.6 : 1
+                        }}
+                      >
+                        {auditioningVoices.has(c.voiceAssignment.voiceId) ? "Playing..." : "Audition"}
+                      </button>
+                    )}
+                    
+                    {/* Remove button */}
                     <button
                       onClick={() => remove(c.id)}
                       style={{

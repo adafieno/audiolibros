@@ -83,16 +83,38 @@ def _style_supported(voice_id: str, style: Optional[str], features: dict, invent
 def _score_voice(v: dict, t: dict, lang: str, features: dict) -> int:
     """Heuristic scoring to match character traits to an inventory voice."""
     s = 0
-    if t.get("gender") != "U" and v.get("gender") == t.get("gender"):
-        s += 3
+    
+    # Enhanced gender matching - heavily prioritize gender matches
+    character_gender = t.get("gender", "U")
+    voice_gender = v.get("gender", "U")
+    
+    if character_gender != "U":
+        if voice_gender == character_gender:
+            s += 10  # Much higher score for exact gender match
+        else:
+            # Penalty for gender mismatch when character has defined gender
+            s -= 5
+    else:
+        # Slight preference for neutral voices when character gender is unknown
+        if voice_gender == "U":
+            s += 1
+    
+    # Age matching
     if v.get("age_hint") == t.get("age_range"):
         s += 2
+    
+    # Accent matching
     if t.get("accent_hint") and t["accent_hint"] in (v.get("accent_tags") or []):
         s += 3
+    
+    # Style support
     if _style_supported(v.get("id", ""), t.get("default_style"), features, []):
         s += 2
+    
+    # Locale preference
     if v.get("locale", "").startswith(lang):
         s += 1
+        
     return s
 
 # ------------------------- main derivation API --------------------------

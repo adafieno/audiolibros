@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Character, CharacterDetection, Voice, VoiceAssignment } from "../types/character";
+import { loadVoiceInventory } from "../lib/voice";
+import { loadProjectConfig } from "../lib/config";
 
 interface RawDetectedCharacter {
   id?: string;
@@ -20,9 +22,19 @@ interface RawDetectedCharacter {
   quotes?: string[];
   isNarrator?: boolean;
   isMainCharacter?: boolean;
+  voiceAssignment?: {
+    voiceId: string;
+    style?: string;
+    styledegree?: number;
+    rate_pct?: number;
+    pitch_pct?: number;
+    confidence?: number;
+    method?: string;
+  };
 }
 
 interface SavedCharacter {
+  id?: string;
   name?: string;
   type?: string;
   importance?: string;
@@ -36,6 +48,15 @@ interface SavedCharacter {
   confidence?: number;
   has_dialogue?: boolean;
   dialogue_frequency?: string;
+  voiceAssignment?: {
+    voiceId: string;
+    style?: string;
+    styledegree?: number;
+    rate_pct?: number;
+    pitch_pct?: number;
+    confidence?: number;
+    method?: string;
+  };
 }
 interface DetectionIPCResult {
   ok: boolean;
@@ -102,6 +123,7 @@ export interface UseCharactersApi extends UseCharactersState {
   importJson: (file: File) => Promise<void>;
   assignVoices: () => Promise<void>;
   updateVoiceAssignment: (characterId: string, voiceId: string, style?: string, prosodyAdjustments?: Partial<VoiceAssignment>) => void;
+  auditionVoice: (characterId: string) => Promise<void>;
   availableVoices: Voice[];
 }
 
@@ -170,45 +192,65 @@ export function useCharacters(): UseCharactersApi {
           console.log(`✅ Loaded ${charactersArray.length} characters from file`);
           
           // Convert to frontend format
-          const formattedCharacters: Character[] = charactersArray.map((char: SavedCharacter, index: number) => {
-            const mapAge = (age: string): "elderly" | "adult" | "child" | "teen" => {
-              switch (age?.toLowerCase()) {
-                case 'elderly': return 'elderly';
-                case 'child': return 'child';
-                case 'teenager': case 'teen': return 'teen';
-                case 'young_adult': case 'adult': 
-                default: return 'adult';
-              }
-            };
+          const formattedCharacters: Character[] = charactersArray
+            .map((char: SavedCharacter, index: number) => {
+              const mapAge = (age: string): "elderly" | "adult" | "child" | "teen" => {
+                switch (age?.toLowerCase()) {
+                  case 'elderly': return 'elderly';
+                  case 'child': return 'child';
+                  case 'teenager': case 'teen': return 'teen';
+                  case 'young_adult': case 'adult': 
+                  default: return 'adult';
+                }
+              };
 
-            const mapGender = (gender: string): "M" | "F" | "N" => {
-              switch (gender?.toLowerCase()) {
-                case 'male': return 'M';
-                case 'female': return 'F';
-                default: return 'N';
-              }
-            };
+              const mapGender = (gender: string): "M" | "F" | "N" => {
+                switch (gender?.toLowerCase()) {
+                  case 'male': return 'M';
+                  case 'female': return 'F';
+                  case 'neutral': return 'N';
+                  default: return 'N';
+                }
+              };
 
-            return {
-              id: char.name?.toLowerCase().replace(/\s+/g, '_') || `char_${index}`,
-              name: char.name || `Character ${index + 1}`,
-              description: char.description || `Character: ${char.name}`,
-              traits: {
-                gender: mapGender(char.gender || 'unknown'),
-                age: mapAge(char.age || 'adult'),
-                register: char.type === 'narrator' ? 'formal' as const : 'informal' as const,
-                energy: char.age === 'elderly' ? 'low' as const : char.age === 'child' ? 'high' as const : 'medium' as const,
-                personality: char.personality || ['neutral'],
-                speaking_style: char.speaking_style || ['conversational'],
-                accent: char.accent || 'neutral',
-              },
-              frequency: Math.round((char.frequency || 0.5) * 100),
-              chapters: [],
-              quotes: [],
-              isNarrator: char.type === 'narrator',
-              isMainCharacter: char.importance === 'primary'
-            };
-          });
+              // Add safety check and debug info for mapping
+              if (!char || typeof char !== 'object') {
+                console.warn('Invalid character object:', char);
+                return null;
+              }
+
+              console.log('Processing character:', char.name, 'with fields:', Object.keys(char));
+
+              return {
+                id: char.id || char.name?.toLowerCase().replace(/\s+/g, '_') || `char_${index}`,
+                name: char.name || `Character ${index + 1}`,
+                description: char.description || `Character: ${char.name}`,
+                traits: {
+                  gender: mapGender(char.gender || 'unknown'),
+                  age: mapAge(char.age || 'adult'),
+                  register: char.type === 'narrator' ? 'formal' as const : 'informal' as const,
+                  energy: char.age === 'elderly' ? 'low' as const : char.age === 'child' ? 'high' as const : 'medium' as const,
+                  personality: char.personality || ['neutral'],
+                  speaking_style: char.speaking_style || ['conversational'],
+                  accent: char.accent || 'neutral',
+                },
+                frequency: Math.round((char.frequency || 0.5) * 100),
+                chapters: [],
+                quotes: [],
+                isNarrator: char.type === 'narrator',
+                isMainCharacter: char.importance === 'primary',
+                voiceAssignment: char.voiceAssignment ? {
+                  voiceId: char.voiceAssignment.voiceId,
+                  style: char.voiceAssignment.style,
+                  styledegree: char.voiceAssignment.styledegree || 0.6,
+                  rate_pct: char.voiceAssignment.rate_pct || 0,
+                  pitch_pct: char.voiceAssignment.pitch_pct || 0,
+                  confidence: char.voiceAssignment.confidence || 0.9,
+                  method: (char.voiceAssignment.method as "llm_auto" | "manual") || "llm_auto"
+                } : undefined,
+              };
+            })
+            .filter((char) => char !== null) as Character[];
           
           setCharacters(formattedCharacters);
           setDetection({
@@ -243,6 +285,47 @@ export function useCharacters(): UseCharactersApi {
       setMessage("Failed to load characters");
     } finally {
       setLoading(false);
+    }
+  }, [safeProjectRoot]);
+
+  const loadVoices = useCallback(async () => {
+    if (!safeProjectRoot) return;
+    
+    try {
+      console.log("🎤 Loading voice inventory...");
+      const [inventory, config] = await Promise.all([
+        loadVoiceInventory(safeProjectRoot),
+        loadProjectConfig(safeProjectRoot)
+      ]);
+      
+      if (inventory && inventory.voices) {
+        // Filter voices for the project
+        const projectLanguage = config?.language || "es-PE";
+        
+        // Filter by locale only (assume all voices in inventory are for the target engine)
+        const filteredVoices = inventory.voices
+          .filter(voice => 
+            voice.locale.startsWith(projectLanguage.split('-')[0]) // Match language
+          )
+          .map(voice => ({
+            id: voice.id,
+            engine: voice.engine || "azure" as const, // Default to azure if not specified
+            locale: voice.locale,
+            gender: voice.gender as "M" | "F" | "N", // Keep original gender including N for neutral
+            age_hint: voice.age_hint,
+            accent_tags: voice.accent_tags,
+            styles: voice.styles,
+          }));
+        
+        console.log(`🎤 Loaded ${filteredVoices.length} voices for ${projectLanguage}`);
+        setAvailableVoices(filteredVoices);
+      } else {
+        console.log("🎤 No voice inventory found");
+        setAvailableVoices([]);
+      }
+    } catch (error) {
+      console.warn("Failed to load voice inventory:", error);
+      setAvailableVoices([]);
     }
   }, [safeProjectRoot]);
 
@@ -325,6 +408,15 @@ export function useCharacters(): UseCharactersApi {
             quotes: Array.isArray(c.quotes) ? c.quotes : [],
             isNarrator: c.type === 'narrator' || c.isNarrator === true,
             isMainCharacter: c.type === 'protagonist' || c.type === 'primary' || c.isMainCharacter === true,
+            voiceAssignment: c.voiceAssignment ? {
+              voiceId: c.voiceAssignment.voiceId,
+              style: c.voiceAssignment.style,
+              styledegree: c.voiceAssignment.styledegree || 0.6,
+              rate_pct: c.voiceAssignment.rate_pct || 0,
+              pitch_pct: c.voiceAssignment.pitch_pct || 0,
+              confidence: c.voiceAssignment.confidence || 0.9,
+              method: (c.voiceAssignment.method as "llm_auto" | "manual") || "llm_auto"
+            } : undefined,
           };
           
           console.log(`✅ Mapped character ${i + 1}:`, mappedCharacter.name, mappedCharacter);
@@ -445,6 +537,7 @@ export function useCharacters(): UseCharactersApi {
       // Save in the same format as the Python detection script
       // This maintains compatibility with both manual edits and detection results
       const savedCharacters = characters.map(c => ({
+        id: c.id, // Include ID for voice assignment tracking
         name: c.name,
         type: c.isNarrator ? "narrator" : "character",
         importance: c.isMainCharacter ? "primary" : "secondary",
@@ -457,15 +550,17 @@ export function useCharacters(): UseCharactersApi {
         accent: c.traits.accent || "neutral",
         confidence: 1.0,
         has_dialogue: true,
-        dialogue_frequency: "medium"
+        dialogue_frequency: "medium",
+        // CRITICAL: Preserve voice assignment data
+        ...(c.voiceAssignment && { voiceAssignment: c.voiceAssignment })
       }));
 
-      // Save as plain array (same format as Python script output)
+      // Save in dictionary format (same format as Python voice assignment script expects)
       await window.khipu!.call("fs:write", {
         projectRoot: safeProjectRoot,
         relPath: "dossier/characters.json",
         json: true,
-        content: savedCharacters
+        content: { characters: savedCharacters }
       });
       
       // Characters saved successfully - no need for message
@@ -540,9 +635,9 @@ export function useCharacters(): UseCharactersApi {
       }) as { success?: boolean; characters?: Character[]; availableVoices?: Voice[]; message?: string; error?: string };
       
       if (result.success) {
-        setCharacters(result.characters || []);
+        // The voice assignment script has saved the file, so reload from disk
+        await load();
         setAvailableVoices(result.availableVoices || []);
-        setDirty(false);
         setMessage(result.message || "Voices assigned successfully");
       } else {
         setMessage(result.error || "Voice assignment failed");
@@ -553,7 +648,7 @@ export function useCharacters(): UseCharactersApi {
     } finally {
       setLoading(false);
     }
-  }, [safeProjectRoot]);
+  }, [safeProjectRoot, load]);
 
   const updateVoiceAssignment = useCallback((characterId: string, voiceId: string, style?: string, prosodyAdjustments?: Partial<VoiceAssignment>) => {
     setCharacters(prev => prev.map(char => {
@@ -576,6 +671,40 @@ export function useCharacters(): UseCharactersApi {
     setDirty(true);
   }, []);
 
+  const auditionVoice = useCallback(async (characterId: string) => {
+    if (!safeProjectRoot) return;
+    
+    const character = characters.find(c => c.id === characterId);
+    if (!character?.voiceAssignment) {
+      setMessage("No voice assigned to this character");
+      return;
+    }
+
+    try {
+      setMessage("Playing voice sample...");
+      
+      // Use IPC to play voice sample
+      const api = (window as unknown as WindowKhipu).khipu;
+      if (!api?.call) {
+        throw new Error("IPC method not available");
+      }
+      
+      // Call voice audition through IPC
+      await api.call("characters:auditionVoice", {
+        projectRoot: safeProjectRoot,
+        characterId: characterId,
+        voiceId: character.voiceAssignment.voiceId,
+        style: character.voiceAssignment.style,
+        sampleText: character.quotes?.[0] || character.description || `Hello, my name is ${character.name}.`
+      });
+      
+      setMessage("Voice sample played");
+    } catch (e) {
+      console.error(e);
+      setMessage("Failed to play voice sample");
+    }
+  }, [safeProjectRoot, characters]);
+
   const filtered = useMemo(() => {
     if (!filter.trim()) return characters;
     const q = filter.toLowerCase();
@@ -586,8 +715,9 @@ export function useCharacters(): UseCharactersApi {
     if (!mounted.current) {
       mounted.current = true;
       void load();
+      void loadVoices();
     }
-  }, [load]);
+  }, [load, loadVoices]);
 
   return {
     characters: filtered,
@@ -615,6 +745,7 @@ export function useCharacters(): UseCharactersApi {
     importJson,
     assignVoices,
     updateVoiceAssignment,
+    auditionVoice,
     availableVoices,
   };
 }

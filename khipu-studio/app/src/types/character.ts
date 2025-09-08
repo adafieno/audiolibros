@@ -23,8 +23,9 @@ export interface VoiceAssignment {
 
 export interface Voice {
   id: string;
+  engine?: string;
   locale: string;
-  gender: "M" | "F";
+  gender: "M" | "F" | "N"; // Male, Female, Neutral
   age_hint: string;
   accent_tags: string[];
   styles: string[];

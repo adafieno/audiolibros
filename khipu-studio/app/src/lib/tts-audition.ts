@@ -31,6 +31,10 @@ export interface AuditionOptions {
   voice: Voice;
   config: ProjectConfig;
   text?: string;
+  style?: string;
+  styledegree?: number;
+  rate_pct?: number;
+  pitch_pct?: number;
 }
 
 export interface AuditionResult {
@@ -175,7 +179,7 @@ function getAuditionText(locale: string, customText?: string): string {
 /**
  * Generate TTS audition for Azure Speech Services (enhanced following Python implementation)
  */
-async function auditAzureVoice(voice: Voice, config: ProjectConfig, text: string): Promise<AuditionResult> {
+async function auditAzureVoice(voice: Voice, config: ProjectConfig, text: string, options?: { style?: string; styledegree?: number; rate_pct?: number; pitch_pct?: number }): Promise<AuditionResult> {
   const credentials = config.creds?.azure;
   if (!credentials?.key || !credentials?.region) {
     return { success: false, error: "Azure credentials not configured" };
@@ -187,10 +191,34 @@ async function auditAzureVoice(voice: Voice, config: ProjectConfig, text: string
   
   // Preprocess SSML
   const ssmlText = preflightSsml(text);
+  
+  // Build prosody attributes
+  let prosodyAttrs = "";
+  if (options?.rate_pct) {
+    prosodyAttrs += ` rate="${options.rate_pct > 0 ? '+' : ''}${options.rate_pct}%"`;
+  }
+  if (options?.pitch_pct) {
+    prosodyAttrs += ` pitch="${options.pitch_pct > 0 ? '+' : ''}${options.pitch_pct}%"`;
+  }
+  
+  // Build SSML with proper nesting: voice -> express-as (if style) -> prosody (if prosody attrs) -> text
+  let innerContent = ssmlText;
+  
+  // Wrap in prosody if we have prosody attributes
+  if (prosodyAttrs) {
+    innerContent = `<prosody${prosodyAttrs}>${innerContent}</prosody>`;
+  }
+  
+  // Wrap in express-as if we have style
+  if (options?.style && options.style !== "none") {
+    const styledegree = options?.styledegree !== undefined ? ` styledegree="${options.styledegree}"` : "";
+    innerContent = `<mstts:express-as style="${options.style}"${styledegree}>${innerContent}</mstts:express-as>`;
+  }
+  
   const ssml = `
-    <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${voice.locale}">
+    <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="${voice.locale}">
       <voice name="${voice.id}">
-        ${ssmlText}
+        ${innerContent}
       </voice>
     </speak>
   `;
@@ -492,9 +520,17 @@ export async function generateAudition(options: AuditionOptions): Promise<Auditi
   const { voice, config } = options;
   const text = getAuditionText(voice.locale, options.text);
 
+  // Extract prosody options for engines that support them
+  const prosodyOptions = {
+    style: options.style,
+    styledegree: options.styledegree,
+    rate_pct: options.rate_pct,
+    pitch_pct: options.pitch_pct
+  };
+
   switch (voice.engine) {
     case "azure":
-      return auditAzureVoice(voice, config, text);
+      return auditAzureVoice(voice, config, text, prosodyOptions);
     
     case "elevenlabs":
       return auditElevenLabsVoice(voice, config, text);

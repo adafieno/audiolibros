@@ -195,6 +195,27 @@ async function runVoiceAssignment(projectRoot) {
   });
 }
 
+async function runVoiceAudition(projectRoot, characterId, voiceId, style, sampleText) {
+  console.log("🎵 Starting voice audition:", { characterId, voiceId, style, sampleText });
+  
+  // For now, just log the audition request
+  // TODO: Implement actual TTS synthesis and audio playback
+  console.log("🔊 Would play voice sample for:", {
+    character: characterId,
+    voice: voiceId,
+    style: style || "default",
+    text: sampleText
+  });
+  
+  // Simulate audio playback delay
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  return {
+    success: true,
+    message: `Voice audition for ${characterId} with ${voiceId} completed`
+  };
+}
+
 /* ---------------- App config (userData) ---------------- */
 function appConfigPath() {
   const userData = app.getPath("userData");
@@ -459,6 +480,20 @@ function createWin() {
           if (!projectRoot) throw new Error("Missing projectRoot");
           try {
             const result = await runVoiceAssignment(projectRoot);
+            return { success: true, ...result };
+          } catch (e) {
+            return { success: false, error: String(e.message || e) };
+          }
+        });
+
+        // Voice audition for characters
+        ipcMain.handle("characters:auditionVoice", async (_e, { projectRoot, characterId, voiceId, style, sampleText }) => {
+          if (!projectRoot) throw new Error("Missing projectRoot");
+          if (!characterId) throw new Error("Missing characterId");
+          if (!voiceId) throw new Error("Missing voiceId");
+          
+          try {
+            const result = await runVoiceAudition(projectRoot, characterId, voiceId, style, sampleText);
             return { success: true, ...result };
           } catch (e) {
             return { success: false, error: String(e.message || e) };
