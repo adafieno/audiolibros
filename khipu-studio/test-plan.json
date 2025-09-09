@@ -1,0 +1,43 @@
+{
+  "chapter_id": "ch01",
+  "chunks": [
+    {
+      "id": "ch01_001",
+      "start_char": 0,
+      "end_char": 92,
+      "voice": "narrador",
+      "stylepack": "chapter_default",
+      "lines": [
+        {
+          "voice": "desconocido",
+          "start_char": 0,
+          "end_char": 35
+        },
+        {
+          "voice": "desconocido",
+          "start_char": 38,
+          "end_char": 44
+        },
+        {
+          "voice": "narrador",
+          "start_char": 45,
+          "end_char": 92
+        }
+      ]
+    },
+    {
+      "id": "ch01_002",
+      "start_char": 93,
+      "end_char": 108,
+      "voice": "narrador",
+      "stylepack": "chapter_default",
+      "lines": [
+        {
+          "voice": "narrador",
+          "start_char": 93,
+          "end_char": 108
+        }
+      ]
+    }
+  ]
+}

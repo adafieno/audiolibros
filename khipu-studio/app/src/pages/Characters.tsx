@@ -362,9 +362,9 @@ function CharactersPage() {
               borderRadius: "50%",
               animation: "spin 1s linear infinite"
             }}></div>
-            <span style={{ color: "var(--text)" }}>Running character detection...</span>
+            <span style={{ color: "var(--text)" }}>{message || "Loading..."}</span>
           </div>
-          {detectionProgress && (
+          {detectionProgress ? (
             <div style={{ marginTop: "12px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "var(--muted)", marginBottom: "4px" }}>
                 <span>Processing chapter {detectionProgress.current} of {detectionProgress.total}</span>
@@ -382,8 +382,22 @@ function CharactersPage() {
                 ></div>
               </div>
             </div>
+          ) : (
+            <div style={{ marginTop: "12px" }}>
+              <div style={{ width: "100%", backgroundColor: "var(--border)", borderRadius: "9999px", height: "8px" }}>
+                <div 
+                  style={{ 
+                    backgroundColor: "var(--accent)", 
+                    height: "8px", 
+                    borderRadius: "9999px", 
+                    animation: "pulse 2s ease-in-out infinite",
+                    width: "100%" 
+                  }}
+                ></div>
+              </div>
+            </div>
           )}
-          <div style={{ fontSize: "12px", color: "var(--accent)", marginTop: "4px" }}>This may take a moment while analyzing the manuscript...</div>
+          <div style={{ fontSize: "12px", color: "var(--accent)", marginTop: "4px" }}>This may take a moment...</div>
         </div>
       )}
 

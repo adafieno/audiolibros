@@ -183,7 +183,7 @@ export default function Home() {
                     nav("/project", { replace: true });
                   }}
                 >
-                  <div style={{ marginBottom: "12px" }}>
+                  <div style={{ marginBottom: "2px" }}>
                     <div style={{ 
                       fontWeight: "600", 
                       fontSize: "16px", 

@@ -428,7 +428,7 @@ export default function CastingPage() {
               gap: "6px"
             }}
           >
-            {isCastingCompleted ? "✓ " + t("workflow.buttonCompleted") : "✓ " + t("casting.complete")}
+            {isCastingCompleted ? t("workflow.buttonCompleted") : "✓ " + t("casting.complete")}
           </button>
         </div>
       </section>

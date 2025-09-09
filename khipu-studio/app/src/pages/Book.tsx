@@ -161,7 +161,7 @@ export default function Book() {
             <div>{t("book.description.label")}</div>
             <textarea
               style={{ width: "80%" }}
-              rows={10}
+              rows={12}
               value={cfg?.bookMeta?.description || ""}
               onChange={(e) => updateBookMeta({ description: e.target.value })}
             />

@@ -1,0 +1,12 @@
+{
+  "07cfb3e7eecdc15f6b29537b55d5c88663dcf389": {
+    "speaker": "desconocido",
+    "confidence": 0.9,
+    "reason": "No se menciona explícitamente quién habla, pero el diálogo se atribuye a Rosa."
+  },
+  "7288b4fdd07ac8ed8f567649d5ba8e14dd05188a": {
+    "speaker": "desconocido",
+    "confidence": 0.7,
+    "reason": "No hay suficiente información para identificar al hablante, pero parece ser una respuesta a la pregunta de Rosa."
+  }
+}

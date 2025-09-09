@@ -414,4 +414,10 @@ a:focus {
   100% { transform: rotate(360deg); }
 }
 
+/* Animation for progress bar pulse */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 
