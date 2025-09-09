@@ -106,9 +106,9 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       console.log(`Chapter ${chapterId}: Plan file error:`, error);
     }
     
-    // For now, consider a chapter complete if it has a plan with segments
-    // In the future, we could check if the plan has been successfully processed
-    const isComplete = hasPlan; // TODO: Add more sophisticated completion check
+    // A chapter is complete only if it has a plan AND has been saved/finalized
+    // For now, we'll just set it to false - completion should be a manual step
+    const isComplete = false; // TODO: Add proper completion tracking based on user action
     
     const result = { hasText, hasPlan, isComplete };
     console.log(`=== Chapter ${chapterId} final status:`, result, `===`);
@@ -163,8 +163,10 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
           relPath: `ssml/plans/${chapterId}.plan.json`,
           json: true
         });
+        console.log(`📋 Loaded plan for ${chapterId}:`, planData);
         setPlan(planData as ChapterPlan);
-      } catch {
+      } catch (error) {
+        console.log(`📋 No plan found for ${chapterId}:`, error);
         setPlan(null);
       }
       
@@ -175,8 +177,10 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
           relPath: `analysis/chapters_txt/${chapterId}.txt`,
           json: false
         }) as string;
+        console.log(`📄 Loaded text for ${chapterId}, length:`, textData?.length || 0);
         setChapterText(textData || "");
-      } catch {
+      } catch (error) {
+        console.log(`📄 No text found for ${chapterId}:`, error);
         setChapterText("");
       }
       
@@ -306,6 +310,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
 
   // Convert plan to rows for table display
   const planToRows = useCallback((plan: ChapterPlan, chapterText: string): PlanRow[] => {
+    console.log(`🔄 planToRows called with plan chunks: ${plan.chunks?.length || 0}, text length: ${chapterText.length}`);
     const rows: PlanRow[] = [];
     plan.chunks.forEach((ch, cIdx) => {
       const cid = cidOf(ch);
@@ -316,7 +321,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
         ch.lines.forEach((ln, lIdx) => {
           const s = ln.start_char ?? cStart, e = ln.end_char ?? cEnd;
           const snippet = chapterText.slice(s, e + 1).replace(/\n/g, " ").slice(0, 160);
-          rows.push({
+          const row = {
             rowKey: `${cid}|${lIdx}|${s}|${e}`,
             chunkId: cid,
             chunkIndex: cIdx,
@@ -326,10 +331,12 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
             length: e - s + 1,
             voice: String(ln.voice ?? ""),
             snippet: snippet || baseSnippet,
-          });
+          };
+          console.log(`🔄 Adding line row:`, row);
+          rows.push(row);
         });
       } else {
-        rows.push({
+        const row = {
           rowKey: `${cid}|-1|${cStart}|${cEnd}`,
           chunkId: cid,
           chunkIndex: cIdx,
@@ -339,23 +346,61 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
           length: cEnd - cStart + 1,
           voice: String(ch.voice ?? ""),
           snippet: baseSnippet,
-        });
+        };
+        console.log(`🔄 Adding chunk row:`, row);
+        rows.push(row);
       }
     });
+    console.log(`🔄 planToRows returning ${rows.length} rows`);
     return rows;
   }, []);
 
-  const rowsAll = useMemo(() => (plan ? planToRows(plan, chapterText) : []), [plan, chapterText, planToRows]);
+  const rowsAll = useMemo(() => {
+    console.log(`🗂️ Computing grid rows: plan=${!!plan}, planChunks=${plan?.chunks?.length || 0}, textLength=${chapterText.length}`);
+    
+    if (!plan) {
+      console.log(`🗂️ No plan available, returning empty rows`);
+      return [];
+    }
+    
+    if (!chapterText) {
+      console.log(`🗂️ No chapter text available, returning empty rows`);
+      return [];
+    }
+    
+    const rows = planToRows(plan, chapterText);
+    console.log(`🗂️ Generated ${rows.length} grid rows`);
+    return rows;
+  }, [plan, chapterText, planToRows]);
   const chunkIds = useMemo(() => ["(all)", ...Array.from(new Set(rowsAll.map((r) => r.chunkId)))], [rowsAll]);
 
   const filteredRows = useMemo(() => {
+    console.log(`🔍 Filtering rows: rowsAll=${rowsAll.length}, onlyUnknown=${onlyUnknown}, chunkFilter=${chunkFilter}, search="${search}"`);
+    
     let rs = rowsAll;
-    if (onlyUnknown) rs = rs.filter((r) => r.voice.toLowerCase() === "desconocido" || r.voice === "");
-    if (chunkFilter !== "(all)") rs = rs.filter((r) => r.chunkId === chunkFilter);
+    console.log(`🔍 Starting with ${rs.length} rows`);
+    
+    if (onlyUnknown) {
+      rs = rs.filter((r) => r.voice.toLowerCase() === "desconocido" || r.voice === "");
+      console.log(`🔍 After onlyUnknown filter: ${rs.length} rows`);
+    }
+    
+    if (chunkFilter !== "(all)") {
+      rs = rs.filter((r) => r.chunkId === chunkFilter);
+      console.log(`🔍 After chunkFilter "${chunkFilter}": ${rs.length} rows`);
+    }
+    
     if (search.trim()) {
       const q = search.toLowerCase();
       rs = rs.filter((r) => r.snippet.toLowerCase().includes(q));
+      console.log(`🔍 After search "${q}": ${rs.length} rows`);
     }
+    
+    console.log(`🔍 Final filtered rows: ${rs.length}`);
+    if (rs.length > 0) {
+      console.log(`🔍 Sample row:`, rs[0]);
+    }
+    
     return rs;
   }, [rowsAll, onlyUnknown, chunkFilter, search]);
 
@@ -476,6 +521,13 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       if (result === 0) {
         console.log(`✅ Chapter ${chapter.id} completed successfully`);
         setMessage(`Chapter ${selectedChapter} plan generated successfully!`);
+        
+        // Refresh chapter status and reload plan data
+        const newStatus = await checkChapterStatus(selectedChapter);
+        setChapterStatus(prev => new Map(prev).set(selectedChapter, newStatus));
+        
+        // Reload the plan data to display in grid
+        await loadChapterData(selectedChapter);
       } else {
         console.error(`❌ Chapter ${chapter.id} failed with code: ${result}`);
         setMessage(`Failed to generate plan for chapter ${selectedChapter}. Error code: ${result}`);

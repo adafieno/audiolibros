@@ -127,11 +127,84 @@ def _build_name_lexicon(characters_json: dict) -> Dict[str, str]:
             out[str(a).lower()] = disp
     return out
 
+def _emit_progress(stage: str, percent: int, note: str = ""):
+    """Emit progress as JSON for the frontend"""
+    progress_data = {
+        "event": "progress",
+        "stage": stage,
+        "pct": percent,
+        "note": note
+    }
+    print(json.dumps(progress_data), flush=True)
+
+def _apply_segmentation_heuristics(text: str) -> List[Dict[str, object]]:
+    """
+    Simple initial segmentation:
+    1. Linebreaks ALWAYS determine new segments
+    2. Detect full sentences within lines
+    NO character splitting here - let LLM handle that
+    """
+    print(f"[KHIPU] Starting heuristic segmentation on {len(text)} characters", file=sys.stderr)
+    segments = []
+    current_pos = 0
+    
+    # Step 1: LINEBREAKS ALWAYS CREATE NEW SEGMENTS
+    lines = text.split('\n')
+    print(f"[KHIPU] Split text into {len(lines)} lines", file=sys.stderr)
+    
+    for line_num, line in enumerate(lines, 1):
+        if not line.strip():  # Skip empty lines
+            print(f"[KHIPU] Line {line_num}: Empty, skipping", file=sys.stderr)
+            current_pos += len(line) + 1
+            continue
+            
+        line_start = current_pos
+        print(f"[KHIPU] Line {line_num}: Processing '{line[:50]}...' at position {line_start}", file=sys.stderr)
+        
+        # Step 2: DETECT FULL SENTENCES within this line
+        sentence_ends = []
+        for match in re.finditer(r'[.!?]+(?:\s|$)', line):
+            sentence_ends.append(match.end())
+        
+        if not sentence_ends:
+            sentence_ends = [len(line)]  # Treat whole line as one sentence
+            print(f"[KHIPU] Line {line_num}: No sentence endings found, treating as one segment", file=sys.stderr)
+        else:
+            print(f"[KHIPU] Line {line_num}: Found {len(sentence_ends)} sentence endings", file=sys.stderr)
+            
+        sentence_start = 0
+        for sentence_end in sentence_ends:
+            sentence_text = line[sentence_start:sentence_end].strip()
+            if not sentence_text:
+                sentence_start = sentence_end
+                continue
+                
+            # Add sentence as segment - fix coordinate calculation
+            actual_start = line_start + sentence_start
+            actual_end = line_start + sentence_start + len(sentence_text) - 1
+            segments.append({
+                "text": sentence_text,
+                "start_offset": actual_start,
+                "end_offset": actual_end,
+                "speaker": "narrador",
+                "type": "narration"
+            })
+            print(f"[KHIPU] Line {line_num}, Sentence {len(segments)}: '{sentence_text[:30]}...' [{actual_start}-{actual_end}] ({len(sentence_text)} chars)", file=sys.stderr)
+            
+            sentence_start = sentence_end
+        
+        current_pos += len(line) + 1  # +1 for the \n
+    
+    print(f"[KHIPU] Heuristic segmentation complete: {len(segments)} initial segments created", file=sys.stderr)
+    return segments
+
 def _find_dialogue_spans_llm(text: str, allowed_speakers: List[str], window_chars: int = 200) -> List[Dict[str, object]]:
     """
     LLM-based comprehensive dialogue detection and parsing.
     Processes text chunks to identify and properly segment all dialogue with accurate speaker attribution.
     """
+    _emit_progress("🧠 LLM Analysis", 5, "Preparing text for dialogue detection")
+    
     # Split text into manageable chunks for LLM processing (to avoid timeouts and token limits)
     chunk_size = 2000  # Characters per chunk - balance between context and processing time
     overlap = 300     # Overlap between chunks to maintain context
@@ -160,16 +233,25 @@ def _find_dialogue_spans_llm(text: str, allowed_speakers: List[str], window_char
         
         chunk_text = text[start:end]
         
-        _LOG.info(f"Processing LLM dialogue chunk {chunk_num}/{((text_len // chunk_size) + 1)}: {len(chunk_text)} chars, position {start}-{end}")
+        total_chunks_estimate = (text_len // chunk_size) + 1
+        
+        # Progress: LLM analysis (5-70%)
+        llm_progress = 5 + int((chunk_num / total_chunks_estimate) * 65)
+        _emit_progress("🧠 LLM Analysis", llm_progress, f"Analyzing dialogue in chunk {chunk_num}/{total_chunks_estimate}")
+        
+        _LOG.info(f"Processing LLM dialogue chunk {chunk_num}/{total_chunks_estimate}: {len(chunk_text)} chars, position {start}-{end}")
         print(f"[KHIPU] Processing dialogue chunk {chunk_num}: {len(chunk_text)} characters at position {start}-{end}")
+        print(f"[KHIPU] Chunk {chunk_num} text preview: '{chunk_text[:100]}...''")
         
         try:
+            print(f"[KHIPU] ========== Chunk {chunk_num} Processing ==========")
             # Use comprehensive LLM parsing
             result = _llm_parse_dialogue_comprehensive(
                 chunk_text, 
                 allowed_speakers,
                 max_tts_chars=3000  # TTS length constraint
             )
+            print(f"[KHIPU] ========== Chunk {chunk_num} LLM Complete ==========")
             
             if result.get("success") and "segments" in result:
                 _LOG.info(f"Chunk {chunk_num} processed successfully: {len(result['segments'])} dialogue segments found")
@@ -368,119 +450,65 @@ def _save_cache(p: Path, obj: Dict[str, dict]) -> None:
 
 def _llm_parse_dialogue_comprehensive(text_chunk: str, allowed_speakers: List[str], max_tts_chars: int = 3000) -> dict:
     """
-    Uses LLM to comprehensively parse a text chunk for dialogue splitting and speaker identification.
-    Designed to handle complex cases and TTS length constraints in a single pass.
+    Simple LLM approach: Get initial segments, then let LLM further split for dialogue and length.
     """
-    system = """You are an expert dialogue parser for Spanish novels. Your task is to:
-1. Identify ALL dialogue segments in the text (marked by em-dashes — or quotes)
-2. Separate dialogue speech from attribution/narration (e.g., "—Hello —said María" becomes two segments)
-3. Identify the correct speaker for each dialogue segment
-4. Split long segments to respect TTS length limits
-5. Maintain narrative flow and context
-
-Return ONLY valid JSON with no additional text."""
-
-    user_prompt = {
-        "text": text_chunk.strip(),
-        "available_speakers": allowed_speakers,
-        "max_segment_chars": max_tts_chars,
-        "instructions": {
-            "dialogue_detection": [
-                "Find text starting with em-dash (—) or within quotes (\" or « »)",
-                "Separate actual dialogue from speaker attribution",
-                "Example: '—No puedo creerlo —dijo María' becomes:",
-                "  Segment 1: '—No puedo creerlo' (speaker: María, type: dialogue)",
-                "  Segment 2: '—dijo María' (speaker: narrador, type: attribution)"
-            ],
-            "speaker_identification": [
-                "Use available_speakers list or 'narrador' for narration", 
-                "Look for attribution patterns: 'dijo X', 'preguntó Y', 'X respondió'",
-                "Consider context and previous dialogue to maintain conversation flow",
-                "Use 'desconocido' only when truly ambiguous"
-            ],
-            "length_management": [
-                f"Split segments longer than {max_tts_chars} characters at natural breaks",
-                "Prefer sentence boundaries, then clause boundaries",
-                "Never split within a single sentence if avoidable",
-                "Each segment should be meaningful for TTS synthesis"
-            ],
-            "output_format": "Return segments array with start_offset, end_offset, speaker, type, text, confidence"
-        }
-    }
-
-    messages = [
-        {"role": "system", "content": system},
-        {"role": "user", "content": json.dumps(user_prompt, ensure_ascii=False, indent=2)}
-    ]
+    print(f"[KHIPU] ========== LLM Processing Start ==========")
+    print(f"[KHIPU] Chunk size: {len(text_chunk)} characters")
+    print(f"[KHIPU] Available speakers: {allowed_speakers}")
+    print(f"[KHIPU] Max TTS chars: {max_tts_chars}")
     
     try:
-        result = chat_json(messages, strict=True, timeout_s=45)
+        # Get initial line/sentence segments  
+        print(f"[KHIPU] Step 1: Running heuristic segmentation...")
+        base_segments = _apply_segmentation_heuristics(text_chunk)
+        print(f"[KHIPU] Step 1 Complete: {len(base_segments)} initial segments created")
         
-        # Validate and normalize the response
-        if not isinstance(result, dict) or "segments" not in result:
-            raise ValueError("Invalid LLM response structure")
-            
-        segments = result["segments"]
-        if not isinstance(segments, list):
-            raise ValueError("Segments must be a list")
-            
-        # Validate each segment and add missing fields
-        validated_segments = []
-        for i, seg in enumerate(segments):
-            if not isinstance(seg, dict):
-                continue
-                
-            # Ensure required fields exist
-            validated_seg = {
-                "start_offset": seg.get("start_offset", 0),
-                "end_offset": seg.get("end_offset", len(text_chunk)),
-                "speaker": seg.get("speaker", "desconocido"),
-                "type": seg.get("type", "dialogue"),
-                "text": seg.get("text", "").strip(),
-                "confidence": max(0.1, min(1.0, seg.get("confidence", 0.7)))
-            }
-            
-            # Basic validation
-            if (validated_seg["end_offset"] <= validated_seg["start_offset"] or 
-                not validated_seg["text"] or
-                validated_seg["speaker"] not in allowed_speakers + ["narrador", "desconocido"]):
-                validated_seg["speaker"] = "desconocido"
-                validated_seg["confidence"] = 0.3
-            
-            validated_segments.append(validated_seg)
+        # Simple LLM prompt - further split and assign speakers
+        print(f"[KHIPU] Step 2: Preparing LLM request...")
+        system = """Split text segments for audiobook TTS. You can:
+1. Further split segments that contain dialogue or are too long (>300 chars)
+2. Assign correct speakers (use available_speakers or 'narrador')
+3. Keep line boundaries intact
+
+Return JSON array of segments with: text, start_offset, end_offset, speaker, type"""
         
-        if not validated_segments:
-            # Create fallback single segment
-            validated_segments = [{
-                "start_offset": 0,
-                "end_offset": len(text_chunk),
-                "speaker": "narrador",
-                "type": "narration", 
-                "text": text_chunk,
-                "confidence": 0.5
-            }]
-        
-        return {
-            "success": True,
-            "segments": validated_segments,
-            "processing_notes": result.get("notes", "")
+        user_prompt = {
+            "segments": base_segments,
+            "available_speakers": allowed_speakers,
+            "max_chars": max_tts_chars
         }
+
+        messages = [
+            {"role": "system", "content": system},
+            {"role": "user", "content": json.dumps(user_prompt, ensure_ascii=False)}
+        ]
         
+        print(f"[KHIPU] Step 2: Sending request to LLM (timeout: 15s)...")
+        result = chat_json(messages, strict=True, timeout_s=15)
+        print(f"[KHIPU] Step 2 Complete: LLM responded successfully")
+        
+        if isinstance(result, dict) and "segments" in result:
+            final_segments = result["segments"]
+            print(f"[KHIPU] Step 3: LLM returned {len(final_segments)} refined segments")
+            for i, seg in enumerate(final_segments[:5]):  # Show first 5
+                print(f"[KHIPU] Segment {i+1}: '{seg.get('text', '')[:30]}...' speaker='{seg.get('speaker', 'unknown')}' [{seg.get('start_offset', '?')}-{seg.get('end_offset', '?')}]")
+            if len(final_segments) > 5:
+                print(f"[KHIPU] ... and {len(final_segments) - 5} more segments")
+            print(f"[KHIPU] ========== LLM Processing Complete ==========")
+            return {"success": True, "segments": final_segments}
+        else:
+            print(f"[KHIPU] LLM returned invalid format, using heuristic segments")
+            print(f"[KHIPU] ========== LLM Processing Complete (Fallback) ==========")
+            return {"success": True, "segments": base_segments}
+            
     except Exception as e:
-        _LOG.warning(f"Comprehensive LLM parsing failed: {e}")
-        # Safe fallback - treat entire chunk as narration
-        return {
-            "success": False,
-            "error": str(e),
-            "segments": [{
-                "start_offset": 0,
-                "end_offset": len(text_chunk),
-                "speaker": "narrador",
-                "type": "narration",
-                "text": text_chunk,
-                "confidence": 0.2
-            }]
-        }
+        print(f"[KHIPU] LLM processing failed: {e}")
+        print(f"[KHIPU] Falling back to heuristic segmentation only...")
+        base_segments = _apply_segmentation_heuristics(text_chunk)
+        print(f"[KHIPU] ========== LLM Processing Complete (Error Fallback) ==========")
+        return {"success": True, "segments": base_segments}
+
+
 
 def _llm_choose_speaker(speech_text: str, context_left: str, context_right: str, allowed: List[str]) -> dict:
     """Legacy function - now prefer _llm_parse_dialogue_comprehensive for better results"""
@@ -582,10 +610,14 @@ def build_chapter_plan(
     if not chapter_id or not isinstance(chapter_id, str):
         raise SSMLPlanError("chapter_id inválido")
 
+    _emit_progress("📖 Reading Chapter", 0, f"Loading text for {chapter_id}")
+    
     text = (chapter_text or "").strip("\n")
     if not text:
         return {"chapter_id": chapter_id, "chunks": []}
 
+    _emit_progress("📖 Reading Chapter", 3, "Loading character definitions")
+    
     name_lex: Dict[str,str] = {}
     if dossier_dir:
         chars_p = Path(dossier_dir) / "characters.json"
@@ -602,21 +634,23 @@ def build_chapter_plan(
     positions = [b.pos for b in boundaries]
     kinds     = [b.kind for b in boundaries]
 
-    # Enable comprehensive LLM-based dialogue parsing and speaker attribution
-    use_llm = llm_attribution.lower() in ("unknown", "all")
-    use_llm_dialogue_parsing = use_llm  # Use LLM for both detection and attribution when enabled
-    
-    if dialogue and use_llm_dialogue_parsing:
+    # Always use comprehensive LLM-based dialogue parsing when dialogue is enabled
+    if dialogue:
         _LOG.info("Using comprehensive LLM-based dialogue detection, splitting, and speaker attribution")
+        print(f"[KHIPU] ========== DIALOGUE PROCESSING START ==========")
+        print(f"[KHIPU] Chapter: {chapter_id}")
+        print(f"[KHIPU] Text length: {len(text)} characters") 
+        print(f"[KHIPU] Available speakers: {allowed_speakers}")
+        print(f"[KHIPU] LLM window chars: {llm_window_chars}")
+        
         # Get detailed dialogue segments with proper speaker assignment from LLM  
         detailed_dialogue_segments = _find_dialogue_spans_llm(text, allowed_speakers, llm_window_chars)
-        # Still create dialogue_spans for compatibility
-        dialogue_spans = [(seg["start_char"], seg["end_char"]) for seg in detailed_dialogue_segments]
+        
+        print(f"[KHIPU] ========== DIALOGUE PROCESSING COMPLETE ==========")
+        print(f"[KHIPU] Total segments extracted: {len(detailed_dialogue_segments)}")
     else:
-        # Use legacy regex-based dialogue detection
-        _LOG.info("Using regex-based dialogue detection with LLM speaker attribution" if use_llm else "Using legacy regex-only dialogue detection")
-        base_dialogue_spans: List[Tuple[int,int]] = _find_dialogue_spans(text) if dialogue else []
-        dialogue_spans = _expand_dialogue_spans_swallow_leading_delims(text, base_dialogue_spans) if dialogue else []
+        _LOG.info("No dialogue processing requested")
+        print(f"[KHIPU] Dialogue processing disabled, using narrator only")
         detailed_dialogue_segments = []
 
     chunks: List[Dict[str, object]] = []
@@ -624,12 +658,18 @@ def build_chapter_plan(
     idx = 1
     N = len(text)
 
-    cache_path = (Path(dossier_dir) / ".cache/llm_speaker_cache.json") if dossier_dir else None
-    use_llm = llm_attribution.lower() in ("unknown", "all")
+    # Legacy variables removed - now using LLM-only approach
 
     with log_span("ssml.plan.build", extra={"chapter": chapter_id}):
         total_chunks_estimate = (N // int(target_minutes * wpm * 6.3)) + 1
         print(f"[KHIPU] Starting chapter {chapter_id} processing: {N} characters, estimated {total_chunks_estimate} chunks")
+        
+        _emit_progress("✂️ Building Chunks", 70, f"Creating audio segments (0/{total_chunks_estimate})")
+        
+        print(f"[KHIPU] ========== CHUNK BUILDING START ==========")
+        print(f"[KHIPU] Text length: {N} characters")
+        print(f"[KHIPU] Estimated chunks: {total_chunks_estimate}")
+        print(f"[KHIPU] Available dialogue segments: {len(detailed_dialogue_segments) if detailed_dialogue_segments else 0}")
         
         while cursor < N:
             approx_chars_needed = int(target_minutes * wpm * 6.3)
@@ -667,43 +707,56 @@ def build_chapter_plan(
             chunk_id = f"{chapter_id}_{idx:03d}"
             
             progress_percent = (cursor / N) * 100
+            chunk_progress = 70 + int((idx / total_chunks_estimate) * 25)  # 70-95% for chunk building
+            _emit_progress("✂️ Building Chunks", chunk_progress, f"Creating audio chunk {idx}/{total_chunks_estimate}")
+            
+            print(f"[KHIPU] ---------- Chunk {chunk_id} Start ----------")
             print(f"[KHIPU] Building audio chunk {chunk_id} ({idx}/{total_chunks_estimate}): {progress_percent:.1f}% complete, {end_pos - cursor} chars")
+            print(f"[KHIPU] Chunk boundaries: {cursor} to {end_pos-1}")
+            print(f"[KHIPU] Cut kind: {cut_kind}, Minutes: {minutes:.2f}, KB: {kb:.2f}")
 
             lines: List[Dict[str, object]] = []
-            if dialogue:
-                # Legacy regex-based dialogue processing
-                in_chunk = [(ds,de) for (ds,de) in dialogue_spans if not (de < cursor or ds > end_pos - 1)]
-                in_chunk.sort()
-                # narrador para huecos — pero filtrando basura de puntuación
-                for gs, ge in _subtract_spans(cursor, end_pos - 1, in_chunk):
-                    seg = text[gs:ge+1]
-                    if not _is_punct_only(seg):
-                        lines.append({"voice": default_voice, "start_char": gs, "end_char": ge})
-                # diálogos — también saltar si el contenido resultara ser solo puntuación
-                for ds,de in in_chunk:
-                    seg = text[ds:de+1]
-                    if _is_punct_only(seg):
-                        continue
-                    spk = _guess_speaker(text, (ds,de), name_lex) or "desconocido"
-                    lines.append({"voice": spk, "start_char": ds, "end_char": de})
-                lines.sort(key=lambda d: d.get("start_char", 0))
-
-                if use_llm and lines:
-                    lines = _refine_speakers_with_llm(
-                        lines, text,
-                        allowed_speakers=allowed_speakers,
-                        threshold=float(llm_threshold),
-                        mode=llm_attribution.lower(),
-                        max_lines=int(llm_max_lines),
-                        window_chars=int(llm_window_chars),
-                        cache_path=cache_path,
-                        unknown_label="desconocido",
-                    )
+            if dialogue and detailed_dialogue_segments:
+                # Use LLM-processed dialogue segments - DON'T clip to chunk boundaries
+                print(f"[KHIPU] Processing chunk {chunk_id} with LLM dialogue segments")
+                in_chunk_segments = [seg for seg in detailed_dialogue_segments 
+                                   if not (seg["end_char"] < cursor or seg["start_char"] >= end_pos)]
+                
+                # Use LLM segments exactly as provided - no clipping or gap filling
+                for segment in in_chunk_segments:
+                    # Use original LLM coordinates - don't force into chunk boundaries
+                    seg_start = segment["start_char"] 
+                    seg_end = segment["end_char"]
+                    
+                    # Only include if segment actually overlaps with chunk
+                    if seg_end >= cursor and seg_start < end_pos:
+                        # Adjust only if segment extends beyond chunk
+                        actual_start = max(seg_start, cursor)
+                        actual_end = min(seg_end, end_pos - 1)
+                        
+                        if actual_end >= actual_start:
+                            seg_text = text[actual_start:actual_end + 1]
+                            if not _is_punct_only(seg_text):
+                                lines.append({
+                                    "voice": segment["voice"],
+                                    "start_char": actual_start,
+                                    "end_char": actual_end
+                                })
+                                print(f"[KHIPU] Added LLM segment: voice={segment['voice']}, start={actual_start}, end={actual_end}, text='{seg_text[:50]}...'")
+                
+                # If no segments found in chunk, use narrator for whole chunk
+                if not lines:
+                    lines.append({"voice": default_voice, "start_char": cursor, "end_char": end_pos - 1})
+                    print(f"[KHIPU] No LLM segments in chunk {chunk_id}, using full narrator")
+            elif dialogue:
+                # Dialogue requested but no LLM segments available, use all narrator
+                lines.append({"voice": default_voice, "start_char": cursor, "end_char": end_pos - 1})
+                print(f"[KHIPU] No LLM segments available for chunk {chunk_id}, using full narrator")
 
             chunk_obj: Dict[str, object] = {
                 "id": chunk_id,
                 "start_char": cursor,
-                "end_char": end_pos - 1 if end_pos > 0 else 0,
+                "end_char": end_pos - 1,  # Consistent end indexing
                 "voice": default_voice,
                 "stylepack": default_stylepack,
             }
@@ -711,11 +764,14 @@ def build_chapter_plan(
                 chunk_obj["lines"] = lines
 
             chunks.append(chunk_obj)
+            print(f"[KHIPU] Chunk {chunk_id} complete: {len(lines)} lines created")
+            print(f"[KHIPU] ---------- Chunk {chunk_id} End ----------")
+            
             _LOG.info("chunk", extra={
                 "chapter": chapter_id, "chunk_id": chunk_id,
                 "start": cursor, "end": end_pos, "kind": cut_kind,
                 "minutes": round(minutes, 2), "kb": kb,
-                "lines": len(lines), "llm": use_llm
+                "lines": len(lines), "llm": True  # Always using LLM now
             })
 
             idx += 1
@@ -723,8 +779,13 @@ def build_chapter_plan(
             while cursor < N and text[cursor].isspace():
                 cursor += 1
 
+    _emit_progress("💾 Saving Plan", 95, "Finalizing chapter plan")
+    
     print(f"[KHIPU] Chapter {chapter_id} completed: {len(chunks)} audio chunks generated")
     _LOG.info(f"Chapter {chapter_id} processing complete: {len(chunks)} chunks, {cursor} characters processed")
+    
+    _emit_progress("✅ Complete", 100, f"Chapter {chapter_id} ready - {len(chunks)} audio segments")
+    
     return {"chapter_id": chapter_id, "chunks": chunks}
 
 # ------------------ Batch + CLI (igual que antes) ------------------
