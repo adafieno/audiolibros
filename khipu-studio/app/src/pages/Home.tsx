@@ -11,7 +11,110 @@ type RecentItem = {
   title?: string;
   authors?: string[];
   language?: string;
+  coverImage?: string; // Cover image path from bookMeta
 };
+
+// Component for project cover image with fallback
+function ProjectCover({ project }: { project: RecentItem }) {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [showFallback, setShowFallback] = useState(false);
+
+  useEffect(() => {
+    const loadCoverImage = async () => {
+      // First, check if cover image path is already available in project data
+      const coverImagePath = project.coverImage;
+        
+      if (coverImagePath) {
+          // Try to load the configured cover image
+          try {
+            const result = await window.khipu!.call("file:getImageDataUrl", {
+              projectRoot: project.path,
+              fileName: coverImagePath
+            });
+            
+            if (result.success && result.dataUrl) {
+              setImageUrl(result.dataUrl);
+              setShowFallback(false);
+              console.log(`✅ Successfully loaded configured cover: ${coverImagePath} for ${project.name}`);
+              return;
+            }
+          } catch (error) {
+            console.log(`❌ Failed to load configured cover ${coverImagePath} for ${project.name}:`, error);
+          }
+        }
+
+        // If no configured cover or it failed, try fallback file names for backward compatibility
+        const fallbackFiles = ['art/cover_3000.jpg', 'art/cover.jpg', 'art/cover.png'];
+        
+        for (const fileName of fallbackFiles) {
+          try {
+            const result = await window.khipu!.call("file:getImageDataUrl", {
+              projectRoot: project.path,
+              fileName
+            });
+            
+            if (result.success && result.dataUrl) {
+              setImageUrl(result.dataUrl);
+              setShowFallback(false);
+              console.log(`✅ Successfully loaded fallback cover: ${fileName} for ${project.name}`);
+              return;
+            }
+          } catch {
+            // Continue trying other files
+          }
+        }
+      
+      // No cover image found, show fallback
+      console.log(`📚 No cover found for ${project.name}, using fallback`);
+      setShowFallback(true);
+    };
+
+    loadCoverImage();
+  }, [project.path, project.name, project.coverImage]);
+
+  return (
+    <div style={{
+      width: "60px",
+      height: "80px",
+      flexShrink: 0,
+      borderRadius: "4px",
+      overflow: "hidden",
+      border: "1px solid var(--border)",
+      backgroundColor: "var(--panelAccent)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center"
+    }}>
+      {imageUrl && !showFallback ? (
+        <img
+          src={imageUrl}
+          alt={`Cover for ${project.title || project.name}`}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover"
+          }}
+          onError={() => {
+            console.log(`🖼️ Image failed to display for ${project.name}`);
+            setShowFallback(true);
+          }}
+        />
+      ) : (
+        <div style={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "24px",
+          color: "var(--muted)"
+        }}>
+          📚
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Home() {
   const { t } = useTranslation();
@@ -46,7 +149,8 @@ export default function Home() {
                 ...item,
                 title: configData?.bookMeta?.title,
                 authors: configData?.bookMeta?.authors,
-                language: configData?.language || configData?.bookMeta?.language
+                language: configData?.language || configData?.bookMeta?.language,
+                coverImage: configData?.bookMeta?.coverImage
               };
             } catch (error) {
               // If we can't load config, just return the basic item
@@ -151,13 +255,12 @@ export default function Home() {
             <p style={{ fontSize: "14px" }}>Create a new project or open an existing one to get started.</p>
           </div>
         ) : (
-          <>
-            <div style={{ 
-              display: "grid", 
-              gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))", 
-              gap: "16px",
-              marginBottom: "16px"
-            }}>
+          <div style={{ 
+            display: "grid", 
+            gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))", 
+            gap: "16px",
+            marginBottom: "16px"
+          }}>
               {recents.map((r) => (
                 <div
                   key={r.path}
@@ -183,50 +286,55 @@ export default function Home() {
                     nav("/project", { replace: true });
                   }}
                 >
-                  <div style={{ marginBottom: "2px" }}>
-                    <div style={{ 
-                      fontWeight: "600", 
-                      fontSize: "16px", 
-                      color: "var(--text)",
-                      marginBottom: "4px"
-                    }}>
-                      {r.title || r.name}
-                    </div>
+                  <div style={{ display: "flex", gap: "12px", marginBottom: "2px" }}>
+                    {/* Book cover thumbnail */}
+                    <ProjectCover project={r} />
                     
-                    {r.authors && r.authors.length > 0 && (
+                    <div style={{ flex: 1 }}>
                       <div style={{ 
-                        fontSize: "13px", 
+                        fontWeight: "600", 
+                        fontSize: "16px", 
                         color: "var(--text)",
-                        marginBottom: "4px",
-                        fontWeight: "500"
+                        marginBottom: "4px"
                       }}>
-                        by {r.authors.join(", ")}
+                        {r.title || r.name}
                       </div>
-                    )}
-                    
-                    {r.language && (
+                      
+                      {r.authors && r.authors.length > 0 && (
+                        <div style={{ 
+                          fontSize: "13px", 
+                          color: "var(--text)",
+                          marginBottom: "4px",
+                          fontWeight: "500"
+                        }}>
+                          by {r.authors.join(", ")}
+                        </div>
+                      )}
+                      
+                      {r.language && (
+                        <div style={{ 
+                          fontSize: "12px", 
+                          color: "var(--muted)",
+                          marginBottom: "4px",
+                          display: "inline-block",
+                          backgroundColor: "var(--panelAccent)",
+                          padding: "2px 6px",
+                          borderRadius: "4px",
+                          border: "1px solid var(--border)"
+                        }}>
+                          {r.language}
+                        </div>
+                      )}
+                      
                       <div style={{ 
-                        fontSize: "12px", 
+                        fontSize: "11px", 
                         color: "var(--muted)",
-                        marginBottom: "4px",
-                        display: "inline-block",
-                        backgroundColor: "var(--panelAccent)",
-                        padding: "2px 6px",
-                        borderRadius: "4px",
-                        border: "1px solid var(--border)"
+                        wordBreak: "break-all",
+                        lineHeight: "1.4",
+                        marginTop: "8px"
                       }}>
-                        {r.language}
+                        {r.path}
                       </div>
-                    )}
-                    
-                    <div style={{ 
-                      fontSize: "11px", 
-                      color: "var(--muted)",
-                      wordBreak: "break-all",
-                      lineHeight: "1.4",
-                      marginTop: "8px"
-                    }}>
-                      {r.path}
                     </div>
                   </div>
                   <div style={{ 
@@ -257,8 +365,7 @@ export default function Home() {
                   </div>
                 </div>
               ))}
-            </div>
-          </>
+          </div>
         )}
         
         <div style={{ 
