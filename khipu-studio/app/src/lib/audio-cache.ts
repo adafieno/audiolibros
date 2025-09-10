@@ -176,6 +176,8 @@ class AudioCacheManager {
         console.warn("Background file system cache failed:", error);
         // Don't throw - memory cache is working fine
       });
+    } else {
+      console.log("📝 File system caching skipped - khipu API or voiceOptions not available");
     }
   }
 
@@ -188,17 +190,22 @@ class AudioCacheManager {
       const response = await fetch(audioUrl);
       const arrayBuffer = await response.arrayBuffer();
       
-      // Convert array buffer to base64 safely (handle large files)
+      // Convert array buffer to base64 safely using built-in method
       const uint8Array = new Uint8Array(arrayBuffer);
-      let base64 = '';
-      const chunkSize = 8192; // Process in chunks to avoid call stack overflow
       
-      for (let i = 0; i < uint8Array.length; i += chunkSize) {
-        const chunk = uint8Array.slice(i, i + chunkSize);
-        base64 += String.fromCharCode(...chunk);
-      }
-      
-      const base64Data = btoa(base64);
+      // Use FileReader for safe base64 conversion (avoids call stack issues)
+      const base64Data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          // Remove data URL prefix (data:application/octet-stream;base64,)
+          const base64 = result.split(',')[1];
+          resolve(base64);
+        };
+        reader.onerror = () => reject(reader.error);
+        const blob = new Blob([uint8Array], { type: 'application/octet-stream' });
+        reader.readAsDataURL(blob);
+      });
       
       const now = Date.now();
       const metadata: AudioCacheMetadata = {

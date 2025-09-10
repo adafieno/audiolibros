@@ -739,10 +739,21 @@ function createWin() {
   ipcMain.handle("audioCache:write", async (_e, { key, audioData, metadata }) => {
     try {
       const cacheDir = path.join(app.getPath("userData"), "cache", "tts");
-      await fsp.mkdir(cacheDir, { recursive: true });
+      console.log("Creating cache directory:", cacheDir);
+      
+      // Ensure directory exists with better error handling
+      try {
+        await fsp.mkdir(cacheDir, { recursive: true });
+        console.log("Cache directory created/verified");
+      } catch (mkdirError) {
+        console.error("Failed to create cache directory:", mkdirError);
+        throw mkdirError;
+      }
       
       const cacheFile = path.join(cacheDir, `${key}.json`);
       const audioFile = path.join(cacheDir, `${key}.wav`);
+      
+      console.log("Writing audio file:", audioFile);
       
       // Write audio data (convert from base64)
       const audioBuffer = Buffer.from(audioData, 'base64');
