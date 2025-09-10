@@ -62,18 +62,6 @@ export default function ManuscriptPage() {
     setMsg("");
   }
 
-  async function saveChapter() {
-    if (!root || !selected) return;
-    setMsg(t("manu.saving"));
-    const ok = await window.khipu!.call("chapter:write", {
-      projectRoot: root,
-      relPath: selected.relPath,
-      text,
-    });
-    setMsg(ok ? t("manu.saved") : t("manu.saveError"));
-    if (ok) await refreshList(); // update word counts
-  }
-
   useEffect(() => {
     if (root) void refreshList();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -85,15 +73,37 @@ export default function ManuscriptPage() {
         <section style={{ marginTop: 16 }}>
           <h2>{t("manu.title")}</h2>
         </section>
+        
+        {/* Toolbar */}
+        <section style={{ marginTop: 16, marginBottom: 16 }}>
+          <div style={{ 
+            display: "flex", 
+            gap: 8, 
+            alignItems: "center",
+            padding: "8px 12px",
+            backgroundColor: "var(--panel)",
+            border: "1px solid var(--border)",
+            borderRadius: "6px"
+          }}>
+            <button className="btn" onClick={chooseDocxAndParse}>Importar .docx…</button>
+            <button className="btn" onClick={refreshList}>Refrescar</button>
+            <div style={{ width: "1px", height: "20px", backgroundColor: "var(--border)", margin: "0 4px" }}></div>
+            <WorkflowCompleteButton 
+              step="manuscript" 
+              disabled={chapters.length === 0}
+              className="btn"
+            >
+              Marcar manuscrito como completo
+            </WorkflowCompleteButton>
+            {msg && (
+              <span style={{ color: "var(--muted)", fontSize: 12, marginLeft: "auto" }}>{msg}</span>
+            )}
+          </div>
+        </section>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: 12, height: "100%" }}>
         {/* Left: chapters */}
-        <aside style={{ borderRight: "1px solid var(--border)", paddingRight: 12, overflow: "auto" }}>
-          <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-            <button className="btn" onClick={chooseDocxAndParse}>Importar .docx…</button>
-            <button className="btn" onClick={refreshList}>Refrescar</button>
-          </div>
-          <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 8 }}>{msg}</div>
+        <aside style={{ borderRight: "1px solid var(--border)", padding: "0 16px 0 0", overflow: "auto" }}>
 
           {chapters.length === 0 ? (
             <div style={{ color: "var(--muted)" }}>
@@ -130,44 +140,24 @@ export default function ManuscriptPage() {
           )}
         </aside>
 
-        {/* Right: editor */}
-        <section style={{ display: "grid", gridTemplateRows: "auto 1fr auto", gap: 8, minHeight: 0 }}>
-          <div>
-            <h3 style={{ margin: 0 }}>
+        {/* Right: preview */}
+        <section style={{ minHeight: 0 }}>
+          <div style={{ border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden", display: "flex", flexDirection: "column", height: "100%" }}>
+            <div style={{ padding: "8px 12px", backgroundColor: "var(--panelAccent)", borderBottom: "1px solid var(--border)", fontSize: "14px", fontWeight: 500 }}>
               {selected ? `${selected.title} (${selected.id})` : "Selecciona un capítulo"}
-            </h3>
-          </div>
-
-          <div style={{ minHeight: 0 }}>
-            <textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Contenido del capítulo…"
-              style={{
-                width: "100%",
-                height: "100%",
-                minHeight: 0,
-                resize: "none",
-                fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-                fontSize: 14,
-                background: "var(--panel)",
-                color: "inherit",
-                border: "1px solid var(--border)",
-                borderRadius: 10,
-                padding: 12,
-              }}
-            />
-          </div>
-
-          <div style={{ display: "flex", gap: 8 }}>
-            <button className="btn" disabled={!selected} onClick={saveChapter}>Guardar capítulo</button>
-            <WorkflowCompleteButton 
-              step="manuscript" 
-              disabled={chapters.length === 0}
-            >
-              Marcar manuscrito como completo
-            </WorkflowCompleteButton>
-            <span style={{ color: "var(--muted)", fontSize: 12 }}>{msg}</span>
+            </div>
+            
+            <div style={{ flex: 1, padding: "12px", overflow: "auto" }}>
+              {selected ? (
+                <div style={{ fontSize: "14px", lineHeight: "1.6", color: "var(--text)", whiteSpace: "pre-wrap", fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" }}>
+                  {text || "Contenido del capítulo…"}
+                </div>
+              ) : (
+                <div style={{ color: "var(--muted)", fontStyle: "italic" }}>
+                  Selecciona un capítulo para ver su contenido
+                </div>
+              )}
+            </div>
           </div>
         </section>
       </div>
