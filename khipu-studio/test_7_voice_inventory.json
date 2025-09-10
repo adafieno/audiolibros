@@ -6,8 +6,14 @@
       "locale": "es-PE",
       "gender": "M",
       "age_hint": "adult",
-      "accent_tags": ["peru"],
-      "styles": ["narration-relaxed", "cheerful", "sad"],
+      "accent_tags": [
+        "peru"
+      ],
+      "styles": [
+        "narration-relaxed",
+        "cheerful",
+        "sad"
+      ],
       "description": "Peruvian Spanish male voice with natural narration style"
     },
     {
@@ -16,8 +22,14 @@
       "locale": "es-EC",
       "gender": "F",
       "age_hint": "adult",
-      "accent_tags": ["ecuador"],
-      "styles": ["serious", "empathetic", "calm"],
+      "accent_tags": [
+        "ecuador"
+      ],
+      "styles": [
+        "serious",
+        "empathetic",
+        "calm"
+      ],
       "description": "Ecuadorian Spanish female voice with empathetic tone"
     },
     {
@@ -26,8 +38,14 @@
       "locale": "es-EC",
       "gender": "M",
       "age_hint": "adult",
-      "accent_tags": ["ecuador"],
-      "styles": ["serious", "shouting", "angry"],
+      "accent_tags": [
+        "ecuador"
+      ],
+      "styles": [
+        "serious",
+        "shouting",
+        "angry"
+      ],
       "description": "Ecuadorian Spanish male voice with strong emotions"
     },
     {
@@ -36,8 +54,14 @@
       "locale": "es-MX",
       "gender": "F",
       "age_hint": "adult",
-      "accent_tags": ["mexico"],
-      "styles": ["empathetic", "cheerful", "sad"],
+      "accent_tags": [
+        "mexico"
+      ],
+      "styles": [
+        "empathetic",
+        "cheerful",
+        "sad"
+      ],
       "description": "Mexican Spanish female voice with warm tone"
     },
     {
@@ -46,8 +70,14 @@
       "locale": "es-US",
       "gender": "F",
       "age_hint": "adult",
-      "accent_tags": ["us_latam"],
-      "styles": ["empathetic", "calm", "sad"],
+      "accent_tags": [
+        "us_latam"
+      ],
+      "styles": [
+        "empathetic",
+        "calm",
+        "sad"
+      ],
       "description": "US Latino Spanish female voice"
     },
     {
@@ -56,8 +86,14 @@
       "locale": "es-US",
       "gender": "M",
       "age_hint": "adult",
-      "accent_tags": ["us_latam"],
-      "styles": ["hopeful", "serious", "chat"],
+      "accent_tags": [
+        "us_latam"
+      ],
+      "styles": [
+        "hopeful",
+        "serious",
+        "chat"
+      ],
       "description": "US Latino Spanish male voice"
     },
     {
@@ -66,8 +102,12 @@
       "locale": "es-BO",
       "gender": "M",
       "age_hint": "adult",
-      "accent_tags": ["bolivia"],
-      "styles": ["serious"],
+      "accent_tags": [
+        "bolivia"
+      ],
+      "styles": [
+        "serious"
+      ],
       "description": "Bolivian Spanish male voice"
     },
     {
@@ -76,8 +116,13 @@
       "locale": "es-BO",
       "gender": "F",
       "age_hint": "adult",
-      "accent_tags": ["bolivia"],
-      "styles": ["sad", "empathetic"],
+      "accent_tags": [
+        "bolivia"
+      ],
+      "styles": [
+        "sad",
+        "empathetic"
+      ],
       "description": "Bolivian Spanish female voice"
     },
     {
@@ -86,8 +131,14 @@
       "locale": "es-MX",
       "gender": "M",
       "age_hint": "adult",
-      "accent_tags": ["mexico"],
-      "styles": ["curious", "deep", "confident"],
+      "accent_tags": [
+        "mexico"
+      ],
+      "styles": [
+        "curious",
+        "deep",
+        "confident"
+      ],
       "description": "Mexican Spanish male voice with confident tone"
     },
     {
@@ -96,8 +147,12 @@
       "locale": "es-MX",
       "gender": "M",
       "age_hint": "adult",
-      "accent_tags": ["mexico"],
-      "styles": ["serious"],
+      "accent_tags": [
+        "mexico"
+      ],
+      "styles": [
+        "serious"
+      ],
       "description": "Mexican Spanish male voice, serious tone"
     },
     {
@@ -106,8 +161,12 @@
       "locale": "es-MX",
       "gender": "M",
       "age_hint": "adult",
-      "accent_tags": ["mexico"],
-      "styles": ["serious"],
+      "accent_tags": [
+        "mexico"
+      ],
+      "styles": [
+        "serious"
+      ],
       "description": "Mexican Spanish male voice, professional tone"
     },
     {
@@ -116,8 +175,12 @@
       "locale": "es-MX",
       "gender": "F",
       "age_hint": "adult",
-      "accent_tags": ["mexico"],
-      "styles": ["serious"],
+      "accent_tags": [
+        "mexico"
+      ],
+      "styles": [
+        "serious"
+      ],
       "description": "Mexican Spanish female voice, professional tone"
     },
     {
@@ -126,8 +189,12 @@
       "locale": "es-MX",
       "gender": "F",
       "age_hint": "adult",
-      "accent_tags": ["mexico"],
-      "styles": ["serious"],
+      "accent_tags": [
+        "mexico"
+      ],
+      "styles": [
+        "serious"
+      ],
       "description": "Mexican Spanish female voice"
     },
     {
@@ -136,8 +203,12 @@
       "locale": "es-MX",
       "gender": "M",
       "age_hint": "adult",
-      "accent_tags": ["mexico"],
-      "styles": ["serious"],
+      "accent_tags": [
+        "mexico"
+      ],
+      "styles": [
+        "serious"
+      ],
       "description": "Mexican Spanish male voice"
     },
     {
@@ -146,8 +217,12 @@
       "locale": "es-MX",
       "gender": "M",
       "age_hint": "adult",
-      "accent_tags": ["mexico"],
-      "styles": ["serious"],
+      "accent_tags": [
+        "mexico"
+      ],
+      "styles": [
+        "serious"
+      ],
       "description": "Mexican Spanish male voice"
     },
     {
@@ -156,8 +231,14 @@
       "locale": "en-US",
       "gender": "F",
       "age_hint": "adult",
-      "accent_tags": ["us"],
-      "styles": ["narration-professional", "customerservice", "newscast"],
+      "accent_tags": [
+        "us"
+      ],
+      "styles": [
+        "narration-professional",
+        "customerservice",
+        "newscast"
+      ],
       "description": "US English female voice, professional narrator"
     },
     {
@@ -166,8 +247,14 @@
       "locale": "en-US",
       "gender": "M",
       "age_hint": "adult",
-      "accent_tags": ["us"],
-      "styles": ["chat", "angry", "cheerful"],
+      "accent_tags": [
+        "us"
+      ],
+      "styles": [
+        "chat",
+        "angry",
+        "cheerful"
+      ],
       "description": "US English male voice with expressive range"
     },
     {
@@ -176,8 +263,14 @@
       "locale": "en-US",
       "gender": "F",
       "age_hint": "adult",
-      "accent_tags": ["us"],
-      "styles": ["assistant", "chat", "customerservice"],
+      "accent_tags": [
+        "us"
+      ],
+      "styles": [
+        "assistant",
+        "chat",
+        "customerservice"
+      ],
       "description": "US English female voice, assistant style"
     },
     {
@@ -186,8 +279,14 @@
       "locale": "en-US",
       "gender": "M",
       "age_hint": "adult",
-      "accent_tags": ["us"],
-      "styles": ["newscast", "angry", "cheerful"],
+      "accent_tags": [
+        "us"
+      ],
+      "styles": [
+        "newscast",
+        "angry",
+        "cheerful"
+      ],
       "description": "US English male voice, newscast quality"
     },
     {
@@ -196,8 +295,14 @@
       "locale": "en-GB",
       "gender": "F",
       "age_hint": "adult",
-      "accent_tags": ["uk", "british"],
-      "styles": ["cheerful", "sad"],
+      "accent_tags": [
+        "uk",
+        "british"
+      ],
+      "styles": [
+        "cheerful",
+        "sad"
+      ],
       "description": "British English female voice"
     },
     {
@@ -206,8 +311,14 @@
       "locale": "en-GB",
       "gender": "M",
       "age_hint": "adult",
-      "accent_tags": ["uk", "british"],
-      "styles": ["chat", "cheerful"],
+      "accent_tags": [
+        "uk",
+        "british"
+      ],
+      "styles": [
+        "chat",
+        "cheerful"
+      ],
       "description": "British English male voice"
     },
     {
@@ -216,8 +327,13 @@
       "locale": "es-ES",
       "gender": "M",
       "age_hint": "adult",
-      "accent_tags": ["multilingual"],
-      "styles": ["natural", "expressive"],
+      "accent_tags": [
+        "multilingual"
+      ],
+      "styles": [
+        "natural",
+        "expressive"
+      ],
       "description": "ElevenLabs multilingual model v2 (male default)"
     },
     {
@@ -226,8 +342,13 @@
       "locale": "es-ES",
       "gender": "F",
       "age_hint": "adult",
-      "accent_tags": ["multilingual"],
-      "styles": ["fast", "natural"],
+      "accent_tags": [
+        "multilingual"
+      ],
+      "styles": [
+        "fast",
+        "natural"
+      ],
       "description": "ElevenLabs Turbo v2.5 - Fast generation (female default)"
     },
     {
@@ -236,8 +357,17 @@
       "locale": "es-ES",
       "gender": "M",
       "age_hint": "adult",
-      "accent_tags": ["multilingual"],
-      "styles": ["alloy", "echo", "fable", "onyx", "nova", "shimmer"],
+      "accent_tags": [
+        "multilingual"
+      ],
+      "styles": [
+        "alloy",
+        "echo",
+        "fable",
+        "onyx",
+        "nova",
+        "shimmer"
+      ],
       "description": "OpenAI TTS-1 model with multiple voice styles (male default: onyx)"
     },
     {
@@ -246,8 +376,17 @@
       "locale": "es-ES",
       "gender": "F",
       "age_hint": "adult",
-      "accent_tags": ["multilingual"],
-      "styles": ["alloy", "echo", "fable", "onyx", "nova", "shimmer"],
+      "accent_tags": [
+        "multilingual"
+      ],
+      "styles": [
+        "alloy",
+        "echo",
+        "fable",
+        "onyx",
+        "nova",
+        "shimmer"
+      ],
       "description": "OpenAI TTS-1-HD model with higher quality (female default: nova, shimmer)"
     },
     {
@@ -256,8 +395,12 @@
       "locale": "es-ES",
       "gender": "F",
       "age_hint": "adult",
-      "accent_tags": ["spain"],
-      "styles": ["standard"],
+      "accent_tags": [
+        "spain"
+      ],
+      "styles": [
+        "standard"
+      ],
       "description": "Google Cloud TTS Spanish female voice"
     },
     {
@@ -266,8 +409,12 @@
       "locale": "es-ES",
       "gender": "M",
       "age_hint": "adult",
-      "accent_tags": ["spain"],
-      "styles": ["standard"],
+      "accent_tags": [
+        "spain"
+      ],
+      "styles": [
+        "standard"
+      ],
       "description": "Google Cloud TTS Spanish male voice"
     },
     {
@@ -276,8 +423,12 @@
       "locale": "es-ES",
       "gender": "F",
       "age_hint": "adult",
-      "accent_tags": ["spain"],
-      "styles": ["wavenet"],
+      "accent_tags": [
+        "spain"
+      ],
+      "styles": [
+        "wavenet"
+      ],
       "description": "Google Cloud TTS Spanish female WaveNet voice"
     },
     {
@@ -286,8 +437,12 @@
       "locale": "es-ES",
       "gender": "M",
       "age_hint": "adult",
-      "accent_tags": ["spain"],
-      "styles": ["wavenet"],
+      "accent_tags": [
+        "spain"
+      ],
+      "styles": [
+        "wavenet"
+      ],
       "description": "Google Cloud TTS Spanish male WaveNet voice"
     },
     {
@@ -296,8 +451,12 @@
       "locale": "es-US",
       "gender": "F",
       "age_hint": "adult",
-      "accent_tags": ["us_latam"],
-      "styles": ["standard"],
+      "accent_tags": [
+        "us_latam"
+      ],
+      "styles": [
+        "standard"
+      ],
       "description": "Google Cloud TTS US Spanish female voice"
     },
     {
@@ -306,8 +465,12 @@
       "locale": "es-US",
       "gender": "M",
       "age_hint": "adult",
-      "accent_tags": ["us_latam"],
-      "styles": ["standard"],
+      "accent_tags": [
+        "us_latam"
+      ],
+      "styles": [
+        "standard"
+      ],
       "description": "Google Cloud TTS US Spanish male voice"
     },
     {
@@ -316,8 +479,12 @@
       "locale": "en-US",
       "gender": "F",
       "age_hint": "adult",
-      "accent_tags": ["us"],
-      "styles": ["standard"],
+      "accent_tags": [
+        "us"
+      ],
+      "styles": [
+        "standard"
+      ],
       "description": "Google Cloud TTS US English female voice"
     },
     {
@@ -326,8 +493,12 @@
       "locale": "en-US",
       "gender": "M",
       "age_hint": "adult",
-      "accent_tags": ["us"],
-      "styles": ["standard"],
+      "accent_tags": [
+        "us"
+      ],
+      "styles": [
+        "standard"
+      ],
       "description": "Google Cloud TTS US English male voice"
     },
     {
@@ -336,8 +507,12 @@
       "locale": "en-US",
       "gender": "F",
       "age_hint": "adult",
-      "accent_tags": ["us"],
-      "styles": ["wavenet"],
+      "accent_tags": [
+        "us"
+      ],
+      "styles": [
+        "wavenet"
+      ],
       "description": "Google Cloud TTS US English female WaveNet voice"
     },
     {
@@ -346,9 +521,32 @@
       "locale": "en-US",
       "gender": "M",
       "age_hint": "adult",
-      "accent_tags": ["us"],
-      "styles": ["wavenet"],
+      "accent_tags": [
+        "us"
+      ],
+      "styles": [
+        "wavenet"
+      ],
       "description": "Google Cloud TTS US English male WaveNet voice"
     }
+  ],
+  "selectedVoiceIds": [
+    "es-PE-CamilaNeural",
+    "es-ES-Standard-A",
+    "es-PE-AlexNeural",
+    "es-EC-AndreaNeural",
+    "es-EC-LuisNeural",
+    "es-MX-DaliaNeural",
+    "es-US-PalomaNeural",
+    "es-US-AlonsoNeural",
+    "es-BO-MarceloNeural",
+    "es-BO-SofiaNeural",
+    "es-MX-JorgeNeural",
+    "es-MX-GerardoNeural",
+    "es-MX-CecilioNeural",
+    "es-MX-CarlotaNeural",
+    "es-MX-LarissaNeural",
+    "es-MX-LibertoNeural",
+    "es-MX-LucianoNeural"
   ]
 }

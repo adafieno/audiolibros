@@ -103,6 +103,7 @@ export interface UseCharactersState {
   message: string;
   filter: string;
   selectedIds: Set<string>;
+  assignmentProgress: { current: number; total?: string } | null;
 }
 
 export interface UseCharactersApi extends UseCharactersState {
@@ -146,6 +147,7 @@ export function useCharacters(): UseCharactersApi {
   const [filter, setFilter] = useState("");
   const [selectedIds, setSelected] = useState<Set<string>>(new Set());
   const [availableVoices, setAvailableVoices] = useState<Voice[]>([]);
+  const [assignmentProgress, setAssignmentProgress] = useState<{ current: number; total?: string } | null>(null);
   const mounted = useRef(false);
 
   const safeProjectRoot = root || "";
@@ -301,9 +303,20 @@ export function useCharacters(): UseCharactersApi {
       if (inventory && inventory.voices) {
         // Filter voices for the project
         const projectLanguage = config?.language || "es-PE";
+        const selectedVoiceIds = inventory.selectedVoiceIds || [];
         
-        // Filter by locale only (assume all voices in inventory are for the target engine)
-        const filteredVoices = inventory.voices
+        // Filter by selected voices first, then by locale
+        let filteredVoices = inventory.voices;
+        
+        // If there are selected voices, only use those
+        if (selectedVoiceIds.length > 0) {
+          filteredVoices = filteredVoices.filter(voice => 
+            selectedVoiceIds.includes(voice.id)
+          );
+        }
+        
+        // Then filter by language
+        filteredVoices = filteredVoices
           .filter(voice => 
             voice.locale.startsWith(projectLanguage.split('-')[0]) // Match language
           )
@@ -317,7 +330,7 @@ export function useCharacters(): UseCharactersApi {
             styles: voice.styles,
           }));
         
-        console.log(`🎤 Loaded ${filteredVoices.length} voices for ${projectLanguage}`);
+        console.log(`🎤 Loaded ${filteredVoices.length} voices for ${projectLanguage} (${selectedVoiceIds.length} selected)`);
         setAvailableVoices(filteredVoices);
       } else {
         console.log("🎤 No voice inventory found");
@@ -620,6 +633,7 @@ export function useCharacters(): UseCharactersApi {
   const assignVoices = useCallback(async () => {
     if (!safeProjectRoot) return;
     setLoading(true);
+    setAssignmentProgress(null);
     setMessage("Assigning voices...");
     
     try {
@@ -635,9 +649,48 @@ export function useCharacters(): UseCharactersApi {
       }) as { success?: boolean; characters?: Character[]; availableVoices?: Voice[]; message?: string; error?: string };
       
       if (result.success) {
-        // The voice assignment script has saved the file, so reload from disk
-        await load();
-        setAvailableVoices(result.availableVoices || []);
+        // Update characters in UI state with assignments (don't auto-save)
+        if (result.characters && Array.isArray(result.characters)) {
+          const updatedCharacters = (result.characters as (SavedCharacter & { chapters?: string[]; quotes?: string[] })[]).map((char) => ({
+            id: char.id || "",
+            name: char.name || "",
+            type: char.type || "character",
+            importance: char.importance || "secondary", 
+            gender: char.gender || "unknown",
+            age: char.age || "adult",
+            description: char.description || "",
+            personality: char.personality || [],
+            speaking_style: char.speaking_style || [],
+            frequency: char.frequency || 0.5,
+            accent: char.accent || "neutral",
+            confidence: char.confidence || 0.9,
+            has_dialogue: char.has_dialogue !== false,
+            dialogue_frequency: char.dialogue_frequency || "medium",
+            traits: {
+              gender: char.gender as "M" | "F" | "unknown" || "unknown",
+              age: char.age || "adult",
+              personality: char.personality || [],
+              speaking_style: char.speaking_style || [],
+              accent: char.accent || "neutral",
+              register: "neutral" as const,
+              energy: "medium" as const
+            },
+            chapters: char.chapters || [],
+            quotes: char.quotes || [],
+            voiceAssignment: char.voiceAssignment ? {
+              voiceId: char.voiceAssignment.voiceId,
+              style: char.voiceAssignment.style,
+              styledegree: char.voiceAssignment.styledegree || 0.6,
+              rate_pct: char.voiceAssignment.rate_pct || 0,
+              pitch_pct: char.voiceAssignment.pitch_pct || 0,
+              confidence: char.voiceAssignment.confidence || 0.9,
+              method: char.voiceAssignment.method as "llm_auto" | "manual" || "llm_auto"
+            } : undefined
+          })) as Character[];
+          
+          setCharacters(updatedCharacters);
+          setDirty(true); // Mark as dirty so user can save when ready
+        }
         setMessage(result.message || "Voices assigned successfully");
       } else {
         setMessage(result.error || "Voice assignment failed");
@@ -647,8 +700,9 @@ export function useCharacters(): UseCharactersApi {
       setMessage("Voice assignment failed");
     } finally {
       setLoading(false);
+      setAssignmentProgress(null);
     }
-  }, [safeProjectRoot, load]);
+  }, [safeProjectRoot]);
 
   const updateVoiceAssignment = useCallback((characterId: string, voiceId: string, style?: string, prosodyAdjustments?: Partial<VoiceAssignment>) => {
     setCharacters(prev => prev.map(char => {
@@ -719,6 +773,17 @@ export function useCharacters(): UseCharactersApi {
     }
   }, [load, loadVoices]);
 
+  // Listen for assignment progress updates
+  useEffect(() => {
+    const handleAssignmentProgress = (progress: { current: number; total?: string }) => {
+      setAssignmentProgress(progress);
+    };
+
+    if (window.khipu?.characters?.onAssignmentProgress) {
+      window.khipu.characters.onAssignmentProgress(handleAssignmentProgress);
+    }
+  }, []);
+
   return {
     characters: filtered,
     detection,
@@ -728,6 +793,7 @@ export function useCharacters(): UseCharactersApi {
     message,
     filter,
     selectedIds,
+    assignmentProgress,
     load,
     reloadDetection,
     addCharacter,

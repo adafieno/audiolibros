@@ -1,0 +1,87 @@
+{
+  "pools": {
+    "neutral_any": [
+      {
+        "id": "var::es-PE-AlexNeural",
+        "voice": "es-PE-AlexNeural",
+        "style": null,
+        "styledegree": 0.0,
+        "rate_pct": 0,
+        "pitch_pct": 0,
+        "tags": [
+          "auto",
+          "neutral"
+        ]
+      },
+      {
+        "id": "var::es-MX-DaliaNeural",
+        "voice": "es-MX-DaliaNeural",
+        "style": null,
+        "styledegree": 0.0,
+        "rate_pct": 0,
+        "pitch_pct": 0,
+        "tags": [
+          "auto",
+          "neutral"
+        ]
+      },
+      {
+        "id": "var::es-US-AlonsoNeural",
+        "voice": "es-US-AlonsoNeural",
+        "style": null,
+        "styledegree": 0.0,
+        "rate_pct": 0,
+        "pitch_pct": 0,
+        "tags": [
+          "auto",
+          "neutral"
+        ]
+      },
+      {
+        "id": "var::es-MX-JorgeNeural",
+        "voice": "es-MX-JorgeNeural",
+        "style": null,
+        "styledegree": 0.0,
+        "rate_pct": 0,
+        "pitch_pct": 0,
+        "tags": [
+          "auto",
+          "neutral"
+        ]
+      }
+    ]
+  },
+  "policy": {
+    "default_pool": "neutral_any",
+    "assignment": {
+      "hash_seed": 17,
+      "reuse_strategy": "sticky",
+      "max_reuse_per_chapter": 4,
+      "min_scene_gap_sec": 30
+    },
+    "routing_rules": [],
+    "safety": {
+      "rate_bounds_pct": [
+        -12,
+        8
+      ],
+      "pitch_bounds_pct": [
+        -8,
+        6
+      ],
+      "allow_styles_for_long_spans": [
+        "serious",
+        "empathetic",
+        "narration-relaxed",
+        "hopeful",
+        "calm"
+      ],
+      "short_span_styles_only": [
+        "shouting",
+        "terrified",
+        "angry",
+        "whispering"
+      ]
+    }
+  }
+}

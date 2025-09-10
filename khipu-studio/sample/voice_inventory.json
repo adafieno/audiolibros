@@ -1,4 +1,14 @@
 {
+  "selectedVoiceIds": [
+    "es-PE-AlexNeural",
+    "es-PE-CamilaNeural", 
+    "es-MX-DaliaNeural",
+    "es-MX-JorgeNeural",
+    "es-MX-LucianoNeural",
+    "es-BO-SofiaNeural",
+    "es-ES-Standard-A",
+    "es-US-AlonsoNeural"
+  ],
   "voices": [
     {
       "id": "es-PE-AlexNeural",

@@ -243,6 +243,20 @@ export default function CastingPage() {
             >
               {t("casting.deselectAll")}
             </button>
+            <button
+              onClick={handleSave}
+              disabled={selectedVoices.size === 0}
+              style={{ padding: "6px 12px", fontSize: "14px" }}
+            >
+              {t("casting.save")}
+            </button>
+            <button
+              onClick={handleComplete}
+              disabled={selectedVoices.size === 0 || isCastingCompleted}
+              style={{ padding: "6px 12px", fontSize: "14px" }}
+            >
+              {isCastingCompleted ? t("workflow.buttonCompleted") : "✓ " + t("casting.complete")}
+            </button>
           </div>
         </div>
 
@@ -372,7 +386,7 @@ export default function CastingPage() {
         )}
       </section>
 
-      {/* Save Section */}
+      {/* Status Section */}
       <section style={{ 
         borderTop: "1px solid #374151", 
         paddingTop: "16px",
@@ -390,47 +404,14 @@ export default function CastingPage() {
             </div>
           )}
         </div>
-        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          {message && (
-            <span style={{ 
-              fontSize: "14px", 
-              color: message.includes("Error") || message.includes("Error") ? "#ef4444" : "#10b981" 
-            }}>
-              {message}
-            </span>
-          )}
-          <button
-            onClick={handleSave}
-            disabled={selectedVoices.size === 0}
-            style={{
-              padding: "8px 16px",
-              backgroundColor: selectedVoices.size > 0 ? "#3b82f6" : "#6b7280",
-              color: "white",
-              border: "none",
-              borderRadius: "6px",
-              cursor: selectedVoices.size > 0 ? "pointer" : "not-allowed"
-            }}
-          >
-            {t("casting.save")}
-          </button>
-          <button
-            onClick={handleComplete}
-            disabled={selectedVoices.size === 0 || isCastingCompleted}
-            style={{
-              padding: "8px 16px",
-              backgroundColor: isCastingCompleted ? "#10b981" : (selectedVoices.size > 0 ? "#10b981" : "#6b7280"),
-              color: "white",
-              border: "none",
-              borderRadius: "6px",
-              cursor: (selectedVoices.size > 0 && !isCastingCompleted) ? "pointer" : "not-allowed",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px"
-            }}
-          >
-            {isCastingCompleted ? t("workflow.buttonCompleted") : "✓ " + t("casting.complete")}
-          </button>
-        </div>
+        {message && (
+          <span style={{ 
+            fontSize: "14px", 
+            color: message.includes("Error") || message.includes("Error") ? "#ef4444" : "#10b981" 
+          }}>
+            {message}
+          </span>
+        )}
       </section>
     </div>
   );

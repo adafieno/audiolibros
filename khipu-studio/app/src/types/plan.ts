@@ -1,38 +1,21 @@
-// Enhanced planning types based on SSML Voice Studio
-export interface PlanLine {
-  start_char: number;
-  end_char: number;
-  voice?: string;
-}
-
-export interface PlanChunk {
-  id?: string;
-  start_char: number;
-  end_char: number;
-  voice?: string;
-  lines?: PlanLine[];
-  // Legacy fields for compatibility
-  text?: string;
-  locked?: boolean;
-  sfxAfter?: string | null;
-}
-
-export interface ChapterPlan {
-  chapter_id?: string;
-  chapter_title?: string;
-  chunks: PlanChunk[];
+// Segment type for pure splitter output
+export interface Segment {
+  segment_id: number;
+  start_idx: number;
+  end_idx: number;
+  delimiter: string;
+  text: string;
+  voice?: string; // for UI assignment only
 }
 
 export interface PlanRow {
   rowKey: string;
-  chunkId: string;
-  chunkIndex: number;
-  lineIndex: number;  // -1 for chunk-level
+  segmentId: number;
   start: number;
   end: number;
   length: number;
   voice: string;
-  snippet: string;
+  delimiter: string;
 }
 
 export interface AzureCaps {
@@ -45,16 +28,4 @@ export interface AzureCaps {
 export interface ChunkStats {
   kb: number;
   minutes: number;
-}
-
-// Legacy types for compatibility
-export interface PlanChunkSource {
-  chapter: string;          // e.g., "ch01"
-  start?: number;           // optional offsets in chapter text
-  end?: number;
-}
-
-export interface PlanFile {
-  chapter_id: string;
-  chunks: PlanChunk[];
 }

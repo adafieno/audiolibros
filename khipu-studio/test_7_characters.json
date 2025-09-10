@@ -1,0 +1,530 @@
+{
+  "characters": [
+    {
+      "id": "character_001",
+      "name": "narrador",
+      "type": "narrator",
+      "importance": "secondary",
+      "gender": "unknown",
+      "age": "adult",
+      "description": "El narrador proporciona la descripción de las acciones y pensamientos de los personajes, así como el desarrollo de la trama.",
+      "personality": [
+        "descriptive",
+        "neutral",
+        "observant",
+        "informative"
+      ],
+      "speaking_style": [
+        "narrative",
+        "objective",
+        "evocative"
+      ],
+      "frequency": 1,
+      "accent": "neutral",
+      "confidence": 1,
+      "has_dialogue": true,
+      "dialogue_frequency": "medium",
+      "voiceAssignment": {
+        "voiceId": "es-MX-JorgeNeural",
+        "style": null,
+        "styledegree": 0.6,
+        "rate_pct": 0,
+        "pitch_pct": 0,
+        "confidence": 0.9,
+        "method": "llm_auto"
+      }
+    },
+    {
+      "id": "character_002",
+      "name": "Lucía",
+      "type": "character",
+      "importance": "primary",
+      "gender": "female",
+      "age": "adult",
+      "description": "Lucía es la hermana de Rafo y está profundamente involucrada en la investigación de su desaparición. Es emocionalmente afectada por los descubrimientos.",
+      "personality": [
+        "curious",
+        "emotional",
+        "determined",
+        "thoughtful"
+      ],
+      "speaking_style": [
+        "emotional",
+        "inquisitive",
+        "thoughtful"
+      ],
+      "frequency": 0.8,
+      "accent": "neutral",
+      "confidence": 1,
+      "has_dialogue": true,
+      "dialogue_frequency": "medium",
+      "voiceAssignment": {
+        "voiceId": "es-US-AlonsoNeural",
+        "style": null,
+        "styledegree": 0.6,
+        "rate_pct": 0,
+        "pitch_pct": 0,
+        "confidence": 0.9,
+        "method": "llm_auto"
+      }
+    },
+    {
+      "id": "character_003",
+      "name": "Patricia",
+      "type": "character",
+      "importance": "secondary",
+      "gender": "female",
+      "age": "adult",
+      "description": "Patricia es una de las investigadoras principales que busca descubrir la verdad detrás de la muerte de Rafo. Ella es metódica y determinada.",
+      "personality": [
+        "perceptive",
+        "pragmatic",
+        "determined",
+        "analytical"
+      ],
+      "speaking_style": [
+        "curious",
+        "scientific",
+        "analytical"
+      ],
+      "frequency": 0.5,
+      "accent": "neutral",
+      "confidence": 1,
+      "has_dialogue": true,
+      "dialogue_frequency": "medium",
+      "voiceAssignment": {
+        "voiceId": "es-PE-AlexNeural",
+        "style": null,
+        "styledegree": 0.6,
+        "rate_pct": 0,
+        "pitch_pct": 0,
+        "confidence": 0.9,
+        "method": "llm_auto"
+      }
+    },
+    {
+      "id": "character_004",
+      "name": "Don Severino",
+      "type": "character",
+      "importance": "secondary",
+      "gender": "male",
+      "age": "elderly",
+      "description": "Don Severino es un personaje que intenta mantener el control sobre las tradiciones del pueblo y confronta a Carmen.",
+      "personality": [
+        "defensive",
+        "mysterious",
+        "traditional",
+        "wise"
+      ],
+      "speaking_style": [
+        "advisory",
+        "persuasive",
+        "thoughtful"
+      ],
+      "frequency": 0.4,
+      "accent": "neutral",
+      "confidence": 1,
+      "has_dialogue": true,
+      "dialogue_frequency": "medium",
+      "voiceAssignment": {
+        "voiceId": "es-MX-CecilioNeural",
+        "style": null,
+        "styledegree": 0.6,
+        "rate_pct": 0,
+        "pitch_pct": 0,
+        "confidence": 0.9,
+        "method": "llm_auto"
+      }
+    },
+    {
+      "id": "character_005",
+      "name": "Toño",
+      "type": "character",
+      "importance": "secondary",
+      "gender": "male",
+      "age": "adult",
+      "description": "Compañero de escuela de Rafo que muestra precaución al hablar con Lucía sobre su hermano.",
+      "personality": [
+        "nervous",
+        "guarded"
+      ],
+      "speaking_style": [
+        "hesitant",
+        "cautious"
+      ],
+      "frequency": 0.4,
+      "accent": "neutral",
+      "confidence": 1,
+      "has_dialogue": true,
+      "dialogue_frequency": "medium",
+      "voiceAssignment": {
+        "voiceId": "es-MX-LucianoNeural",
+        "style": null,
+        "styledegree": 0.6,
+        "rate_pct": 0,
+        "pitch_pct": 0,
+        "confidence": 0.9,
+        "method": "llm_auto"
+      }
+    },
+    {
+      "id": "character_006",
+      "name": "El Chato Mendoza",
+      "type": "character",
+      "importance": "secondary",
+      "gender": "male",
+      "age": "adult",
+      "description": "Maneja la cooperativa de pescadores y comenta sobre las tradiciones.",
+      "personality": [
+        "pragmatic",
+        "experienced"
+      ],
+      "speaking_style": [
+        "practical",
+        "informal"
+      ],
+      "frequency": 0.4,
+      "accent": "neutral",
+      "confidence": 1,
+      "has_dialogue": true,
+      "dialogue_frequency": "medium",
+      "voiceAssignment": {
+        "voiceId": "es-MX-LibertoNeural",
+        "style": null,
+        "styledegree": 0.6,
+        "rate_pct": 0,
+        "pitch_pct": 0,
+        "confidence": 0.9,
+        "method": "llm_auto"
+      }
+    },
+    {
+      "id": "character_007",
+      "name": "la bibliotecaria",
+      "type": "character",
+      "importance": "secondary",
+      "gender": "female",
+      "age": "adult",
+      "description": "La bibliotecaria guarda documentos importantes que Rafo le confió y los entrega a Lucía.",
+      "personality": [
+        "cautious",
+        "helpful"
+      ],
+      "speaking_style": [
+        "informative",
+        "cautious"
+      ],
+      "frequency": 0.4,
+      "accent": "neutral",
+      "confidence": 1,
+      "has_dialogue": true,
+      "dialogue_frequency": "medium",
+      "voiceAssignment": {
+        "voiceId": "es-EC-LuisNeural",
+        "style": null,
+        "styledegree": 0.6,
+        "rate_pct": 0,
+        "pitch_pct": 0,
+        "confidence": 0.9,
+        "method": "llm_auto"
+      }
+    },
+    {
+      "id": "character_008",
+      "name": "Señora Vásquez",
+      "type": "character",
+      "importance": "secondary",
+      "gender": "female",
+      "age": "adult",
+      "description": "La madre de Miguelito, preocupada por la salud de su hijo.",
+      "personality": [
+        "worried",
+        "protective"
+      ],
+      "speaking_style": [
+        "emotional",
+        "concerned"
+      ],
+      "frequency": 0.4,
+      "accent": "neutral",
+      "confidence": 1,
+      "has_dialogue": true,
+      "dialogue_frequency": "medium",
+      "voiceAssignment": {
+        "voiceId": "es-MX-GerardoNeural",
+        "style": null,
+        "styledegree": 0.6,
+        "rate_pct": 0,
+        "pitch_pct": 0,
+        "confidence": 0.9,
+        "method": "llm_auto"
+      }
+    },
+    {
+      "id": "character_009",
+      "name": "Rafo",
+      "type": "character",
+      "importance": "secondary",
+      "gender": "male",
+      "age": "adult",
+      "description": "Rafo es el hermano de Lucía, cuya desaparición y muerte están siendo investigadas. Su voz se escucha en las grabaciones encontradas.",
+      "personality": [
+        "brave",
+        "principled"
+      ],
+      "speaking_style": [
+        "determined",
+        "urgent"
+      ],
+      "frequency": 0.4,
+      "accent": "neutral",
+      "confidence": 1,
+      "has_dialogue": true,
+      "dialogue_frequency": "medium",
+      "voiceAssignment": {
+        "voiceId": "es-BO-MarceloNeural",
+        "style": null,
+        "styledegree": 0.6,
+        "rate_pct": 0,
+        "pitch_pct": 0,
+        "confidence": 0.9,
+        "method": "llm_auto"
+      }
+    },
+    {
+      "id": "character_010",
+      "name": "Mamá de Lucía",
+      "type": "character",
+      "importance": "secondary",
+      "gender": "female",
+      "age": "adult",
+      "description": "La madre de Lucía, quien tiene conocimiento sobre las tradiciones del pueblo y participa en la conversación sobre ellas.",
+      "personality": [
+        "stoic",
+        "enigmatic",
+        "knowledgeable",
+        "strategic"
+      ],
+      "speaking_style": [
+        "thoughtful",
+        "cryptic",
+        "concerned"
+      ],
+      "frequency": 0.3,
+      "accent": "neutral",
+      "confidence": 1,
+      "has_dialogue": true,
+      "dialogue_frequency": "medium",
+      "voiceAssignment": {
+        "voiceId": "es-MX-LucianoNeural",
+        "style": null,
+        "styledegree": 0.6,
+        "rate_pct": 0,
+        "pitch_pct": 0,
+        "confidence": 0.9,
+        "method": "llm_auto"
+      }
+    },
+    {
+      "id": "character_011",
+      "name": "Doña Esperanza",
+      "type": "character",
+      "importance": "secondary",
+      "gender": "female",
+      "age": "elderly",
+      "description": "Doña Esperanza participa activamente en la escena en la iglesia, recordando y compartiendo sus preocupaciones sobre el pasado.",
+      "personality": [
+        "reflective",
+        "mysterious",
+        "supportive",
+        "wise"
+      ],
+      "speaking_style": [
+        "inquisitive",
+        "philosophical",
+        "enigmatic"
+      ],
+      "frequency": 0.2,
+      "accent": "neutral",
+      "confidence": 1,
+      "has_dialogue": true,
+      "dialogue_frequency": "medium",
+      "voiceAssignment": {
+        "voiceId": "es-US-AlonsoNeural",
+        "style": null,
+        "styledegree": 0.6,
+        "rate_pct": 0,
+        "pitch_pct": 0,
+        "confidence": 0.9,
+        "method": "llm_auto"
+      }
+    },
+    {
+      "id": "character_012",
+      "name": "Don Aurelio",
+      "type": "character",
+      "importance": "secondary",
+      "gender": "male",
+      "age": "elderly",
+      "description": "Don Aurelio intenta organizar a la gente congregada frente a la casa de los Vásquez.",
+      "personality": [
+        "helpful",
+        "wise",
+        "conservative",
+        "authoritative"
+      ],
+      "speaking_style": [
+        "reflective",
+        "commanding",
+        "cautious"
+      ],
+      "frequency": 0.1,
+      "accent": "neutral",
+      "confidence": 1,
+      "has_dialogue": true,
+      "dialogue_frequency": "medium",
+      "voiceAssignment": {
+        "voiceId": "es-BO-MarceloNeural",
+        "style": null,
+        "styledegree": 0.6,
+        "rate_pct": 0,
+        "pitch_pct": 0,
+        "confidence": 0.9,
+        "method": "llm_auto"
+      }
+    },
+    {
+      "id": "character_013",
+      "name": "Doña Carmela",
+      "type": "character",
+      "importance": "secondary",
+      "gender": "female",
+      "age": "elderly",
+      "description": "Vendedora en el mercado que habla con Lucía sobre las tradiciones del pueblo.",
+      "personality": [
+        "wise",
+        "supportive",
+        "calm",
+        "informative"
+      ],
+      "speaking_style": [
+        "friendly",
+        "direct",
+        "informative"
+      ],
+      "frequency": 0.1,
+      "accent": "neutral",
+      "confidence": 1,
+      "has_dialogue": true,
+      "dialogue_frequency": "medium",
+      "voiceAssignment": {
+        "voiceId": "es-PE-AlexNeural",
+        "style": null,
+        "styledegree": 0.6,
+        "rate_pct": 0,
+        "pitch_pct": 0,
+        "confidence": 0.9,
+        "method": "llm_auto"
+      }
+    },
+    {
+      "id": "character_014",
+      "name": "Don Cipriano",
+      "type": "character",
+      "importance": "secondary",
+      "gender": "male",
+      "age": "elderly",
+      "description": "Don Cipriano es un pescador viejo que proporciona información crucial sobre los eventos del 10 de abril.",
+      "personality": [
+        "helpful",
+        "honest",
+        "cautious",
+        "observant"
+      ],
+      "speaking_style": [
+        "reflective",
+        "serious",
+        "revealing"
+      ],
+      "frequency": 0.1,
+      "accent": "neutral",
+      "confidence": 1,
+      "has_dialogue": true,
+      "dialogue_frequency": "medium",
+      "voiceAssignment": {
+        "voiceId": "es-MX-JorgeNeural",
+        "style": null,
+        "styledegree": 0.6,
+        "rate_pct": 0,
+        "pitch_pct": 0,
+        "confidence": 0.9,
+        "method": "llm_auto"
+      }
+    },
+    {
+      "id": "character_015",
+      "name": "Carmen la enfermera",
+      "type": "character",
+      "importance": "secondary",
+      "gender": "female",
+      "age": "adult",
+      "description": "Carmen es una enfermera que tiene un papel significativo al reportar patrones médicos anómalos y confrontar a don Severino.",
+      "personality": [
+        "assertive",
+        "concerned",
+        "analytical",
+        "responsible"
+      ],
+      "speaking_style": [
+        "precise",
+        "thoughtful",
+        "professional"
+      ],
+      "frequency": 0.1,
+      "accent": "neutral",
+      "confidence": 1,
+      "has_dialogue": true,
+      "dialogue_frequency": "medium",
+      "voiceAssignment": {
+        "voiceId": "es-EC-LuisNeural",
+        "style": null,
+        "styledegree": 0.6,
+        "rate_pct": 0,
+        "pitch_pct": 0,
+        "confidence": 0.9,
+        "method": "llm_auto"
+      }
+    },
+    {
+      "id": "character_016",
+      "name": "Joven del comité",
+      "type": "character",
+      "importance": "secondary",
+      "gender": "male",
+      "age": "adult",
+      "description": "Uno de los jóvenes del comité que habla sobre las ceremonias.",
+      "personality": [
+        "respectful",
+        "inquisitive"
+      ],
+      "speaking_style": [
+        "concise",
+        "thoughtful"
+      ],
+      "frequency": 0.2,
+      "accent": "neutral",
+      "confidence": 1,
+      "has_dialogue": true,
+      "dialogue_frequency": "medium",
+      "voiceAssignment": {
+        "voiceId": "es-MX-LibertoNeural",
+        "style": null,
+        "styledegree": 0.6,
+        "rate_pct": 0,
+        "pitch_pct": 0,
+        "confidence": 0.9,
+        "method": "llm_auto"
+      }
+    }
+  ]
+}

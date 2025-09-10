@@ -31,9 +31,14 @@ def debug_paths(project_root: str):
         print(f"Alternative file exists: {alt_characters_file.exists()}")
         
         # Check voice inventory path
-        voice_inventory_file = project_path / "dossier" / "voice_inventory.json"
+        voice_inventory_file = project_path / "voice_inventory.json"
         print(f"Voice inventory file: {voice_inventory_file}")
         print(f"Voice inventory exists: {voice_inventory_file.exists()}")
+        
+        # Also check old dossier location for debugging
+        old_voice_inventory_file = project_path / "dossier" / "voice_inventory.json"
+        print(f"Old voice inventory location: {old_voice_inventory_file}")
+        print(f"Old voice inventory exists: {old_voice_inventory_file.exists()}")
         
         # If characters file exists, show its timestamp
         if characters_file.exists():

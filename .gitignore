@@ -1,1 +1,4 @@
 /khipu-studio/.venv
+*.pyc
+*.pyc
+*.pyc

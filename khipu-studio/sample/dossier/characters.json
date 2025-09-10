@@ -1,42 +1,133 @@
-[
-  {
-    "name": "Rosa",
-    "type": "secondary",
-    "importance": "primary",
-    "gender": "female",
-    "age": "adult",
-    "description": "Rosa engages in dialogue with Luis, asking if he arrived early.",
-    "personality": [
-      "curious",
-      "friendly"
-    ],
-    "speaking_style": [
-      "conversational"
-    ],
-    "confidence": 1.0,
-    "has_dialogue": true,
-    "dialogue_frequency": "medium",
-    "frequency": 0.7,
-    "accent": "neutral"
-  },
-  {
-    "name": "Luis",
-    "type": "secondary",
-    "importance": "primary",
-    "gender": "male",
-    "age": "adult",
-    "description": "Luis responds to Rosa's question about his arrival time.",
-    "personality": [
-      "calm",
-      "reflective"
-    ],
-    "speaking_style": [
-      "concise"
-    ],
-    "confidence": 1.0,
-    "has_dialogue": true,
-    "dialogue_frequency": "medium",
-    "frequency": 0.7,
-    "accent": "neutral"
-  }
-]
+{
+  "characters": [
+    {
+      "name": "Rosa",
+      "type": "secondary",
+      "importance": "primary",
+      "gender": "female",
+      "age": "adult",
+      "description": "Rosa engages in dialogue with Luis, asking if he arrived early.",
+      "personality": [
+        "curious",
+        "friendly"
+      ],
+      "speaking_style": [
+        "conversational"
+      ],
+      "confidence": 1.0,
+      "has_dialogue": true,
+      "dialogue_frequency": "medium",
+      "frequency": 0.7,
+      "accent": "neutral",
+      "id": "character_001",
+      "voiceAssignment": {
+        "voiceId": "es-ES-Standard-A",
+        "style": null,
+        "styledegree": 0.6,
+        "rate_pct": 0,
+        "pitch_pct": 0,
+        "confidence": 0.9,
+        "method": "llm_auto"
+      }
+    },
+    {
+      "name": "Luis",
+      "type": "secondary",
+      "importance": "primary",
+      "gender": "male",
+      "age": "adult",
+      "description": "Luis responds to Rosa's question about his arrival time.",
+      "personality": [
+        "calm",
+        "reflective"
+      ],
+      "speaking_style": [
+        "concise"
+      ],
+      "confidence": 1.0,
+      "has_dialogue": true,
+      "dialogue_frequency": "medium",
+      "frequency": 0.7,
+      "accent": "neutral",
+      "id": "character_002",
+      "voiceAssignment": {
+        "voiceId": "es-MX-LucianoNeural",
+        "style": null,
+        "styledegree": 0.6,
+        "rate_pct": 0,
+        "pitch_pct": 0,
+        "confidence": 0.9,
+        "method": "llm_auto"
+      }
+    },
+    {
+      "name": "Alex",
+      "type": "secondary",
+      "importance": "secondary",
+      "gender": "unknown",
+      "age": "adult",
+      "description": "Alex is a character with an ambiguous name that could be male or female.",
+      "personality": [
+        "mysterious"
+      ],
+      "speaking_style": [
+        "neutral"
+      ],
+      "confidence": 1.0,
+      "has_dialogue": true,
+      "dialogue_frequency": "low",
+      "frequency": 0.3,
+      "accent": "neutral",
+      "id": "character_003"
+    },
+    {
+      "name": "Jordan",
+      "type": "minor",
+      "importance": "tertiary",
+      "gender": "unknown",
+      "age": "teen",
+      "description": "Jordan is another character with a gender-neutral name.",
+      "personality": [
+        "friendly"
+      ],
+      "speaking_style": [
+        "casual"
+      ],
+      "confidence": 1.0,
+      "has_dialogue": false,
+      "dialogue_frequency": "none",
+      "frequency": 0.1,
+      "accent": "neutral",
+      "id": "character_004"
+    },
+    {
+      "name": "María",
+      "type": "secondary",
+      "importance": "secondary",
+      "gender": "female",
+      "age": "adult",
+      "description": "María is clearly a female name - should get high confidence.",
+      "personality": [
+        "kind"
+      ],
+      "speaking_style": [
+        "warm"
+      ],
+      "confidence": 1.0,
+      "has_dialogue": true,
+      "dialogue_frequency": "medium",
+      "frequency": 0.6,
+      "accent": "neutral",
+      "id": "character_005",
+      "voiceAssignment": {
+        "voiceId": "es-BO-SofiaNeural",
+        "style": "empathetic",
+        "styledegree": 0.6,
+        "rate_pct": 0,
+        "pitch_pct": 0,
+        "confidence": 0.9,
+        "method": "llm_auto"
+      }
+    }
+  ]
+}

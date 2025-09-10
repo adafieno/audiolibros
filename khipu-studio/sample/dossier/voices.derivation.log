@@ -1,0 +1,6 @@
+{
+  "inventory": "sample\\voice_inventory.json",
+  "features": null,
+  "cache_key": "dc8765366124b2f67bb121e68c909d2ff7f95ee1",
+  "notes": "Traits by LLM via unified client; deterministic matcher picked voices from voice_inventory.json."
+}

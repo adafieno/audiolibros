@@ -166,6 +166,25 @@ async function runVoiceAssignment(projectRoot) {
       const s = d.toString(); 
       stderr += s; 
       console.log("📢 Python stderr:", s.trim());
+      
+      // Parse progress messages and send to UI
+      const lines = s.split('\n');
+      for (const line of lines) {
+        if (line.trim().startsWith('PROGRESS:')) {
+          const parts = line.trim().split(':');
+          if (parts.length >= 3) {
+            const pct = parseInt(parts[1]);
+            const status = parts[2];
+            BrowserWindow.getAllWindows().forEach(w => {
+              w.webContents.send("characters:assignment:progress", { 
+                current: pct, 
+                total: 100, 
+                stage: `Assigning voices... ${status}` 
+              });
+            });
+          }
+        }
+      }
     });
     
     proc.on("error", err => {
@@ -682,7 +701,7 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
       try { fs.mkdirSync(path.dirname(outAbs), { recursive: true }); } catch {}
 
       const args = [
-        "-m", "py.ssml.plan_builder",
+        "-m", "py.ssml.simple_plan_builder",
         "--chapter-id", String(chapterId),
         "--in", infileAbs,
         "--out", outAbs,
@@ -694,7 +713,23 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
         else if (v !== undefined && v !== null) args.push(flag, String(v));
       }
 
-      return await runPy(args, (line) => _e.sender.send("job:event", line));
+      console.log("[plan:build] invoking simple_plan_builder with args", args.join(" "));
+      const code = await runPy(args, (line) => _e.sender.send("job:event", line));
+      try {
+        // Append a sentinel note inside the saved plan (non-breaking) for debugging cache issues
+        if (code === 0) {
+          const planPath = outAbs;
+            const raw = await fsp.readFile(planPath, "utf-8");
+            const obj = JSON.parse(raw);
+            obj._debug_invoked = {
+              module: "simple_plan_builder",
+              ts: new Date().toISOString(),
+              args
+            };
+            await fsp.writeFile(planPath, JSON.stringify(obj, null, 2), "utf-8");
+        }
+      } catch (e) { console.warn("[plan:build] sentinel write failed", e); }
+      return code;
     } catch (err) {
       console.error("[plan:build] fatal:", err);
       return -99;

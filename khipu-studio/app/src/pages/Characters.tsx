@@ -23,6 +23,7 @@ function CharactersPage() {
     assignVoices,
     updateVoiceAssignment,
     availableVoices,
+    assignmentProgress,
   } = useCharacters();
 
   const [hasCharacterList, setHasCharacterList] = useState(false);
@@ -312,7 +313,9 @@ function CharactersPage() {
               disabled={loading || characters.length === 0} 
               style={{ padding: "6px 12px", fontSize: "14px" }}
             >
-              Assign Voices
+              {assignmentProgress 
+                ? `Assigning... ${assignmentProgress.current}%` 
+                : "Assign Voices"}
             </button>
             
             <button 
@@ -342,6 +345,35 @@ function CharactersPage() {
           </>
         )}
       </div>
+
+      {assignmentProgress && (
+        <div style={{ 
+          margin: "10px 0", 
+          padding: "8px", 
+          backgroundColor: "var(--bg-secondary)", 
+          borderRadius: "4px",
+          fontSize: "14px"
+        }}>
+          <div style={{ marginBottom: "4px" }}>
+            Assigning voices: {assignmentProgress.current}%
+            {assignmentProgress.total && ` (${assignmentProgress.total})`}
+          </div>
+          <div style={{
+            width: "100%",
+            height: "8px",
+            backgroundColor: "var(--border)",
+            borderRadius: "4px",
+            overflow: "hidden"
+          }}>
+            <div style={{
+              width: `${assignmentProgress.current}%`,
+              height: "100%",
+              backgroundColor: "var(--accent)",
+              transition: "width 0.3s ease"
+            }} />
+          </div>
+        </div>
+      )}
 
       {loading && (
         <div style={{ 

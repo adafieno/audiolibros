@@ -81,6 +81,7 @@ export interface Khipu {
     detect(projectRoot: string): Promise<unknown>;
     onProgress(callback: (progress: {current: number, total: number}) => void): void;
     onLog(callback: (log: string) => void): void;
+    onAssignmentProgress(callback: (progress: {current: number, total?: string}) => void): void;
   };
   fileExists(filePath: string): Promise<boolean>;
 }

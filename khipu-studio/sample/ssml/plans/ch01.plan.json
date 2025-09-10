@@ -4,40 +4,48 @@
     {
       "id": "ch01_001",
       "start_char": 0,
-      "end_char": 92,
-      "voice": "narrador",
-      "stylepack": "chapter_default",
-      "lines": [
-        {
-          "voice": "desconocido",
-          "start_char": 0,
-          "end_char": 35
-        },
-        {
-          "voice": "desconocido",
-          "start_char": 38,
-          "end_char": 44
-        },
-        {
-          "voice": "narrador",
-          "start_char": 45,
-          "end_char": 92
-        }
-      ]
-    },
-    {
-      "id": "ch01_002",
-      "start_char": 93,
       "end_char": 108,
       "voice": "narrador",
       "stylepack": "chapter_default",
       "lines": [
         {
           "voice": "narrador",
+          "start_char": 1,
+          "end_char": 20,
+          "delimiter": "em-dash",
+          "line_type": "line"
+        },
+        {
+          "voice": "narrador",
+          "start_char": 22,
+          "end_char": 35,
+          "delimiter": "newline",
+          "line_type": "line"
+        },
+        {
+          "voice": "narrador",
+          "start_char": 37,
+          "end_char": 91,
+          "delimiter": "newline",
+          "line_type": "line"
+        },
+        {
+          "voice": "narrador",
           "start_char": 93,
-          "end_char": 108
+          "end_char": 108,
+          "delimiter": "EOF",
+          "line_type": "line"
         }
       ]
     }
-  ]
+  ],
+  "segmentation_meta": {
+    "version": "simple-v1",
+    "algorithm": "newline +em-dash",
+    "segment_count": 4,
+    "manuscript_sha1": "f7c06981d011a0f39b9d26cd174bf687f2e24a72",
+    "manuscript_first40": "—¿Llegaste temprano? —preguntó Rosa.\n\"Un",
+    "include_title": false,
+    "generated_at": "2025-09-09T16:30:20.241296Z"
+  }
 }

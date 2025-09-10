@@ -12,6 +12,10 @@ import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 
+# Ensure UTF-8 encoding for stdout
+sys.stdout.reconfigure(encoding='utf-8')
+sys.stderr.reconfigure(encoding='utf-8')
+
 # Disable logging to stdout to prevent interference with JSON output
 logging.getLogger().setLevel(logging.CRITICAL)
 logging.getLogger("audiobooks").setLevel(logging.CRITICAL)
@@ -261,17 +265,17 @@ def assign_voices_to_characters(project_root: str) -> Dict[str, Any]:
                     "method": "llm_auto"
                 }
         
-        # Save updated characters with voice assignments in dictionary format for backend compatibility
+        # Don't auto-save - let the UI decide when to save
+        # Return the assignments for the UI to handle
         characters_data["characters"] = characters
-        with open(characters_file, 'w', encoding='utf-8') as f:
-            json.dump(characters_data, f, ensure_ascii=False, indent=2)
         
         return {
             "success": True,
             "message": f"Successfully assigned voices to {len([c for c in characters if c.get('voiceAssignment')])} out of {len(characters)} characters",
             "total_characters": len(characters),
             "characters_with_assignments": len([c for c in characters if c.get('voiceAssignment')]),
-            "llm_model_used": project_model if project_model else "default"
+            "llm_model_used": project_model if project_model else "default",
+            "characters": characters  # Return updated characters for UI to handle
         }
         
     except Exception as e:

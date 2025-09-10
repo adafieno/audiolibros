@@ -1,0 +1,71 @@
+{
+  "Rosa": {
+    "id": "principal::character_001",
+    "voice": "es-ES-Standard-A",
+    "style": null,
+    "styledegree": 0.6,
+    "rate_pct": 0,
+    "pitch_pct": 0,
+    "_traits": {
+      "id": "character_001",
+      "display_name": "Rosa",
+      "gender": "F",
+      "confidence": 1.0,
+      "age_range": "adult",
+      "accent_hint": "none",
+      "register": "neutral",
+      "energy": "medium",
+      "default_style": "none",
+      "styledegree": 0.6,
+      "rate_pct": 0,
+      "pitch_pct": 0,
+      "notes": "Curious and friendly, engages in dialogue with Luis."
+    }
+  },
+  "Luis": {
+    "id": "principal::character_002",
+    "voice": "es-MX-LucianoNeural",
+    "style": null,
+    "styledegree": 0.6,
+    "rate_pct": 0,
+    "pitch_pct": 0,
+    "_traits": {
+      "id": "character_002",
+      "display_name": "Luis",
+      "gender": "M",
+      "confidence": 1.0,
+      "age_range": "adult",
+      "accent_hint": "mexico",
+      "register": "neutral",
+      "energy": "medium",
+      "default_style": "calm",
+      "styledegree": 0.6,
+      "rate_pct": 0,
+      "pitch_pct": 0,
+      "notes": "Calm and reflective, responds to Rosa."
+    }
+  },
+  "María": {
+    "id": "principal::character_005",
+    "voice": "es-BO-SofiaNeural",
+    "style": "empathetic",
+    "styledegree": 0.6,
+    "rate_pct": 0,
+    "pitch_pct": 0,
+    "_traits": {
+      "id": "character_005",
+      "display_name": "María",
+      "gender": "F",
+      "confidence": 1.0,
+      "age_range": "adult",
+      "accent_hint": "bolivia",
+      "register": "neutral",
+      "energy": "medium",
+      "default_style": "empathetic",
+      "styledegree": 0.6,
+      "rate_pct": 0,
+      "pitch_pct": 0,
+      "notes": "Kind and warm, clearly female name."
+    }
+  }
+}
