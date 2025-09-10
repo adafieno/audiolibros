@@ -20,6 +20,7 @@ export interface AudioCacheMetadata {
   createdAt: number;
   accessedAt: number;
   expiresAt: number;
+  originalKey?: string; // For mapping hashed filenames back to original cache keys
 }
 
 export type OptsValue = Primitive | Primitive[];

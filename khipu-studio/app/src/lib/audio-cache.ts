@@ -26,6 +26,21 @@ export interface CacheKey {
 /**
  * Generate a stable cache key from audition options
  */
+/**
+ * Generate a hash for the cache key to avoid Windows path length limitations
+ */
+function generateCacheHash(cacheKey: string): string {
+  // Simple hash function for consistent, short filenames
+  let hash = 0;
+  for (let i = 0; i < cacheKey.length; i++) {
+    const char = cacheKey.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  // Convert to hex and ensure positive
+  return Math.abs(hash).toString(16).padStart(8, '0');
+}
+
 export function generateCacheKey(options: AuditionOptions): string {
   const key: CacheKey = {
     engine: options.voice.engine,
@@ -69,10 +84,11 @@ class AudioCacheManager {
       if (result.success && result.entries) {
         const now = Date.now();
         
-        // Restore valid entries
-        for (const { key, metadata } of result.entries) {
-          if (metadata.expiresAt && now < metadata.expiresAt) {
-            this.cache.set(key, {
+        // Restore valid entries using original keys from metadata
+        for (const { metadata } of result.entries) {
+          if (metadata.expiresAt && now < metadata.expiresAt && metadata.originalKey) {
+            // Use the original key for memory cache mapping
+            this.cache.set(metadata.originalKey, {
               audioUrl: '', // Will be loaded on demand
               createdAt: metadata.createdAt,
               lastAccessed: metadata.accessedAt,
@@ -105,7 +121,8 @@ class AudioCacheManager {
     // Check file system cache if available
     if (window.khipu) {
       try {
-        const result = await window.khipu.call('audioCache:read', { key: cacheKey });
+        const hashedKey = generateCacheHash(cacheKey);
+        const result = await window.khipu.call('audioCache:read', { key: hashedKey });
         if (result.success && result.audioData) {
           console.log("📁 File system cache hit");
           
@@ -215,11 +232,12 @@ class AudioCacheManager {
         expiresAt: now + this.maxAge
       };
 
-      // Store in file system
+      // Store in file system using hashed filename
+      const hashedKey = generateCacheHash(cacheKey);
       const result = await window.khipu!.call('audioCache:write', { 
-        key: cacheKey, 
+        key: hashedKey, 
         audioData: base64Data, 
-        metadata 
+        metadata: { ...metadata, originalKey: cacheKey } 
       });
       
       if (result.success) {
