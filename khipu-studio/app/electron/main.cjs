@@ -214,6 +214,93 @@ async function runVoiceAssignment(projectRoot) {
   });
 }
 
+/** Run character assignment script for planning segments */
+async function runCharacterAssignment(projectRoot, payload) {
+  console.log("🎭 Starting character assignment for planning segments:", projectRoot);
+  
+  const script = path.join(repoRoot, "py", "characters", "assign_characters_to_segments.py");
+  console.log("📜 Script path:", script);
+  
+  // Basic existence check
+  try { 
+    await fsp.access(script); 
+    console.log("✅ Character assignment script exists");
+  } catch { 
+    console.error("❌ Character assignment script not found:", script);
+    throw new Error("Character assignment script not found"); 
+  }
+
+  const exe = getPythonExe();
+  console.log("🐍 Python executable:", exe);
+  
+  return new Promise((resolve, reject) => {
+    console.log("🚀 Spawning Python process for character assignment...");
+    const proc = spawn(exe, [script, projectRoot], { cwd: repoRoot, windowsHide: true });
+    let stderr = ""; let stdout = "";
+    
+    // Send the payload as JSON input to the Python script
+    proc.stdin.write(JSON.stringify(payload));
+    proc.stdin.end();
+    
+    proc.stdout.on("data", d => { 
+      const output = d.toString();
+      stdout += output;
+      console.log("📤 Character assignment stdout:", output.trim());
+    });
+    
+    proc.stderr.on("data", d => { 
+      const s = d.toString(); 
+      stderr += s; 
+      console.log("📢 Character assignment stderr:", s.trim());
+      
+      // Parse progress messages and send to UI
+      const lines = s.split('\n');
+      for (const line of lines) {
+        if (line.trim().startsWith('PROGRESS:')) {
+          const parts = line.trim().split(':');
+          if (parts.length >= 3) {
+            const pct = parseInt(parts[1]);
+            const status = parts[2];
+            BrowserWindow.getAllWindows().forEach(w => {
+              w.webContents.send("characters:assignment:progress", { 
+                current: pct, 
+                total: 100, 
+                stage: `Assigning characters... ${status}` 
+              });
+            });
+          }
+        }
+      }
+    });
+    
+    proc.on("error", err => {
+      console.error("💥 Character assignment process error:", err);
+      reject(err);
+    });
+    
+    proc.on("close", async (code) => {
+      console.log("🏁 Character assignment process closed with code:", code);
+      
+      if (code !== 0) {
+        const error = `Character assignment exited with code ${code}. stderr: ${stderr.split(/\n/).slice(-8).join("\n")}`;
+        console.error("❌ Character assignment failed:", error);
+        return reject(new Error(error));
+      }
+      
+      // Try parsing the output JSON
+      try {
+        const result = JSON.parse(stdout.trim());
+        console.log("✅ Character assignment result:", result);
+        resolve(result);
+      } catch (e) {
+        console.error("❌ Failed to parse character assignment output:", e);
+        console.log("Raw stdout:", stdout);
+        reject(new Error("Character assignment finished but output not parseable"));
+      }
+    });
+  });
+}
+
 async function runVoiceAudition(projectRoot, characterId, voiceId, style, sampleText) {
   console.log("🎵 Starting voice audition:", { characterId, voiceId, style, sampleText });
   
@@ -499,6 +586,18 @@ function createWin() {
           if (!projectRoot) throw new Error("Missing projectRoot");
           try {
             const result = await runVoiceAssignment(projectRoot);
+            return { success: true, ...result };
+          } catch (e) {
+            return { success: false, error: String(e.message || e) };
+          }
+        });
+
+        // Character assignment for planning segments
+        ipcMain.handle("characters:assignToSegments", async (_e, { projectRoot, payload }) => {
+          if (!projectRoot) throw new Error("Missing projectRoot");
+          if (!payload) throw new Error("Missing payload");
+          try {
+            const result = await runCharacterAssignment(projectRoot, payload);
             return { success: true, ...result };
           } catch (e) {
             return { success: false, error: String(e.message || e) };

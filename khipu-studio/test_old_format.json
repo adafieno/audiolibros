@@ -1,0 +1,10 @@
+[
+  {
+    "segment_id": 1,
+    "start_idx": 0,
+    "end_idx": 20,
+    "delimiter": "newline",
+    "text": "Test segment",
+    "voice": "narrador"
+  }
+]

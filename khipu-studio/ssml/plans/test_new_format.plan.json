@@ -1,8 +1,8 @@
 {
-  "chapter_id": "ch01",
+  "chapter_id": "test_new_format",
   "chunks": [
     {
-      "id": "ch01_001",
+      "id": "test_new_format_001",
       "start_char": 1,
       "end_char": 109,
       "voice": "narrador",
@@ -13,32 +13,28 @@
           "start_char": 1,
           "end_char": 21,
           "delimiter": "em-dash",
-          "line_type": "line",
-          "text": "¿Llegaste temprano? "
+          "line_type": "line"
         },
         {
           "voice": "narrador",
           "start_char": 22,
           "end_char": 36,
           "delimiter": "newline",
-          "line_type": "line",
-          "text": "preguntó Rosa."
+          "line_type": "line"
         },
         {
           "voice": "narrador",
           "start_char": 37,
           "end_char": 92,
           "delimiter": "newline",
-          "line_type": "line",
-          "text": "\"Un poco\", dijo Luis. La lluvia golpeaba los cristales."
+          "line_type": "line"
         },
         {
           "voice": "narrador",
           "start_char": 93,
           "end_char": 109,
           "delimiter": "EOF",
-          "line_type": "line",
-          "text": "Sí, un poco más."
+          "line_type": "line"
         }
       ]
     }
@@ -50,6 +46,6 @@
     "manuscript_sha1": "f7c06981d011a0f39b9d26cd174bf687f2e24a72",
     "manuscript_first40": "—¿Llegaste temprano? —preguntó Rosa.\n\"Un",
     "include_title": false,
-    "generated_at": "2025-09-10T05:32:54.523308+00:00"
+    "generated_at": "2025-09-10T05:09:20.826844+00:00"
   }
 }

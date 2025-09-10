@@ -1,0 +1,43 @@
+{
+  "chapter_id": "test_sample",
+  "chunks": [
+    {
+      "id": "test_sample_001",
+      "start_char": 0,
+      "end_char": 98,
+      "voice": "narrador",
+      "stylepack": "chapter_default",
+      "lines": [
+        {
+          "voice": "narrador",
+          "start_char": 0,
+          "end_char": 29
+        },
+        {
+          "voice": "desconocido",
+          "start_char": 30,
+          "end_char": 67
+        },
+        {
+          "voice": "desconocido",
+          "start_char": 69,
+          "end_char": 97
+        }
+      ]
+    },
+    {
+      "id": "test_sample_002",
+      "start_char": 99,
+      "end_char": 125,
+      "voice": "narrador",
+      "stylepack": "chapter_default",
+      "lines": [
+        {
+          "voice": "narrador",
+          "start_char": 99,
+          "end_char": 125
+        }
+      ]
+    }
+  ]
+}

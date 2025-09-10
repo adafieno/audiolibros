@@ -79,6 +79,7 @@ export interface Khipu {
   onJob(cb: (e: JobEvent) => void): void;
   characters: {
     detect(projectRoot: string): Promise<unknown>;
+    assignToSegments(projectRoot: string, payload: unknown): Promise<unknown>;
     onProgress(callback: (progress: {current: number, total: number}) => void): void;
     onLog(callback: (log: string) => void): void;
     onAssignmentProgress(callback: (progress: {current: number, total?: string}) => void): void;

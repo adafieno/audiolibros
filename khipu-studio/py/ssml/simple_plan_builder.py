@@ -28,7 +28,7 @@ def iter_segments(text: str, *, split_on_em_dash: bool = True, include_empty: bo
         if end_idx > start_idx or include_empty:
             segment_text = text[start_idx:end_idx]
             segment_id = len(segments) + 1
-            print(f"🔍 SEGMENT DETECTED #{segment_id}: [{start_idx}:{end_idx}] delim='{delim}' text='{segment_text[:50]}{'...' if len(segment_text) > 50 else ''}'", file=sys.stderr)
+            print(f"🔍 SEGMENT DETECTED #{segment_id}: [{start_idx}:{end_idx}] delim='{delim}' text='{segment_text}'", file=sys.stderr)
             segments.append(Segment(
                 segment_id=segment_id,
                 start_idx=start_idx,
@@ -74,20 +74,65 @@ def main(argv: Optional[List[str]] = None) -> int:
             writer = csv.writer(f)
             writer.writerow(["segment_id","start_idx","end_idx","length","delimiter","text"])
             for s in segments:
-                print(f"🔍 CSV RECORD #{s.segment_id}: [{s.start_idx}:{s.end_idx}] delim='{s.delimiter}' text='{s.text[:30]}{'...' if len(s.text) > 30 else ''}'", file=sys.stderr)
+                print(f"🔍 CSV RECORD #{s.segment_id}: [{s.start_idx}:{s.end_idx}] delim='{s.delimiter}' text='{s.text}'", file=sys.stderr)
                 writer.writerow([s.segment_id, s.start_idx, s.end_idx, s.end_idx-s.start_idx, s.delimiter, s.text])
         print(f"🔍 CSV FILE WRITTEN SUCCESSFULLY", file=sys.stderr)
     else:
         print(f"🔍 WRITING {len(segments)} SEGMENTS TO JSON: {args.out}", file=sys.stderr)
-        segment_dicts = []
+        
+        # Generate new hierarchical format with chunks and lines
+        import hashlib
+        from datetime import datetime, timezone
+        
+        # Calculate manuscript metadata for segmentation_meta
+        manuscript_sha1 = hashlib.sha1(text.encode('utf-8')).hexdigest()
+        manuscript_first40 = text[:40] if len(text) > 40 else text
+        
+        # Extract chapter ID from output filename (e.g., "ch01.plan.json" -> "ch01")
+        chapter_id = Path(args.out).stem.replace('.plan', '')
+        
+        # Create chunks - for now, put all segments in one chunk
+        # This maintains the same segmentation but in the new structure
+        lines = []
         for s in segments:
-            segment_dict = asdict(s)
-            print(f"🔍 JSON RECORD #{s.segment_id}: [{s.start_idx}:{s.end_idx}] delim='{s.delimiter}' text='{s.text[:30]}{'...' if len(s.text) > 30 else ''}'", file=sys.stderr)
-            segment_dicts.append(segment_dict)
+            line = {
+                "voice": "narrador",  # Default voice assignment
+                "start_char": s.start_idx,
+                "end_char": s.end_idx,
+                "delimiter": s.delimiter,
+                "line_type": "line",
+                "text": s.text  # Include actual segment text for Preview display
+            }
+            lines.append(line)
+            print(f"🔍 LINE #{len(lines)}: [{s.start_idx}:{s.end_idx}] delim='{s.delimiter}' voice='narrador' text='{s.text}'", file=sys.stderr)
+        
+        chunk = {
+            "id": f"{chapter_id}_001",
+            "start_char": segments[0].start_idx if segments else 0,
+            "end_char": segments[-1].end_idx if segments else 0,
+            "voice": "narrador",  # Default chunk voice
+            "stylepack": "chapter_default",
+            "lines": lines
+        }
+        
+        plan_data = {
+            "chapter_id": chapter_id,
+            "chunks": [chunk],
+            "segmentation_meta": {
+                "version": "simple-v1",
+                "algorithm": "newline" + (" +em-dash" if not args.no_em_dash else ""),
+                "segment_count": len(segments),
+                "manuscript_sha1": manuscript_sha1,
+                "manuscript_first40": manuscript_first40,
+                "include_title": False,
+                "generated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
         
         with open(args.out, "w", encoding="utf-8") as f:
-            json.dump(segment_dicts, f, ensure_ascii=False, indent=2)
-        print(f"🔍 JSON FILE WRITTEN SUCCESSFULLY", file=sys.stderr)
+            json.dump(plan_data, f, ensure_ascii=False, indent=2)
+        print(f"🔍 HIERARCHICAL PLAN FILE WRITTEN SUCCESSFULLY", file=sys.stderr)
+        print(f"🔍 FORMAT: {len(plan_data['chunks'])} chunks, {len(lines)} lines total", file=sys.stderr)
     return 0
 
 if __name__ == "__main__":

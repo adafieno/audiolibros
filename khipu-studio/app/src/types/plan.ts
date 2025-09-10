@@ -29,3 +29,35 @@ export interface ChunkStats {
   kb: number;
   minutes: number;
 }
+
+// Plan file format types
+export interface PlanLine {
+  voice: string;
+  start_char: number;
+  end_char: number;
+  delimiter?: string;
+  line_type?: string;
+  text?: string; // Actual segment text for Preview display
+}
+
+export interface PlanChunk {
+  id: string;
+  text: string;
+  locked: boolean;
+  sfxAfter?: string | null;
+  start_char?: number;
+  end_char?: number;
+  voice?: string;
+  stylepack?: string;
+  lines?: PlanLine[];
+  source?: {
+    chapter: string;
+    start: number | undefined;
+    end: number | undefined;
+  };
+}
+
+export interface PlanFile {
+  chapter_id: string;
+  chunks: PlanChunk[];
+}

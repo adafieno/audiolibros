@@ -110,7 +110,7 @@ def configure(level: str = _DEFAULT_LEVEL, json_mode: bool = _JSON_MODE, stream=
 
     logger = logging.getLogger(_LOGGER_NAME)
     logger.setLevel(getattr(logging, level, logging.INFO))
-    handler = logging.StreamHandler(stream or sys.stdout)
+    handler = logging.StreamHandler(stream or sys.stderr)
     handler.setLevel(getattr(logging, level, logging.INFO))
     handler.setFormatter(JsonFormatter() if json_mode else PlainFormatter())
     logger.addHandler(handler)
