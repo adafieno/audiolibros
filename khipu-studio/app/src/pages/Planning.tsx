@@ -537,6 +537,21 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       <h1 style={{ fontSize: "32px", fontWeight: "bold", color: "var(--text)", marginBottom: "8px" }}>Planning</h1>
       <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "24px" }}>TTS-compliant chunk breakdown and character voice assignment - work chapter by chapter.</p>
 
+      {/* Status message */}
+      {message && !running && (
+        <div style={{
+          marginBottom: "16px",
+          padding: "12px",
+          borderRadius: "6px",
+          fontSize: "14px",
+          backgroundColor: "var(--panelAccent)",
+          border: "1px solid var(--border)",
+          color: "var(--text)"
+        }}>
+          {message}
+        </div>
+      )}
+
       {/* Chapter selector */}
       <div style={{ marginBottom: "16px", padding: "16px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "6px" }}>
         <div style={{ display: "flex", gap: "16px", alignItems: "center", flexWrap: "wrap" }}>
@@ -731,21 +746,6 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
         </div>
       )}
 
-      {/* Status message */}
-      {message && !running && (
-        <div style={{
-          marginBottom: "16px",
-          padding: "12px",
-          borderRadius: "6px",
-          fontSize: "14px",
-          backgroundColor: "var(--panelAccent)",
-          border: "1px solid var(--border)",
-          color: "var(--text)"
-        }}>
-          {message}
-        </div>
-      )}
-
       {!selectedChapter ? (
         <div style={{ 
           textAlign: "center", 
@@ -844,7 +844,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
                       <th style={{ padding: "8px 6px" }}>start</th>
                       <th style={{ padding: "8px 6px" }}>end</th>
                       <th style={{ padding: "8px 6px" }}>len</th>
-                      <th style={{ padding: "8px 6px", minWidth: "150px" }}>voice</th>
+                      <th style={{ padding: "8px 6px", minWidth: "150px" }}>character</th>
                     </tr>
                   </thead>
                   <tbody>

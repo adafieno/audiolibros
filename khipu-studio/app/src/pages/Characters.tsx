@@ -17,6 +17,7 @@ function CharactersPage() {
     reloadDetection,
     addCharacter,
     removeCharacter,
+    updateCharacter,
     sortByFrequency,
     save,
     load,
@@ -34,6 +35,9 @@ function CharactersPage() {
   const [auditioningVoices, setAuditioningVoices] = useState<Set<string>>(new Set());
   const [playingAudio, setPlayingAudio] = useState<{ voiceId: string; audio: HTMLAudioElement } | null>(null);
   const [projectConfig, setProjectConfig] = useState<ProjectConfig | null>(null);
+  
+  // Editing state
+  const [editingFields, setEditingFields] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!root) {
@@ -275,6 +279,34 @@ function CharactersPage() {
     );
   }
 
+  // Helper functions for inline editing
+  const startEditing = (fieldId: string) => {
+    setEditingFields(prev => new Set(prev).add(fieldId));
+  };
+
+  const stopEditing = (fieldId: string) => {
+    setEditingFields(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(fieldId);
+      return newSet;
+    });
+  };
+
+  const isEditing = (fieldId: string) => editingFields.has(fieldId);
+
+  const handleFieldUpdate = (characterId: string, field: string, value: string) => {
+    updateCharacter(characterId, { [field]: value });
+    stopEditing(`${characterId}-${field}`);
+  };
+
+  const handleKeyPress = (event: React.KeyboardEvent, characterId: string, field: string, value: string) => {
+    if (event.key === 'Enter') {
+      handleFieldUpdate(characterId, field, value);
+    } else if (event.key === 'Escape') {
+      stopEditing(`${characterId}-${field}`);
+    }
+  };
+
   return (
     <div style={{ padding: "2px", maxWidth: "90%" }}>
       <h2>Characters</h2>
@@ -492,7 +524,33 @@ function CharactersPage() {
                 <div>
                   {/* Character name */}
                   <div style={{ fontWeight: "500", marginBottom: "8px", fontSize: "16px", color: "var(--text)" }}>
-                    {c.name}
+                    {isEditing(`${c.id}-name`) ? (
+                      <input
+                        type="text"
+                        defaultValue={c.name}
+                        autoFocus
+                        onBlur={(e) => handleFieldUpdate(c.id, 'name', e.target.value)}
+                        onKeyDown={(e) => handleKeyPress(e, c.id, 'name', e.currentTarget.value)}
+                        style={{
+                          background: "var(--input)",
+                          border: "1px solid var(--border)",
+                          borderRadius: "4px",
+                          padding: "4px 6px",
+                          fontSize: "16px",
+                          fontWeight: "500",
+                          color: "var(--text)",
+                          width: "100%"
+                        }}
+                      />
+                    ) : (
+                      <span 
+                        onClick={() => startEditing(`${c.id}-name`)}
+                        style={{ cursor: "pointer", display: "inline-block", minWidth: "100px" }}
+                        title="Click to edit"
+                      >
+                        {c.name || "Unnamed Character"}
+                      </span>
+                    )}
                   </div>
                   
                   {/* Frequency */}
@@ -518,11 +576,49 @@ function CharactersPage() {
                   )}
 
                   {/* Description */}
-                  {c.description && (
-                    <div style={{ fontSize: "12px", color: "var(--text)", marginBottom: "8px" }}>
-                      {c.description}
-                    </div>
-                  )}
+                  <div style={{ fontSize: "12px", color: "var(--text)", marginBottom: "8px" }}>
+                    {isEditing(`${c.id}-description`) ? (
+                      <textarea
+                        defaultValue={c.description || ""}
+                        autoFocus
+                        onBlur={(e) => handleFieldUpdate(c.id, 'description', e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                            handleFieldUpdate(c.id, 'description', e.currentTarget.value);
+                          } else if (e.key === 'Escape') {
+                            stopEditing(`${c.id}-description`);
+                          }
+                        }}
+                        style={{
+                          background: "var(--input)",
+                          border: "1px solid var(--border)",
+                          borderRadius: "4px",
+                          padding: "4px 6px",
+                          fontSize: "12px",
+                          color: "var(--text)",
+                          width: "100%",
+                          minHeight: "60px",
+                          resize: "vertical",
+                          fontFamily: "inherit"
+                        }}
+                        placeholder="Add character description..."
+                      />
+                    ) : (
+                      <span 
+                        onClick={() => startEditing(`${c.id}-description`)}
+                        style={{ 
+                          cursor: "pointer", 
+                          display: "block", 
+                          minHeight: "16px",
+                          color: c.description ? "var(--text)" : "var(--muted)",
+                          fontStyle: c.description ? "normal" : "italic"
+                        }}
+                        title="Click to edit"
+                      >
+                        {c.description || "Click to add description..."}
+                      </span>
+                    )}
+                  </div>
 
                   {/* Personality */}
                   {c.traits?.personality && c.traits.personality.length > 0 && (
