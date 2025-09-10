@@ -11,6 +11,17 @@ export type JobEvent = {
   ok?: boolean;
 } & Record<string, unknown>;
 
+export interface AudioCacheMetadata {
+  voiceOptions: {
+    engine: string;
+    id: string;
+    locale?: string;
+  };
+  createdAt: number;
+  accessedAt: number;
+  expiresAt: number;
+}
+
 export type OptsValue = Primitive | Primitive[];
 
 export interface PlanBuildPayload {
@@ -56,6 +67,28 @@ export interface KhipuRequestMap {
   "file:getImageDataUrl": {
     in: { projectRoot: string; fileName: string };
     out: { success: boolean; dataUrl?: string; error?: string }
+  };
+
+  // Audio Cache
+  "audioCache:read": { 
+    in: { key: string }; 
+    out: { success: boolean; audioData?: string; metadata?: AudioCacheMetadata; error?: string } 
+  };
+  "audioCache:write": { 
+    in: { key: string; audioData: string; metadata: AudioCacheMetadata }; 
+    out: { success: boolean; error?: string } 
+  };
+  "audioCache:list": { 
+    in: undefined; 
+    out: { success: boolean; entries?: { key: string; metadata: AudioCacheMetadata }[]; error?: string } 
+  };
+  "audioCache:delete": { 
+    in: { key: string }; 
+    out: { success: boolean; error?: string } 
+  };
+  "audioCache:clear": { 
+    in: undefined; 
+    out: { success: boolean; error?: string } 
   };
 
   // Plan

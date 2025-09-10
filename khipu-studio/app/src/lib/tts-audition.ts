@@ -180,10 +180,34 @@ function getAuditionText(locale: string, customText?: string): string {
  * Generate TTS audition for Azure Speech Services (enhanced following Python implementation)
  */
 async function auditAzureVoice(voice: Voice, config: ProjectConfig, text: string, options?: { style?: string; styledegree?: number; rate_pct?: number; pitch_pct?: number }): Promise<AuditionResult> {
-  const credentials = config.creds?.azure;
-  if (!credentials?.key || !credentials?.region) {
-    return { success: false, error: "Azure credentials not configured" };
+  // Handle both useAppAzure and project-level credentials
+  let credentials: { key?: string; region?: string } | undefined;
+  
+  if (config.creds?.useAppAzure) {
+    // Use app-level credentials - these should be provided via IPC or configuration
+    // For now, return an error as this feature needs to be implemented
+    return { success: false, error: "App-level Azure credentials not implemented yet. Please configure project-level credentials." };
+  } else {
+    // Use project-level credentials
+    credentials = config.creds?.azure;
   }
+  
+  if (!credentials?.key || !credentials?.region) {
+    console.error("❌ Azure TTS Error: Missing credentials", { 
+      hasKey: !!credentials?.key, 
+      hasRegion: !!credentials?.region,
+      useAppAzure: config.creds?.useAppAzure 
+    });
+    return { success: false, error: "Azure credentials not configured in project. Please add Azure key and region in Project settings." };
+  }
+
+  console.log("🎤 Azure TTS: Attempting audition", { 
+    voice: voice.id, 
+    locale: voice.locale,
+    hasKey: !!credentials.key,
+    hasRegion: !!credentials.region,
+    region: credentials.region 
+  });
   
   const maxRetries = 4;
   const timeoutMs = 30000;
@@ -514,9 +538,26 @@ async function auditOpenAIVoice(voice: Voice, config: ProjectConfig, text: strin
 }
 
 /**
- * Generate TTS audition for any supported engine
+ * Generate TTS audition for any supported engine with automatic caching
  */
 export async function generateAudition(options: AuditionOptions): Promise<AuditionResult> {
+  // Check if caching is enabled in the config (defaults to true)
+  const useCache = options.config.tts?.cache !== false;
+  
+  if (useCache) {
+    // Use the cached version for better performance
+    const { generateCachedAudition } = await import("./audio-cache");
+    return generateCachedAudition(options, true);
+  }
+  
+  // Fall back to direct generation
+  return generateAuditionDirect(options);
+}
+
+/**
+ * Generate TTS audition directly without caching
+ */
+export async function generateAuditionDirect(options: AuditionOptions): Promise<AuditionResult> {
   const { voice, config } = options;
   const text = getAuditionText(voice.locale, options.text);
 

@@ -5,7 +5,7 @@ import { loadProjectConfig } from "../lib/config";
 import type { ProjectConfig } from "../types/config";
 import type { Segment, PlanRow, AzureCaps, PlanFile } from "../types/plan";
 import type { JobEvent, PlanBuildPayload } from "../global";
-import { generateAudition, cleanupAudioUrl } from "../lib/tts-audition";
+import { useAudioCache } from "../hooks/useAudioCache";
 import type { Voice as VoiceType } from "../types/voice";
 import type { Character as CharacterData } from "../types/character";
 
@@ -60,8 +60,10 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
   
   // Audition state
   const [auditioningSegments, setAuditioningSegments] = useState<Set<number>>(new Set());
-  const [playingAudio, setPlayingAudio] = useState<{ audio: HTMLAudioElement; segmentId: number } | null>(null);
   const [charactersData, setCharactersData] = useState<CharacterData[]>([]);
+  
+  // Use the new audio cache hook
+  const { isPlaying: isAudioPlaying, isLoading: isAudioLoading, playAudition, stopAudio } = useAudioCache();
 
   const gridRef = useRef<HTMLDivElement | null>(null);
 
@@ -878,16 +880,9 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
 
     console.log("🎵 Created voice object from character:", voice);
 
-    // Stop any currently playing audio
-    if (playingAudio) {
-      playingAudio.audio.pause();
-      playingAudio.audio.currentTime = 0;
-      cleanupAudioUrl(playingAudio.audio.src);
-      setPlayingAudio(null);
-    }
-
     // If already auditioning this segment, stop
     if (auditioningSegments.has(segmentId)) {
+      stopAudio();
       setAuditioningSegments(prev => {
         const next = new Set(prev);
         next.delete(segmentId);
@@ -908,7 +903,12 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
         pitch_pct: character.voiceAssignment.pitch_pct
       });
 
-      const result = await generateAudition({
+      // Use caching unless explicitly disabled in config
+      const useCache = projectConfig?.tts?.cache !== false;
+      console.log(`🎤 Starting segment audition for: ${segmentId}`, { voice, config: !!projectConfig, useCache });
+      
+      // Use the new audio cache hook for audition
+      await playAudition({
         voice: voice,
         config: projectConfig,
         text: segment.text || "No text available",
@@ -916,28 +916,9 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
         styledegree: character.voiceAssignment.styledegree,
         rate_pct: character.voiceAssignment.rate_pct,
         pitch_pct: character.voiceAssignment.pitch_pct
-      });
+      }, useCache);
 
-      console.log("🎵 Audition generation result:", result);
-
-      if (result.success && result.audioUrl) {
-        const audio = new Audio(result.audioUrl);
-        audio.onended = () => {
-          cleanupAudioUrl(result.audioUrl!);
-          setPlayingAudio(null);
-        };
-        audio.onerror = () => {
-          console.warn("Failed to play segment audition");
-          cleanupAudioUrl(result.audioUrl!);
-          setPlayingAudio(null);
-        };
-
-        setPlayingAudio({ audio, segmentId });
-        console.log(`🔊 Playing segment audition for: ${characterId}`);
-        await audio.play();
-      } else {
-        console.warn("Failed to generate audition:", result.error);
-      }
+      console.log(`🔊 Playing cached segment audition for: ${characterId}`);
     } catch (error) {
       console.error("Audition error:", error);
     } finally {
@@ -1331,18 +1312,18 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
                       {current.voice && current.voice !== "unassigned" && (
                         <button
                           onClick={() => handleSegmentAudition(current.segmentId)}
-                          disabled={auditioningSegments.has(current.segmentId)}
+                          disabled={isAudioLoading || auditioningSegments.has(current.segmentId)}
                           style={{
                             padding: "4px 8px",
                             fontSize: "12px",
                             border: "1px solid var(--border)",
                             borderRadius: "4px",
-                            backgroundColor: auditioningSegments.has(current.segmentId) ? "var(--panelAccent)" : "var(--background)",
+                            backgroundColor: (isAudioPlaying || auditioningSegments.has(current.segmentId)) ? "var(--panelAccent)" : "var(--background)",
                             color: "var(--text)",
-                            cursor: auditioningSegments.has(current.segmentId) ? "not-allowed" : "pointer"
+                            cursor: (isAudioLoading || auditioningSegments.has(current.segmentId)) ? "not-allowed" : "pointer"
                           }}
                         >
-                          {auditioningSegments.has(current.segmentId) ? "🔊 Playing..." : "🔊 Audition"}
+                          {(isAudioLoading || auditioningSegments.has(current.segmentId)) ? "🔊 Loading..." : isAudioPlaying ? "🔊 Playing..." : "🔊 Audition"}
                         </button>
                       )}
                     </div>

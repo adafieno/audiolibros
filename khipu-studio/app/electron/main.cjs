@@ -687,7 +687,153 @@ function createWin() {
       console.error("Error reading image:", error);
       return { success: false, error: "Failed to read image file" };
     }
-  });// ---- IPC: parse manuscript via Python module (FIXED FLAGS) ----
+  });
+
+  // ---- IPC: audio cache handlers ----
+  ipcMain.handle("audioCache:read", async (_e, { key }) => {
+    try {
+      const cacheDir = path.join(app.getPath("userData"), "cache", "tts");
+      await fsp.mkdir(cacheDir, { recursive: true });
+      
+      const cacheFile = path.join(cacheDir, `${key}.json`);
+      const audioFile = path.join(cacheDir, `${key}.wav`);
+      
+      // Check if both metadata and audio files exist
+      const metadataExists = await fsp.access(cacheFile).then(() => true).catch(() => false);
+      const audioExists = await fsp.access(audioFile).then(() => true).catch(() => false);
+      
+      if (!metadataExists || !audioExists) {
+        return { success: false, error: "Cache entry not found" };
+      }
+      
+      // Read metadata
+      const metadata = JSON.parse(await fsp.readFile(cacheFile, "utf-8"));
+      
+      // Check expiry
+      const now = Date.now();
+      if (metadata.expiresAt && now > metadata.expiresAt) {
+        // Clean up expired files
+        try {
+          await fsp.unlink(cacheFile);
+          await fsp.unlink(audioFile);
+        } catch {}
+        return { success: false, error: "Cache entry expired" };
+      }
+      
+      // Read audio data as base64
+      const audioBuffer = await fsp.readFile(audioFile);
+      const audioData = audioBuffer.toString('base64');
+      
+      // Update access time for LRU
+      metadata.accessedAt = now;
+      await fsp.writeFile(cacheFile, JSON.stringify(metadata, null, 2), "utf-8");
+      
+      return { success: true, audioData, metadata };
+      
+    } catch (error) {
+      console.error("Error reading audio cache:", error);
+      return { success: false, error: "Failed to read cache entry" };
+    }
+  });
+
+  ipcMain.handle("audioCache:write", async (_e, { key, audioData, metadata }) => {
+    try {
+      const cacheDir = path.join(app.getPath("userData"), "cache", "tts");
+      await fsp.mkdir(cacheDir, { recursive: true });
+      
+      const cacheFile = path.join(cacheDir, `${key}.json`);
+      const audioFile = path.join(cacheDir, `${key}.wav`);
+      
+      // Write audio data (convert from base64)
+      const audioBuffer = Buffer.from(audioData, 'base64');
+      await fsp.writeFile(audioFile, audioBuffer);
+      
+      // Write metadata
+      const now = Date.now();
+      const metadataWithTimestamps = {
+        ...metadata,
+        createdAt: now,
+        accessedAt: now,
+        expiresAt: now + (7 * 24 * 60 * 60 * 1000) // 7 days
+      };
+      await fsp.writeFile(cacheFile, JSON.stringify(metadataWithTimestamps, null, 2), "utf-8");
+      
+      return { success: true };
+      
+    } catch (error) {
+      console.error("Error writing audio cache:", error);
+      return { success: false, error: "Failed to write cache entry" };
+    }
+  });
+
+  ipcMain.handle("audioCache:list", async () => {
+    try {
+      const cacheDir = path.join(app.getPath("userData"), "cache", "tts");
+      await fsp.mkdir(cacheDir, { recursive: true });
+      
+      const files = await fsp.readdir(cacheDir);
+      const metadataFiles = files.filter(f => f.endsWith('.json'));
+      
+      const entries = [];
+      for (const file of metadataFiles) {
+        try {
+          const metadata = JSON.parse(await fsp.readFile(path.join(cacheDir, file), "utf-8"));
+          const key = file.replace('.json', '');
+          entries.push({ key, metadata });
+        } catch {
+          // Skip invalid metadata files
+        }
+      }
+      
+      return { success: true, entries };
+      
+    } catch (error) {
+      console.error("Error listing audio cache:", error);
+      return { success: false, error: "Failed to list cache entries" };
+    }
+  });
+
+  ipcMain.handle("audioCache:delete", async (_e, { key }) => {
+    try {
+      const cacheDir = path.join(app.getPath("userData"), "cache", "tts");
+      const cacheFile = path.join(cacheDir, `${key}.json`);
+      const audioFile = path.join(cacheDir, `${key}.wav`);
+      
+      // Delete both files if they exist
+      try {
+        await fsp.unlink(cacheFile);
+      } catch {}
+      try {
+        await fsp.unlink(audioFile);
+      } catch {}
+      
+      return { success: true };
+      
+    } catch (error) {
+      console.error("Error deleting audio cache entry:", error);
+      return { success: false, error: "Failed to delete cache entry" };
+    }
+  });
+
+  ipcMain.handle("audioCache:clear", async () => {
+    try {
+      const cacheDir = path.join(app.getPath("userData"), "cache", "tts");
+      
+      // Remove entire cache directory and recreate
+      try {
+        await fsp.rm(cacheDir, { recursive: true, force: true });
+      } catch {}
+      await fsp.mkdir(cacheDir, { recursive: true });
+      
+      return { success: true };
+      
+    } catch (error) {
+      console.error("Error clearing audio cache:", error);
+      return { success: false, error: "Failed to clear cache" };
+    }
+  });
+
+// ---- IPC: parse manuscript via Python module (FIXED FLAGS) ----
 ipcMain.handle("manuscript:parse", async (_e, { projectRoot, docxPath }) => {
   if (!projectRoot || !docxPath) return { code: -1 };
   const root = path.resolve(projectRoot);

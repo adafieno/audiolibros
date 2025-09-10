@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useCharacters } from "../hooks/useCharacters";
 import { useProject } from "../store/project";
-import { generateAudition, cleanupAudioUrl } from "../lib/tts-audition";
+import { useAudioCache } from "../hooks/useAudioCache";
 import { loadProjectConfig } from "../lib/config";
 import type { ProjectConfig } from "../types/config";
 import type { Voice as VoiceType } from "../types/voice";
@@ -33,8 +33,10 @@ function CharactersPage() {
   
   // Audition state 
   const [auditioningVoices, setAuditioningVoices] = useState<Set<string>>(new Set());
-  const [playingAudio, setPlayingAudio] = useState<{ voiceId: string; audio: HTMLAudioElement } | null>(null);
   const [projectConfig, setProjectConfig] = useState<ProjectConfig | null>(null);
+  
+  // Use the new audio cache hook
+  const { error: audioError, playAudition, stopAudio, clearError } = useAudioCache();
   
   // Editing state
   const [editingFields, setEditingFields] = useState<Set<string>>(new Set());
@@ -127,6 +129,21 @@ function CharactersPage() {
     }
   };
 
+  // Handle audio errors
+  useEffect(() => {
+    if (audioError) {
+      console.warn("Audio error:", audioError);
+      clearError();
+    }
+  }, [audioError, clearError]);
+
+  // Cleanup audio when component unmounts
+  useEffect(() => {
+    return () => {
+      stopAudio();
+    };
+  }, [stopAudio]);
+
   // Handle voice audition with real TTS
   const handleAudition = async (characterId: string) => {
     if (!projectConfig) {
@@ -159,14 +176,6 @@ function CharactersPage() {
       description: `Voice for ${character.name}`
     };
 
-    // Stop any currently playing audio
-    if (playingAudio) {
-      playingAudio.audio.pause();
-      playingAudio.audio.currentTime = 0;
-      cleanupAudioUrl(playingAudio.audio.src);
-      setPlayingAudio(null);
-    }
-
     // If already auditioning this voice, stop
     if (auditioningVoices.has(character.voiceAssignment.voiceId)) {
       setAuditioningVoices(prev => {
@@ -180,41 +189,21 @@ function CharactersPage() {
     setAuditioningVoices(prev => new Set(prev).add(character.voiceAssignment!.voiceId));
 
     try {
-      const result = await generateAudition({
+      // Use caching unless explicitly disabled in config
+      const useCache = projectConfig?.tts?.cache !== false;
+      console.log(`🎤 Starting audition for character: ${character.name}`, { voice, config: !!projectConfig, useCache });
+      
+      await playAudition({
         voice: voice,
-        config: projectConfig,
+        config: projectConfig!,
         text: character.quotes?.[0] || character.description || `Hello, my name is ${character.name}.`,
         style: character.voiceAssignment.style,
         styledegree: character.voiceAssignment.styledegree,
         rate_pct: character.voiceAssignment.rate_pct,
         pitch_pct: character.voiceAssignment.pitch_pct
-      });
-
-      if (result.success && result.audioUrl) {
-        const audio = new Audio(result.audioUrl);
-        audio.onended = () => {
-          cleanupAudioUrl(result.audioUrl!);
-          setPlayingAudio(null);
-        };
-        audio.onerror = () => {
-          console.warn("Failed to play voice sample");
-          cleanupAudioUrl(result.audioUrl!);
-          setPlayingAudio(null);
-        };
-        
-        setPlayingAudio({ voiceId: character.voiceAssignment.voiceId, audio });
-        
-        try {
-          await audio.play();
-          console.log("🔊 Playing voice audition for", character.name);
-        } catch {
-          console.warn("Failed to play voice sample");
-          cleanupAudioUrl(result.audioUrl);
-          setPlayingAudio(null);
-        }
-      } else {
-        console.warn("Failed to generate voice sample:", result.error);
-      }
+      }, useCache);
+      
+      console.log("🔊 Playing voice audition for", character.name);
     } catch (error) {
       console.error("Audition error:", error);
     } finally {

@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useProject } from "../store/project";
 import { loadProjectConfig } from "../lib/config";
 import { loadVoiceInventory, saveVoiceInventory, filterVoicesForProject } from "../lib/voice";
-import { generateAudition, cleanupAudioUrl } from "../lib/tts-audition";
+import { useAudioCache } from "../hooks/useAudioCache";
 import type { Voice, VoiceInventory } from "../types/voice";
 import type { ProjectConfig } from "../types/config";
 
@@ -16,7 +16,9 @@ export default function CastingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [auditioningVoices, setAuditioningVoices] = useState<Set<string>>(new Set());
-  const [playingAudio, setPlayingAudio] = useState<{ voiceId: string; audio: HTMLAudioElement } | null>(null);
+  
+  // Use the new audio cache hook
+  const { error: audioError, playAudition, stopAudio, clearError } = useAudioCache();
 
   const isCastingCompleted = isStepCompleted("casting");
 
@@ -48,31 +50,26 @@ export default function CastingPage() {
     })();
   }, [root, t]);
 
-  // Cleanup audio when component unmounts or playingAudio changes
+  // Handle audio errors
+  useEffect(() => {
+    if (audioError) {
+      setMessage(audioError);
+      setTimeout(() => {
+        setMessage("");
+        clearError();
+      }, 3000);
+    }
+  }, [audioError, clearError]);
+
+  // Cleanup audio when component unmounts
   useEffect(() => {
     return () => {
-      if (playingAudio) {
-        playingAudio.audio.pause();
-        playingAudio.audio.src = "";
-        if (playingAudio.audio.src.startsWith("blob:")) {
-          cleanupAudioUrl(playingAudio.audio.src);
-        }
-      }
+      stopAudio();
     };
-  }, [playingAudio]);
+  }, [stopAudio]);
 
   const handleAudition = async (voice: Voice) => {
     if (!config) return;
-
-    // Stop any currently playing audio
-    if (playingAudio) {
-      playingAudio.audio.pause();
-      playingAudio.audio.src = "";
-      if (playingAudio.audio.src.startsWith("blob:")) {
-        cleanupAudioUrl(playingAudio.audio.src);
-      }
-      setPlayingAudio(null);
-    }
 
     // If already auditioning this voice, stop
     if (auditioningVoices.has(voice.id)) {
@@ -82,41 +79,30 @@ export default function CastingPage() {
     setAuditioningVoices(prev => new Set(prev).add(voice.id));
     
     try {
-      const result = await generateAudition({
-        voice,
-        config,
+      // Use caching unless explicitly disabled in config
+      const useCache = config.tts?.cache !== false; 
+      console.log(`🎤 Starting audition for: ${voice.id}`, { voice, config: !!config, useCache });
+      
+      // Add timeout to prevent hanging forever
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Audition timeout after 30 seconds')), 30000);
       });
-
-      if (result.success && result.audioUrl) {
-        const audio = new Audio(result.audioUrl);
-        audio.onloadeddata = () => {
-          setPlayingAudio({ voiceId: voice.id, audio });
-          audio.play().catch(err => {
-            console.error("Failed to play audio:", err);
-            setMessage(t("casting.audition.playError"));
-            setTimeout(() => setMessage(""), 3000);
-          });
-        };
-        
-        audio.onended = () => {
-          setPlayingAudio(null);
-          cleanupAudioUrl(result.audioUrl!);
-        };
-        
-        audio.onerror = () => {
-          setMessage(t("casting.audition.loadError"));
-          setTimeout(() => setMessage(""), 3000);
-          setPlayingAudio(null);
-          cleanupAudioUrl(result.audioUrl!);
-        };
-      } else {
-        setMessage(result.error || t("casting.audition.error"));
-        setTimeout(() => setMessage(""), 5000);
-      }
+      
+      await Promise.race([
+        playAudition({
+          voice,
+          config,
+          text: undefined, // Will use locale-appropriate default audition text
+        }, useCache),
+        timeoutPromise
+      ]);
+      
+      console.log(`🔊 Playing voice audition for: ${voice.id}`);
     } catch (error) {
-      console.error("Audition error:", error);
-      setMessage(t("casting.audition.error"));
-      setTimeout(() => setMessage(""), 3000);
+      console.error("❌ Audition error for", voice.id, ":", error);
+      const errorMsg = error instanceof Error ? error.message : "Unknown error";
+      setMessage(`Audition failed: ${errorMsg}`);
+      setTimeout(() => setMessage(""), 5000);
     } finally {
       setAuditioningVoices(prev => {
         const newSet = new Set(prev);
@@ -346,37 +332,10 @@ export default function CastingPage() {
                             }}></span>
                             {t("casting.audition.loading")}
                           </>
-                        ) : playingAudio?.voiceId === voice.id ? (
-                          <>🔊 {t("casting.audition.playing")}</>
                         ) : (
                           <>🎵 {t("casting.audition.button")}</>
                         )}
                       </button>
-                      
-                      {playingAudio?.voiceId === voice.id && (
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            if (playingAudio) {
-                              playingAudio.audio.pause();
-                              playingAudio.audio.src = "";
-                              setPlayingAudio(null);
-                            }
-                          }}
-                          style={{
-                            padding: "4px 8px",
-                            fontSize: "12px",
-                            backgroundColor: "#ef4444",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "4px",
-                            cursor: "pointer"
-                          }}
-                        >
-                          ⏹️ {t("casting.audition.stop")}
-                        </button>
-                      )}
                     </div>
                   </div>
                 </label>
