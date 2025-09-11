@@ -3,14 +3,99 @@ import type { ProjectConfig } from "../types/config";
 
 // Default audition text in multiple languages
 const AUDITION_TEXTS: Record<string, string> = {
+  // English variants
   "en-US": "Hello, I'm a voice you can use for your audiobook. This is a sample of how I sound when reading your content.",
+  "en-GB": "Hello, I'm a voice you can use for your audiobook. This is a sample of how I sound when reading your content.",
+  "en-AU": "Hello, I'm a voice you can use for your audiobook. This is a sample of how I sound when reading your content.",
+  "en-CA": "Hello, I'm a voice you can use for your audiobook. This is a sample of how I sound when reading your content.",
+  "en-IE": "Hello, I'm a voice you can use for your audiobook. This is a sample of how I sound when reading your content.",
+  "en-IN": "Hello, I'm a voice you can use for your audiobook. This is a sample of how I sound when reading your content.",
+  "en-NZ": "Hello, I'm a voice you can use for your audiobook. This is a sample of how I sound when reading your content.",
+  "en-ZA": "Hello, I'm a voice you can use for your audiobook. This is a sample of how I sound when reading your content.",
+  "en-SG": "Hello, I'm a voice you can use for your audiobook. This is a sample of how I sound when reading your content.",
+  "en-HK": "Hello, I'm a voice you can use for your audiobook. This is a sample of how I sound when reading your content.",
+  "en-PH": "Hello, I'm a voice you can use for your audiobook. This is a sample of how I sound when reading your content.",
+  "en-KE": "Hello, I'm a voice you can use for your audiobook. This is a sample of how I sound when reading your content.",
+  "en-NG": "Hello, I'm a voice you can use for your audiobook. This is a sample of how I sound when reading your content.",
+  "en-TZ": "Hello, I'm a voice you can use for your audiobook. This is a sample of how I sound when reading your content.",
   "en": "Hello, I'm a voice you can use for your audiobook. This is a sample of how I sound when reading your content.",
-  "es-PE": "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.",
-  "es-ES": "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.",
-  "es-MX": "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.",
-  "es-US": "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.",
+  
+  // Spanish variants
+  "es-AR": "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.",
+  "es-BO": "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.",
+  "es-CL": "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.",
+  "es-CO": "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.",
+  "es-CR": "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.",
+  "es-CU": "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.",
+  "es-DO": "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.",
   "es-EC": "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.",
+  "es-ES": "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.",
+  "es-GQ": "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.",
+  "es-GT": "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.",
+  "es-HN": "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.",
+  "es-MX": "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.",
+  "es-NI": "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.",
+  "es-PA": "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.",
+  "es-PE": "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.",
+  "es-PR": "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.",
+  "es-PY": "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.",
+  "es-SV": "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.",
+  "es-US": "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.",
+  "es-UY": "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.",
+  "es-VE": "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.",
   "es": "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.",
+
+  // French variants
+  "fr-FR": "Bonjour, je suis une voix que vous pouvez utiliser pour votre livre audio. Ceci est un échantillon de la façon dont je sonne quand je lis votre contenu.",
+  "fr-CA": "Bonjour, je suis une voix que vous pouvez utiliser pour votre livre audio. Ceci est un échantillon de la façon dont je sonne quand je lis votre contenu.",
+  "fr": "Bonjour, je suis une voix que vous pouvez utiliser pour votre livre audio. Ceci est un échantillon de la façon dont je sonne quand je lis votre contenu.",
+
+  // German variants  
+  "de-DE": "Hallo, ich bin eine Stimme, die Sie für Ihr Hörbuch verwenden können. Dies ist eine Probe davon, wie ich klinge, wenn ich Ihren Inhalt lese.",
+  "de-AT": "Hallo, ich bin eine Stimme, die Sie für Ihr Hörbuch verwenden können. Dies ist eine Probe davon, wie ich klinge, wenn ich Ihren Inhalt lese.",
+  "de-CH": "Hallo, ich bin eine Stimme, die Sie für Ihr Hörbuch verwenden können. Dies ist eine Probe davon, wie ich klinge, wenn ich Ihren Inhalt lese.",
+  "de": "Hallo, ich bin eine Stimme, die Sie für Ihr Hörbuch verwenden können. Dies ist eine Probe davon, wie ich klinge, wenn ich Ihren Inhalt lese.",
+
+  // Italian variants
+  "it-IT": "Ciao, sono una voce che puoi usare per il tuo audiolibro. Questo è un esempio di come suono quando leggo il tuo contenuto.",
+  "it": "Ciao, sono una voce che puoi usare per il tuo audiolibro. Questo è un esempio di come suono quando leggo il tuo contenuto.",
+
+  // Portuguese variants
+  "pt-BR": "Olá, sou uma voz que você pode usar para seu audiolivro. Esta é uma amostra de como eu soou quando leio seu conteúdo.",
+  "pt-PT": "Olá, sou uma voz que pode usar para o seu audiolivro. Esta é uma amostra de como soou quando leio o seu conteúdo.",
+  "pt": "Olá, sou uma voz que você pode usar para seu audiolivro. Esta é uma amostra de como eu soou quando leio seu conteúdo.",
+
+  // Chinese variants
+  "zh-CN": "你好，我是一个可以用于您的有声书的语音。这是我阅读您的内容时声音的样本。",
+  "zh-HK": "你好，我是一個可以用於您的有聲書的語音。這是我閱讀您的內容時聲音的樣本。",
+  "zh-TW": "你好，我是一個可以用於您的有聲書的語音。這是我閱讀您的內容時聲音的樣本。",
+  "zh": "你好，我是一个可以用于您的有声书的语音。这是我阅读您的内容时声音的样本。",
+
+  // Japanese
+  "ja-JP": "こんにちは、私はあなたのオーディオブックに使用できる音声です。これは、私があなたのコンテンツを読むときの音のサンプルです。",
+  "ja": "こんにちは、私はあなたのオーディオブックに使用できる音声です。これは、私があなたのコンテンツを読むときの音のサンプルです。",
+
+  // Korean
+  "ko-KR": "안녕하세요, 저는 오디오북에 사용할 수 있는 음성입니다. 이것은 제가 당신의 콘텐츠를 읽을 때 어떤 소리를 내는지에 대한 샘플입니다.",
+  "ko": "안녕하세요, 저는 오디오북에 사용할 수 있는 음성입니다. 이것은 제가 당신의 콘텐츠를 읽을 때 어떤 소리를 내는지에 대한 샘플입니다.",
+
+  // Hindi
+  "hi-IN": "नमस्ते, मैं एक आवाज़ हूँ जिसका उपयोग आप अपनी ऑडियो बुक के लिए कर सकते हैं। यह इस बात का नमूना है कि जब मैं आपकी सामग्री पढ़ती हूँ तो मैं कैसी आवाज़ करती हूँ।",
+  "hi": "नमस्ते, मैं एक आवाज़ हूँ जिसका उपयोग आप अपनी ऑडियो बुक के लिए कर सकते हैं। यह इस बात का नमूना है कि जब मैं आपकी सामग्री पढ़ती हूँ तो मैं कैसी आवाज़ करती हूँ।",
+
+  // Arabic variants
+  "ar-AE": "مرحبا، أنا صوت يمكنك استخدامه لكتابك الصوتي. هذه عينة من صوتي عندما أقرأ محتواك.",
+  "ar-BH": "مرحبا، أنا صوت يمكنك استخدامه لكتابك الصوتي. هذه عينة من صوتي عندما أقرأ محتواك.",
+  "ar-DZ": "مرحبا، أنا صوت يمكنك استخدامه لكتابك الصوتي. هذه عينة من صوتي عندما أقرأ محتواك.",
+  "ar-EG": "مرحبا، أنا صوت يمكنك استخدامه لكتابك الصوتي. هذه عينة من صوتي عندما أقرأ محتواك.",
+  "ar-IQ": "مرحبا، أنا صوت يمكنك استخدامه لكتابك الصوتي. هذه عينة من صوتي عندما أقرأ محتواك.",
+  "ar-JO": "مرحبا، أنا صوت يمكنك استخدامه لكتابك الصوتي. هذه عينة من صوتي عندما أقرأ محتواك.",
+  "ar-KW": "مرحبا، أنا صوت يمكنك استخدامه لكتابك الصوتي. هذه عينة من صوتي عندما أقرأ محتواك.",
+  "ar-LB": "مرحبا، أنا صوت يمكنك استخدامه لكتابك الصوتي. هذه عينة من صوتي عندما أقرأ محتواك.",
+  "ar-LY": "مرحبا، أنا صوت يمكنك استخدامه لكتابك الصوتي. هذه عينة من صوتي عندما أقرأ محتواك.",
+  "ar-MA": "مرحبا، أنا صوت يمكنك استخدامه لكتابك الصوتي. هذه عينة من صوتي عندما أقرأ محتواك.",
+  "ar": "مرحبا، أنا صوت يمكنك استخدامه لكتابك الصوتي. هذه عينة من صوتي عندما أقرأ محتواك.",
+
   "default": "Hello, this is a voice audition sample for your audiobook project."
 };
 
