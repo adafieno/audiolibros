@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useProject } from "../store/project";
 import { bootstrapVoiceInventory } from "../lib/voice";
-import type { ProjectConfig } from "../types/config";
+import type { ProjectConfig, BookMeta } from "../types/config";
 
 type RecentItem = { 
   path: string; 
@@ -145,12 +145,27 @@ export default function Home() {
                 json: true
               }) as ProjectConfig;
               
+              // Try to load book metadata from separate book.meta.json (optimized structure)
+              let bookMeta = configData?.bookMeta; // Fallback to old structure
+              try {
+                const bookMetaData = await window.khipu!.call("fs:read", {
+                  projectRoot: item.path,
+                  relPath: "book.meta.json",
+                  json: true
+                }) as BookMeta;
+                if (bookMetaData && typeof bookMetaData.title === 'string' && bookMetaData.title.trim() !== '') {
+                  bookMeta = bookMetaData; // Use separate book.meta.json if it has content
+                }
+              } catch {
+                // book.meta.json doesn't exist or is invalid, use fallback
+              }
+              
               return {
                 ...item,
-                title: configData?.bookMeta?.title,
-                authors: configData?.bookMeta?.authors,
-                language: configData?.language || configData?.bookMeta?.language,
-                coverImage: configData?.bookMeta?.coverImage
+                title: bookMeta?.title,
+                authors: bookMeta?.authors,
+                language: configData?.language || bookMeta?.language,
+                coverImage: bookMeta?.coverImage
               };
             } catch (error) {
               // If we can't load config, just return the basic item

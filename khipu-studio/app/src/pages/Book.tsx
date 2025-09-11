@@ -14,62 +14,101 @@ export default function Book() {
   const { t } = useTranslation();
   const { root } = useProject();
   const [cfg, setCfg] = useState<ProjectConfig | null>(null);
+  const [bookMeta, setBookMeta] = useState<BookMeta | null>(null);
   const [msg, setMsg] = useState("");
 
-  // Load config on mount or project change
+  // Load config and book metadata on mount or project change
   useEffect(() => {
     if (!root) {
       setCfg(null);
+      setBookMeta(null);
       return;
     }
     
+    // Load project config
     loadProjectConfig(root)
       .then(setCfg)
       .catch(err => {
         console.error("Failed to load project config:", err);
         setMsg(t("book.loadError"));
       });
-  }, [root, t]);
 
-  // Helper to update nested config properties
-  const update = <K extends keyof ProjectConfig>(
-    key: K,
-    value: ProjectConfig[K]
-  ) => {
-    if (!cfg) return;
-    setCfg({ ...cfg, [key]: value });
-  };
+    // Load book metadata from book.meta.json (optimized structure) or fallback to project config
+    const loadBookMeta = async () => {
+      try {
+        // Try to load from book.meta.json first (optimized structure)
+        const bookMetaData = await window.khipu!.call("fs:read", {
+          projectRoot: root,
+          relPath: "book.meta.json",
+          json: true
+        }) as BookMeta;
+        
+        if (bookMetaData && (bookMetaData.title || bookMetaData.authors?.length > 0)) {
+          setBookMeta(bookMetaData);
+          return;
+        }
+      } catch {
+        console.log("book.meta.json not found or invalid, trying fallback");
+      }
+
+      // Fallback to bookMeta in project config (legacy structure)
+      try {
+        const projectConfig = await loadProjectConfig(root);
+        if (projectConfig?.bookMeta) {
+          setBookMeta(projectConfig.bookMeta);
+        } else {
+          // Create empty template if no book metadata exists
+          const emptyMeta: BookMeta = {
+            title: "",
+            authors: [],
+            language: projectConfig?.language || "es-PE"
+          };
+          setBookMeta(emptyMeta);
+        }
+      } catch (error) {
+        console.error("Failed to load book metadata:", error);
+        setMsg(t("book.loadError"));
+      }
+    };
+
+    loadBookMeta();
+  }, [root, t]);
 
   // Helper for BookMeta updates with proper defaults
   const updateBookMeta = (updates: Partial<BookMeta>) => {
-    const currentMeta: BookMeta = cfg?.bookMeta || {
-      title: "",
-      authors: [],
-      language: cfg?.language || "en-US"
-    };
+    if (!bookMeta) return;
     
-    const newMeta = { ...currentMeta, ...updates };
-    console.log("Updating BookMeta:", { currentMeta, updates, newMeta });
+    const newMeta = { ...bookMeta, ...updates };
+    console.log("Updating BookMeta:", { currentMeta: bookMeta, updates, newMeta });
     
     // Ensure required fields are never empty
     if (newMeta.authors.length === 0 && updates.authors && updates.authors.length > 0) {
       newMeta.authors = updates.authors.filter(author => author.trim() !== "");
     }
     
-    update("bookMeta", newMeta);
+    setBookMeta(newMeta);
   };
 
   const saveAll = useCallback(async () => {
-    if (!root || !cfg) {
-      console.log("Save aborted: missing root or cfg", { root: !!root, cfg: !!cfg });
+    if (!root || !cfg || !bookMeta) {
+      console.log("Save aborted: missing root, cfg, or bookMeta", { root: !!root, cfg: !!cfg, bookMeta: !!bookMeta });
       return;
     }
     
     try {
-      console.log("Saving config with bookMeta:", cfg.bookMeta);
-      console.log("Full config being saved:", cfg);
+      console.log("Saving book metadata:", bookMeta);
       
-      const result = await saveProjectConfig(root, cfg);
+      // Save project config (without book metadata)
+      await saveProjectConfig(root, cfg);
+      
+      // Save book metadata to book.meta.json
+      const result = await window.khipu!.call("fs:write", {
+        projectRoot: root,
+        relPath: "book.meta.json",
+        json: true,
+        content: bookMeta
+      });
+      
       console.log("Save result:", result);
       
       setMsg(t("book.saved"));
@@ -78,13 +117,13 @@ export default function Book() {
       console.error("Failed to save config:", err);
       setMsg(t("book.saveError"));
     }
-  }, [root, cfg, t]);
+  }, [root, cfg, bookMeta, t]);
 
   if (!root) {
     return <div>{t("status.openProject")}</div>;
   }
 
-  if (!cfg) {
+  if (!cfg || !bookMeta) {
     return <div>{t("book.loading")}</div>;
   }
 
@@ -100,7 +139,7 @@ export default function Book() {
               <div>{t("book.title.label")}</div>
               <input
                 style={{ width: "80%" }}
-                value={cfg?.bookMeta?.title || ""}
+                value={bookMeta?.title || ""}
                 onChange={(e) => updateBookMeta({ title: e.target.value })}
               />
             </label>
@@ -108,7 +147,7 @@ export default function Book() {
               <div>{t("book.subtitle.label")}</div>
               <input
                 style={{ width: "80%" }}
-                value={cfg?.bookMeta?.subtitle || ""}
+                value={bookMeta?.subtitle || ""}
                 onChange={(e) => updateBookMeta({ subtitle: e.target.value })}
               />
             </label>
@@ -116,7 +155,7 @@ export default function Book() {
               <div>{t("book.authors.label")}</div>
               <input
                 style={{ width: "80%" }}
-                value={cfg?.bookMeta?.authors?.join(", ") || ""}
+                value={bookMeta?.authors?.join(", ") || ""}
                 placeholder="Author 1, Author 2"
                 onChange={(e) => updateBookMeta({ 
                   authors: e.target.value.split(",").map(a => a.trim()).filter(a => a) 
@@ -127,7 +166,7 @@ export default function Book() {
               <div>{t("book.narrators.label")}</div>
               <input
                 style={{ width: "80%" }}
-                value={cfg?.bookMeta?.narrators?.join(", ") || ""}
+                value={bookMeta?.narrators?.join(", ") || ""}
                 placeholder="Narrator 1, Narrator 2"
                 onChange={(e) => updateBookMeta({ 
                   narrators: e.target.value.split(",").map(n => n.trim()).filter(n => n) 
@@ -137,7 +176,7 @@ export default function Book() {
             <label>
               <div>{t("book.language.label")}</div>
               <input
-                value={cfg?.bookMeta?.language || cfg?.language || ""}
+                value={bookMeta?.language || cfg?.language || ""}
                 onChange={(e) => updateBookMeta({ language: e.target.value })}
               />
             </label>
@@ -146,7 +185,7 @@ export default function Book() {
           <div>
             <ImageSelector
               projectRoot={root}
-              value={cfg?.bookMeta?.coverImage}
+              value={bookMeta?.coverImage}
               onChange={(coverImage) => updateBookMeta({ coverImage })}
             />
           </div>
@@ -162,7 +201,7 @@ export default function Book() {
             <textarea
               style={{ width: "80%" }}
               rows={12}
-              value={cfg?.bookMeta?.description || ""}
+              value={bookMeta?.description || ""}
               onChange={(e) => updateBookMeta({ description: e.target.value })}
             />
           </label>
@@ -170,7 +209,7 @@ export default function Book() {
             <div>{t("book.keywords.label")}</div>
             <input
               style={{ width: "40%" }}
-              value={cfg?.bookMeta?.keywords?.join(", ") || ""}
+              value={bookMeta?.keywords?.join(", ") || ""}
               placeholder="keyword1, keyword2, keyword3"
               onChange={(e) => updateBookMeta({ 
                 keywords: e.target.value.split(",").map(k => k.trim()).filter(k => k) 
@@ -181,7 +220,7 @@ export default function Book() {
             <div>{t("book.categories.label")}</div>
             <input
               style={{ width: "40%" }}
-              value={cfg?.bookMeta?.categories?.join(", ") || ""}
+              value={bookMeta?.categories?.join(", ") || ""}
               placeholder="Fiction / Literary, Suspense"
               onChange={(e) => updateBookMeta({ 
                 categories: e.target.value.split(",").map(c => c.trim()).filter(c => c) 
@@ -199,7 +238,7 @@ export default function Book() {
             <div>{t("book.publisher.label")}</div>
             <input
               style={{ width: "80%" }}
-              value={cfg?.bookMeta?.publisher || ""}
+              value={bookMeta?.publisher || ""}
               onChange={(e) => updateBookMeta({ publisher: e.target.value })}
             />
           </label>
@@ -207,7 +246,7 @@ export default function Book() {
             <div>{t("book.publishingDate.label")}</div>
             <input
               type="date"
-              value={cfg?.bookMeta?.publication_date || ""}
+              value={bookMeta?.publication_date || ""}
               onChange={(e) => updateBookMeta({ publication_date: e.target.value })}
             />
           </label>
@@ -215,7 +254,7 @@ export default function Book() {
             <div>{t("book.isbn.label")}</div>
             <input
               style={{ width: "80%" }}
-              value={cfg?.bookMeta?.isbn || ""}
+              value={bookMeta?.isbn || ""}
               placeholder="978-0-000000-00-0"
               onChange={(e) => updateBookMeta({ isbn: e.target.value })}
             />
@@ -224,7 +263,7 @@ export default function Book() {
             <div>{t("book.sku.label")}</div>
             <input
               style={{ width: "80%" }}
-              value={cfg?.bookMeta?.sku || ""}
+              value={bookMeta?.sku || ""}
               onChange={(e) => updateBookMeta({ sku: e.target.value })}
             />
           </label>
@@ -232,7 +271,7 @@ export default function Book() {
             <div>{t("book.rights.label")}</div>
             <input
               style={{ width: "80%" }}
-              value={cfg?.bookMeta?.rights || ""}
+              value={bookMeta?.rights || ""}
               placeholder="© 2025 Author Name"
               onChange={(e) => updateBookMeta({ rights: e.target.value })}
             />
@@ -248,10 +287,10 @@ export default function Book() {
             <div>{t("book.seriesName.label")}</div>
             <input
               style={{ width: "80%" }}  
-              value={cfg?.bookMeta?.series?.name || ""}
+              value={bookMeta?.series?.name || ""}
               onChange={(e) => updateBookMeta({ 
                 series: { 
-                  ...cfg?.bookMeta?.series, 
+                  ...bookMeta?.series, 
                   name: e.target.value 
                 } 
               })}
@@ -261,10 +300,10 @@ export default function Book() {
             <div>{t("book.seriesNumber.label")}</div>
             <input
               type="number"
-              value={cfg?.bookMeta?.series?.number || ""}
+              value={bookMeta?.series?.number || ""}
               onChange={(e) => updateBookMeta({ 
                 series: { 
-                  ...cfg?.bookMeta?.series, 
+                  ...bookMeta?.series, 
                   number: e.target.value ? parseInt(e.target.value) : null 
                 } 
               })}
@@ -279,7 +318,7 @@ export default function Book() {
         <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <input
             type="checkbox"
-            checked={cfg?.bookMeta?.disclosure_digital_voice || false}
+            checked={bookMeta?.disclosure_digital_voice || false}
             onChange={(e) => updateBookMeta({ 
               disclosure_digital_voice: e.target.checked 
             })}

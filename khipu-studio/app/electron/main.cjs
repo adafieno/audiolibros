@@ -380,6 +380,7 @@ async function pushRecent(projectPath) {
 async function createScaffold(root) {
   await ensureDirs(root, [
     "analysis/chapters_txt",
+    "art",
     "dossier",
     "ssml/plans",
     "ssml/xml",
@@ -389,17 +390,34 @@ async function createScaffold(root) {
     "exports",
   ]);
 
-  // project.khipu.json — minimal & consistent
+  // project.khipu.json — optimized with comprehensive path tracking
   const projectCfg = {
     version: 1,
     language: "es-PE",
-    paths: { bookMeta: "book.meta.json", production: "production.settings.json" },
+    paths: {
+      bookMeta: "book.meta.json",
+      production: "production.settings.json",
+      manuscript: "analysis/chapters_txt",
+      dossier: "dossier",
+      ssml: "ssml/plans",
+      audio: "audio",
+      cache: "cache",
+      exports: "exports",
+      art: "art"
+    },
     planning: { maxKb: 48, llmAttribution: "off" },
     ssml: {},
     tts: { engine: { name: "azure", voice: "es-PE-CamilaNeural" }, cache: true },
     llm: { engine: { name: "openai", model: "gpt-4o" } },
     export: { outputDir: "exports", platforms: { apple: false, google: false, spotify: false } },
     creds: { useAppAzure: false, useAppOpenAI: false },
+    workflow: {
+      project: { complete: false },
+      characters: { complete: false },
+      planning: { complete: false },
+      ssml: { complete: false },
+      audio: { complete: false }
+    }
   };
   await writeJson(path.join(root, "project.khipu.json"), projectCfg);
 
@@ -451,6 +469,23 @@ async function createScaffold(root) {
       const sample = ["Capítulo 1", "", "Texto de ejemplo. Reemplázalo con el capítulo real."].join("\n");
       await fsp.writeFile(path.join(chDir, "ch01.txt"), sample, "utf-8");
     }
+  } catch {}
+
+  // create art directory README
+  const artDir = path.join(root, "art");
+  const artReadme = path.join(artDir, "README.md");
+  try {
+    const artReadmeContent = [
+      "# Cover Art Directory",
+      "",
+      "Place your book cover image here. Requirements:",
+      "- **Format:** JPEG (.jpg)",
+      "- **Dimensions:** 3000×3000 pixels (recommended)",
+      "- **Naming:** Use descriptive names like `cover_3000.jpg`",
+      "",
+      "The cover image path will be automatically added to `book.meta.json` when you select it through the Book page."
+    ].join("\n");
+    await fsp.writeFile(artReadme, artReadmeContent, "utf-8");
   } catch {}
 }
 
