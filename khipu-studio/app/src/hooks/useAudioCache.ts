@@ -100,6 +100,31 @@ export function useAudioCache(): UseAudioCacheReturn {
         let audio: HTMLAudioElement;
         try {
           audio = new Audio(result.audioUrl);
+          // Set consistent volume for all auditions to prevent volume fluctuation
+          audio.volume = 0.8; // Set to 80% to provide consistent experience
+          // Optional: Add volume normalization via gain
+          // This helps ensure consistent volume across different TTS engines
+          if ('webkitAudioContext' in window || 'AudioContext' in window) {
+            try {
+              const AudioContext = (window as Window & typeof globalThis & { 
+                AudioContext?: typeof window.AudioContext;
+                webkitAudioContext?: typeof window.AudioContext;
+              }).AudioContext || (window as Window & typeof globalThis & { 
+                webkitAudioContext?: typeof window.AudioContext;
+              }).webkitAudioContext;
+              if (AudioContext) {
+                const audioContext = new AudioContext();
+                const source = audioContext.createMediaElementSource(audio);
+                const gainNode = audioContext.createGain();
+                gainNode.gain.value = 1.0; // Unity gain, can be adjusted for normalization
+                source.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+              }
+            } catch (webAudioError) {
+              // Web Audio API setup failed, continue with basic volume control
+              console.debug("Web Audio API setup failed, using basic volume control:", webAudioError);
+            }
+          }
         } catch (audioError) {
           console.error("Failed to create Audio element:", audioError);
           setError("Failed to create audio player");

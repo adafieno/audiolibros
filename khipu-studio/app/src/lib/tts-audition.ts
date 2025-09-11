@@ -156,24 +156,57 @@ async function getAzureToken(region: string, key: string, timeout: number = 1000
 }
 
 /**
- * Get audition text for the given locale with intelligent fallback
+ * Get audition text for the given locale with intelligent fallback and project pauses
  */
-function getAuditionText(locale: string, customText?: string): string {
-  if (customText) return customText;
-  
-  // Try exact locale match first
-  if (AUDITION_TEXTS[locale]) {
-    return AUDITION_TEXTS[locale];
+function getAuditionText(locale: string, config: ProjectConfig, customText?: string): string {
+  let text = customText;
+
+  if (!text) {
+    // Try exact locale match first
+    if (AUDITION_TEXTS[locale]) {
+      text = AUDITION_TEXTS[locale];
+    } else {
+      // Try language code fallback (e.g., "es-AR" -> "es")
+      const language = locale.split('-')[0];
+      if (AUDITION_TEXTS[language]) {
+        text = AUDITION_TEXTS[language];
+      } else {
+        // Final fallback
+        text = AUDITION_TEXTS["default"];
+      }
+    }
   }
-  
-  // Try language code fallback (e.g., "es-AR" -> "es")
-  const language = locale.split('-')[0];
-  if (AUDITION_TEXTS[language]) {
-    return AUDITION_TEXTS[language];
+
+  // Apply project pause settings to make auditions more representative
+  if (config.pauses) {
+    const pauses = config.pauses;
+    
+    // Add sentence pauses (replace periods, exclamation marks, question marks)
+    if (pauses.sentenceMs !== undefined) {
+      text = text.replace(/[.!?]+/g, match => {
+        const breakTime = Math.round(pauses.sentenceMs! / 100) / 10; // Convert ms to seconds with 1 decimal
+        return `${match}<break time="${breakTime}s"/>`;
+      });
+    }
+    
+    // Add comma pauses if configured
+    if (pauses.commaMs !== undefined) {
+      text = text.replace(/,/g, () => {
+        const breakTime = Math.round(pauses.commaMs! / 100) / 10; // Convert ms to seconds with 1 decimal
+        return `,<break time="${breakTime}s"/>`;
+      });
+    }
+    
+    // Add colon pauses if configured
+    if (pauses.colonMs !== undefined) {
+      text = text.replace(/:/g, () => {
+        const breakTime = Math.round(pauses.colonMs! / 100) / 10; // Convert ms to seconds with 1 decimal
+        return `:<break time="${breakTime}s"/>`;
+      });
+    }
   }
-  
-  // Final fallback
-  return AUDITION_TEXTS["default"];
+
+  return text;
 }
 
 /**
@@ -549,7 +582,7 @@ export async function generateAudition(options: AuditionOptions): Promise<Auditi
  */
 export async function generateAuditionDirect(options: AuditionOptions): Promise<AuditionResult> {
   const { voice, config } = options;
-  const text = getAuditionText(voice.locale, options.text);
+  const text = getAuditionText(voice.locale, config, options.text);
 
   // Extract prosody options for engines that support them
   const prosodyOptions = {
