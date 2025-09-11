@@ -996,7 +996,8 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       
 
       
-      setMessage(`Chapter ${chapterId} data loaded.`);
+      // Don't show a persistent "data loaded" message - just clear any previous message
+      setMessage("");
     } catch (error) {
       console.warn(`Failed to load chapter ${chapterId} data:`, error);
       setMessage(`Failed to load chapter ${chapterId} data.`);
@@ -1845,28 +1846,6 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
               })}
             </select>
           </div>
-          
-          {selectedChapter && (
-            <div style={{ fontSize: "12px", color: "var(--muted)" }}>
-              {(() => {
-                const status = chapterStatus.get(selectedChapter);
-                if (!status) return "Loading status...";
-                
-                const parts = [];
-                if (status.hasText) parts.push("✅ Text available");
-                else parts.push("❌ No text file");
-                
-                if (status.hasPlan) parts.push("✅ Plan exists");
-                else parts.push("❌ No plan");
-                
-                if (status.isComplete) parts.push("✅ Complete");
-                else if (status.hasPlan) parts.push("⏳ In progress");
-                else parts.push("⭕ Not started");
-                
-                return parts.join(" | ");
-              })()}
-            </div>
-          )}
         </div>
       </div>
 
