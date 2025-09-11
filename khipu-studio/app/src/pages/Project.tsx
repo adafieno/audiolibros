@@ -249,7 +249,7 @@ export default function Project() {
               onChange={(e) => update("llm", { engine: { name: "openai", model: e.target.value } })}
             />
           ) : isAzureOpenAI(llm.engine) ? (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "150px 1fr 200px", gap: 8 }}>
               <input
                 placeholder="Model (gpt-4o)"
                 value={llm.engine.model}
@@ -267,7 +267,7 @@ export default function Project() {
               />
             </div>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 8 }}>
               <input
                 placeholder={t("project.llmModelLocal")}
                 value={llm.engine.model}
@@ -286,7 +286,7 @@ export default function Project() {
         {isOpenAI(llm.engine) && (
           <div style={{ marginTop: 16 }}>
             <h4 style={{ fontSize: "16px", marginBottom: 12 }}>OpenAI Credentials</h4>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 12, alignItems: "start" }}>
               <PasswordField
                 label="OpenAI API Key"
                 value={cfg?.creds?.llm?.openai?.apiKey || ""}
@@ -391,7 +391,7 @@ export default function Project() {
         {isAzureTTS(tts.engine) && (
           <div style={{ marginTop: 16 }}>
             <h4 style={{ fontSize: "16px", marginBottom: 12 }}>Azure TTS Credentials</h4>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "300px 200px", gap: 12, alignItems: "start" }}>
               <PasswordField
                 label="Azure TTS Key"
                 value={cfg?.creds?.tts?.azure?.key || ""}
