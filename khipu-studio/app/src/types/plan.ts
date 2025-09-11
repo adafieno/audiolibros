@@ -5,6 +5,7 @@ export interface Segment {
   end_idx: number;
   delimiter: string;
   text: string;
+  originalText?: string; // Preserve original text for auditions/caching
   voice?: string; // for UI assignment only
 }
 

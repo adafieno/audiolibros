@@ -54,7 +54,15 @@ export function generateCacheKey(options: AuditionOptions): string {
   };
   
   // Create a deterministic string key
-  return btoa(JSON.stringify(key, Object.keys(key).sort()));
+  const cacheKey = btoa(JSON.stringify(key, Object.keys(key).sort()));
+  
+  console.log(`🔑 CACHE KEY GENERATED:`, {
+    voiceId: key.voiceId,
+    text: key.text,
+    cacheKey: cacheKey
+  });
+  
+  return cacheKey;
 }
 
 /**
@@ -109,12 +117,14 @@ class AudioCacheManager {
   async get(cacheKey: string): Promise<string | null> {
     await this.init();
     
+    console.log(`🔍 CACHE GET: "${cacheKey}"`);
+    
     // Check memory cache first for immediate response
     const memoryEntry = this.cache.get(cacheKey);
     if (memoryEntry && memoryEntry.audioUrl) {
       // Update access time
       memoryEntry.lastAccessed = Date.now();
-      console.log("💨 Memory cache hit");
+      console.log("💨 Memory cache hit for:", cacheKey);
       return memoryEntry.audioUrl;
     }
     
@@ -124,7 +134,7 @@ class AudioCacheManager {
         const hashedKey = generateCacheHash(cacheKey);
         const result = await window.khipu.call('audioCache:read', { key: hashedKey });
         if (result.success && result.audioData) {
-          console.log("📁 File system cache hit");
+          console.log("📁 File system cache hit for:", cacheKey);
           
           // Convert base64 audio data to blob URL
           const audioBuffer = Uint8Array.from(atob(result.audioData), c => c.charCodeAt(0));
@@ -139,12 +149,15 @@ class AudioCacheManager {
           });
           
           return audioUrl;
+        } else {
+          console.log("📁 File system cache miss for:", cacheKey);
         }
       } catch (error) {
         console.warn("File system cache read failed:", error);
       }
     }
     
+    console.log("❌ Cache miss for:", cacheKey);
     return null;
   }
 
@@ -248,6 +261,41 @@ class AudioCacheManager {
     } catch (error) {
       console.warn("💾 Background file cache error:", error);
     }
+  }
+
+  /**
+   * Delete a specific cache entry
+   */
+  async delete(key: string): Promise<boolean> {
+    await this.init();
+    
+    console.log(`🗑️ CACHE DELETE REQUESTED: "${key}"`);
+    
+    // Get the entry to clean up its URL
+    const entry = this.cache.get(key);
+    if (entry) {
+      cleanupAudioUrl(entry.audioUrl);
+      console.log(`🗑️ Cleaned up audio URL for: "${key}"`);
+    } else {
+      console.log(`🗑️ No memory entry found for: "${key}"`);
+    }
+    
+    // Delete from memory cache
+    const deleted = this.cache.delete(key);
+    console.log(`🗑️ Memory cache delete result: ${deleted} for: "${key}"`);
+    
+    // Delete from file system cache
+    if (deleted && window.khipu) {
+      const hashedFilename = generateCacheHash(key);
+      try {
+        await window.khipu.call('audioCache:delete', { key: hashedFilename + '.wav' });
+        console.log(`🗑️ File system delete successful: ${key} (${hashedFilename}.wav)`);
+      } catch (error) {
+        console.warn(`Failed to delete file cache for ${key}:`, error);
+      }
+    }
+    
+    return deleted;
   }
 
   /**
@@ -385,6 +433,13 @@ export async function generateCachedAudition(
       error: error instanceof Error ? error.message : "Unknown error in audio generation"
     };
   }
+}
+
+/**
+ * Delete a specific cache entry by key
+ */
+export async function deleteAudioCacheEntry(key: string): Promise<boolean> {
+  return audioCache.delete(key);
 }
 
 /**

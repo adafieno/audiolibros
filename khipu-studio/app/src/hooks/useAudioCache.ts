@@ -1,7 +1,7 @@
 // hooks/useAudioCache.ts
 import { useState, useCallback, useRef } from "react";
 import { generateCachedAudition } from "../lib/audio-cache";
-import { generateAuditionDirect, cleanupAudioUrl, type AuditionOptions, type AuditionResult } from "../lib/tts-audition";
+import { generateAuditionDirect, type AuditionOptions, type AuditionResult } from "../lib/tts-audition";
 
 export interface PlayingAudio {
   audio: HTMLAudioElement;
@@ -37,13 +37,27 @@ export function useAudioCache(): UseAudioCacheReturn {
     if (currentAudioRef.current) {
       const audioElement = currentAudioRef.current.audio;
       
-      // Pause and reset audio first with proper error handling
+      // Pause and reset audio with safe error handling
       try {
-        if (!audioElement.paused) {
-          audioElement.pause();
-        }
-        if (audioElement.currentTime > 0) {
-          audioElement.currentTime = 0;
+        // Check if audioElement is valid
+        if (audioElement && audioElement instanceof HTMLAudioElement) {
+          // Use safer approach without method binding
+          if (!audioElement.paused) {
+            try {
+              audioElement.pause();
+            } catch (pauseError) {
+              console.warn("Could not pause audio:", pauseError);
+            }
+          }
+          
+          // Reset time safely
+          try {
+            if (audioElement.currentTime > 0) {
+              audioElement.currentTime = 0;
+            }
+          } catch (timeError) {
+            console.warn("Could not reset currentTime:", timeError);
+          }
         }
       } catch (e) {
         console.warn("Error stopping audio:", e);
@@ -51,16 +65,15 @@ export function useAudioCache(): UseAudioCacheReturn {
       }
       
       // Clean up event listeners if cleanup function exists
-      if ('cleanup' in audioElement && typeof audioElement.cleanup === 'function') {
-        audioElement.cleanup();
+      try {
+        if ('cleanup' in audioElement && typeof (audioElement as HTMLAudioElement & { cleanup?: () => void }).cleanup === 'function') {
+          (audioElement as HTMLAudioElement & { cleanup: () => void }).cleanup();
+        }
+      } catch (cleanupError) {
+        console.warn("Error during cleanup:", cleanupError);
       }
       
-      // Clean up the URL after a short delay to ensure audio is stopped
-      const audioUrl = audioElement.src;
-      setTimeout(() => {
-        cleanupAudioUrl(audioUrl);
-      }, 100);
-      
+      // Don't cleanup URLs - they may be reused by cache
       currentAudioRef.current = null;
     }
     setPlayingAudio(null);
@@ -112,7 +125,7 @@ export function useAudioCache(): UseAudioCacheReturn {
           setError("Audio playback failed");
           setIsPlaying(false);
           setPlayingAudio(null);
-          cleanupAudioUrl(result.audioUrl!);
+          // Don't cleanup cached URLs on error - they may be needed for retry
         };
         
         const handleCanPlay = () => {
@@ -131,47 +144,44 @@ export function useAudioCache(): UseAudioCacheReturn {
           audio.removeEventListener("canplay", handleCanPlay);
         };
         
-        // Store reference and set up cleanup
+        // Store reference with simple cleanup function attachment
+        currentAudioRef.current = playingAudioData;
+        
+        // Attach cleanup function directly without proxy
         try {
-          currentAudioRef.current = {
-            ...playingAudioData,
-            audio: new Proxy(audio, {
-              get(target, prop) {
-                if (prop === 'cleanup') return cleanup;
-                try {
-                  return target[prop as keyof HTMLAudioElement];
-                } catch (e) {
-                  console.warn(`Error accessing audio property ${String(prop)}:`, e);
-                  return undefined;
-                }
-              }
-            }) as HTMLAudioElement
-          };
-        } catch (proxyError) {
-          console.warn("Error creating audio proxy:", proxyError);
-          // Fallback to direct assignment
-          currentAudioRef.current = playingAudioData;
-          // Manually attach cleanup function
           Object.defineProperty(currentAudioRef.current.audio, 'cleanup', {
             value: cleanup,
             writable: false,
-            enumerable: false
+            enumerable: false,
+            configurable: true
           });
+        } catch (defineError) {
+          console.warn("Could not attach cleanup function:", defineError);
+          // Continue without cleanup attachment - it's not critical
         }
         
         setPlayingAudio(currentAudioRef.current);
         
-        // Start playback with proper binding to avoid "Illegal invocation" error
-        const playPromise = audio.play();
-        if (playPromise) {
-          playPromise.catch((playError) => {
-            console.error("Audio play failed:", playError);
-            setError("Audio playback failed");
-            setIsPlaying(false);
-            setPlayingAudio(null);
-            cleanup();
-            cleanupAudioUrl(result.audioUrl!);
-          });
+        // Start playback with safe error handling
+        try {
+          const playPromise = audio.play();
+          if (playPromise && typeof playPromise.then === 'function') {
+            playPromise.catch((playError) => {
+              console.error("Audio play failed:", playError);
+              setError("Audio playback failed");
+              setIsLoading(false);
+              setIsPlaying(false);
+              setPlayingAudio(null);
+              cleanup();
+            });
+          }
+        } catch (playError) {
+          console.error("Audio play error:", playError);
+          setError("Audio playback failed");
+          setIsLoading(false);
+          setIsPlaying(false);
+          setPlayingAudio(null);
+          cleanup();
         }
         
       } else {

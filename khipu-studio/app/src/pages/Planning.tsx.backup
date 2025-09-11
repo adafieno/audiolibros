@@ -21,44 +21,6 @@ const DEFAULT_CAPS: AzureCaps = {
   overhead: 0.15
 };
 
-// Segment size validation constants
-const SEGMENT_LIMITS = {
-  recommendedWords: 500,
-  recommendedChars: 2800, // ~2,500-2,800 chars
-  maxKB: 48, // Maximum TTS request size including tags
-  estimatedMinutes: 3.3
-};
-
-// Utility functions for segment validation
-function estimateKBSize(text: string): number {
-  // Estimate size including SSML tags overhead
-  const textBytes = new TextEncoder().encode(text).length;
-  const overhead = 0.15; // 15% overhead for SSML tags
-  return (textBytes * (1 + overhead)) / 1024;
-}
-
-function countWords(text: string): number {
-  return text.trim().split(/\s+/).filter(word => word.length > 0).length;
-}
-
-function validateSegmentSize(text: string): { valid: boolean; reason?: string; stats: { chars: number; words: number; kb: number } } {
-  const chars = text.length;
-  const words = countWords(text);
-  const kb = estimateKBSize(text);
-  
-  const stats = { chars, words, kb };
-  
-  if (kb > SEGMENT_LIMITS.maxKB) {
-    return { valid: false, reason: `Segment size (${kb}KB) exceeds maximum limit (${SEGMENT_LIMITS.maxKB}KB)`, stats };
-  }
-  
-  if (chars > SEGMENT_LIMITS.recommendedChars * 1.5) {
-    return { valid: false, reason: `Segment too long (${chars} chars). Recommended: ${SEGMENT_LIMITS.recommendedChars} chars`, stats };
-  }
-  
-  return { valid: true, stats };
-}
-
 interface Chapter {
   id: string;
   title?: string;
@@ -71,143 +33,11 @@ interface ChapterStatus {
   isComplete: boolean;
 }
 
-// Segment operation result type
-interface SegmentOpResult {
-  success: boolean;
-  message?: string;
-  newSegments?: Segment[];
-}
-
-// Segment operations
-function splitSegmentAtPosition(segments: Segment[], segmentId: number, position: number): SegmentOpResult {
-  const segmentIndex = segments.findIndex(seg => seg.segment_id === segmentId);
-  if (segmentIndex === -1) {
-    return { success: false, message: "Segment not found" };
-  }
-
-  const segment = segments[segmentIndex];
-  const text = segment.text;
-
-  if (position <= 0 || position >= text.length) {
-    return { success: false, message: "Invalid split position" };
-  }
-
-  const leftText = text.slice(0, position);
-  const rightText = text.slice(position);
-
-  // Validate both parts would be within limits
-  const leftValidation = validateSegmentSize(leftText);
-  const rightValidation = validateSegmentSize(rightText);
-
-  if (!leftValidation.valid || !rightValidation.valid) {
-    const reason = !leftValidation.valid ? leftValidation.reason : rightValidation.reason;
-    return { success: false, message: `Split would create invalid segment: ${reason}` };
-  }
-
-  // Create new segments with incremented IDs
-  const maxId = Math.max(...segments.map(s => s.segment_id));
-  const leftSegment: Segment = {
-    ...segment,
-    text: leftText,
-    originalText: leftText,
-    end_idx: segment.start_idx + position - 1
-  };
-  
-  const rightSegment: Segment = {
-    ...segment,
-    segment_id: maxId + 1,
-    text: rightText,
-    originalText: rightText,
-    start_idx: segment.start_idx + position,
-    // end_idx remains the same as original segment
-  };
-
-  const newSegments = [
-    ...segments.slice(0, segmentIndex),
-    leftSegment,
-    rightSegment,
-    ...segments.slice(segmentIndex + 1)
-  ];
-
-  return { success: true, newSegments };
-}
-
-function mergeSegments(segments: Segment[], segmentId: number, direction: 'forward' | 'backward'): SegmentOpResult {
-  const segmentIndex = segments.findIndex(seg => seg.segment_id === segmentId);
-  if (segmentIndex === -1) {
-    return { success: false, message: "Segment not found" };
-  }
-
-  const targetIndex = direction === 'forward' ? segmentIndex + 1 : segmentIndex - 1;
-  
-  if (targetIndex < 0 || targetIndex >= segments.length) {
-    return { success: false, message: `No ${direction === 'forward' ? 'next' : 'previous'} segment to merge with` };
-  }
-
-  const currentSegment = segments[segmentIndex];
-  const targetSegment = segments[targetIndex];
-
-  // Determine receiving segment and merging text order
-  const [receivingSegment, mergingSegment] = direction === 'forward' 
-    ? [targetSegment, currentSegment]  // Forward: target receives current
-    : [currentSegment, targetSegment]; // Backward: current receives target
-
-  const mergedText = direction === 'forward'
-    ? `${mergingSegment.text} ${receivingSegment.text}`  // Current + Next
-    : `${receivingSegment.text} ${mergingSegment.text}`; // Current + Previous
-
-  // Validate merged segment size
-  const validation = validateSegmentSize(mergedText);
-  if (!validation.valid) {
-    return { success: false, message: `Merge would create invalid segment: ${validation.reason}` };
-  }
-
-  // Create merged segment
-  const mergedSegment: Segment = {
-    ...receivingSegment,
-    text: mergedText,
-    originalText: mergedText,
-    start_idx: Math.min(currentSegment.start_idx, targetSegment.start_idx),
-    end_idx: Math.max(currentSegment.end_idx, targetSegment.end_idx)
-  };
-
-  // Remove both segments and insert merged one
-  const indicesToRemove = [segmentIndex, targetIndex].sort((a, b) => b - a); // Remove in reverse order
-  const newSegments = [...segments];
-  
-  for (const index of indicesToRemove) {
-    newSegments.splice(index, 1);
-  }
-  
-  // Insert merged segment at the correct position
-  const insertIndex = Math.min(segmentIndex, targetIndex);
-  newSegments.splice(insertIndex, 0, mergedSegment);
-
-  return { success: true, newSegments };
-}
-
-function deleteSegment(segments: Segment[], segmentId: number): SegmentOpResult {
-  const segmentIndex = segments.findIndex(seg => seg.segment_id === segmentId);
-  if (segmentIndex === -1) {
-    return { success: false, message: "Segment not found" };
-  }
-
-  if (segments.length === 1) {
-    return { success: false, message: "Cannot delete the last segment in the chapter" };
-  }
-
-  const newSegments = segments.filter(seg => seg.segment_id !== segmentId);
-  return { success: true, newSegments };
-}
-
 // Editable Preview Component
 interface EditablePreviewProps {
   current: PlanRow;
   segments: Segment[] | null;
   setSegments: (segments: Segment[] | null) => void;
-  setSegmentsWithHistory: (segments: Segment[] | null) => void;
-  undoSegmentOperation: () => void;
-  canUndo: boolean;
   onAudition: (segmentId: number, overrideText?: string, disableCache?: boolean) => void;
   onInvalidateCache?: (segmentId: number, oldText: string) => Promise<void>;
   isAudioLoading: boolean;
@@ -219,9 +49,6 @@ function EditablePreview({
   current,
   segments,
   setSegments,
-  setSegmentsWithHistory,
-  undoSegmentOperation,
-  canUndo,
   onAudition,
   onInvalidateCache,
   isAudioLoading,
@@ -319,66 +146,6 @@ function EditablePreview({
     setCursorPosition(e.target.selectionStart);
   };
 
-  // Segment operations handlers
-  const handleSplitSegment = () => {
-    if (!segments || !originalSegment || !isEditing || cursorPosition <= 0 || cursorPosition >= editedText.length) {
-      return;
-    }
-
-    const result = splitSegmentAtPosition(segments, current.segmentId, cursorPosition);
-    if (result.success && result.newSegments) {
-      setSegmentsWithHistory(result.newSegments);
-      setIsEditing(false);
-      setMessage("Segment split successfully");
-    } else {
-      setMessage(result.message || "Split operation failed");
-    }
-  };
-
-  const handleMergeSegment = (direction: 'forward' | 'backward') => {
-    if (!segments || !originalSegment) return;
-
-    const result = mergeSegments(segments, current.segmentId, direction);
-    if (result.success && result.newSegments) {
-      setSegmentsWithHistory(result.newSegments);
-      if (isEditing) setIsEditing(false);
-      setMessage(`Segment merged ${direction} successfully`);
-    } else {
-      setMessage(result.message || "Merge operation failed");
-    }
-  };
-
-  const handleDeleteSegment = () => {
-    if (!segments || !originalSegment) return;
-
-    if (confirm(`Are you sure you want to delete segment ${current.segmentId}? This action cannot be undone.`)) {
-      const result = deleteSegment(segments, current.segmentId);
-      if (result.success && result.newSegments) {
-        setSegmentsWithHistory(result.newSegments);
-        if (isEditing) setIsEditing(false);
-        setMessage("Segment deleted successfully");
-      } else {
-        setMessage(result.message || "Delete operation failed");
-      }
-    }
-  };
-
-  // Check if operations are available
-  const canMergeForward = segments && segments.findIndex(s => s.segment_id === current.segmentId) < segments.length - 1;
-  const canMergeBackward = segments && segments.findIndex(s => s.segment_id === current.segmentId) > 0;
-  const canSplit = isEditing && cursorPosition > 0 && cursorPosition < editedText.length;
-  const canDelete = segments && segments.length > 1;
-
-  // State for displaying messages (temporary)
-  const [message, setMessage] = useState<string>("");
-  
-  useEffect(() => {
-    if (message) {
-      const timer = setTimeout(() => setMessage(""), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [message]);
-
   // Render text with cursor indicator
   const renderTextWithCursor = (text: string, position: number) => {
     if (!isEditing) {
@@ -394,7 +161,7 @@ function EditablePreview({
         <span 
           style={{
             display: 'inline-block',
-            width: '3px', // Thicker cursor as requested
+            width: '2px',
             height: '1.2em',
             backgroundColor: 'var(--accent)',
             marginLeft: position === 0 ? '0' : '1px',
@@ -414,93 +181,28 @@ function EditablePreview({
         color: "var(--muted)", 
         marginBottom: "8px", 
         display: "flex", 
-        justifyContent: "flex-end", 
-        alignItems: "center"
+        justifyContent: "space-between", 
+        alignItems: "center",
+        gap: "8px"
       }}>
-        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+        <span>Segment: {current.segmentId} | Delimiter: {current.delimiter} | Voice: {current.voice || "unassigned"}</span>
+        <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
           {!isEditing ? (
-            <>
-              <button
-                onClick={handleStartEdit}
-                style={{
-                  padding: "4px 8px",
-                  fontSize: "12px",
-                  border: "1px solid var(--border)",
-                  borderRadius: "4px",
-                  backgroundColor: "var(--background)",
-                  color: "var(--text)",
-                  cursor: "pointer"
-                }}
-                title="Click to edit text (changes save to plan only)"
-              >
-                ✏️ Edit
-              </button>
-              {/* Merge operations when not editing */}
-              <button
-                onClick={() => handleMergeSegment('backward')}
-                disabled={!canMergeBackward}
-                style={{
-                  padding: "4px 8px",
-                  fontSize: "12px",
-                  border: "1px solid var(--border)",
-                  borderRadius: "4px",
-                  backgroundColor: canMergeBackward ? "var(--background)" : "var(--disabled)",
-                  color: canMergeBackward ? "var(--text)" : "var(--muted)",
-                  cursor: canMergeBackward ? "pointer" : "not-allowed"
-                }}
-                title="Merge with previous segment"
-              >
-                ◀ Merge
-              </button>
-              <button
-                onClick={() => handleMergeSegment('forward')}
-                disabled={!canMergeForward}
-                style={{
-                  padding: "4px 8px",
-                  fontSize: "12px",
-                  border: "1px solid var(--border)",
-                  borderRadius: "4px",
-                  backgroundColor: canMergeForward ? "var(--background)" : "var(--disabled)",
-                  color: canMergeForward ? "var(--text)" : "var(--muted)",
-                  cursor: canMergeForward ? "pointer" : "not-allowed"
-                }}
-                title="Merge with next segment"
-              >
-                Merge ▶
-              </button>
-              <button
-                onClick={handleDeleteSegment}
-                disabled={!canDelete}
-                style={{
-                  padding: "4px 8px",
-                  fontSize: "12px",
-                  border: "1px solid var(--border)",
-                  borderRadius: "4px",
-                  backgroundColor: canDelete ? "var(--background)" : "var(--disabled)",
-                  color: canDelete ? "var(--error)" : "var(--muted)",
-                  cursor: canDelete ? "pointer" : "not-allowed"
-                }}
-                title="Delete this segment"
-              >
-                🗑️ Delete
-              </button>
-              <button
-                onClick={undoSegmentOperation}
-                disabled={!canUndo}
-                style={{
-                  padding: "4px 8px",
-                  fontSize: "12px",
-                  border: "1px solid var(--border)",
-                  borderRadius: "4px",
-                  backgroundColor: canUndo ? "var(--background)" : "var(--disabled)",
-                  color: canUndo ? "var(--text)" : "var(--muted)",
-                  cursor: canUndo ? "pointer" : "not-allowed"
-                }}
-                title="Undo last segment operation"
-              >
-                ↶ Undo
-              </button>
-            </>
+            <button
+              onClick={handleStartEdit}
+              style={{
+                padding: "4px 8px",
+                fontSize: "12px",
+                border: "1px solid var(--border)",
+                borderRadius: "4px",
+                backgroundColor: "var(--background)",
+                color: "var(--text)",
+                cursor: "pointer"
+              }}
+              title="Click to edit text (changes save to plan only)"
+            >
+              ✏️ Edit
+            </button>
           ) : (
             <>
               <button
@@ -517,22 +219,6 @@ function EditablePreview({
                 title="Save changes (Ctrl+Enter)"
               >
                 💾 Save
-              </button>
-              <button
-                onClick={handleSplitSegment}
-                disabled={!canSplit}
-                style={{
-                  padding: "4px 8px",
-                  fontSize: "12px",
-                  border: "1px solid var(--border)",
-                  borderRadius: "4px",
-                  backgroundColor: canSplit ? "var(--background)" : "var(--disabled)",
-                  color: canSplit ? "var(--text)" : "var(--muted)",
-                  cursor: canSplit ? "pointer" : "not-allowed"
-                }}
-                title="Split segment at cursor position"
-              >
-                ✂️ Split at cursor
               </button>
               <button
                 onClick={handleCancelEdit}
@@ -580,14 +266,6 @@ function EditablePreview({
         </div>
       </div>
       
-      {/* Separator between toolbar and content */}
-      <div style={{
-        height: "1px",
-        backgroundColor: "var(--border)",
-        margin: "8px 0",
-        opacity: 0.3
-      }} />
-      
       {isEditing ? (
         <textarea
           ref={textareaRef}
@@ -598,7 +276,7 @@ function EditablePreview({
           style={{
             width: "100%",
             minHeight: "120px",
-            fontSize: "16px",
+            fontSize: "14px",
             lineHeight: "1.6",
             color: "var(--text)",
             backgroundColor: "var(--background)",
@@ -616,7 +294,7 @@ function EditablePreview({
           ref={previewRef}
           onClick={handleStartEdit}
           style={{ 
-            fontSize: "16px", 
+            fontSize: "14px", 
             lineHeight: "1.6", 
             color: "var(--text)", 
             whiteSpace: "pre-wrap",
@@ -633,33 +311,6 @@ function EditablePreview({
         </div>
       )}
       
-      {/* Size statistics */}
-      {(() => {
-        const text = isEditing ? editedText : displayText;
-        const validation = validateSegmentSize(text);
-        const stats = validation.stats;
-        const isOverLimit = stats.words > SEGMENT_LIMITS.recommendedWords || 
-                           stats.chars > SEGMENT_LIMITS.recommendedChars * 1.5 || 
-                           stats.kb > SEGMENT_LIMITS.maxKB;
-        return (
-          <div style={{ 
-            fontSize: "11px", 
-            color: isOverLimit ? "var(--error)" : "var(--muted)", 
-            marginTop: "6px",
-            padding: "4px 8px",
-            backgroundColor: "var(--panelBackground)",
-            borderRadius: "3px",
-            display: "flex",
-            gap: "12px"
-          }}>
-            <span>📏 {stats.words}/{SEGMENT_LIMITS.recommendedWords} words</span>
-            <span>🔤 {stats.chars}/{SEGMENT_LIMITS.recommendedChars} chars</span>
-            <span>💾 {stats.kb.toFixed(1)}/{SEGMENT_LIMITS.maxKB}KB</span>
-            {isOverLimit && <span style={{ color: "var(--error)", fontWeight: "bold" }}>⚠️ OVER LIMITS</span>}
-          </div>
-        );
-      })()}
-      
       {isEditing && (
         <div style={{ 
           fontSize: "11px", 
@@ -668,24 +319,9 @@ function EditablePreview({
           fontStyle: "italic"
         }}>
           💡 Changes are saved to the plan only, not to the original manuscript. Use Ctrl+Enter to save, Escape to cancel.
-          <br />
-          ✂️ Position cursor where you want to split, then click "Split at cursor"
         </div>
       )}
 
-      {message && (
-        <div style={{ 
-          fontSize: "12px", 
-          color: message.includes("successfully") ? "var(--success)" : "var(--error)", 
-          marginTop: "8px",
-          padding: "4px 8px",
-          border: `1px solid ${message.includes("successfully") ? "var(--success)" : "var(--error)"}`,
-          borderRadius: "4px",
-          backgroundColor: message.includes("successfully") ? "var(--successBg)" : "var(--errorBg)"
-        }}>
-          {message}
-        </div>
-      )}
 
     </div>
   );
@@ -698,10 +334,6 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
   const [selectedChapter, setSelectedChapter] = useState<string>("");
   const [chapterStatus, setChapterStatus] = useState<Map<string, ChapterStatus>>(new Map());
   const [segments, setSegments] = useState<Segment[] | null>(null);
-  
-  // Undo functionality
-  const [segmentHistory, setSegmentHistory] = useState<Segment[][]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
 
   const [availableCharacters, setAvailableCharacters] = useState<string[]>([]);
   const [projectConfig, setProjectConfig] = useState<ProjectConfig | null>(null);
@@ -729,35 +361,6 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
   const { isPlaying: isAudioPlaying, isLoading: isAudioLoading, playAudition, stopAudio } = useAudioCache();
 
   const gridRef = useRef<HTMLDivElement | null>(null);
-
-  // Undo functionality
-  const saveToHistory = useCallback((oldSegments: Segment[]) => {
-    if (oldSegments) {
-      setSegmentHistory(prev => {
-        const newHistory = prev.slice(0, historyIndex + 1);
-        newHistory.push([...oldSegments]);
-        return newHistory.slice(-50); // Keep last 50 operations
-      });
-      setHistoryIndex(prev => Math.min(prev + 1, 49));
-    }
-  }, [historyIndex]);
-
-  const setSegmentsWithHistory = useCallback((newSegments: Segment[] | null) => {
-    if (newSegments && segments) {
-      saveToHistory(segments); // Save current segments as history before replacing
-    }
-    setSegments(newSegments);
-  }, [segments, saveToHistory]);
-
-  const undoSegmentOperation = useCallback(() => {
-    if (historyIndex >= 0 && segmentHistory[historyIndex]) {
-      setSegments([...segmentHistory[historyIndex]]);
-      setHistoryIndex(prev => prev - 1);
-      setMessage("Undo successful");
-    }
-  }, [historyIndex, segmentHistory]);
-
-  const canUndo = historyIndex >= 0;
 
   // Check status of a specific chapter
   const checkChapterStatus = useCallback(async (chapterId: string): Promise<ChapterStatus> => {
@@ -835,6 +438,8 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
         if (!selectedChapter && chapterList.length > 0) {
           setSelectedChapter(chapterList[0].id);
         }
+        
+        setMessage(`Found ${chapterList.length} chapters. Select a chapter to work with.`);
       } else {
         setMessage("No chapters found in project. Please add chapter files first.");
       }
@@ -1715,8 +1320,8 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
     setAuditioningSegments(prev => new Set(prev).add(segmentId));
 
     try {
-      // Use override text if provided (during editing), otherwise use current text
-      const auditionText = overrideText || segment.text || "No text available";
+      // Use override text if provided (during editing), otherwise use cached original text
+      const auditionText = overrideText || segment.originalText || segment.text || "No text available";
       console.log("🎤 Generating audition with parameters:", {
         segmentId: segmentId,
         voice: voice,
@@ -2145,9 +1750,6 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
                     current={current}
                     segments={segments}
                     setSegments={setSegments}
-                    setSegmentsWithHistory={setSegmentsWithHistory}
-                    undoSegmentOperation={undoSegmentOperation}
-                    canUndo={canUndo}
                     onAudition={handleSegmentAudition}
                     onInvalidateCache={handleCacheInvalidation}
                     isAudioLoading={isAudioLoading}

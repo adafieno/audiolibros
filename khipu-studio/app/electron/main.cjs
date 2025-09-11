@@ -691,6 +691,7 @@ function createWin() {
 
   // ---- IPC: audio cache handlers ----
   ipcMain.handle("audioCache:read", async (_e, { key }) => {
+    console.log("🎵 CACHE READ:", key);
     try {
       const cacheDir = path.join(app.getPath("userData"), "cache", "tts");
       await fsp.mkdir(cacheDir, { recursive: true });
@@ -702,9 +703,14 @@ function createWin() {
       const metadataExists = await fsp.access(cacheFile).then(() => true).catch(() => false);
       const audioExists = await fsp.access(audioFile).then(() => true).catch(() => false);
       
+      console.log(`🎵 CACHE READ ${key}:`, { metadataExists, audioExists });
+      
       if (!metadataExists || !audioExists) {
+        console.log(`🎵 CACHE MISS for ${key}`);
         return { success: false, error: "Cache entry not found" };
       }
+      
+      console.log(`🎵 CACHE HIT for ${key}`);
       
       // Read metadata
       const metadata = JSON.parse(await fsp.readFile(cacheFile, "utf-8"));
@@ -737,6 +743,7 @@ function createWin() {
   });
 
   ipcMain.handle("audioCache:write", async (_e, { key, audioData, metadata }) => {
+    console.log("🎵 CACHE WRITE:", key);
     try {
       const cacheDir = path.join(app.getPath("userData"), "cache", "tts");
       console.log("Creating cache directory:", cacheDir);
@@ -805,6 +812,7 @@ function createWin() {
   });
 
   ipcMain.handle("audioCache:delete", async (_e, { key }) => {
+    console.log("🎵 CACHE DELETE:", key);
     try {
       const cacheDir = path.join(app.getPath("userData"), "cache", "tts");
       const cacheFile = path.join(cacheDir, `${key}.json`);
