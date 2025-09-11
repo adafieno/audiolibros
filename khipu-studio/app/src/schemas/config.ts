@@ -38,7 +38,14 @@ export const projectConfigSchema = z.object({
   language: z.string().default("es-PE"),
   manuscript: z.object({ chapterGlob: z.string().default("analysis/chapters_txt/*.txt") }).optional(),
   planning: z.object({ maxKb: z.number().int().positive().default(48), llmAttribution: z.enum(["on","off"]).default("off") }),
-  ssml: z.object({ rate: z.string().optional(), pitch: z.string().optional(), breaksMs: z.number().int().nonnegative().optional() }),
+  pauses: z.object({ 
+    sentenceMs: z.number().int().nonnegative().default(500),
+    paragraphMs: z.number().int().nonnegative().default(1000),
+    chapterMs: z.number().int().nonnegative().default(3000),
+    commaMs: z.number().int().nonnegative().default(300),
+    colonMs: z.number().int().nonnegative().default(400),
+    semicolonMs: z.number().int().nonnegative().default(350),
+  }).optional(),
   tts: z.object({
     engine: z.union([
       z.object({ name: z.literal("azure"), voice: z.string(), style: z.string().optional(), role: z.string().optional() }),
@@ -58,10 +65,13 @@ export const projectConfigSchema = z.object({
     platforms: z.object({ apple: z.boolean().optional(), google: z.boolean().optional(), spotify: z.boolean().optional() }).default({}),
   }),
   creds: z.object({
-    useAppAzure: z.boolean().optional(),
-    azure: z.object({ key: z.string().optional(), region: z.string().optional() }).optional(),
-    useAppOpenAI: z.boolean().optional(),
-    openai: z.object({ apiKey: z.string().optional(), baseUrl: z.string().optional() }).optional(),
+    tts: z.object({
+      azure: z.object({ key: z.string().optional(), region: z.string().optional() }).optional(),
+    }).optional(),
+    llm: z.object({
+      openai: z.object({ apiKey: z.string().optional(), baseUrl: z.string().optional() }).optional(),
+      azureOpenAI: z.object({ apiKey: z.string().optional(), endpoint: z.string().optional(), apiVersion: z.string().optional() }).optional(),
+    }).optional(),
   }).optional(),
   paths: z.object({
     bookMeta: z.string().default("book.meta.json"),

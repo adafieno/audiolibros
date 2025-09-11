@@ -80,7 +80,7 @@ export function mergeEffective(appCfg: AppConfig, proj: ProjectConfig) {
     tts: proj.tts,
     export: proj.export,
     planning: proj.planning,
-    ssml: proj.ssml,
+    pauses: proj.pauses,
     creds: proj.creds ?? {},
   };
 }

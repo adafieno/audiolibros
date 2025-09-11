@@ -406,11 +406,26 @@ async function createScaffold(root) {
       art: "art"
     },
     planning: { maxKb: 48, llmAttribution: "off" },
-    ssml: {},
+    pauses: {
+      sentenceMs: 500,
+      paragraphMs: 1000,
+      chapterMs: 3000,
+      commaMs: 300,
+      colonMs: 400,
+      semicolonMs: 350
+    },
     tts: { engine: { name: "azure", voice: "es-PE-CamilaNeural" }, cache: true },
     llm: { engine: { name: "openai", model: "gpt-4o" } },
     export: { outputDir: "exports", platforms: { apple: false, google: false, spotify: false } },
-    creds: { useAppAzure: false, useAppOpenAI: false },
+    creds: {
+      tts: {
+        azure: { key: "", region: "" }
+      },
+      llm: {
+        openai: { apiKey: "", baseUrl: "" },
+        azureOpenAI: { apiKey: "", endpoint: "", apiVersion: "" }
+      }
+    },
     workflow: {
       project: { complete: false },
       characters: { complete: false },

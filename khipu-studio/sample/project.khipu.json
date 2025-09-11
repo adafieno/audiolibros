@@ -9,7 +9,14 @@
     "maxKb": 48, 
     "llmAttribution": "off" 
   },
-  "ssml": {},
+  "pauses": {
+    "sentenceMs": 500,
+    "paragraphMs": 1000,
+    "chapterMs": 3000,
+    "commaMs": 300,
+    "colonMs": 400,
+    "semicolonMs": 350
+  },
   "tts": { 
     "engine": { 
       "name": "azure", 
@@ -31,8 +38,13 @@
       "spotify": false 
     } 
   },
-  "creds": { 
-    "useAppAzure": false, 
-    "useAppOpenAI": false 
+  "creds": {
+    "tts": {
+      "azure": { "key": "", "region": "" }
+    },
+    "llm": {
+      "openai": { "apiKey": "", "baseUrl": "" },
+      "azureOpenAI": { "apiKey": "", "endpoint": "", "apiVersion": "" }
+    }
   }
 }

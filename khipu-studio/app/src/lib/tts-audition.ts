@@ -180,23 +180,13 @@ function getAuditionText(locale: string, customText?: string): string {
  * Generate TTS audition for Azure Speech Services (enhanced following Python implementation)
  */
 async function auditAzureVoice(voice: Voice, config: ProjectConfig, text: string, options?: { style?: string; styledegree?: number; rate_pct?: number; pitch_pct?: number }): Promise<AuditionResult> {
-  // Handle both useAppAzure and project-level credentials
-  let credentials: { key?: string; region?: string } | undefined;
-  
-  if (config.creds?.useAppAzure) {
-    // Use app-level credentials - these should be provided via IPC or configuration
-    // For now, return an error as this feature needs to be implemented
-    return { success: false, error: "App-level Azure credentials not implemented yet. Please configure project-level credentials." };
-  } else {
-    // Use project-level credentials
-    credentials = config.creds?.azure;
-  }
+  // Use TTS-specific credentials
+  const credentials = config.creds?.tts?.azure;
   
   if (!credentials?.key || !credentials?.region) {
     console.error("❌ Azure TTS Error: Missing credentials", { 
       hasKey: !!credentials?.key, 
-      hasRegion: !!credentials?.region,
-      useAppAzure: config.creds?.useAppAzure 
+      hasRegion: !!credentials?.region
     });
     return { success: false, error: "Azure credentials not configured in project. Please add Azure key and region in Project settings." };
   }
@@ -344,7 +334,7 @@ async function auditAzureVoice(voice: Voice, config: ProjectConfig, text: string
  * Generate TTS audition for ElevenLabs (enhanced with retry logic)
  */
 async function auditElevenLabsVoice(voice: Voice, config: ProjectConfig, text: string): Promise<AuditionResult> {
-  const credentials = config.creds?.openai; // Reusing OpenAI creds section for ElevenLabs
+  const credentials = config.creds?.llm?.openai; // Reusing OpenAI creds section for ElevenLabs
   if (!credentials?.apiKey) {
     return { success: false, error: "ElevenLabs API key not configured" };
   }
@@ -445,7 +435,7 @@ async function auditElevenLabsVoice(voice: Voice, config: ProjectConfig, text: s
  * Generate TTS audition for OpenAI (enhanced with retry logic)
  */
 async function auditOpenAIVoice(voice: Voice, config: ProjectConfig, text: string): Promise<AuditionResult> {
-  const credentials = config.creds?.openai;
+  const credentials = config.creds?.llm?.openai;
   if (!credentials?.apiKey) {
     return { success: false, error: "OpenAI API key not configured" };
   }

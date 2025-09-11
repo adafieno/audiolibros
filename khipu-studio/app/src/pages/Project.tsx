@@ -11,6 +11,53 @@ import type {
   LlmEngine, TtsEngine,
 } from "../types/config";
 
+// Password field component with visibility toggle
+function PasswordField({ 
+  label, 
+  value, 
+  onChange, 
+  placeholder 
+}: { 
+  label: string; 
+  value: string; 
+  onChange: (value: string) => void; 
+  placeholder?: string; 
+}) {
+  const [showPassword, setShowPassword] = useState(false);
+  
+  return (
+    <label>
+      <div>{label}</div>
+      <div style={{ position: "relative" }}>
+        <input
+          type={showPassword ? "text" : "password"}
+          value={value}
+          placeholder={placeholder}
+          onChange={(e) => onChange(e.target.value)}
+          style={{ paddingRight: "40px" }}
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          style={{
+            position: "absolute",
+            right: "8px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            fontSize: "14px",
+            color: "var(--muted)"
+          }}
+        >
+          {showPassword ? "🙈" : "👁️"}
+        </button>
+      </div>
+    </label>
+  );
+}
+
 export default function Project() {
   const { t } = useTranslation();
   const { root } = useProject();
@@ -103,18 +150,15 @@ export default function Project() {
         <p style={{ fontSize: "14px", color: "var(--muted)", marginBottom: "16px" }}>
           Configure pause durations (in milliseconds) to be inserted in the planning:
         </p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
           <label>
             <div>Sentence Pause</div>
             <input
               type="number"
-              value={cfg?.planning?.pauses?.sentence || 200}
-              onChange={onNumber((n) => update("planning", { 
-                maxKb: 4, // Hardcoded 
-                pauses: { 
-                  ...cfg?.planning?.pauses, 
-                  sentence: n 
-                }
+              value={cfg?.pauses?.sentenceMs || 500}
+              onChange={onNumber((n) => update("pauses", { 
+                ...cfg?.pauses, 
+                sentenceMs: n 
               }))}
             />
           </label>
@@ -122,13 +166,10 @@ export default function Project() {
             <div>Paragraph Pause</div>
             <input
               type="number"
-              value={cfg?.planning?.pauses?.paragraph || 500}
-              onChange={onNumber((n) => update("planning", { 
-                maxKb: 4, // Hardcoded 
-                pauses: { 
-                  ...cfg?.planning?.pauses, 
-                  paragraph: n 
-                }
+              value={cfg?.pauses?.paragraphMs || 1000}
+              onChange={onNumber((n) => update("pauses", { 
+                ...cfg?.pauses, 
+                paragraphMs: n 
               }))}
             />
           </label>
@@ -136,33 +177,45 @@ export default function Project() {
             <div>Chapter Pause</div>
             <input
               type="number"
-              value={cfg?.planning?.pauses?.chapter || 1000}
-              onChange={onNumber((n) => update("planning", { 
-                maxKb: 4, // Hardcoded 
-                pauses: { 
-                  ...cfg?.planning?.pauses, 
-                  chapter: n 
-                }
+              value={cfg?.pauses?.chapterMs || 3000}
+              onChange={onNumber((n) => update("pauses", { 
+                ...cfg?.pauses, 
+                chapterMs: n 
               }))}
             />
           </label>
         </div>
-      </section>
-
-      {/* SSML Settings - Remove rate and pitch (per-segment now), keep general breaks */}
-      <section style={{ marginTop: 24 }}>
-        <h3>{t("project.ssml")}</h3>
-        <p style={{ fontSize: "14px", color: "var(--muted)", marginBottom: "8px" }}>
-          Rate and pitch are configured per segment. General break settings:
-        </p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
           <label>
-            <div>Default Break Duration (ms)</div>
+            <div>Comma Pause</div>
             <input
               type="number"
-              value={cfg?.ssml?.breaksMs || 0}
-              onChange={onNumber((n) => update("ssml", { 
-                breaksMs: n 
+              value={cfg?.pauses?.commaMs || 300}
+              onChange={onNumber((n) => update("pauses", { 
+                ...cfg?.pauses, 
+                commaMs: n 
+              }))}
+            />
+          </label>
+          <label>
+            <div>Colon Pause</div>
+            <input
+              type="number"
+              value={cfg?.pauses?.colonMs || 400}
+              onChange={onNumber((n) => update("pauses", { 
+                ...cfg?.pauses, 
+                colonMs: n 
+              }))}
+            />
+          </label>
+          <label>
+            <div>Semi-colon Pause</div>
+            <input
+              type="number"
+              value={cfg?.pauses?.semicolonMs || 350}
+              onChange={onNumber((n) => update("pauses", { 
+                ...cfg?.pauses, 
+                semicolonMs: n 
               }))}
             />
           </label>
@@ -229,6 +282,63 @@ export default function Project() {
             </div>
           )}
         </div>
+
+        {/* OpenAI Credentials - Show only when OpenAI is selected */}
+        {isOpenAI(llm.engine) && (
+          <div style={{ marginTop: 16 }}>
+            <h4 style={{ fontSize: "16px", marginBottom: 12 }}>OpenAI Credentials</h4>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <PasswordField
+                label="OpenAI API Key"
+                value={cfg?.creds?.llm?.openai?.apiKey || ""}
+                onChange={(value) => update("creds", {
+                  ...cfg?.creds,
+                  llm: { 
+                    ...cfg?.creds?.llm, 
+                    openai: { ...cfg?.creds?.llm?.openai, apiKey: value }
+                  }
+                })}
+                placeholder="sk-..."
+              />
+              <label>
+                <div>OpenAI Base URL (optional)</div>
+                <input
+                  type="text"
+                  value={cfg?.creds?.llm?.openai?.baseUrl || ""}
+                  placeholder="https://api.openai.com/v1"
+                  onChange={(e) => update("creds", {
+                    ...cfg?.creds,
+                    llm: { 
+                      ...cfg?.creds?.llm, 
+                      openai: { ...cfg?.creds?.llm?.openai, baseUrl: e.target.value }
+                    }
+                  })}
+                />
+              </label>
+            </div>
+          </div>
+        )}
+
+        {/* Azure OpenAI Credentials - Show only when Azure OpenAI is selected */}
+        {isAzureOpenAI(llm.engine) && (
+          <div style={{ marginTop: 16 }}>
+            <h4 style={{ fontSize: "16px", marginBottom: 12 }}>Azure OpenAI Credentials</h4>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
+              <PasswordField
+                label="Azure OpenAI API Key"
+                value={cfg?.creds?.llm?.azureOpenAI?.apiKey || ""}
+                onChange={(value) => update("creds", {
+                  ...cfg?.creds,
+                  llm: { 
+                    ...cfg?.creds?.llm, 
+                    azureOpenAI: { ...cfg?.creds?.llm?.azureOpenAI, apiKey: value }
+                  }
+                })}
+                placeholder="Enter Azure OpenAI API key"
+              />
+            </div>
+          </div>
+        )}
       </section>
 
       {/* TTS Engine */}
@@ -277,136 +387,42 @@ export default function Project() {
             TTS caching is always enabled for optimal performance.
           </div>
         </div>
-      </section>
-
-      {/* TTS Credentials */}
-      <section style={{ marginTop: 24 }}>
-        <h3>TTS Service Credentials</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          <label>
-            <input
-              type="checkbox"
-              checked={cfg?.creds?.tts?.useAppAzure || false}
-              onChange={(e) => update("creds", {
-                ...cfg.creds,
-                tts: { ...cfg.creds?.tts, useAppAzure: e.target.checked }
-              })}
-            />
-            <span style={{ marginLeft: 8 }}>Use application Azure credentials</span>
-          </label>
-          <div></div>
-          {!cfg?.creds?.tts?.useAppAzure && (
-            <>
-              <label>
-                <div>Azure TTS Key</div>
-                <input
-                  type="text"
-                  value={cfg.creds?.tts?.azure?.key ?? ""}
-                  onChange={e => update("creds", {
-                    ...cfg.creds,
-                    tts: { 
-                      ...cfg.creds?.tts, 
-                      azure: { ...cfg.creds?.tts?.azure, key: e.target.value }
-                    }
-                  })}
-                />
-              </label>
+        
+        {/* Azure TTS Credentials - Show only when Azure is selected */}
+        {isAzureTTS(tts.engine) && (
+          <div style={{ marginTop: 16 }}>
+            <h4 style={{ fontSize: "16px", marginBottom: 12 }}>Azure TTS Credentials</h4>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <PasswordField
+                label="Azure TTS Key"
+                value={cfg?.creds?.tts?.azure?.key || ""}
+                onChange={(value) => update("creds", {
+                  ...cfg?.creds,
+                  tts: { 
+                    ...cfg?.creds?.tts, 
+                    azure: { ...cfg?.creds?.tts?.azure, key: value }
+                  }
+                })}
+                placeholder="Enter Azure TTS API key"
+              />
               <label>
                 <div>Azure Region</div>
                 <input
                   type="text"
-                  value={cfg.creds?.tts?.azure?.region ?? ""}
-                  onChange={e => update("creds", {
-                    ...cfg.creds,
+                  value={cfg?.creds?.tts?.azure?.region || ""}
+                  placeholder="e.g., eastus"
+                  onChange={(e) => update("creds", {
+                    ...cfg?.creds,
                     tts: { 
-                      ...cfg.creds?.tts, 
-                      azure: { ...cfg.creds?.tts?.azure, region: e.target.value }
+                      ...cfg?.creds?.tts, 
+                      azure: { ...cfg?.creds?.tts?.azure, region: e.target.value }
                     }
                   })}
                 />
               </label>
-            </>
-          )}
-        </div>
-      </section>
-
-      {/* LLM Credentials */}
-      <section style={{ marginTop: 24 }}>
-        <h3>LLM Service Credentials</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          <label>
-            <input
-              type="checkbox"
-              checked={cfg?.creds?.llm?.useAppOpenAI || false}
-              onChange={(e) => update("creds", {
-                ...cfg.creds,
-                llm: { ...cfg.creds?.llm, useAppOpenAI: e.target.checked }
-              })}
-            />
-            <span style={{ marginLeft: 8 }}>Use application OpenAI credentials</span>
-          </label>
-          <div></div>
-          {!cfg?.creds?.llm?.useAppOpenAI && (
-            <>
-              <label>
-                <div>OpenAI API Key</div>
-                <input
-                  type="text"
-                  value={cfg.creds?.llm?.openai?.apiKey ?? ""}
-                  onChange={e => update("creds", {
-                    ...cfg.creds,
-                    llm: { 
-                      ...cfg.creds?.llm, 
-                      openai: { ...cfg.creds?.llm?.openai, apiKey: e.target.value }
-                    }
-                  })}
-                />
-              </label>
-              <label>
-                <div>OpenAI Base URL</div>
-                <input
-                  type="text"
-                  value={cfg.creds?.llm?.openai?.baseUrl ?? ""}
-                  onChange={e => update("creds", {
-                    ...cfg.creds,
-                    llm: { 
-                      ...cfg.creds?.llm, 
-                      openai: { ...cfg.creds?.llm?.openai, baseUrl: e.target.value }
-                    }
-                  })}
-                />
-              </label>
-              <label>
-                <div>Azure OpenAI API Key</div>
-                <input
-                  type="text"
-                  value={cfg.creds?.llm?.azureOpenAI?.apiKey ?? ""}
-                  onChange={e => update("creds", {
-                    ...cfg.creds,
-                    llm: { 
-                      ...cfg.creds?.llm, 
-                      azureOpenAI: { ...cfg.creds?.llm?.azureOpenAI, apiKey: e.target.value }
-                    }
-                  })}
-                />
-              </label>
-              <label>
-                <div>Azure OpenAI Endpoint</div>
-                <input
-                  type="text"
-                  value={cfg.creds?.llm?.azureOpenAI?.endpoint ?? ""}
-                  onChange={e => update("creds", {
-                    ...cfg.creds,
-                    llm: { 
-                      ...cfg.creds?.llm, 
-                      azureOpenAI: { ...cfg.creds?.llm?.azureOpenAI, endpoint: e.target.value }
-                    }
-                  })}
-                />
-              </label>
-            </>
-          )}
-        </div>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Packaging Settings */}

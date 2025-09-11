@@ -30,19 +30,24 @@ export interface ProjectConfig {
   language: string;                  // UI/locale for the project (e.g., "es-PE")
   bookMeta?: BookMeta;               // Book metadata information
   manuscript?: { chapterGlob: string }; // usually analysis/chapters_txt/*.txt
-  planning: { maxKb: number; pauses?: { sentence?: number; paragraph?: number; chapter?: number; } };
-  ssml: { breaksMs?: number };
+  planning: { maxKb: number; llmAttribution: "on" | "off" };
+  pauses?: { 
+    sentenceMs?: number; 
+    paragraphMs?: number; 
+    chapterMs?: number; 
+    commaMs?: number; 
+    colonMs?: number; 
+    semicolonMs?: number; 
+  };
   tts: { engine: TtsEngine; cache: boolean };
   llm: { engine: LlmEngine };
   export: { outputDir: string; platforms: { apple?: boolean; google?: boolean; spotify?: boolean } };
   // Credentials organized by service
   creds?: {
     tts?: {
-      useAppAzure?: boolean;
       azure?: { key?: string; region?: string };
     };
     llm?: {
-      useAppOpenAI?: boolean;
       openai?: { apiKey?: string; baseUrl?: string };
       azureOpenAI?: { apiKey?: string; endpoint?: string; apiVersion?: string };
     };
@@ -78,7 +83,6 @@ export interface BookMeta {
   isbn?: string;
   coverImage?: string; // Path to cover image (3000x3000 JPEG)
   disclosure_digital_voice?: boolean;
-  llmAttribution?: "on" | "off"; // Moved from planning settings
 }
 
 export interface ProductionSettings {

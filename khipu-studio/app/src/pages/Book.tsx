@@ -326,18 +326,6 @@ export default function Book() {
             />
             <span>{t("book.hasDigitalVoices.label")}</span>
           </label>
-          <label>
-            <div>LLM Attribution</div>
-            <select
-              value={bookMeta?.llmAttribution || "on"}
-              onChange={(e) => updateBookMeta({ 
-                llmAttribution: e.target.value as "on" | "off" 
-              })}
-            >
-              <option value="on">Include attribution</option>
-              <option value="off">No attribution</option>
-            </select>
-          </label>
         </div>
       </section>
 
