@@ -78,15 +78,23 @@ export function groupVoicesByEngine(voices: Voice[]): Record<string, Voice[]> {
  */
 export async function bootstrapVoiceInventory(projectPath: string): Promise<void> {
   try {
-    // Load default voice inventory from app data
-    const defaultInventoryModule = await import('../data/default-voice-inventory.json')
-    const defaultInventory = defaultInventoryModule.default as VoiceInventory
+    // Load comprehensive voice inventory from app data
+    const comprehensiveInventoryModule = await import('../data/comprehensive-azure-voices.json')
+    const comprehensiveInventory = comprehensiveInventoryModule.default as VoiceInventory
     
-    // Save to project directory
-    await saveVoiceInventory(projectPath, defaultInventory)
+    // Save comprehensive inventory to project directory
+    await saveVoiceInventory(projectPath, comprehensiveInventory)
   } catch (error) {
-    console.error('Failed to bootstrap voice inventory:', error)
-    // Create empty inventory as fallback
-    await saveVoiceInventory(projectPath, { voices: [] })
+    console.error('Failed to bootstrap comprehensive voice inventory, falling back to default:', error)
+    try {
+      // Fallback to original default inventory
+      const defaultInventoryModule = await import('../data/default-voice-inventory.json')
+      const defaultInventory = defaultInventoryModule.default as VoiceInventory
+      await saveVoiceInventory(projectPath, defaultInventory)
+    } catch (fallbackError) {
+      console.error('Failed to load fallback inventory:', fallbackError)
+      // Create empty inventory as last resort
+      await saveVoiceInventory(projectPath, { voices: [] })
+    }
   }
 }

@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useProject } from "../store/project";
 import { loadProjectConfig } from "../lib/config";
-import { loadVoiceInventory, saveVoiceInventory, filterVoicesForProject } from "../lib/voice";
+import { loadVoiceInventory, saveVoiceInventory } from "../lib/voice";
+import { 
+  getAvailableLanguages,
+  getLanguageFromLocale
+} from "../lib/voice-enhanced";
 import { useAudioCache } from "../hooks/useAudioCache";
 import type { Voice, VoiceInventory } from "../types/voice";
 import type { ProjectConfig } from "../types/config";
@@ -13,6 +17,7 @@ export default function CastingPage() {
   const [config, setConfig] = useState<ProjectConfig | null>(null);
   const [inventory, setInventory] = useState<VoiceInventory | null>(null);
   const [selectedVoices, setSelectedVoices] = useState<Set<string>>(new Set());
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [auditioningVoices, setAuditioningVoices] = useState<Set<string>>(new Set());
@@ -35,6 +40,12 @@ export default function CastingPage() {
         
         setConfig(projectConfig);
         setInventory(voiceInventory);
+        
+        // Initialize selected languages with primary language
+        if (projectConfig?.language) {
+          const primaryLang = getLanguageFromLocale(projectConfig.language);
+          setSelectedLanguages([primaryLang]);
+        }
         
         // Load previously selected voices
         if (voiceInventory?.selectedVoiceIds) {
@@ -183,40 +194,103 @@ export default function CastingPage() {
     return <div>{t("casting.loadError")}</div>;
   }
 
-  // Get the project's TTS engine and locale
+  // Get the project's TTS engine
   const projectEngine = config.tts.engine.name;
-  const projectLocale = config.language;
 
-  // Filter voices to only show those compatible with project settings
-  const availableVoices = filterVoicesForProject(inventory.voices, projectEngine, projectLocale);
+  // Filter voices to show all voices from selected languages
+  const availableVoices = inventory.voices.filter(voice => {
+    if (voice.engine !== projectEngine) return false;
+    const voiceLanguage = getLanguageFromLocale(voice.locale);
+    return selectedLanguages.includes(voiceLanguage);
+  });
+
+  // Get available languages for the language selector (from all voices with this engine)
+  const availableLanguageOptions = getAvailableLanguages(inventory.voices.filter(v => v.engine === projectEngine));
+
+  // Create language name mapping
+  const getLanguageName = (langCode: string): string => {
+    const languageNames: { [key: string]: string } = {
+      'ar': 'Arabic',
+      'bg': 'Bulgarian', 
+      'ca': 'Catalan',
+      'cs': 'Czech',
+      'da': 'Danish',
+      'de': 'German',
+      'el': 'Greek', 
+      'en': 'English',
+      'es': 'Spanish',
+      'et': 'Estonian',
+      'eu': 'Basque',
+      'fi': 'Finnish',
+      'fr': 'French',
+      'gl': 'Galician',
+      'he': 'Hebrew',
+      'hi': 'Hindi',
+      'hr': 'Croatian',
+      'hu': 'Hungarian',
+      'id': 'Indonesian',
+      'it': 'Italian',
+      'ja': 'Japanese',
+      'ko': 'Korean',
+      'lt': 'Lithuanian',
+      'lv': 'Latvian',
+      'mt': 'Maltese',
+      'nb': 'Norwegian',
+      'nl': 'Dutch',
+      'pl': 'Polish',
+      'pt': 'Portuguese',
+      'ro': 'Romanian',
+      'ru': 'Russian',
+      'sk': 'Slovak',
+      'sl': 'Slovenian',
+      'sv': 'Swedish',
+      'th': 'Thai',
+      'tr': 'Turkish',
+      'uk': 'Ukrainian',
+      'vi': 'Vietnamese',
+      'zh': 'Chinese'
+    };
+    return languageNames[langCode] || langCode.toUpperCase();
+  };
 
   return (
     <div style={{ padding: "2px", maxWidth: "90%" }}>
       <h2>{t("casting.title")}</h2>
       <p>{t("casting.description")}</p>
-      {/* Current Engine Display */}
-      <section style={{ marginBottom: "24px" }}>
-        <h3>{t("casting.currentEngine")}</h3>
-          <p>{t("casting.engineDescription")}</p>
-        
-        <div style={{ 
-          padding: "12px 16px",
-          borderRadius: "6px",
-          border: "2px solid #3b82f6",
-          backgroundColor: "#1e40af",
-          color: "white",
-          display: "inline-block",
-          fontWeight: "500"
-        }}>
-          {t(`casting.engine.${projectEngine}`)} - {availableVoices.length} {t("casting.voicesAvailable")}
-        </div>
-      </section>
 
       {/* Voice Selection */}
       <section>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
           <h3>{t("casting.voicesTitle")} ({availableVoices.length})</h3>
-          <div style={{ display: "flex", gap: "8px" }}>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            {/* Language Selector */}
+            <select
+              value=""
+              onChange={(e) => {
+                if (e.target.value && !selectedLanguages.includes(e.target.value)) {
+                  setSelectedLanguages([...selectedLanguages, e.target.value]);
+                }
+                e.target.value = ""; // Reset dropdown
+              }}
+              style={{
+                padding: "6px 12px",
+                border: "1px solid var(--border)",
+                borderRadius: "4px",
+                backgroundColor: "var(--input)",
+                color: "var(--text)",
+                fontSize: "14px"
+              }}
+            >
+              <option value="">+ Add Language</option>
+              {availableLanguageOptions
+                .filter(lang => !selectedLanguages.includes(lang))
+                .map(lang => (
+                  <option key={lang} value={lang}>
+                    {getLanguageName(lang)}
+                  </option>
+                ))}
+            </select>
+            
             <button
               onClick={() => handleSelectAll(availableVoices)}
               style={{ padding: "6px 12px", fontSize: "14px" }}
@@ -245,6 +319,45 @@ export default function CastingPage() {
             </button>
           </div>
         </div>
+
+        {/* Language Filter Tags */}
+        {selectedLanguages.length > 0 && (
+          <div style={{ marginBottom: "16px", display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
+            <span style={{ fontSize: "14px", color: "var(--muted)" }}>Languages:</span>
+            {selectedLanguages.map(lang => (
+              <span
+                key={lang}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "4px 8px",
+                  backgroundColor: "var(--accent)",
+                  color: "var(--accent-text)",
+                  borderRadius: "4px",
+                  fontSize: "12px"
+                }}
+              >
+                {getLanguageName(lang)}
+                {selectedLanguages.length > 1 && (
+                  <button
+                    onClick={() => setSelectedLanguages(selectedLanguages.filter(l => l !== lang))}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "var(--accent-text)",
+                      cursor: "pointer",
+                      fontSize: "14px",
+                      padding: "0"
+                    }}
+                  >
+                    ×
+                  </button>
+                )}
+              </span>
+            ))}
+          </div>
+        )}
 
         {availableVoices.length === 0 ? (
           <p style={{ color: "#6b7280", fontStyle: "italic" }}>
