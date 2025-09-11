@@ -56,8 +56,8 @@ export function AppShell(props: { title?: string; pageName?: string; projectName
     if (!root) return "";
     
     const steps: { step: WorkflowStep; labelKey: string }[] = [
-      { step: "project", labelKey: "nav.project" },
       { step: "project", labelKey: "nav.book" },
+      { step: "project", labelKey: "nav.project" },
       { step: "manuscript", labelKey: "nav.manuscript" },
       { step: "casting", labelKey: "nav.casting" },
       { step: "characters", labelKey: "nav.characters" },
