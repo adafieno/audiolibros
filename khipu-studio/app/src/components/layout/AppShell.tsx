@@ -18,8 +18,8 @@ const homeRoute: RouteItem = { to: "/", key: "nav.home", icon: "🏠", exact: tr
 const settingsRoute: RouteItem = { to: "/settings", key: "nav.settings", icon: "⚙️" };
 
 const projectRoutes: RouteItem[] = [
-  { to: "/project",    key: "nav.project",    icon: "📄", workflowStep: "project" },
-  { to: "/book",       key: "nav.book",       icon: "📖", workflowStep: "project" },
+  { to: "/book",       key: "nav.book",       icon: "�", workflowStep: "project" },
+  { to: "/project",    key: "nav.project",    icon: "�", workflowStep: "project" },
   { to: "/manuscript", key: "nav.manuscript", icon: "✍️", workflowStep: "manuscript" },
   { to: "/casting",    key: "nav.casting",    icon: "🗣️", workflowStep: "casting" },
   { to: "/characters", key: "nav.characters", icon: "🎭", workflowStep: "characters" },
