@@ -193,7 +193,7 @@ export default function Home() {
     if (!picked) return;
     await window.khipu!.call("project:open", { path: picked });
     setRoot(picked);
-    nav("/project", { replace: true });
+    nav("/book", { replace: true });
   }
 
   async function browseParent() {
@@ -230,7 +230,7 @@ export default function Home() {
     setRoot(res.path);
     setProjName("");
     setMsg(t("home.createSuccess"));
-    nav("/project", { replace: true });
+    nav("/book", { replace: true });
   }
 
   const disabledCreate = useMemo(() => !parentDir || !projName.trim(), [parentDir, projName]);
@@ -298,7 +298,7 @@ export default function Home() {
                   onClick={async () => {
                     await window.khipu!.call("project:open", { path: r.path });
                     setRoot(r.path);
-                    nav("/project", { replace: true });
+                    nav("/book", { replace: true });
                   }}
                 >
                   <div style={{ display: "flex", gap: "12px", marginBottom: "2px" }}>
@@ -363,7 +363,7 @@ export default function Home() {
                         e.stopPropagation();
                         await window.khipu!.call("project:open", { path: r.path });
                         setRoot(r.path);
-                        nav("/project", { replace: true });
+                        nav("/book", { replace: true });
                       }}
                       style={{
                         padding: "6px 12px",

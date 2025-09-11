@@ -34,21 +34,28 @@ function PasswordField({
           value={value}
           placeholder={placeholder}
           onChange={(e) => onChange(e.target.value)}
-          style={{ paddingRight: "40px" }}
+          style={{ paddingRight: "32px" }}
         />
         <button
           type="button"
           onClick={() => setShowPassword(!showPassword)}
           style={{
             position: "absolute",
-            right: "8px",
+            right: "4px",
             top: "50%",
             transform: "translateY(-50%)",
             background: "none",
             border: "none",
             cursor: "pointer",
-            fontSize: "14px",
-            color: "var(--muted)"
+            fontSize: "16px",
+            color: "var(--muted)",
+            padding: "2px",
+            borderRadius: "2px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "24px",
+            height: "24px"
           }}
         >
           {showPassword ? "🙈" : "👁️"}
@@ -136,14 +143,6 @@ export default function Project() {
     <div>
       <h2>{t("project.title")}</h2>
       
-      {/* Manuscript Settings - Remove chapter pattern */}
-      <section style={{ marginTop: 24 }}>
-        <h3>{t("project.manuscript")}</h3>
-        <p style={{ fontSize: "14px", color: "var(--muted)", marginBottom: "8px" }}>
-          Chapter files are automatically detected from: analysis/chapters_txt/*.txt
-        </p>
-      </section>
-
       {/* Planning - Remove max KB and add pauses */}
       <section style={{ marginTop: 24 }}>
         <h3>{t("project.planning")}</h3>
