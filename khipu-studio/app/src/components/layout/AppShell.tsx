@@ -26,7 +26,7 @@ const projectRoutes: RouteItem[] = [
   { to: "/planning",   key: "nav.planning",   icon: "🗃️", workflowStep: "planning" },
   { to: "/ssml",       key: "nav.ssml",       icon: "🏷️", workflowStep: "ssml" },
   { to: "/voice",      key: "nav.voice",      icon: "🎙️", workflowStep: "voice" },
-  { to: "/export",     key: "nav.export",     icon: "📦", workflowStep: "export" },
+  { to: "/packaging",  key: "nav.packaging",  icon: "📦", workflowStep: "export" },
 ];
 
 export function AppShell(props: { title?: string; pageName?: string; projectName?: string; status?: string; children: ReactNode }) {

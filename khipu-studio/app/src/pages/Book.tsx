@@ -315,16 +315,30 @@ export default function Book() {
       {/* Digital Voice Disclosure */}
       <section style={{ marginTop: 24 }}>
         <h3>{t("book.disclosure")}</h3>
-        <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <input
-            type="checkbox"
-            checked={bookMeta?.disclosure_digital_voice || false}
-            onChange={(e) => updateBookMeta({ 
-              disclosure_digital_voice: e.target.checked 
-            })}
-          />
-          <span>{t("book.hasDigitalVoices.label")}</span>
-        </label>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <input
+              type="checkbox"
+              checked={bookMeta?.disclosure_digital_voice || false}
+              onChange={(e) => updateBookMeta({ 
+                disclosure_digital_voice: e.target.checked 
+              })}
+            />
+            <span>{t("book.hasDigitalVoices.label")}</span>
+          </label>
+          <label>
+            <div>LLM Attribution</div>
+            <select
+              value={bookMeta?.llmAttribution || "on"}
+              onChange={(e) => updateBookMeta({ 
+                llmAttribution: e.target.value as "on" | "off" 
+              })}
+            >
+              <option value="on">Include attribution</option>
+              <option value="off">No attribution</option>
+            </select>
+          </label>
+        </div>
       </section>
 
       <div style={{ marginTop: 24, display: "flex", gap: 12, alignItems: "center" }}>

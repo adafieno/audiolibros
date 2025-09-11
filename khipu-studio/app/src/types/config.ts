@@ -22,6 +22,7 @@ export type TtsEngine =
 
 export type LlmEngine = 
   | { name: "openai"; model: string; baseUrl?: string }
+  | { name: "azure-openai"; model: string; endpoint: string; apiVersion?: string }
   | { name: "local"; model: string; endpoint: string };
 
 export interface ProjectConfig {
@@ -29,18 +30,22 @@ export interface ProjectConfig {
   language: string;                  // UI/locale for the project (e.g., "es-PE")
   bookMeta?: BookMeta;               // Book metadata information
   manuscript?: { chapterGlob: string }; // usually analysis/chapters_txt/*.txt
-  planning: { maxKb: number; llmAttribution: "on" | "off" };
-  ssml: { rate?: string; pitch?: string; breaksMs?: number };
+  planning: { maxKb: number; pauses?: { sentence?: number; paragraph?: number; chapter?: number; } };
+  ssml: { breaksMs?: number };
   tts: { engine: TtsEngine; cache: boolean };
   llm: { engine: LlmEngine };
   export: { outputDir: string; platforms: { apple?: boolean; google?: boolean; spotify?: boolean } };
-  // Link to app creds (safe default), optional per-project overrides:
+  // Credentials organized by service
   creds?: {
-    useAppAzure?: boolean;
-    azure?: { key?: string; region?: string };         // only if not using app creds
-    useAppOpenAI?: boolean;
-    openai?: { apiKey?: string; baseUrl?: string }; 
-    paths?: { bookMeta?: string; production?: string };    // only if not using app creds
+    tts?: {
+      useAppAzure?: boolean;
+      azure?: { key?: string; region?: string };
+    };
+    llm?: {
+      useAppOpenAI?: boolean;
+      openai?: { apiKey?: string; baseUrl?: string };
+      azureOpenAI?: { apiKey?: string; endpoint?: string; apiVersion?: string };
+    };
   };
   // Workflow completion tracking
   workflow?: {
@@ -73,6 +78,7 @@ export interface BookMeta {
   isbn?: string;
   coverImage?: string; // Path to cover image (3000x3000 JPEG)
   disclosure_digital_voice?: boolean;
+  llmAttribution?: "on" | "off"; // Moved from planning settings
 }
 
 export interface ProductionSettings {

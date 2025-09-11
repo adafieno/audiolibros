@@ -74,6 +74,8 @@ export default function Project() {
   // Type guard functions
   const isOpenAI = (engine: LlmEngine): engine is Extract<LlmEngine, { name: "openai" }> => 
     engine.name === "openai";
+  const isAzureOpenAI = (engine: LlmEngine): engine is Extract<LlmEngine, { name: "azure-openai" }> => 
+    engine.name === "azure-openai";
   const isLocalLLM = (engine: LlmEngine): engine is Extract<LlmEngine, { name: "local" }> => 
     engine.name === "local";
   const isAzureTTS = (engine: TtsEngine): engine is Extract<TtsEngine, { name: "azure" }> => 
@@ -86,97 +88,80 @@ export default function Project() {
   return (
     <div>
       <h2>{t("project.title")}</h2>
-      {/* Project Language */}
-      <section style={{ marginTop: 24 }}>
-        <h3>{t("project.general")}</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          <label>
-            <div>{t("project.language")}</div>
-            <input
-              value={cfg?.language || ""}
-              onChange={(e) => update("language", e.target.value)}
-            />
-          </label>
-        </div>
-      </section>
-
-      {/* Manuscript Settings */}
+      
+      {/* Manuscript Settings - Remove chapter pattern */}
       <section style={{ marginTop: 24 }}>
         <h3>{t("project.manuscript")}</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
-          <label>
-            <div>{t("project.chapterGlob")}</div>
-            <input
-              value={cfg?.manuscript?.chapterGlob || "analysis/chapters_txt/*.txt"}
-              placeholder="analysis/chapters_txt/*.txt"
-              onChange={(e) => update("manuscript", { chapterGlob: e.target.value })}
-            />
-          </label>
-        </div>
+        <p style={{ fontSize: "14px", color: "var(--muted)", marginBottom: "8px" }}>
+          Chapter files are automatically detected from: analysis/chapters_txt/*.txt
+        </p>
       </section>
 
-      {/* Planning */}
+      {/* Planning - Remove max KB and add pauses */}
       <section style={{ marginTop: 24 }}>
         <h3>{t("project.planning")}</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        <p style={{ fontSize: "14px", color: "var(--muted)", marginBottom: "16px" }}>
+          Configure pause durations (in milliseconds) to be inserted in the planning:
+        </p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
           <label>
-            <div>{t("project.maxKb")}</div>
+            <div>Sentence Pause</div>
             <input
               type="number"
-              value={cfg?.planning?.maxKb || 4}
+              value={cfg?.planning?.pauses?.sentence || 200}
               onChange={onNumber((n) => update("planning", { 
-                maxKb: n, 
-                llmAttribution: cfg?.planning?.llmAttribution || "on" 
+                maxKb: 4, // Hardcoded 
+                pauses: { 
+                  ...cfg?.planning?.pauses, 
+                  sentence: n 
+                }
               }))}
             />
           </label>
           <label>
-            <div>{t("project.llmAttribution")}</div>
-            <select
-              value={cfg?.planning?.llmAttribution || "on"}
-              onChange={(e) => update("planning", { 
-                maxKb: cfg?.planning?.maxKb || 4, 
-                llmAttribution: e.target.value as "on" | "off" 
-              })}
-            >
-              <option value="on">{t("project.attributionOn")}</option>
-              <option value="off">{t("project.attributionOff")}</option>
-            </select>
+            <div>Paragraph Pause</div>
+            <input
+              type="number"
+              value={cfg?.planning?.pauses?.paragraph || 500}
+              onChange={onNumber((n) => update("planning", { 
+                maxKb: 4, // Hardcoded 
+                pauses: { 
+                  ...cfg?.planning?.pauses, 
+                  paragraph: n 
+                }
+              }))}
+            />
+          </label>
+          <label>
+            <div>Chapter Pause</div>
+            <input
+              type="number"
+              value={cfg?.planning?.pauses?.chapter || 1000}
+              onChange={onNumber((n) => update("planning", { 
+                maxKb: 4, // Hardcoded 
+                pauses: { 
+                  ...cfg?.planning?.pauses, 
+                  chapter: n 
+                }
+              }))}
+            />
           </label>
         </div>
       </section>
 
-      {/* SSML Settings */}
+      {/* SSML Settings - Remove rate and pitch (per-segment now), keep general breaks */}
       <section style={{ marginTop: 24 }}>
         <h3>{t("project.ssml")}</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        <p style={{ fontSize: "14px", color: "var(--muted)", marginBottom: "8px" }}>
+          Rate and pitch are configured per segment. General break settings:
+        </p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
           <label>
-            <div>{t("project.rate")}</div>
-            <input
-              value={cfg?.ssml?.rate || ""}
-              onChange={(e) => update("ssml", { 
-                ...cfg?.ssml, 
-                rate: e.target.value 
-              })}
-            />
-          </label>
-          <label>
-            <div>{t("project.pitch")}</div>
-            <input
-              value={cfg?.ssml?.pitch || ""}
-              onChange={(e) => update("ssml", { 
-                ...cfg?.ssml, 
-                pitch: e.target.value 
-              })}
-            />
-          </label>
-          <label>
-            <div>{t("project.breaks")}</div>
+            <div>Default Break Duration (ms)</div>
             <input
               type="number"
               value={cfg?.ssml?.breaksMs || 0}
               onChange={onNumber((n) => update("ssml", { 
-                ...cfg?.ssml, 
                 breaksMs: n 
               }))}
             />
@@ -184,7 +169,7 @@ export default function Project() {
         </div>
       </section>
 
-      {/* LLM Engine */}
+      {/* LLM Engine - Add Azure OpenAI option */}
       <section style={{ marginTop: 24 }}>
         <h3>{t("project.llm")}</h3>
         <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: 8, alignItems: "center" }}>
@@ -194,12 +179,15 @@ export default function Project() {
               const name = e.target.value as LlmEngine["name"];
               if (name === "openai") {
                 update("llm", { engine: { name: "openai", model: isOpenAI(llm.engine) ? llm.engine.model : "gpt-4o" } });
+              } else if (name === "azure-openai") {
+                update("llm", { engine: { name: "azure-openai", model: isAzureOpenAI(llm.engine) ? llm.engine.model : "gpt-4o", endpoint: isAzureOpenAI(llm.engine) ? llm.engine.endpoint : "" } });
               } else {
                 update("llm", { engine: { name: "local", model: isLocalLLM(llm.engine) ? llm.engine.model : "llama3.1", endpoint: isLocalLLM(llm.engine) ? llm.engine.endpoint : "http://localhost:8000" } });
               }
             }}
           >
             <option value="openai">OpenAI</option>
+            <option value="azure-openai">Azure OpenAI</option>
             <option value="local">Local</option>
           </select>
           {isOpenAI(llm.engine) ? (
@@ -208,6 +196,24 @@ export default function Project() {
               value={llm.engine.model}
               onChange={(e) => update("llm", { engine: { name: "openai", model: e.target.value } })}
             />
+          ) : isAzureOpenAI(llm.engine) ? (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+              <input
+                placeholder="Model (gpt-4o)"
+                value={llm.engine.model}
+                onChange={(e) => update("llm", { engine: { name: "azure-openai", model: e.target.value, endpoint: isAzureOpenAI(llm.engine) ? llm.engine.endpoint : "", apiVersion: isAzureOpenAI(llm.engine) ? llm.engine.apiVersion : "" } })}
+              />
+              <input
+                placeholder="Endpoint URL"
+                value={isAzureOpenAI(llm.engine) ? llm.engine.endpoint : ""}
+                onChange={(e) => update("llm", { engine: { name: "azure-openai", model: llm.engine.model, endpoint: e.target.value, apiVersion: isAzureOpenAI(llm.engine) ? llm.engine.apiVersion : "" } })}
+              />
+              <input
+                placeholder="API Version (2024-02-15-preview)"
+                value={isAzureOpenAI(llm.engine) ? (llm.engine.apiVersion ?? "") : ""}
+                onChange={(e) => update("llm", { engine: { name: "azure-openai", model: llm.engine.model, endpoint: isAzureOpenAI(llm.engine) ? llm.engine.endpoint : "", apiVersion: e.target.value } })}
+              />
+            </div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               <input
@@ -264,77 +270,151 @@ export default function Project() {
             <input
               placeholder={t("project.ttsModelLocal")}
               value={tts.engine.model ?? ""}
-              onChange={(e) => update("tts", { engine: { name: "local", model: e.target.value }, cache: tts.cache })}
+              onChange={(e) => update("tts", { engine: { name: "local", model: e.target.value }, cache: true })}
             />
           )}
+          <div style={{ fontSize: "14px", color: "var(--muted)", gridColumn: "1 / -1" }}>
+            TTS caching is always enabled for optimal performance.
+          </div>
+        </div>
+      </section>
+
+      {/* TTS Credentials */}
+      <section style={{ marginTop: 24 }}>
+        <h3>TTS Service Credentials</h3>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           <label>
             <input
               type="checkbox"
-              checked={tts.cache}
-              onChange={(e) => update("tts", { engine: tts.engine, cache: e.target.checked })}
+              checked={cfg?.creds?.tts?.useAppAzure || false}
+              onChange={(e) => update("creds", {
+                ...cfg.creds,
+                tts: { ...cfg.creds?.tts, useAppAzure: e.target.checked }
+              })}
             />
-            <span style={{ marginLeft: 8 }}>{t("project.ttsCacheEnabled")}</span>
+            <span style={{ marginLeft: 8 }}>Use application Azure credentials</span>
           </label>
+          <div></div>
+          {!cfg?.creds?.tts?.useAppAzure && (
+            <>
+              <label>
+                <div>Azure TTS Key</div>
+                <input
+                  type="text"
+                  value={cfg.creds?.tts?.azure?.key ?? ""}
+                  onChange={e => update("creds", {
+                    ...cfg.creds,
+                    tts: { 
+                      ...cfg.creds?.tts, 
+                      azure: { ...cfg.creds?.tts?.azure, key: e.target.value }
+                    }
+                  })}
+                />
+              </label>
+              <label>
+                <div>Azure Region</div>
+                <input
+                  type="text"
+                  value={cfg.creds?.tts?.azure?.region ?? ""}
+                  onChange={e => update("creds", {
+                    ...cfg.creds,
+                    tts: { 
+                      ...cfg.creds?.tts, 
+                      azure: { ...cfg.creds?.tts?.azure, region: e.target.value }
+                    }
+                  })}
+                />
+              </label>
+            </>
+          )}
         </div>
       </section>
 
-      {/* Credentials */}
+      {/* LLM Credentials */}
       <section style={{ marginTop: 24 }}>
-        <h3>{t("project.creds")}</h3>
+        <h3>LLM Service Credentials</h3>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           <label>
-            <div>{t("project.azureKey")}</div>
             <input
-              type="text"
-              value={cfg.creds?.azure?.key ?? ""}
-              onChange={e => update("creds", {
+              type="checkbox"
+              checked={cfg?.creds?.llm?.useAppOpenAI || false}
+              onChange={(e) => update("creds", {
                 ...cfg.creds,
-                azure: { ...cfg.creds?.azure, key: e.target.value }
+                llm: { ...cfg.creds?.llm, useAppOpenAI: e.target.checked }
               })}
             />
+            <span style={{ marginLeft: 8 }}>Use application OpenAI credentials</span>
           </label>
-          <label>
-            <div>{t("project.azureRegion")}</div>
-            <input
-              type="text"
-              value={cfg.creds?.azure?.region ?? ""}
-              onChange={e => update("creds", {
-                ...cfg.creds,
-                azure: { ...cfg.creds?.azure, region: e.target.value }
-              })}
-            />
-          </label>
-          <label>
-            <div>{t("project.openaiKey")}</div>
-            <input
-              type="text"
-              value={cfg.creds?.openai?.apiKey ?? ""}
-              onChange={e => update("creds", {
-                ...cfg.creds,
-                openai: { ...cfg.creds?.openai, apiKey: e.target.value }
-              })}
-            />
-          </label>
-          <label>
-            <div>{t("project.openaiBaseUrl")}</div>
-            <input
-              type="text"
-              value={cfg.creds?.openai?.baseUrl ?? ""}
-              onChange={e => update("creds", {
-                ...cfg.creds,
-                openai: { ...cfg.creds?.openai, baseUrl: e.target.value }
-              })}
-            />
-          </label>
+          <div></div>
+          {!cfg?.creds?.llm?.useAppOpenAI && (
+            <>
+              <label>
+                <div>OpenAI API Key</div>
+                <input
+                  type="text"
+                  value={cfg.creds?.llm?.openai?.apiKey ?? ""}
+                  onChange={e => update("creds", {
+                    ...cfg.creds,
+                    llm: { 
+                      ...cfg.creds?.llm, 
+                      openai: { ...cfg.creds?.llm?.openai, apiKey: e.target.value }
+                    }
+                  })}
+                />
+              </label>
+              <label>
+                <div>OpenAI Base URL</div>
+                <input
+                  type="text"
+                  value={cfg.creds?.llm?.openai?.baseUrl ?? ""}
+                  onChange={e => update("creds", {
+                    ...cfg.creds,
+                    llm: { 
+                      ...cfg.creds?.llm, 
+                      openai: { ...cfg.creds?.llm?.openai, baseUrl: e.target.value }
+                    }
+                  })}
+                />
+              </label>
+              <label>
+                <div>Azure OpenAI API Key</div>
+                <input
+                  type="text"
+                  value={cfg.creds?.llm?.azureOpenAI?.apiKey ?? ""}
+                  onChange={e => update("creds", {
+                    ...cfg.creds,
+                    llm: { 
+                      ...cfg.creds?.llm, 
+                      azureOpenAI: { ...cfg.creds?.llm?.azureOpenAI, apiKey: e.target.value }
+                    }
+                  })}
+                />
+              </label>
+              <label>
+                <div>Azure OpenAI Endpoint</div>
+                <input
+                  type="text"
+                  value={cfg.creds?.llm?.azureOpenAI?.endpoint ?? ""}
+                  onChange={e => update("creds", {
+                    ...cfg.creds,
+                    llm: { 
+                      ...cfg.creds?.llm, 
+                      azureOpenAI: { ...cfg.creds?.llm?.azureOpenAI, endpoint: e.target.value }
+                    }
+                  })}
+                />
+              </label>
+            </>
+          )}
         </div>
       </section>
 
-      {/* Export Settings */}
+      {/* Packaging Settings */}
       <section style={{ marginTop: 24 }}>
-        <h3>{t("project.export")}</h3>
+        <h3>Packaging</h3>
         <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
           <label>
-            <div>{t("project.outputDir")}</div>
+            <div>Output Directory</div>
             <input
               value={cfg?.export?.outputDir || "output"}
               placeholder="output"
@@ -345,7 +425,7 @@ export default function Project() {
             />
           </label>
           <div style={{ marginTop: 8 }}>
-            <div style={{ marginBottom: 8 }}>{t("project.platforms")}</div>
+            <div style={{ marginBottom: 8 }}>Target Platforms</div>
             <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
               <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <input
@@ -356,7 +436,7 @@ export default function Project() {
                     platforms: { ...cfg?.export?.platforms, apple: e.target.checked }
                   })}
                 />
-                <span>{t("project.platformApple")}</span>
+                <span>Apple Books</span>
               </label>
               <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <input
@@ -367,7 +447,7 @@ export default function Project() {
                     platforms: { ...cfg?.export?.platforms, google: e.target.checked }
                   })}
                 />
-                <span>{t("project.platformGoogle")}</span>
+                <span>Google Play</span>
               </label>
               <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <input
@@ -378,63 +458,10 @@ export default function Project() {
                     platforms: { ...cfg?.export?.platforms, spotify: e.target.checked }
                   })}
                 />
-                <span>{t("project.platformSpotify")}</span>
+                <span>Spotify</span>
               </label>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Additional Credentials & Paths */}
-      <section style={{ marginTop: 24 }}>
-        <h3>{t("project.advancedCreds")}</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <input
-              type="checkbox"
-              checked={cfg?.creds?.useAppAzure || false}
-              onChange={(e) => update("creds", {
-                ...cfg.creds,
-                useAppAzure: e.target.checked
-              })}
-            />
-            <span>{t("project.useAppAzure")}</span>
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <input
-              type="checkbox"
-              checked={cfg?.creds?.useAppOpenAI || false}
-              onChange={(e) => update("creds", {
-                ...cfg.creds,
-                useAppOpenAI: e.target.checked
-              })}
-            />
-            <span>{t("project.useAppOpenAI")}</span>
-          </label>
-          <label>
-            <div>{t("project.bookMetaPath")}</div>
-            <input
-              type="text"
-              value={cfg?.creds?.paths?.bookMeta ?? ""}
-              placeholder="path/to/book_meta.json"
-              onChange={e => update("creds", {
-                ...cfg.creds,
-                paths: { ...cfg.creds?.paths, bookMeta: e.target.value }
-              })}
-            />
-          </label>
-          <label>
-            <div>{t("project.productionPath")}</div>
-            <input
-              type="text"
-              value={cfg?.creds?.paths?.production ?? ""}
-              placeholder="path/to/production.json"
-              onChange={e => update("creds", {
-                ...cfg.creds,
-                paths: { ...cfg.creds?.paths, production: e.target.value }
-              })}
-            />
-          </label>
         </div>
       </section>
 
