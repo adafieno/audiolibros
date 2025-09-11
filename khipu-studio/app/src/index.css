@@ -5,11 +5,14 @@
   --panel: #161b22;        /* Panel background with good contrast */
   --panelAccent: #21262d;  /* Slightly lighter panel for active states */
   --border: #30363d;       /* Subtle borders */
+  --input: #21262d;        /* Input field background */
   --text: #f0f6fc;         /* High contrast white text (15.8:1 ratio) */
+  --text-muted: #8b949e;   /* Muted text (7.9:1 ratio) */
   --muted: #8b949e;        /* Muted text (7.9:1 ratio) */
   --accent: #58a6ff;       /* Accessible blue (8.2:1 ratio) */
   --accent-600: #1f6feb;   /* Darker blue for hover */
   --accent-700: #1158c7;   /* Even darker for active states */
+  --accent-text: #ffffff;  /* White text on accent backgrounds */
   --btn-fg: #ffffff;       /* White text on buttons */
   --btn-bg: #238636;       /* Accessible green (4.8:1 ratio) */
   --btn-bg-h: #2ea043;     /* Hover state */
@@ -28,11 +31,14 @@
   --panel: #ffffff;        /* Pure white panels */
   --panelAccent: #f3f4f6;  /* Light gray for active/selected states */
   --border: #d1d5db;       /* Clear gray borders */
+  --input: #ffffff;        /* Input field background */
   --text: #111827;         /* Dark text for strong contrast */
+  --text-muted: #6b7280;   /* Medium gray for muted text */
   --muted: #6b7280;        /* Medium gray for muted text */
   --accent: #2563eb;       /* Blue accent */
   --accent-600: #1d4ed8;   /* Darker blue for hover */
   --accent-700: #1e40af;   /* Even darker for active */
+  --accent-text: #ffffff;  /* White text on accent backgrounds */
   --btn-fg: #ffffff;       /* White text on buttons */
   --btn-bg: #059669;       /* Green buttons */
   --btn-bg-h: #047857;     /* Darker green on hover */
@@ -424,6 +430,36 @@ a:focus {
 @keyframes blink {
   0%, 50% { opacity: 1; }
   51%, 100% { opacity: 0; }
+}
+
+/* Dark theme dropdown styling */
+.dark-dropdown option {
+  background-color: var(--panel) !important;
+  color: var(--text) !important;
+  padding: 8px 12px;
+}
+
+.dark-dropdown optgroup {
+  background-color: var(--panelAccent) !important;
+  color: var(--text) !important;
+  font-weight: bold;
+  font-style: normal;
+}
+
+.dark-dropdown option:hover,
+.dark-dropdown option:focus {
+  background-color: var(--accent) !important;
+  color: var(--btn-fg) !important;
+}
+
+.dark-dropdown option:checked {
+  background-color: var(--accent) !important;
+  color: var(--btn-fg) !important;
+}
+
+/* For Webkit browsers */
+.dark-dropdown option:checked {
+  background: var(--accent) linear-gradient(0deg, var(--accent) 0%, var(--accent) 100%) !important;
 }
 
 
