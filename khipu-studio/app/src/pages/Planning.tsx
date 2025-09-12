@@ -162,9 +162,12 @@ function mergeSegments(segments: Segment[], segmentId: number, direction: 'forwa
     return { success: false, message: `Merge would create invalid segment: ${validation.reason}` };
   }
 
+  // Always keep the ID of the segment that appears first in the sequence
+  const firstSegment = direction === 'forward' ? currentSegment : targetSegment;
+
   // Create merged segment
   const mergedSegment: Segment = {
-    ...receivingSegment,
+    ...firstSegment, // Use properties of the first segment (maintains ID order)
     text: mergedText,
     originalText: mergedText,
     start_idx: Math.min(currentSegment.start_idx, targetSegment.start_idx),
