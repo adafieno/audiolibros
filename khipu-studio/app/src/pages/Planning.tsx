@@ -2215,37 +2215,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
         <div style={{ display: "flex", flexDirection: "column", height: "calc(100% - 160px)" }}>
           {/* Main content grid */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", flex: 1, minHeight: 0 }}>
-            {/* Left: Preview */}
-            <div style={{ border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-              <div style={{ padding: "8px 12px", backgroundColor: "var(--panelAccent)", borderBottom: "1px solid var(--border)", fontSize: "14px", fontWeight: 500 }}>
-                {t("planning.preview")}
-              </div>
-              
-              <div style={{ flex: 1, padding: "12px", overflow: "auto" }}>
-                {current ? (
-                  <EditablePreview
-                    current={current}
-                    segments={segments}
-                    setSegments={setSegments}
-                    setSegmentsWithHistory={setSegmentsWithHistory}
-                    undoSegmentOperation={undoSegmentOperation}
-                    canUndo={canUndo}
-                    onAudition={handleSegmentAudition}
-                    onInvalidateCache={handleCacheInvalidation}
-                    isAudioLoading={isAudioLoading}
-                    auditioningSegments={auditioningSegments}
-                    isAudioPlaying={isAudioPlaying}
-                    t={t}
-                  />
-                ) : (
-                  <div style={{ color: "var(--muted)", fontStyle: "italic" }}>
-                    {t("planning.selectRowToPreview")}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Right: Table */}
+            {/* Left: Table */}
             <div style={{ border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
               <div style={{ padding: "8px 12px", backgroundColor: "var(--panelAccent)", borderBottom: "1px solid var(--border)", fontSize: "14px", fontWeight: 500 }}>
                 {t("planning.chunksVoiceAssignment")}
@@ -2306,6 +2276,36 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+
+            {/* Right: Preview */}
+            <div style={{ border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+              <div style={{ padding: "8px 12px", backgroundColor: "var(--panelAccent)", borderBottom: "1px solid var(--border)", fontSize: "14px", fontWeight: 500 }}>
+                {t("planning.preview")}
+              </div>
+              
+              <div style={{ flex: 1, padding: "12px", overflow: "auto" }}>
+                {current ? (
+                  <EditablePreview
+                    current={current}
+                    segments={segments}
+                    setSegments={setSegments}
+                    setSegmentsWithHistory={setSegmentsWithHistory}
+                    undoSegmentOperation={undoSegmentOperation}
+                    canUndo={canUndo}
+                    onAudition={handleSegmentAudition}
+                    onInvalidateCache={handleCacheInvalidation}
+                    isAudioLoading={isAudioLoading}
+                    auditioningSegments={auditioningSegments}
+                    isAudioPlaying={isAudioPlaying}
+                    t={t}
+                  />
+                ) : (
+                  <div style={{ color: "var(--muted)", fontStyle: "italic" }}>
+                    {t("planning.selectRowToPreview")}
+                  </div>
+                )}
               </div>
             </div>
 
