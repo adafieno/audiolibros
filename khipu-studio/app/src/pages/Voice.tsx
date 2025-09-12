@@ -11,7 +11,8 @@ interface Chapter {
 interface ChapterStatus {
   hasText: boolean;
   hasPlan: boolean;
-  isComplete: boolean;
+  isComplete: boolean; // This tracks if orchestration is complete
+  isAudioComplete: boolean; // This tracks if audio generation is complete
 }
 
 export default function AudioProductionPage({ onStatus }: { onStatus: (s: string) => void }) {
@@ -24,7 +25,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
   const checkChapterStatus = useCallback(async (chapterId: string): Promise<ChapterStatus> => {
     if (!root) {
-      return { hasText: false, hasPlan: false, isComplete: false };
+      return { hasText: false, hasPlan: false, isComplete: false, isAudioComplete: false };
     }
     
     // Check if chapter text exists
@@ -57,9 +58,9 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       // Plan file doesn't exist
     }
     
-    // Check if audio production is complete
+    // Check if orchestration is complete for this chapter
     let isComplete = false;
-    const completionPath = `audio/${chapterId}.complete`;
+    const completionPath = `ssml/plans/${chapterId}.complete`;
     try {
       const completionData = await window.khipu!.call("fs:read", {
         projectRoot: root,
@@ -71,7 +72,21 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       isComplete = false;
     }
     
-    return { hasText, hasPlan, isComplete };
+    // Check if audio production is complete
+    let isAudioComplete = false;
+    const audioCompletionPath = `audio/${chapterId}.complete`;
+    try {
+      const audioCompletionData = await window.khipu!.call("fs:read", {
+        projectRoot: root,
+        relPath: audioCompletionPath,
+        json: true
+      }) as { complete?: boolean; completedAt?: string } | null;
+      isAudioComplete = audioCompletionData?.complete === true;
+    } catch {
+      isAudioComplete = false;
+    }
+    
+    return { hasText, hasPlan, isComplete, isAudioComplete };
   }, [root]);
 
   const loadChapters = useCallback(async () => {
@@ -115,15 +130,20 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     }
   }, [root, loadChapters]);
 
-  // Filter chapters to only show those with orchestration plans
+  // Filter chapters to show those with plans (for testing) and those with completed orchestration (ready for production)
   const chaptersWithPlans = chapters.filter(chapter => {
     const status = chapterStatus.get(chapter.id);
     return status?.hasPlan === true;
   });
 
-  const completedChapters = chaptersWithPlans.filter(chapter => {
+  const chaptersReadyForProduction = chaptersWithPlans.filter(chapter => {
     const status = chapterStatus.get(chapter.id);
-    return status?.isComplete === true;
+    return status?.isComplete === true; // Orchestration is complete
+  });
+
+  const completedAudioChapters = chaptersWithPlans.filter(chapter => {
+    const status = chapterStatus.get(chapter.id);
+    return status?.isAudioComplete === true;
   });
 
   return (
@@ -186,10 +206,13 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                 color: "#666"
               }}>
                 <div>
-                  <strong>{chaptersWithPlans.length}</strong> chapters ready for audio production
+                  <strong>{chaptersWithPlans.length}</strong> chapters with plans
                 </div>
                 <div>
-                  <strong>{completedChapters.length}</strong> completed
+                  <strong>{chaptersReadyForProduction.length}</strong> ready for production
+                </div>
+                <div>
+                  <strong>{completedAudioChapters.length}</strong> audio completed
                 </div>
               </div>
 
@@ -200,17 +223,20 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               }}>
                 {chaptersWithPlans.map((chapter) => {
                   const status = chapterStatus.get(chapter.id);
-                  const isComplete = status?.isComplete === true;
+                  const hasOrchestrationPlan = status?.hasPlan === true;
+                  const orchestrationComplete = status?.isComplete === true;
+                  const audioComplete = status?.isAudioComplete === true;
                   
                   return (
                     <div
                       key={chapter.id}
                       style={{
                         padding: "1.5rem",
-                        backgroundColor: isComplete ? "#f0fff0" : "#ffffff",
-                        border: isComplete ? "2px solid #90ee90" : "2px solid #e0e0e0",
+                        backgroundColor: audioComplete ? "#f0fff0" : orchestrationComplete ? "#ffffff" : "#f8f9fa",
+                        border: audioComplete ? "2px solid #90ee90" : orchestrationComplete ? "2px solid #007bff" : "2px solid #e0e0e0",
                         borderRadius: "8px",
-                        boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+                        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                        opacity: orchestrationComplete ? 1 : 0.7
                       }}
                     >
                       <div style={{ 
@@ -220,13 +246,13 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                         marginBottom: "1rem"
                       }}>
                         <div style={{ fontSize: "1.5rem" }}>
-                          {isComplete ? "✅" : "🎙️"}
+                          {audioComplete ? "✅" : orchestrationComplete ? "🎙️" : "⏳"}
                         </div>
                         <div>
                           <h3 style={{ 
                             margin: "0", 
                             fontSize: "1.1rem",
-                            color: isComplete ? "#2d5a2d" : "#333"
+                            color: audioComplete ? "#2d5a2d" : orchestrationComplete ? "#333" : "#666"
                           }}>
                             {chapter.title || chapter.id}
                           </h3>
@@ -241,17 +267,31 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                       </div>
                       
                       <div style={{ marginBottom: "1rem" }}>
-                        <div style={{ 
-                          display: "inline-block",
-                          padding: "0.25rem 0.5rem",
-                          backgroundColor: "#e3f2fd",
-                          color: "#1565c0",
-                          borderRadius: "4px",
-                          fontSize: "0.75rem",
-                          fontWeight: "500"
-                        }}>
-                          ✓ Orchestration plan ready
-                        </div>
+                        {orchestrationComplete ? (
+                          <div style={{ 
+                            display: "inline-block",
+                            padding: "0.25rem 0.5rem",
+                            backgroundColor: "#e8f5e8",
+                            color: "#2d5a2d",
+                            borderRadius: "4px",
+                            fontSize: "0.75rem",
+                            fontWeight: "500"
+                          }}>
+                            ✓ Orchestration complete - Ready for production
+                          </div>
+                        ) : hasOrchestrationPlan ? (
+                          <div style={{ 
+                            display: "inline-block",
+                            padding: "0.25rem 0.5rem",
+                            backgroundColor: "#fff3cd",
+                            color: "#856404",
+                            borderRadius: "4px",
+                            fontSize: "0.75rem",
+                            fontWeight: "500"
+                          }}>
+                            ⚠️ Plan exists - Orchestration in progress
+                          </div>
+                        ) : null}
                       </div>
 
                       <div style={{ 
@@ -262,24 +302,28 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                           style={{
                             flex: 1,
                             padding: "0.5rem",
-                            backgroundColor: isComplete ? "#6c757d" : "#007bff",
-                            color: "white",
+                            backgroundColor: audioComplete ? "#6c757d" : orchestrationComplete ? "#007bff" : "#ffc107",
+                            color: orchestrationComplete || audioComplete ? "white" : "#212529",
                             border: "none",
                             borderRadius: "4px",
-                            cursor: isComplete ? "default" : "pointer",
+                            cursor: audioComplete ? "default" : "pointer",
                             fontSize: "0.85rem",
                             fontWeight: "500"
                           }}
-                          disabled={isComplete}
+                          disabled={audioComplete}
                           onClick={() => {
                             // TODO: Implement audio generation
-                            alert(`Generate audio for chapter: ${chapter.id}`);
+                            if (orchestrationComplete) {
+                              alert(`Generate production audio for chapter: ${chapter.id}`);
+                            } else {
+                              alert(`Generate test audio for chapter: ${chapter.id} (orchestration not complete)`);
+                            }
                           }}
                         >
-                          {isComplete ? "Audio Complete" : "Generate Audio"}
+                          {audioComplete ? "Audio Complete" : orchestrationComplete ? "Generate Audio" : "Generate Test Audio"}
                         </button>
                         
-                        {isComplete && (
+                        {audioComplete && (
                           <button
                             style={{
                               padding: "0.5rem",
