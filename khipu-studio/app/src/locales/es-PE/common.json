@@ -397,6 +397,70 @@
     "string": "Modelo local (opcional)",
     "comment": ""
   },
+  "project.openaiCredentials": {
+    "string": "Credenciales OpenAI",
+    "comment": ""
+  },
+  "project.openaiApiKey": {
+    "string": "Clave API OpenAI",
+    "comment": ""
+  },
+  "project.azureOpenaiCredentials": {
+    "string": "Credenciales Azure OpenAI",
+    "comment": ""
+  },
+  "project.azureOpenaiApiKey": {
+    "string": "Clave API Azure OpenAI",
+    "comment": ""
+  },
+  "project.azureOpenaiApiKeyPlaceholder": {
+    "string": "Ingresa la clave API de Azure OpenAI",
+    "comment": ""
+  },
+  "project.azureTtsCredentials": {
+    "string": "Credenciales Azure TTS",
+    "comment": ""
+  },
+  "project.azureTtsKey": {
+    "string": "Clave Azure TTS",
+    "comment": ""
+  },
+  "project.azureRegion": {
+    "string": "Región Azure",
+    "comment": ""
+  },
+  "project.ttsCachingInfo": {
+    "string": "El caché TTS está siempre habilitado para un rendimiento óptimo.",
+    "comment": ""
+  },
+  "project.pauseConfiguration": {
+    "string": "Configura duraciones de pausa (en milisegundos) para insertar en la planificación:",
+    "comment": ""
+  },
+  "project.sentencePause": {
+    "string": "Pausa de Oración",
+    "comment": ""
+  },
+  "project.paragraphPause": {
+    "string": "Pausa de Párrafo",
+    "comment": ""
+  },
+  "project.chapterPause": {
+    "string": "Pausa de Capítulo",
+    "comment": ""
+  },
+  "project.commaPause": {
+    "string": "Pausa de Coma",
+    "comment": ""
+  },
+  "project.colonPause": {
+    "string": "Pausa de Dos Puntos",
+    "comment": ""
+  },
+  "project.semicolonPause": {
+    "string": "Pausa de Punto y Coma",
+    "comment": ""
+  },
   "project.ttsCacheEnabled": {
     "string": "Caché habilitado",
     "comment": ""
@@ -408,10 +472,6 @@
   },
   "project.azureKey": {
     "string": "Clave Azure",
-    "comment": ""
-  },
-  "project.azureRegion": {
-    "string": "Región Azure",
     "comment": ""
   },
   "project.openaiKey": {
@@ -574,6 +634,10 @@
   },
   "home.structurePreview": {
     "string": "Estructura a crear",
+    "comment": ""
+  },
+  "home.projectSetup": {
+    "string": "Configura un nuevo proyecto de audiolibro con la estructura de carpetas requerida.",
     "comment": ""
   },
 
@@ -1169,6 +1233,14 @@
     "string": "Deshacer exitoso",
     "comment": ""
   },
+  "planning.description": {
+    "string": "Desglose de fragmentos compatible con TTS y asignación de voces de personajes - trabaja capítulo por capítulo.",
+    "comment": ""
+  },
+  "planning.generateInstruction": {
+    "string": "Haz clic en \"Generar Plan para {{chapter}}\" para crear fragmentos compatibles con TTS con detección de hablantes IA.",
+    "comment": ""
+  },
   "planning.loadingChapters": {
     "string": "Cargando capítulos del proyecto...",
     "comment": ""
@@ -1326,5 +1398,157 @@
   "planning.errors.completedButFailedReload": {
     "string": "Asignación de personajes completada pero falló la recarga. Actualiza el capítulo.",
     "comment": ""
+  },
+  "casting.addLanguage": {
+    "string": "+ Agregar Idioma",
+    "comment": "Texto del botón para agregar un idioma a la selección de voces"
+  },
+  "casting.languagesLabel": {
+    "string": "Idiomas:",
+    "comment": "Etiqueta para las etiquetas de idiomas seleccionados"
+  },
+  "project.keywords": {
+    "string": "Palabras clave:",
+    "comment": "Etiqueta para el campo de palabras clave del proyecto"
+  },
+  "project.categories": {
+    "string": "Categorías:",
+    "comment": "Etiqueta para el campo de categorías del proyecto"
+  },
+  "project.packaging": {
+    "string": "Empaquetado",
+    "comment": "Encabezado para la sección de empaquetado"
+  },
+  "project.outputDirectory": {
+    "string": "Directorio de Salida",
+    "comment": "Etiqueta para el campo de directorio de salida"
+  },
+  "project.targetPlatforms": {
+    "string": "Plataformas Objetivo",
+    "comment": "Etiqueta para la sección de plataformas objetivo"
+  },
+  "planning.generatePlanFor": {
+    "string": "Generar Plan para {{chapter}}",
+    "comment": "Texto del botón para generar plan para un capítulo específico"
+  },
+  "planning.assignCharacters": {
+    "string": "Asignar Personajes",
+    "comment": "Texto del botón para asignar personajes"
+  },
+  "planning.savePlan": {
+    "string": "Guardar Plan",
+    "comment": "Texto del botón para guardar datos de planificación"
+  },
+  "planning.markChapterComplete": {
+    "string": "Marcar Capítulo como Completo",
+    "comment": "Texto del botón para marcar capítulo como completo"
+  },
+  "planning.chapterLabel": {
+    "string": "Capítulo:",
+    "comment": "Etiqueta para selección de capítulo"
+  },
+  "planning.chunkLabel": {
+    "string": "Fragmento",
+    "comment": "Etiqueta para sección de fragmento"
+  },
+  "planning.chunkAll": {
+    "string": "(todos)",
+    "comment": "Opción para mostrar todos los fragmentos"
+  },
+  "planning.onlyUnknowns": {
+    "string": "solo desconocidos",
+    "comment": "Opción para mostrar solo fragmentos desconocidos"
+  },
+  "planning.preview": {
+    "string": "Vista Previa",
+    "comment": "Encabezado para sección de vista previa"
+  },
+  "planning.edit": {
+    "string": "Editar",
+    "comment": "Texto del botón para editar contenido"
+  },
+  "planning.merge": {
+    "string": "Unir",
+    "comment": "Texto del botón para unir segmentos"
+  },
+  "planning.delete": {
+    "string": "Eliminar",
+    "comment": "Texto del botón para eliminar elemento"
+  },
+  "planning.undo": {
+    "string": "Deshacer",
+    "comment": "Texto del botón para deshacer cambios"
+  },
+  "planning.table.delim": {
+    "string": "delim",
+    "comment": "Encabezado de tabla para columna de delimitador"
+  },
+  "planning.table.start": {
+    "string": "inicio",
+    "comment": "Encabezado de tabla para columna de posición inicial"
+  },
+  "planning.table.end": {
+    "string": "fin",
+    "comment": "Encabezado de tabla para columna de posición final"
+  },
+  "planning.table.len": {
+    "string": "long",
+    "comment": "Encabezado de tabla para columna de longitud"
+  },
+  "planning.table.character": {
+    "string": "personaje",
+    "comment": "Encabezado de tabla para columna de personaje"
+  },
+  "characters.voiceAssignment": {
+    "string": "Asignación de Voz",
+    "comment": "Etiqueta para sección de asignación de voz"
+  },
+  "characters.defaultStyle": {
+    "string": "Estilo Predeterminado",
+    "comment": "Etiqueta para estilo de voz predeterminado"
+  },
+  "characters.styleEmpathetic": {
+    "string": "empático",
+    "comment": "Opción de estilo de voz: empático"
+  },
+  "characters.intensity": {
+    "string": "Intensidad",
+    "comment": "Etiqueta para control de intensidad de voz"
+  },
+  "characters.rate": {
+    "string": "Velocidad",
+    "comment": "Etiqueta para control de velocidad de voz"
+  },
+  "characters.pitch": {
+    "string": "Tono",
+    "comment": "Etiqueta para control de tono de voz"
+  },
+  "characters.audition": {
+    "string": "Audición",
+    "comment": "Texto del botón para audición de voz del personaje"
+  },
+  "characters.remove": {
+    "string": "Eliminar",
+    "comment": "Texto del botón para eliminar personaje"
+  },
+  "characters.detectRefresh": {
+    "string": "Detectar / Actualizar",
+    "comment": "Texto del botón para detección/actualización de personajes"
+  },
+  "characters.add": {
+    "string": "Agregar",
+    "comment": "Texto del botón para agregar personaje"
+  },
+  "characters.sortByFrequency": {
+    "string": "Ordenar por Frecuencia",
+    "comment": "Texto del botón para ordenar personajes por frecuencia"
+  },
+  "characters.assignVoices": {
+    "string": "Asignar Voces",
+    "comment": "Texto del botón para asignar voces a personajes"
+  },
+  "characters.markComplete": {
+    "string": "Marcar como Completo",
+    "comment": "Texto del botón para marcar paso de personajes como completo"
   }
 }

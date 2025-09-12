@@ -253,6 +253,22 @@
     "string": "Error completing casting",
     "comment": "Error message when completing casting fails"
   },
+  "casting.addLanguage": {
+    "string": "+ Add Language",
+    "comment": "Button text to add a language to voice selection"
+  },
+  "casting.languagesLabel": {
+    "string": "Languages:",
+    "comment": "Label for selected languages tags"
+  },
+  "casting.audition.button": {
+    "string": "Audition",
+    "comment": "Button text for voice audition"
+  },
+  "casting.audition.loading": {
+    "string": "Playing...",
+    "comment": "Button text when audition is playing"
+  },
 
   "settings.description": {
     "string": "Adjust global application settings.",
@@ -686,6 +702,14 @@
     "string": "Breaks (ms)",
     "comment": "Label for SSML breaks setting"
   },
+  "project.pauseConfiguration": {
+    "string": "Configure pause durations (in milliseconds) to be inserted in the planning:",
+    "comment": "Description for pause configuration section"
+  },
+  "project.ttsCachingInfo": {
+    "string": "TTS caching is always enabled for optimal performance.",
+    "comment": "Information about TTS caching"
+  },
   "project.llm": {
     "string": "LLM Engine",
     "comment": "Section header for LLM engine settings"
@@ -726,6 +750,62 @@
     "string": "Local model (optional)",
     "comment": "Placeholder for local TTS model field"
   },
+  "project.openaiCredentials": {
+    "string": "OpenAI Credentials",
+    "comment": "Header for OpenAI credentials section"
+  },
+  "project.openaiApiKey": {
+    "string": "OpenAI API Key",
+    "comment": "Label for OpenAI API key field"
+  },
+  "project.azureOpenaiCredentials": {
+    "string": "Azure OpenAI Credentials",
+    "comment": "Header for Azure OpenAI credentials section"
+  },
+  "project.azureOpenaiApiKey": {
+    "string": "Azure OpenAI API Key",
+    "comment": "Label for Azure OpenAI API key field"
+  },
+  "project.azureOpenaiApiKeyPlaceholder": {
+    "string": "Enter Azure OpenAI API key",
+    "comment": "Placeholder for Azure OpenAI API key field"
+  },
+  "project.azureTtsCredentials": {
+    "string": "Azure TTS Credentials",
+    "comment": "Header for Azure TTS credentials section"
+  },
+  "project.azureTtsKey": {
+    "string": "Azure TTS Key",
+    "comment": "Label for Azure TTS key field"
+  },
+  "project.azureRegion": {
+    "string": "Azure Region",
+    "comment": "Label for Azure region field"
+  },
+  "project.sentencePause": {
+    "string": "Sentence Pause",
+    "comment": "Label for sentence pause setting"
+  },
+  "project.paragraphPause": {
+    "string": "Paragraph Pause",
+    "comment": "Label for paragraph pause setting"
+  },
+  "project.chapterPause": {
+    "string": "Chapter Pause",
+    "comment": "Label for chapter pause setting"
+  },
+  "project.commaPause": {
+    "string": "Comma Pause",
+    "comment": "Label for comma pause setting"
+  },
+  "project.colonPause": {
+    "string": "Colon Pause",
+    "comment": "Label for colon pause setting"
+  },
+  "project.semicolonPause": {
+    "string": "Semi-colon Pause",
+    "comment": "Label for semicolon pause setting"
+  },
 
   "manu.title": {
     "string": "Manuscript",
@@ -763,5 +843,194 @@
   "workflow.stepCompleted": {
     "string": "Step completed",
     "comment": "Message when a step is completed"
+  },
+
+  "characters.description": {
+    "string": "Detection, editing & voice preparation.",
+    "comment": "Description for the characters page"
+  },
+  "planning.description": {
+    "string": "TTS-compliant chunk breakdown and character voice assignment - work chapter by chapter.",
+    "comment": "Description for the planning page"
+  },
+  "planning.generateInstruction": {
+    "string": "Click \"Generate Plan for {{chapter}}\" to create TTS-compliant chunks with AI speaker detection.",
+    "comment": "Instruction for generating a plan for a chapter"
+  },
+  "planning.segmentsAndVoices": {
+    "string": "Segments and Voice Assignment",
+    "comment": "Header for segments and voice assignment section"
+  },
+  "planning.chunksVoiceAssignment": {
+    "string": "Segments and Voice Assignment",
+    "comment": "Header for planning chunks and voice assignment section"
+  },
+  "home.projectSetup": {
+    "string": "Set up a new audiobook project with the required folder structure.",
+    "comment": "Description for creating a new project"
+  },
+  "project.keywords": {
+    "string": "Keywords:",
+    "comment": "Label for project keywords field"
+  },
+  "project.categories": {
+    "string": "Categories:",
+    "comment": "Label for project categories field"
+  },
+  "project.openaiBaseUrl": {
+    "string": "OpenAI Base URL (optional)",
+    "comment": "Label for optional OpenAI base URL field"
+  },
+  "project.packaging": {
+    "string": "Packaging",
+    "comment": "Header for packaging section"
+  },
+  "project.outputDirectory": {
+    "string": "Output Directory",
+    "comment": "Label for output directory field"
+  },
+  "project.targetPlatforms": {
+    "string": "Target Platforms",
+    "comment": "Label for target platforms section"
+  },
+  "planning.generatePlanFor": {
+    "string": "Generate Plan for {{chapter}}",
+    "comment": "Button text to generate plan for a specific chapter"
+  },
+  "planning.assignCharacters": {
+    "string": "Assign Characters",
+    "comment": "Button text to assign characters"
+  },
+  "planning.savePlan": {
+    "string": "Save Plan",
+    "comment": "Button text to save planning data"
+  },
+  "planning.markChapterComplete": {
+    "string": "Mark Chapter Complete",
+    "comment": "Button text to mark chapter as complete"
+  },
+  "planning.chapterLabel": {
+    "string": "Chapter:",
+    "comment": "Label for chapter selection"
+  },
+  "planning.chunkLabel": {
+    "string": "Chunk",
+    "comment": "Label for chunk section"
+  },
+  "planning.chunkAll": {
+    "string": "(all)",
+    "comment": "Option to show all chunks"
+  },
+  "planning.onlyUnknowns": {
+    "string": "only unknowns",
+    "comment": "Option to show only unknown chunks"
+  },
+  "planning.preview": {
+    "string": "Preview",
+    "comment": "Header for preview section"
+  },
+  "planning.edit": {
+    "string": "Edit",
+    "comment": "Button text to edit content"
+  },
+  "planning.merge": {
+    "string": "Merge",
+    "comment": "Button text to merge segments"
+  },
+  "planning.delete": {
+    "string": "Delete",
+    "comment": "Button text to delete item"
+  },
+  "planning.undo": {
+    "string": "Undo",
+    "comment": "Button text to undo changes"
+  },
+  "planning.table.delim": {
+    "string": "delim",
+    "comment": "Table header for delimiter column"
+  },
+  "planning.table.start": {
+    "string": "start",
+    "comment": "Table header for start position column"
+  },
+  "planning.table.end": {
+    "string": "end",
+    "comment": "Table header for end position column"
+  },
+  "planning.table.len": {
+    "string": "len",
+    "comment": "Table header for length column"
+  },
+  "planning.table.character": {
+    "string": "character",
+    "comment": "Table header for character column"
+  },
+  "characters.voiceAssignment": {
+    "string": "Voice Assignment",
+    "comment": "Label for voice assignment section"
+  },
+  "characters.defaultStyle": {
+    "string": "Default Style",
+    "comment": "Label for default voice style"
+  },
+  "characters.styleEmpathetic": {
+    "string": "empathetic",
+    "comment": "Voice style option: empathetic"
+  },
+  "characters.method": {
+    "string": "Method",
+    "comment": "Label for assignment method"
+  },
+  "characters.methodManual": {
+    "string": "Manual",
+    "comment": "Manual assignment method"
+  },
+  "characters.methodAutoAssigned": {
+    "string": "Auto-assigned",
+    "comment": "Auto-assigned assignment method"
+  },
+  "characters.intensity": {
+    "string": "Intensity",
+    "comment": "Label for voice intensity control"
+  },
+  "characters.rate": {
+    "string": "Rate",
+    "comment": "Label for voice rate control"
+  },
+  "characters.pitch": {
+    "string": "Pitch",
+    "comment": "Label for voice pitch control"
+  },
+  "characters.audition": {
+    "string": "Audition",
+    "comment": "Button text for character voice audition"
+  },
+  "characters.remove": {
+    "string": "Remove",
+    "comment": "Button text to remove character"
+  },
+  "characters.detectRefresh": {
+    "string": "Detect / Refresh",
+    "comment": "Button text for character detection/refresh"
+  },
+  "characters.add": {
+    "string": "Add",
+    "comment": "Button text to add character"
+  },
+  "characters.sortByFrequency": {
+    "string": "Sort by Frequency",
+    "comment": "Button text to sort characters by frequency"
+  },
+  "characters.assignVoices": {
+    "string": "Assign Voices",
+    "comment": "Button text to assign voices to characters"
+  },
+  "characters.save": {
+    "string": "Save",
+    "comment": "Button text to save character data"
+  },
+  "characters.markComplete": {
+    "string": "Mark Complete",
+    "comment": "Button text to mark characters step complete"
   }
 }

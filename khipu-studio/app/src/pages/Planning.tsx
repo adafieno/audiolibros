@@ -478,7 +478,7 @@ function EditablePreview({
                 }}
                 title={t("planning.tooltips.clickToEdit")}
               >
-                ✏️ Edit
+                ✏️ {t("planning.edit")}
               </button>
               {/* Merge operations when not editing */}
               <button
@@ -495,7 +495,7 @@ function EditablePreview({
                 }}
                 title={t("planning.mergeWithPrevious")}
               >
-                ◀ Merge
+                ◀ {t("planning.merge")}
               </button>
               <button
                 onClick={() => handleMergeSegment('forward')}
@@ -511,7 +511,7 @@ function EditablePreview({
                 }}
                 title={t("planning.mergeWithNext")}
               >
-                Merge ▶
+                {t("planning.merge")} ▶
               </button>
               <button
                 onClick={handleDeleteSegment}
@@ -527,7 +527,7 @@ function EditablePreview({
                 }}
                 title={t("planning.deleteThisSegment")}
               >
-                🗑️ Delete
+                🗑️ {t("planning.delete")}
               </button>
               <button
                 onClick={undoSegmentOperation}
@@ -543,7 +543,7 @@ function EditablePreview({
                 }}
                 title={t("planning.undoLastOperation")}
               >
-                ↶ Undo
+                ↶ {t("planning.undo")}
               </button>
             </>
           ) : (
@@ -763,7 +763,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
   
   // Filters and selection for the current chapter plan
   const [onlyUnknown, setOnlyUnknown] = useState(false);
-  const [chunkFilter, setChunkFilter] = useState<string>("(all)");
+  const [chunkFilter, setChunkFilter] = useState<string>("");
   const [search, setSearch] = useState("");
   const [selIndex, setSelIndex] = useState(0);
   
@@ -1182,7 +1182,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
     return rows;
   }, [segments, segmentsToRows]);
   // Remove chunk filter for flat segments
-  const chunkIds: string[] = ["(all)"];
+  const chunkIds: string[] = [t("planning.chunkAll")];
 
   const filteredRows = useMemo(() => {
     console.log(`🔍 Filtering rows: rowsAll=${rowsAll.length}, onlyUnknown=${onlyUnknown}, chunkFilter=${chunkFilter}, search="${search}"`);
@@ -1228,6 +1228,13 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
     const rowEl = gridRef.current?.querySelector(`[data-row='${selIndex}']`) as HTMLElement | null;
     rowEl?.scrollIntoView({ block: "nearest" });
   }, [selIndex, filteredRows.length]);
+
+  // Initialize chunk filter with translation
+  useEffect(() => {
+    if (!chunkFilter) {
+      setChunkFilter(t("planning.chunkAll"));
+    }
+  }, [t, chunkFilter]);
 
 
 
@@ -1829,7 +1836,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
   return (
     <div style={{ padding: "16px", maxWidth: "1400px", height: "calc(100vh - 32px)" }}>
       <h1 style={{ fontSize: "32px", fontWeight: "bold", color: "var(--text)", marginBottom: "8px" }}>Planning</h1>
-      <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "24px" }}>TTS-compliant chunk breakdown and character voice assignment - work chapter by chapter.</p>
+      <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "24px" }}>{t("planning.description")}</p>
 
       {/* Status message */}
       {message && !running && (
@@ -1851,7 +1858,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
         <div style={{ display: "flex", gap: "16px", alignItems: "center", flexWrap: "wrap" }}>
           <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
             <label style={{ fontSize: "14px", fontWeight: "500", color: "var(--text)" }}>
-              Chapter:
+              {t("planning.chapterLabel")}
             </label>
             <select
               value={selectedChapter}
@@ -1905,7 +1912,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
           disabled={loading || running || !selectedChapter} 
           style={{ padding: "6px 12px", fontSize: "14px" }}
         >
-          {running ? "Generating..." : selectedChapter ? `Generate Plan for ${selectedChapter}` : "Select Chapter"}
+          {running ? "Generating..." : selectedChapter ? t("planning.generatePlanFor", {chapter: selectedChapter}) : "Select Chapter"}
         </button>
         
         <button 
@@ -1913,7 +1920,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
           disabled={loading || assigningCharacters || !selectedChapter || !segments} 
           style={{ padding: "6px 12px", fontSize: "14px" }}
         >
-          {assigningCharacters ? "Assigning..." : "Assign Characters"}
+          {assigningCharacters ? "Assigning..." : t("planning.assignCharacters")}
         </button>
         
   {segments && selectedChapter && (
@@ -1923,7 +1930,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
               disabled={loading} 
               style={{ padding: "6px 12px", fontSize: "14px" }}
             >
-              Save Plan
+              {t("planning.savePlan")}
             </button>
             
             <button 
@@ -1939,7 +1946,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
                 opacity: chapterStatus.get(selectedChapter)?.isComplete ? 0.7 : 1
               }}
             >
-              {chapterStatus.get(selectedChapter)?.isComplete ? "✓ Chapter Complete" : "Mark Chapter Complete"}
+              {chapterStatus.get(selectedChapter)?.isComplete ? "✓ Chapter Complete" : t("planning.markChapterComplete")}
             </button>
           </>
         )}
@@ -2122,7 +2129,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
         <div style={{ display: "grid", gridTemplateRows: "auto 1fr", height: "calc(100% - 200px)", gap: "16px" }}>
           {/* Filters */}
           <div style={{ display: "flex", gap: "12px", alignItems: "center", padding: "12px", backgroundColor: "var(--panel)", borderRadius: "6px", border: "1px solid var(--border)" }}>
-            <label style={{ fontSize: "14px", color: "var(--text)" }}>Chunk:</label>
+            <label style={{ fontSize: "14px", color: "var(--text)" }}>{t("planning.chunkLabel")}:</label>
             <select 
               value={chunkFilter} 
               onChange={(e) => setChunkFilter(e.target.value)}
@@ -2137,7 +2144,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
                 checked={onlyUnknown} 
                 onChange={(e) => setOnlyUnknown(e.target.checked)} 
               />
-              only unknowns
+              {t("planning.onlyUnknowns")}
             </label>
             
             <input 
@@ -2164,7 +2171,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
             {/* Left: Preview */}
             <div style={{ border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
               <div style={{ padding: "8px 12px", backgroundColor: "var(--panelAccent)", borderBottom: "1px solid var(--border)", fontSize: "14px", fontWeight: 500 }}>
-                Preview
+                {t("planning.preview")}
               </div>
               
               <div style={{ flex: 1, padding: "12px", overflow: "auto" }}>
@@ -2203,11 +2210,11 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
                     <tr style={{ textAlign: "left" }}>
                       <th style={{ padding: "8px 6px" }}></th>
                       <th style={{ padding: "8px 6px" }}>id</th>
-                      <th style={{ padding: "8px 6px" }}>delim</th>
-                      <th style={{ padding: "8px 6px" }}>start</th>
-                      <th style={{ padding: "8px 6px" }}>end</th>
-                      <th style={{ padding: "8px 6px" }}>len</th>
-                      <th style={{ padding: "8px 6px", minWidth: "150px" }}>character</th>
+                      <th style={{ padding: "8px 6px" }}>{t("planning.table.delim")}</th>
+                      <th style={{ padding: "8px 6px" }}>{t("planning.table.start")}</th>
+                      <th style={{ padding: "8px 6px" }}>{t("planning.table.end")}</th>
+                      <th style={{ padding: "8px 6px" }}>{t("planning.table.len")}</th>
+                      <th style={{ padding: "8px 6px", minWidth: "150px" }}>{t("planning.table.character")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -2261,7 +2268,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       ) : (
         <div style={{ textAlign: "center", padding: "64px 0", backgroundColor: "var(--panel)", borderRadius: "8px", border: "1px dashed var(--border)" }}>
           <p style={{ color: "var(--text)", fontSize: "18px", marginBottom: "8px" }}>No plan for {selectedChapter}</p>
-          <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "16px" }}>Click "Generate Plan for {selectedChapter}" to create TTS-compliant chunks with AI speaker detection.</p>
+          <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "16px" }}>{t("planning.generateInstruction", { chapter: selectedChapter })}</p>
         </div>
       )}
     </div>

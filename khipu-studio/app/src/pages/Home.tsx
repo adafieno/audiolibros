@@ -415,7 +415,7 @@ export default function Home() {
           {t("home.createNew")}
         </h3>
         <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "16px" }}>
-          Set up a new audiobook project with the required folder structure.
+          {t("home.projectSetup")}
         </p>
         
         <div style={{

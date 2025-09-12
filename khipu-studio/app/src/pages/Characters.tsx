@@ -301,7 +301,7 @@ function CharactersPage() {
   return (
     <div style={{ padding: "2px", maxWidth: "90%" }}>
       <h2>Characters</h2>
-      <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "24px" }}>Detection, editing & voice preparation.</p>
+      <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "24px" }}>{t("characters.description")}</p>
 
       {/* Action buttons */}
       <div style={{ display: "flex", gap: "8px", marginBottom: "24px", alignItems: "center" }}>
@@ -310,7 +310,7 @@ function CharactersPage() {
           disabled={loading} 
           style={{ padding: "6px 12px", fontSize: "14px" }}
         >
-          {loading ? "Detecting..." : "Detect / Refresh"}
+          {loading ? "Detecting..." : t("characters.detectRefresh")}
         </button>
         
         <button 
@@ -318,7 +318,7 @@ function CharactersPage() {
           disabled={loading} 
           style={{ padding: "6px 12px", fontSize: "14px" }}
         >
-          Add
+          {t("characters.add")}
         </button>
         
         {(hasCharacterList || characters.length > 0) && (
@@ -328,7 +328,7 @@ function CharactersPage() {
               disabled={loading || characters.length === 0} 
               style={{ padding: "6px 12px", fontSize: "14px" }}
             >
-              Sort by Frequency
+              {t("characters.sortByFrequency")}
             </button>
             
             <button 
@@ -338,7 +338,7 @@ function CharactersPage() {
             >
               {assignmentProgress 
                 ? `Assigning... ${assignmentProgress.current}%` 
-                : "Assign Voices"}
+                : t("characters.assignVoices")}
             </button>
             
             <button 
@@ -346,7 +346,7 @@ function CharactersPage() {
               disabled={saving || loading || !dirty} 
               style={{ padding: "6px 12px", fontSize: "14px" }}
             >
-              {saving ? "Saving..." : "Save"}
+              {saving ? "Saving..." : t("characters.save")}
               {dirty && !saving && " *"}
             </button>
             
@@ -363,7 +363,7 @@ function CharactersPage() {
                 opacity: isComplete ? 0.7 : 1
               }}
             >
-              {isComplete ? "✓ Completed" : "Mark Complete"}
+              {isComplete ? "✓ Completed" : t("characters.markComplete")}
             </button>
           </>
         )}
@@ -684,7 +684,7 @@ function CharactersPage() {
                               borderRadius: "3px"
                             }}
                           >
-                            <option value="">Default Style</option>
+                            <option value="">{t("characters.defaultStyle")}</option>
                             {availableVoices.find(v => v.id === c.voiceAssignment?.voiceId)?.styles.map(style => (
                               <option key={style} value={style}>
                                 {style}
@@ -697,7 +697,7 @@ function CharactersPage() {
                       {/* Prosody Controls */}
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px", fontSize: "10px" }}>
                         <div>
-                          <label style={{ color: "var(--muted)" }}>Rate: {c.voiceAssignment.rate_pct || 0}%</label>
+                          <label style={{ color: "var(--muted)" }}>{t("characters.rate")}: {c.voiceAssignment.rate_pct || 0}%</label>
                           <input
                             type="range"
                             min="-50"
@@ -711,7 +711,7 @@ function CharactersPage() {
                           />
                         </div>
                         <div>
-                          <label style={{ color: "var(--muted)" }}>Pitch: {c.voiceAssignment.pitch_pct || 0}%</label>
+                          <label style={{ color: "var(--muted)" }}>{t("characters.pitch")}: {c.voiceAssignment.pitch_pct || 0}%</label>
                           <input
                             type="range"
                             min="-50"
@@ -729,7 +729,7 @@ function CharactersPage() {
                       {/* Style Degree */}
                       {c.voiceAssignment.style && (
                         <div style={{ marginTop: "4px", fontSize: "10px" }}>
-                          <label style={{ color: "var(--muted)" }}>Intensity: {Math.round((c.voiceAssignment.styledegree || 0.6) * 100)}%</label>
+                          <label style={{ color: "var(--muted)" }}>{t("characters.intensity")}: {Math.round((c.voiceAssignment.styledegree || 0.6) * 100)}%</label>
                           <input
                             type="range"
                             min="10"
@@ -745,7 +745,7 @@ function CharactersPage() {
                       )}
 
                       <div style={{ fontSize: "10px", color: "var(--muted)", marginTop: "4px" }}>
-                        Method: {c.voiceAssignment.method === "llm_auto" ? "Auto-assigned" : "Manual"}
+                        {t("characters.method")}: {c.voiceAssignment.method === "llm_auto" ? t("characters.methodAutoAssigned") : t("characters.methodManual")}
                       </div>
                     </div>
                   )}
@@ -785,7 +785,7 @@ function CharactersPage() {
                         cursor: "pointer"
                       }}
                     >
-                      Remove
+                      {t("characters.remove")}
                     </button>
                   </div>
                 </div>

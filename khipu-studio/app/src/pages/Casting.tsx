@@ -281,7 +281,7 @@ export default function CastingPage() {
                 fontSize: "14px"
               }}
             >
-              <option value="">+ Add Language</option>
+              <option value="">{t("casting.addLanguage")}</option>
               {availableLanguageOptions
                 .filter(lang => !selectedLanguages.includes(lang))
                 .map(lang => (
@@ -323,7 +323,7 @@ export default function CastingPage() {
         {/* Language Filter Tags */}
         {selectedLanguages.length > 0 && (
           <div style={{ marginBottom: "16px", display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
-            <span style={{ fontSize: "14px", color: "var(--muted)" }}>Languages:</span>
+            <span style={{ fontSize: "14px", color: "var(--muted)" }}>{t("casting.languagesLabel")}</span>
             {selectedLanguages.map(lang => (
               <span
                 key={lang}
@@ -466,16 +466,6 @@ export default function CastingPage() {
         justifyContent: "space-between",
         alignItems: "center"
       }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "4px" }}>
-          <div style={{ fontSize: "14px", color: "#6b7280" }}>
-            {selectedVoices.size} {selectedVoices.size === 1 ? "voice" : "voices"} selected
-          </div>
-          {isCastingCompleted && (
-            <div style={{ fontSize: "12px", color: "#10b981", display: "flex", alignItems: "center", gap: "4px" }}>
-              ✓ {t("workflow.buttonCompleted")}
-            </div>
-          )}
-        </div>
         {message && (
           <span style={{ 
             fontSize: "14px", 

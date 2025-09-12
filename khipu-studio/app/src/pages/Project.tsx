@@ -147,11 +147,11 @@ export default function Project() {
       <section style={{ marginTop: 24 }}>
         <h3>{t("project.planning")}</h3>
         <p style={{ fontSize: "14px", color: "var(--muted)", marginBottom: "16px" }}>
-          Configure pause durations (in milliseconds) to be inserted in the planning:
+          {t("project.pauseConfiguration")}
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
           <label>
-            <div>Sentence Pause</div>
+            <div>{t("project.sentencePause")}</div>
             <input
               type="number"
               value={cfg?.pauses?.sentenceMs || 500}
@@ -162,7 +162,7 @@ export default function Project() {
             />
           </label>
           <label>
-            <div>Paragraph Pause</div>
+            <div>{t("project.paragraphPause")}</div>
             <input
               type="number"
               value={cfg?.pauses?.paragraphMs || 1000}
@@ -173,7 +173,7 @@ export default function Project() {
             />
           </label>
           <label>
-            <div>Chapter Pause</div>
+            <div>{t("project.chapterPause")}</div>
             <input
               type="number"
               value={cfg?.pauses?.chapterMs || 3000}
@@ -186,7 +186,7 @@ export default function Project() {
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
           <label>
-            <div>Comma Pause</div>
+            <div>{t("project.commaPause")}</div>
             <input
               type="number"
               value={cfg?.pauses?.commaMs || 300}
@@ -197,7 +197,7 @@ export default function Project() {
             />
           </label>
           <label>
-            <div>Colon Pause</div>
+            <div>{t("project.colonPause")}</div>
             <input
               type="number"
               value={cfg?.pauses?.colonMs || 400}
@@ -208,7 +208,7 @@ export default function Project() {
             />
           </label>
           <label>
-            <div>Semi-colon Pause</div>
+            <div>{t("project.semicolonPause")}</div>
             <input
               type="number"
               value={cfg?.pauses?.semicolonMs || 350}
@@ -285,10 +285,10 @@ export default function Project() {
         {/* OpenAI Credentials - Show only when OpenAI is selected */}
         {isOpenAI(llm.engine) && (
           <div style={{ marginTop: 16 }}>
-            <h4 style={{ fontSize: "16px", marginBottom: 12 }}>OpenAI Credentials</h4>
+            <h4 style={{ fontSize: "16px", marginBottom: 12 }}>{t("project.openaiCredentials")}</h4>
             <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 12, alignItems: "start" }}>
               <PasswordField
-                label="OpenAI API Key"
+                label={t("project.openaiApiKey")}
                 value={cfg?.creds?.llm?.openai?.apiKey || ""}
                 onChange={(value) => update("creds", {
                   ...cfg?.creds,
@@ -300,7 +300,7 @@ export default function Project() {
                 placeholder="sk-..."
               />
               <label>
-                <div>OpenAI Base URL (optional)</div>
+                <div>{t("project.openaiBaseUrl")}</div>
                 <input
                   type="text"
                   value={cfg?.creds?.llm?.openai?.baseUrl || ""}
@@ -321,10 +321,10 @@ export default function Project() {
         {/* Azure OpenAI Credentials - Show only when Azure OpenAI is selected */}
         {isAzureOpenAI(llm.engine) && (
           <div style={{ marginTop: 16 }}>
-            <h4 style={{ fontSize: "16px", marginBottom: 12 }}>Azure OpenAI Credentials</h4>
+            <h4 style={{ fontSize: "16px", marginBottom: 12 }}>{t("project.azureOpenaiCredentials")}</h4>
             <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
               <PasswordField
-                label="Azure OpenAI API Key"
+                label={t("project.azureOpenaiApiKey")}
                 value={cfg?.creds?.llm?.azureOpenAI?.apiKey || ""}
                 onChange={(value) => update("creds", {
                   ...cfg?.creds,
@@ -333,7 +333,7 @@ export default function Project() {
                     azureOpenAI: { ...cfg?.creds?.llm?.azureOpenAI, apiKey: value }
                   }
                 })}
-                placeholder="Enter Azure OpenAI API key"
+                placeholder={t("project.azureOpenaiApiKeyPlaceholder")}
               />
             </div>
           </div>
@@ -383,17 +383,17 @@ export default function Project() {
             />
           )}
           <div style={{ fontSize: "14px", color: "var(--muted)", gridColumn: "1 / -1" }}>
-            TTS caching is always enabled for optimal performance.
+            {t("project.ttsCachingInfo")}
           </div>
         </div>
         
         {/* Azure TTS Credentials - Show only when Azure is selected */}
         {isAzureTTS(tts.engine) && (
           <div style={{ marginTop: 16 }}>
-            <h4 style={{ fontSize: "16px", marginBottom: 12 }}>Azure TTS Credentials</h4>
+            <h4 style={{ fontSize: "16px", marginBottom: 12 }}>{t("project.azureTtsCredentials")}</h4>
             <div style={{ display: "grid", gridTemplateColumns: "300px 200px", gap: 12, alignItems: "start" }}>
               <PasswordField
-                label="Azure TTS Key"
+                label={t("project.azureTtsKey")}
                 value={cfg?.creds?.tts?.azure?.key || ""}
                 onChange={(value) => update("creds", {
                   ...cfg?.creds,
@@ -405,7 +405,7 @@ export default function Project() {
                 placeholder="Enter Azure TTS API key"
               />
               <label>
-                <div>Azure Region</div>
+                <div>{t("project.azureRegion")}</div>
                 <input
                   type="text"
                   value={cfg?.creds?.tts?.azure?.region || ""}
@@ -426,10 +426,10 @@ export default function Project() {
 
       {/* Packaging Settings */}
       <section style={{ marginTop: 24 }}>
-        <h3>Packaging</h3>
+        <h3>{t("project.packaging")}</h3>
         <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
           <label>
-            <div>Output Directory</div>
+            <div>{t("project.outputDirectory")}</div>
             <input
               value={cfg?.export?.outputDir || "output"}
               placeholder="output"
@@ -440,7 +440,7 @@ export default function Project() {
             />
           </label>
           <div style={{ marginTop: 8 }}>
-            <div style={{ marginBottom: 8 }}>Target Platforms</div>
+            <div style={{ marginBottom: 8 }}>{t("project.targetPlatforms")}</div>
             <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
               <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <input

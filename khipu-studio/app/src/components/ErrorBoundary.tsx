@@ -1,6 +1,5 @@
 import { Component } from "react";
 import type { ReactNode, ErrorInfo } from "react";
-import { t } from "i18next";
 
 type Props = { children: ReactNode };
 type State = { hasError: boolean; msg?: string };
@@ -21,9 +20,9 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div style={{ padding: 24, color: "#fee2e2", background: "#7f1d1d" }}>
-          <h2>{t("error.somethingWentWrong")}</h2>
+          <h2>Algo salió mal en la UI</h2>
           <div><code>{this.state.msg}</code></div>
-          <p>{t("error.checkConsole")}</p>
+          <p>Revisa la consola (Ctrl+Shift+I) para más detalles.</p>
         </div>
       );
     }
