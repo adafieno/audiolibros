@@ -52,6 +52,208 @@
     "comment": "Navigation menu item for application settings"
   },
 
+  "home.welcome": {
+    "string": "Welcome to Khipu Studio",
+    "comment": "Welcome message on the home page"
+  },
+  "home.cta": {
+    "string": "Select a project and start with Manuscript → Planning.",
+    "comment": "Call to action text on the home page"
+  },
+  "home.existingProjects": {
+    "string": "Recent Projects",
+    "comment": "Header for the recent projects section"
+  },
+  "home.openExisting": {
+    "string": "Open Existing Project",
+    "comment": "Button text to open an existing project"
+  },
+  "home.createNew": {
+    "string": "Create New Project",
+    "comment": "Header for creating a new project"
+  },
+  "home.baseFolder": {
+    "string": "Base folder",
+    "comment": "Label for base folder selection"
+  },
+  "home.browse": {
+    "string": "Browse",
+    "comment": "Button text to browse for folder"
+  },
+  "home.projectName": {
+    "string": "Project name",
+    "comment": "Label for project name input"
+  },
+  "home.create": {
+    "string": "Create",
+    "comment": "Button text to create a project"
+  },
+  "home.open": {
+    "string": "Open",
+    "comment": "Button text to open a project"
+  },
+  "home.instructions": {
+    "string": "Open an existing project or create a new one with the recommended structure.",
+    "comment": "Instructions text on the home page"
+  },
+  "home.loading": {
+    "string": "Loading…",
+    "comment": "Loading text for home page"
+  },
+  "home.noRecents": {
+    "string": "No recent projects.",
+    "comment": "Message when no recent projects exist"
+  },
+  "home.createError": {
+    "string": "Could not create project.",
+    "comment": "Error message when project creation fails"
+  },
+  "home.createSuccess": {
+    "string": "Project created ✔",
+    "comment": "Success message when project is created"
+  },
+  "home.structurePreview": {
+    "string": "Structure to create",
+    "comment": "Header for project structure preview"
+  },
+
+  "casting.title": {
+    "string": "Voice Casting",
+    "comment": "Title for the voice casting page"
+  },
+  "casting.description": {
+    "string": "Select and manage voices for text-to-speech generation based on your TTS engine configuration.",
+    "comment": "Description for the voice casting page"
+  },
+  "casting.loading": {
+    "string": "Loading voice inventory...",
+    "comment": "Loading message for voice data"
+  },
+  "casting.loadError": {
+    "string": "Error loading voice data",
+    "comment": "Error message when voice data fails to load"
+  },
+  "casting.saveError": {
+    "string": "Error saving voice selection",
+    "comment": "Error message when voice selection fails to save"
+  },
+  "casting.saving": {
+    "string": "Saving selection...",
+    "comment": "Message shown while saving voice selection"
+  },
+  "casting.saved": {
+    "string": "Voice selection saved ✔",
+    "comment": "Success message when voice selection is saved"
+  },
+  "casting.engineTitle": {
+    "string": "TTS Engine",
+    "comment": "Title for TTS engine section"
+  },
+  "casting.engineDescription": {
+    "string": "Choose voices compatible with your selected TTS engine:",
+    "comment": "Description for engine voice compatibility"
+  },
+  "casting.voicesAvailable": {
+    "string": "voices available",
+    "comment": "Text indicating number of available voices"
+  },
+  "casting.currentEngine": {
+    "string": "Current engine",
+    "comment": "Label for current TTS engine"
+  },
+  "casting.voicesTitle": {
+    "string": "Available Voices",
+    "comment": "Title for available voices section"
+  },
+  "casting.selectAll": {
+    "string": "Select All",
+    "comment": "Button text to select all voices"
+  },
+  "casting.deselectAll": {
+    "string": "Deselect All",
+    "comment": "Button text to deselect all voices"
+  },
+  "casting.noVoicesForEngine": {
+    "string": "No voices available for this engine.",
+    "comment": "Message when no voices are available for selected engine"
+  },
+  "casting.selectedCount": {
+    "string": "{{count}} voices selected",
+    "comment": "Text showing number of selected voices"
+  },
+  "casting.save": {
+    "string": "Save Selection",
+    "comment": "Button text to save voice selection"
+  },
+  "casting.male": {
+    "string": "Male",
+    "comment": "Label for male voice gender"
+  },
+  "casting.female": {
+    "string": "Female",
+    "comment": "Label for female voice gender"
+  },
+  "casting.neutral": {
+    "string": "Neutral",
+    "comment": "Label for neutral voice gender"
+  },
+  "casting.age.child": {
+    "string": "Child",
+    "comment": "Label for child age voice"
+  },
+  "casting.age.teen": {
+    "string": "Teen",
+    "comment": "Label for teen age voice"
+  },
+  "casting.age.adult": {
+    "string": "Adult",
+    "comment": "Label for adult age voice"
+  },
+  "casting.age.elderly": {
+    "string": "Elderly",
+    "comment": "Label for elderly age voice"
+  },
+  "casting.styles": {
+    "string": "Styles",
+    "comment": "Label for voice styles"
+  },
+  "casting.accents": {
+    "string": "Accents",
+    "comment": "Label for voice accents"
+  },
+  "casting.engine.azure": {
+    "string": "Azure",
+    "comment": "Name for Azure TTS engine"
+  },
+  "casting.engine.elevenlabs": {
+    "string": "ElevenLabs",
+    "comment": "Name for ElevenLabs TTS engine"
+  },
+  "casting.engine.openai": {
+    "string": "OpenAI",
+    "comment": "Name for OpenAI TTS engine"
+  },
+  "casting.engine.google": {
+    "string": "Google Cloud",
+    "comment": "Name for Google Cloud TTS engine"
+  },
+  "casting.audition.loadError": {
+    "string": "Error loading audio",
+    "comment": "Error message when audio preview fails to load"
+  },
+  "casting.complete": {
+    "string": "Complete Casting",
+    "comment": "Button text to complete casting step"
+  },
+  "casting.completed": {
+    "string": "Casting completed ✔",
+    "comment": "Message when casting step is completed"
+  },
+  "casting.completeError": {
+    "string": "Error completing casting",
+    "comment": "Error message when completing casting fails"
+  },
+
   "settings.description": {
     "string": "Adjust global application settings.",
     "comment": "Description text for the settings page"
@@ -232,5 +434,334 @@
   "planning.errors.completedButFailedReload": {
     "string": "Character assignment completed but failed to reload. Please refresh the chapter.",
     "comment": "Error message when character assignment completes but reload fails"
+  },
+
+  "planning.segmentNotFound": {
+    "string": "Segment not found",
+    "comment": "Error message when a segment cannot be found"
+  },
+  "planning.invalidSplitPosition": {
+    "string": "Invalid split position",
+    "comment": "Error message when split position is invalid"
+  },
+  "planning.cannotDeleteLastSegment": {
+    "string": "Cannot delete the last segment of the chapter",
+    "comment": "Error message when trying to delete the last segment"
+  },
+  "planning.segmentTextNotFound": {
+    "string": "Segment text not found",
+    "comment": "Error message when segment text is missing"
+  },
+  "planning.segmentSplitSuccessfully": {
+    "string": "Segment split successfully",
+    "comment": "Success message when a segment is split"
+  },
+  "planning.splitOperationFailed": {
+    "string": "Split operation failed",
+    "comment": "Error message when split operation fails"
+  },
+  "planning.mergeOperationFailed": {
+    "string": "Merge operation failed",
+    "comment": "Error message when merge operation fails"
+  },
+  "planning.segmentDeletedSuccessfully": {
+    "string": "Segment deleted successfully",
+    "comment": "Success message when a segment is deleted"
+  },
+  "planning.deleteOperationFailed": {
+    "string": "Delete operation failed",
+    "comment": "Error message when delete operation fails"
+  },
+  "planning.mergeWithPrevious": {
+    "string": "Merge with previous segment",
+    "comment": "Tooltip for merge with previous button"
+  },
+  "planning.mergeWithNext": {
+    "string": "Merge with next segment",
+    "comment": "Tooltip for merge with next button"
+  },
+  "planning.deleteThisSegment": {
+    "string": "Delete this segment",
+    "comment": "Tooltip for delete segment button"
+  },
+  "planning.undoLastOperation": {
+    "string": "Undo last segment operation",
+    "comment": "Tooltip for undo button"
+  },
+  "planning.splitAtCursor": {
+    "string": "Split segment at cursor position",
+    "comment": "Tooltip for split at cursor button"
+  },
+  "planning.clickToEdit": {
+    "string": "Click to edit text",
+    "comment": "Tooltip for editable text"
+  },
+  "planning.splitInstructions": {
+    "string": "✂️ Position cursor where you want to split, then click \"Split at Cursor\"",
+    "comment": "Instructions for splitting segments"
+  },
+  "planning.undoSuccessful": {
+    "string": "Undo successful",
+    "comment": "Success message when undo operation succeeds"
+  },
+  "planning.tooltips.saveChanges": {
+    "string": "Save changes (Ctrl+Enter)",
+    "comment": "Tooltip for save changes button"
+  },
+  "planning.tooltips.cancelEdit": {
+    "string": "Cancel edit (Escape)",
+    "comment": "Tooltip for cancel edit button"
+  },
+
+  "book.title": {
+    "string": "Book Metadata",
+    "comment": "Title for book metadata page"
+  },
+  "book.loading": {
+    "string": "Loading book metadata...",
+    "comment": "Loading message for book metadata"
+  },
+  "book.save": {
+    "string": "Save",
+    "comment": "Save button text for book metadata"
+  },
+  "book.saved": {
+    "string": "Book metadata saved",
+    "comment": "Success message when book metadata is saved"
+  },
+  "book.saveError": {
+    "string": "Error saving book metadata",
+    "comment": "Error message when book metadata save fails"
+  },
+  "book.loadError": {
+    "string": "Error loading book metadata",
+    "comment": "Error message when book metadata load fails"
+  },
+  "book.completeButton": {
+    "string": "Mark book metadata as complete",
+    "comment": "Button text to complete book metadata step"
+  },
+  "book.basicInfo": {
+    "string": "Basic Information",
+    "comment": "Section header for basic book information"
+  },
+  "book.title.label": {
+    "string": "Title",
+    "comment": "Label for book title field"
+  },
+  "book.subtitle.label": {
+    "string": "Subtitle",
+    "comment": "Label for book subtitle field"
+  },
+  "book.authors.label": {
+    "string": "Authors",
+    "comment": "Label for book authors field"
+  },
+  "book.narrators.label": {
+    "string": "Narrators",
+    "comment": "Label for book narrators field"
+  },
+  "book.content": {
+    "string": "Content Information",
+    "comment": "Section header for content information"
+  },
+  "book.description.label": {
+    "string": "Description",
+    "comment": "Label for book description field"
+  },
+  "book.keywords.label": {
+    "string": "Keywords",
+    "comment": "Label for book keywords field"
+  },
+  "book.categories.label": {
+    "string": "Categories",
+    "comment": "Label for book categories field"
+  },
+  "book.language.label": {
+    "string": "Language",
+    "comment": "Label for book language field"
+  },
+  "book.publishing": {
+    "string": "Publishing Information",
+    "comment": "Section header for publishing information"
+  },
+  "book.publisher.label": {
+    "string": "Publisher",
+    "comment": "Label for publisher field"
+  },
+  "book.publishingDate.label": {
+    "string": "Publishing Date",
+    "comment": "Label for publishing date field"
+  },
+  "book.isbn.label": {
+    "string": "ISBN",
+    "comment": "Label for ISBN field"
+  },
+  "book.sku.label": {
+    "string": "SKU",
+    "comment": "Label for SKU field"
+  },
+
+  "project.title": {
+    "string": "Project Configuration",
+    "comment": "Title for project configuration page"
+  },
+  "project.loading": {
+    "string": "Loading configuration...",
+    "comment": "Loading message for project configuration"
+  },
+  "project.save": {
+    "string": "Save",
+    "comment": "Save button text for project configuration"
+  },
+  "project.saved": {
+    "string": "Configuration saved",
+    "comment": "Success message when configuration is saved"
+  },
+  "project.saveError": {
+    "string": "Error saving configuration",
+    "comment": "Error message when configuration save fails"
+  },
+  "project.loadError": {
+    "string": "Error loading configuration",
+    "comment": "Error message when configuration load fails"
+  },
+  "project.completeButton": {
+    "string": "Mark configuration as complete",
+    "comment": "Button text to complete project configuration step"
+  },
+  "project.markComplete": {
+    "string": "Mark configuration as complete",
+    "comment": "Button text to complete project configuration"
+  },
+  "project.general": {
+    "string": "General Configuration",
+    "comment": "Section header for general configuration"
+  },
+  "project.language": {
+    "string": "Project language",
+    "comment": "Label for project language setting"
+  },
+  "project.manuscript": {
+    "string": "Manuscript",
+    "comment": "Section header for manuscript settings"
+  },
+  "project.chapterGlob": {
+    "string": "Chapter file pattern",
+    "comment": "Label for chapter file pattern setting"
+  },
+  "project.planning": {
+    "string": "Planning",
+    "comment": "Section header for planning settings"
+  },
+  "project.maxKb": {
+    "string": "Maximum KB per query",
+    "comment": "Label for maximum KB per query setting"
+  },
+  "project.llmAttribution": {
+    "string": "LLM Attribution",
+    "comment": "Label for LLM attribution setting"
+  },
+  "project.attributionOn": {
+    "string": "Enabled",
+    "comment": "Label for attribution enabled option"
+  },
+  "project.attributionOff": {
+    "string": "Disabled",
+    "comment": "Label for attribution disabled option"
+  },
+  "project.ssml": {
+    "string": "SSML",
+    "comment": "Section header for SSML settings"
+  },
+  "project.rate": {
+    "string": "Rate",
+    "comment": "Label for SSML rate setting"
+  },
+  "project.pitch": {
+    "string": "Pitch",
+    "comment": "Label for SSML pitch setting"
+  },
+  "project.breaks": {
+    "string": "Breaks (ms)",
+    "comment": "Label for SSML breaks setting"
+  },
+  "project.llm": {
+    "string": "LLM Engine",
+    "comment": "Section header for LLM engine settings"
+  },
+  "project.llmEngine": {
+    "string": "Engine",
+    "comment": "Label for LLM engine selection"
+  },
+  "project.llmModel": {
+    "string": "Model (OpenAI)",
+    "comment": "Placeholder for OpenAI model field"
+  },
+  "project.llmModelLocal": {
+    "string": "Model (Local)",
+    "comment": "Placeholder for local model field"
+  },
+  "project.llmEndpoint": {
+    "string": "Endpoint (Local)",
+    "comment": "Placeholder for local endpoint field"
+  },
+  "project.tts": {
+    "string": "TTS Engine",
+    "comment": "Section header for TTS engine settings"
+  },
+  "project.ttsEngine": {
+    "string": "Engine",
+    "comment": "Label for TTS engine selection"
+  },
+  "project.ttsVoiceAzure": {
+    "string": "Azure voice (e.g., en-US-JennyNeural)",
+    "comment": "Placeholder for Azure voice field"
+  },
+  "project.ttsVoiceElevenlabs": {
+    "string": "ElevenLabs voice ID",
+    "comment": "Placeholder for ElevenLabs voice ID field"
+  },
+  "project.ttsModelLocal": {
+    "string": "Local model (optional)",
+    "comment": "Placeholder for local TTS model field"
+  },
+
+  "manu.title": {
+    "string": "Manuscript",
+    "comment": "Title for manuscript page"
+  },
+
+  "workflow.readyToStart": {
+    "string": "Workflow: Ready to start",
+    "comment": "Workflow status message when ready to start"
+  },
+  "workflow.completed": {
+    "string": "Completed: {{steps}}",
+    "comment": "Workflow status showing completed steps"
+  },
+  "workflow.completedLabel": {
+    "string": "Completed",
+    "comment": "Label for completed workflow status"
+  },
+  "workflow.next": {
+    "string": "Next: {{step}}",
+    "comment": "Workflow status showing next step"
+  },
+  "workflow.nextLabel": {
+    "string": "Next",
+    "comment": "Label for next step"
+  },
+  "workflow.allComplete": {
+    "string": "🎉 All workflow steps completed!",
+    "comment": "Success message when all workflow steps are done"
+  },
+  "workflow.buttonCompleted": {
+    "string": "✓ Completed",
+    "comment": "Button text showing step is completed"
+  },
+  "workflow.stepCompleted": {
+    "string": "Step completed",
+    "comment": "Message when a step is completed"
   }
 }
