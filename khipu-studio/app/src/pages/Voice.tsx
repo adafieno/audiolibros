@@ -511,7 +511,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                         color: selectedRowIndex === index ? "white" : "var(--text)"
                       }}
                     >
-                      <td style={{ padding: "8px", color: "var(--muted)" }}>
+                      <td style={{ padding: "8px", color: selectedRowIndex === index ? "white" : "var(--muted)" }}>
                         {selectedRowIndex === index ? "▶" : ""}
                       </td>
                       <td style={{ padding: "8px", color: "inherit" }}>

@@ -2246,7 +2246,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
                           color: i === selIndex ? "white" : "var(--text)"
                         }}
                       >
-                        <td style={{ padding: "4px 6px", color: "var(--muted)" }}>{i === selIndex ? "▶" : ""}</td>
+                        <td style={{ padding: "4px 6px", color: i === selIndex ? "white" : "var(--muted)" }}>{i === selIndex ? "▶" : ""}</td>
                         <td style={{ padding: "4px 6px", whiteSpace: "nowrap" }}>{r.segmentId}</td>
                         <td style={{ padding: "4px 6px", textAlign: "center" }}>{r.delimiter}</td>
                         <td style={{ padding: "4px 6px", textAlign: "right" }}>{r.start}</td>
