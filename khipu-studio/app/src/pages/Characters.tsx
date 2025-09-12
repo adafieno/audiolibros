@@ -592,7 +592,7 @@ function CharactersPage() {
                           resize: "vertical",
                           fontFamily: "inherit"
                         }}
-                        placeholder="Add character description..."
+                        placeholder={t("characters.addDescriptionPlaceholder")}
                       />
                     ) : (
                       <span 

@@ -439,7 +439,7 @@ export default function Home() {
               <input
                 value={parentDir}
                 onChange={(e) => setParentDir(e.target.value)}
-                placeholder="C:\\proyectos\\audio"
+                placeholder={t("home.baseFolderPlaceholder")}
                 style={{
                   flex: 1,
                   padding: "8px 12px",
@@ -481,7 +481,7 @@ export default function Home() {
             <input
               value={projName}
               onChange={(e) => setProjName(e.target.value)}
-              placeholder="mi_libro"
+              placeholder={t("home.projectNamePlaceholder")}
               style={{
                 width: "100%",
                 padding: "8px 12px",

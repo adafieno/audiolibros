@@ -1,6 +1,6 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-// import ICU from "i18next-icu"; // Temporarily disabled to test standard interpolation
+import ICU from "i18next-icu";
 import LanguageDetector from "i18next-browser-languagedetector";
 import { extractTranslationStrings, type TranslationResource } from "./lib/i18n-utils";
 
@@ -13,7 +13,7 @@ const extractedEsPE = extractTranslationStrings(esPE as TranslationResource);
 const extractedEnUS = extractTranslationStrings(enUS as TranslationResource);
 
 i18n
-  // .use(ICU) // Temporarily disabled to test standard interpolation
+  .use(ICU)
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({

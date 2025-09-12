@@ -1312,5 +1312,57 @@
   "languages.zh": {
     "string": "Chinese",
     "comment": "Language name for Chinese"
+  },
+  "characters.addDescriptionPlaceholder": {
+    "string": "Add character description...",
+    "comment": "Placeholder for character description input"
+  },
+  "home.baseFolderPlaceholder": {
+    "string": "C:\\projects\\audio",
+    "comment": "Placeholder for project base folder"
+  },
+  "home.projectNamePlaceholder": {
+    "string": "my_book",
+    "comment": "Placeholder for project name"
+  },
+  "book.isbnPlaceholder": {
+    "string": "978-0-000000-00-0",
+    "comment": "Placeholder for ISBN field"
+  },
+  "book.copyrightPlaceholder": {
+    "string": "© 2025 Author Name",
+    "comment": "Placeholder for copyright field"
+  },
+  "project.azureModelPlaceholder": {
+    "string": "Model (gpt-4o)",
+    "comment": "Placeholder for Azure OpenAI model"
+  },
+  "project.azureEndpointPlaceholder": {
+    "string": "Endpoint URL",
+    "comment": "Placeholder for Azure endpoint"
+  },
+  "project.azureApiVersionPlaceholder": {
+    "string": "API Version (2024-02-15-preview)",
+    "comment": "Placeholder for Azure API version"
+  },
+  "project.openaiApiKeyPlaceholder": {
+    "string": "sk-...",
+    "comment": "Placeholder for OpenAI API key"
+  },
+  "project.openaiBaseUrlPlaceholder": {
+    "string": "https://api.openai.com/v1",
+    "comment": "Placeholder for OpenAI base URL"
+  },
+  "project.azureTtsApiKeyPlaceholder": {
+    "string": "Enter Azure TTS API key",
+    "comment": "Placeholder for Azure TTS API key"
+  },
+  "project.azureRegionPlaceholder": {
+    "string": "e.g., eastus",
+    "comment": "Placeholder for Azure region"
+  },
+  "project.outputFolderPlaceholder": {
+    "string": "output",
+    "comment": "Placeholder for output folder"
   }
 }

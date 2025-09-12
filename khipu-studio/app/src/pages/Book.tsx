@@ -432,7 +432,7 @@ export default function Book() {
             <input
               style={{ width: "80%" }}
               value={bookMeta?.isbn || ""}
-              placeholder="978-0-000000-00-0"
+              placeholder={t("book.isbnPlaceholder")}
               onChange={(e) => updateBookMeta({ isbn: e.target.value })}
             />
           </label>
@@ -449,7 +449,7 @@ export default function Book() {
             <input
               style={{ width: "80%" }}
               value={bookMeta?.rights || ""}
-              placeholder="© 2025 Author Name"
+              placeholder={t("book.copyrightPlaceholder")}
               onChange={(e) => updateBookMeta({ rights: e.target.value })}
             />
           </label>

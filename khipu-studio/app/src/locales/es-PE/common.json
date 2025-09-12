@@ -1818,5 +1818,57 @@
   "languages.zh": {
     "string": "Chino",
     "comment": "Nombre del idioma para Chino"
+  },
+  "characters.addDescriptionPlaceholder": {
+    "string": "Añadir descripción del personaje...",
+    "comment": "Placeholder para la descripción del personaje"
+  },
+  "home.baseFolderPlaceholder": {
+    "string": "C:\\proyectos\\audio",
+    "comment": "Placeholder para la carpeta base del proyecto"
+  },
+  "home.projectNamePlaceholder": {
+    "string": "mi_libro",
+    "comment": "Placeholder para el nombre del proyecto"
+  },
+  "book.isbnPlaceholder": {
+    "string": "978-0-000000-00-0",
+    "comment": "Placeholder para el campo ISBN"
+  },
+  "book.copyrightPlaceholder": {
+    "string": "© 2025 Nombre del Autor",
+    "comment": "Placeholder para el campo de copyright"
+  },
+  "project.azureModelPlaceholder": {
+    "string": "Modelo (gpt-4o)",
+    "comment": "Placeholder para el modelo Azure OpenAI"
+  },
+  "project.azureEndpointPlaceholder": {
+    "string": "URL del Endpoint",
+    "comment": "Placeholder para el endpoint de Azure"
+  },
+  "project.azureApiVersionPlaceholder": {
+    "string": "Versión API (2024-02-15-preview)",
+    "comment": "Placeholder para la versión API de Azure"
+  },
+  "project.openaiApiKeyPlaceholder": {
+    "string": "sk-...",
+    "comment": "Placeholder para la clave API de OpenAI"
+  },
+  "project.openaiBaseUrlPlaceholder": {
+    "string": "https://api.openai.com/v1",
+    "comment": "Placeholder para la URL base de OpenAI"
+  },
+  "project.azureTtsApiKeyPlaceholder": {
+    "string": "Ingresa la clave API de Azure TTS",
+    "comment": "Placeholder para la clave API de Azure TTS"
+  },
+  "project.azureRegionPlaceholder": {
+    "string": "ej., eastus",
+    "comment": "Placeholder para la región de Azure"
+  },
+  "project.outputFolderPlaceholder": {
+    "string": "output",
+    "comment": "Placeholder para la carpeta de salida"
   }
 }

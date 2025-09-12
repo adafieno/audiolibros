@@ -251,17 +251,17 @@ export default function Project() {
           ) : isAzureOpenAI(llm.engine) ? (
             <div style={{ display: "grid", gridTemplateColumns: "150px 1fr 200px", gap: 8 }}>
               <input
-                placeholder="Model (gpt-4o)"
+                placeholder={t("project.azureModelPlaceholder")}
                 value={llm.engine.model}
                 onChange={(e) => update("llm", { engine: { name: "azure-openai", model: e.target.value, endpoint: isAzureOpenAI(llm.engine) ? llm.engine.endpoint : "", apiVersion: isAzureOpenAI(llm.engine) ? llm.engine.apiVersion : "" } })}
               />
               <input
-                placeholder="Endpoint URL"
+                placeholder={t("project.azureEndpointPlaceholder")}
                 value={isAzureOpenAI(llm.engine) ? llm.engine.endpoint : ""}
                 onChange={(e) => update("llm", { engine: { name: "azure-openai", model: llm.engine.model, endpoint: e.target.value, apiVersion: isAzureOpenAI(llm.engine) ? llm.engine.apiVersion : "" } })}
               />
               <input
-                placeholder="API Version (2024-02-15-preview)"
+                placeholder={t("project.azureApiVersionPlaceholder")}
                 value={isAzureOpenAI(llm.engine) ? (llm.engine.apiVersion ?? "") : ""}
                 onChange={(e) => update("llm", { engine: { name: "azure-openai", model: llm.engine.model, endpoint: isAzureOpenAI(llm.engine) ? llm.engine.endpoint : "", apiVersion: e.target.value } })}
               />
@@ -297,14 +297,14 @@ export default function Project() {
                     openai: { ...cfg?.creds?.llm?.openai, apiKey: value }
                   }
                 })}
-                placeholder="sk-..."
+                placeholder={t("project.openaiApiKeyPlaceholder")}
               />
               <label>
                 <div>{t("project.openaiBaseUrl")}</div>
                 <input
                   type="text"
                   value={cfg?.creds?.llm?.openai?.baseUrl || ""}
-                  placeholder="https://api.openai.com/v1"
+                  placeholder={t("project.openaiBaseUrlPlaceholder")}
                   onChange={(e) => update("creds", {
                     ...cfg?.creds,
                     llm: { 
@@ -402,14 +402,14 @@ export default function Project() {
                     azure: { ...cfg?.creds?.tts?.azure, key: value }
                   }
                 })}
-                placeholder="Enter Azure TTS API key"
+                placeholder={t("project.azureTtsApiKeyPlaceholder")}
               />
               <label>
                 <div>{t("project.azureRegion")}</div>
                 <input
                   type="text"
                   value={cfg?.creds?.tts?.azure?.region || ""}
-                  placeholder="e.g., eastus"
+                  placeholder={t("project.azureRegionPlaceholder")}
                   onChange={(e) => update("creds", {
                     ...cfg?.creds,
                     tts: { 
@@ -432,7 +432,7 @@ export default function Project() {
             <div>{t("project.outputDirectory")}</div>
             <input
               value={cfg?.export?.outputDir || "output"}
-              placeholder="output"
+              placeholder={t("project.outputFolderPlaceholder")}
               onChange={(e) => update("export", { 
                 outputDir: e.target.value,
                 platforms: cfg?.export?.platforms || {}
