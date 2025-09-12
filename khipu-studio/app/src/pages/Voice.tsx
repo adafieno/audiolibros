@@ -384,7 +384,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                     padding: "4px 8px"
                   }}
                 >
-                  📄 {chapter.id} {chapter.title ? `- ${chapter.title}` : ""}
+                  📝 {chapter.id} {chapter.title ? `- ${chapter.title}` : ""}
                 </option>
               ))}
             </select>
