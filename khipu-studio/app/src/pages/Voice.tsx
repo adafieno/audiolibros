@@ -478,7 +478,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
       {/* Main content grid - Two pane layout */}
       {selectedChapter && audioSegments.length > 0 ? (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", flex: 1, minHeight: 0 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "0.6fr 1.4fr", gap: "16px", flex: 1, minHeight: 0 }}>
           {/* Left: Audio Segments Grid */}
           <div style={{ border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
             <div style={{ padding: "8px 12px", backgroundColor: "var(--panelAccent)", borderBottom: "1px solid var(--border)", fontSize: "14px", fontWeight: 500 }}>
@@ -497,8 +497,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                     <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>ID</th>
                     <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>Text Preview</th>
                     <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>Voice</th>
-                    <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>SFX</th>
-                    <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -519,7 +517,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                       <td style={{ padding: "8px", color: "inherit" }}>
                         {segment.chunkId}
                       </td>
-                      <td style={{ padding: "8px", color: "inherit", maxWidth: "200px" }}>
+                      <td style={{ padding: "8px", color: "inherit", maxWidth: "250px" }}>
                         <div style={{ 
                           overflow: "hidden", 
                           textOverflow: "ellipsis", 
@@ -528,50 +526,8 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                           {segment.text}
                         </div>
                       </td>
-                      <td style={{ padding: "8px", color: "inherit", fontSize: "11px" }}>
+                      <td style={{ padding: "8px", color: "inherit", fontSize: "12px" }}>
                         {segment.voice}
-                      </td>
-                      <td style={{ padding: "8px" }}>
-                        <select
-                          value={segment.sfxAfter || ""}
-                          onChange={(e) => handleSfxChange(index, e.target.value)}
-                          onClick={(e) => e.stopPropagation()}
-                          style={{
-                            padding: "2px 4px",
-                            fontSize: "10px",
-                            backgroundColor: "var(--input)",
-                            color: "var(--text)",
-                            border: "1px solid var(--border)",
-                            borderRadius: "3px",
-                            minWidth: "60px"
-                          }}
-                        >
-                          <option value="">None</option>
-                          <option value="pause_short">Short</option>
-                          <option value="pause_medium">Medium</option>
-                          <option value="pause_long">Long</option>
-                          <option value="page_turn">Page</option>
-                          <option value="chapter_break">Break</option>
-                        </select>
-                      </td>
-                      <td style={{ padding: "8px" }}>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleGenerateSegmentAudio(index);
-                          }}
-                          style={{
-                            padding: "2px 6px",
-                            fontSize: "10px",
-                            backgroundColor: "var(--accent)",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "3px",
-                            cursor: "pointer"
-                          }}
-                        >
-                          Gen
-                        </button>
                       </td>
                     </tr>
                   ))}
