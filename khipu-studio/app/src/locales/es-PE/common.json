@@ -1622,5 +1622,167 @@
   "characters.markComplete": {
     "string": "Marcar como Completo",
     "comment": "Texto del botón para marcar paso de personajes como completo"
+  },
+
+  "home.byAuthors": {
+    "string": "por {{authors}}",
+    "comment": "Texto de atribución de autores en tarjetas de libros"
+  },
+
+  "languages.ar": {
+    "string": "Árabe",
+    "comment": "Nombre del idioma para Árabe"
+  },
+  "languages.bg": {
+    "string": "Búlgaro",
+    "comment": "Nombre del idioma para Búlgaro"
+  },
+  "languages.ca": {
+    "string": "Catalán",
+    "comment": "Nombre del idioma para Catalán"
+  },
+  "languages.cs": {
+    "string": "Checo",
+    "comment": "Nombre del idioma para Checo"
+  },
+  "languages.da": {
+    "string": "Danés",
+    "comment": "Nombre del idioma para Danés"
+  },
+  "languages.de": {
+    "string": "Alemán",
+    "comment": "Nombre del idioma para Alemán"
+  },
+  "languages.el": {
+    "string": "Griego",
+    "comment": "Nombre del idioma para Griego"
+  },
+  "languages.en": {
+    "string": "Inglés",
+    "comment": "Nombre del idioma para Inglés"
+  },
+  "languages.es": {
+    "string": "Español",
+    "comment": "Nombre del idioma para Español"
+  },
+  "languages.et": {
+    "string": "Estonio",
+    "comment": "Nombre del idioma para Estonio"
+  },
+  "languages.eu": {
+    "string": "Euskera",
+    "comment": "Nombre del idioma para Euskera"
+  },
+  "languages.fi": {
+    "string": "Finés",
+    "comment": "Nombre del idioma para Finés"
+  },
+  "languages.fr": {
+    "string": "Francés",
+    "comment": "Nombre del idioma para Francés"
+  },
+  "languages.gl": {
+    "string": "Gallego",
+    "comment": "Nombre del idioma para Gallego"
+  },
+  "languages.he": {
+    "string": "Hebreo",
+    "comment": "Nombre del idioma para Hebreo"
+  },
+  "languages.hi": {
+    "string": "Hindi",
+    "comment": "Nombre del idioma para Hindi"
+  },
+  "languages.hr": {
+    "string": "Croata",
+    "comment": "Nombre del idioma para Croata"
+  },
+  "languages.hu": {
+    "string": "Húngaro",
+    "comment": "Nombre del idioma para Húngaro"
+  },
+  "languages.id": {
+    "string": "Indonesio",
+    "comment": "Nombre del idioma para Indonesio"
+  },
+  "languages.it": {
+    "string": "Italiano",
+    "comment": "Nombre del idioma para Italiano"
+  },
+  "languages.ja": {
+    "string": "Japonés",
+    "comment": "Nombre del idioma para Japonés"
+  },
+  "languages.ko": {
+    "string": "Coreano",
+    "comment": "Nombre del idioma para Coreano"
+  },
+  "languages.lt": {
+    "string": "Lituano",
+    "comment": "Nombre del idioma para Lituano"
+  },
+  "languages.lv": {
+    "string": "Letón",
+    "comment": "Nombre del idioma para Letón"
+  },
+  "languages.mt": {
+    "string": "Maltés",
+    "comment": "Nombre del idioma para Maltés"
+  },
+  "languages.nb": {
+    "string": "Noruego",
+    "comment": "Nombre del idioma para Noruego"
+  },
+  "languages.nl": {
+    "string": "Neerlandés",
+    "comment": "Nombre del idioma para Neerlandés"
+  },
+  "languages.pl": {
+    "string": "Polaco",
+    "comment": "Nombre del idioma para Polaco"
+  },
+  "languages.pt": {
+    "string": "Portugués",
+    "comment": "Nombre del idioma para Portugués"
+  },
+  "languages.ro": {
+    "string": "Rumano",
+    "comment": "Nombre del idioma para Rumano"
+  },
+  "languages.ru": {
+    "string": "Ruso",
+    "comment": "Nombre del idioma para Ruso"
+  },
+  "languages.sk": {
+    "string": "Eslovaco",
+    "comment": "Nombre del idioma para Eslovaco"
+  },
+  "languages.sl": {
+    "string": "Esloveno",
+    "comment": "Nombre del idioma para Esloveno"
+  },
+  "languages.sv": {
+    "string": "Sueco",
+    "comment": "Nombre del idioma para Sueco"
+  },
+  "languages.th": {
+    "string": "Tailandés",
+    "comment": "Nombre del idioma para Tailandés"
+  },
+  "languages.tr": {
+    "string": "Turco",
+    "comment": "Nombre del idioma para Turco"
+  },
+  "languages.uk": {
+    "string": "Ucraniano",
+    "comment": "Nombre del idioma para Ucraniano"
+  },
+  "languages.vi": {
+    "string": "Vietnamita",
+    "comment": "Nombre del idioma para Vietnamita"
+  },
+  "languages.zh": {
+    "string": "Chino",
+    "comment": "Nombre del idioma para Chino"
   }
 }

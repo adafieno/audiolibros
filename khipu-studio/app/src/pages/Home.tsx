@@ -322,7 +322,7 @@ export default function Home() {
                           marginBottom: "4px",
                           fontWeight: "500"
                         }}>
-                          by {r.authors.join(", ")}
+                          {t("home.byAuthors", { authors: r.authors.join(", ") })}
                         </div>
                       )}
                       

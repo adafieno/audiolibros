@@ -209,48 +209,7 @@ export default function CastingPage() {
 
   // Create language name mapping
   const getLanguageName = (langCode: string): string => {
-    const languageNames: { [key: string]: string } = {
-      'ar': 'Arabic',
-      'bg': 'Bulgarian', 
-      'ca': 'Catalan',
-      'cs': 'Czech',
-      'da': 'Danish',
-      'de': 'German',
-      'el': 'Greek', 
-      'en': 'English',
-      'es': 'Spanish',
-      'et': 'Estonian',
-      'eu': 'Basque',
-      'fi': 'Finnish',
-      'fr': 'French',
-      'gl': 'Galician',
-      'he': 'Hebrew',
-      'hi': 'Hindi',
-      'hr': 'Croatian',
-      'hu': 'Hungarian',
-      'id': 'Indonesian',
-      'it': 'Italian',
-      'ja': 'Japanese',
-      'ko': 'Korean',
-      'lt': 'Lithuanian',
-      'lv': 'Latvian',
-      'mt': 'Maltese',
-      'nb': 'Norwegian',
-      'nl': 'Dutch',
-      'pl': 'Polish',
-      'pt': 'Portuguese',
-      'ro': 'Romanian',
-      'ru': 'Russian',
-      'sk': 'Slovak',
-      'sl': 'Slovenian',
-      'sv': 'Swedish',
-      'th': 'Thai',
-      'tr': 'Turkish',
-      'uk': 'Ukrainian',
-      'vi': 'Vietnamese',
-      'zh': 'Chinese'
-    };
-    return languageNames[langCode] || langCode.toUpperCase();
+    return t(`languages.${langCode}`, { defaultValue: langCode.toUpperCase() });
   };
 
   return (
