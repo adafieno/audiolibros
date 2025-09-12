@@ -1881,7 +1881,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
               }}
             >
               <option value="" style={{ backgroundColor: "var(--panel)", color: "var(--text)" }}>
-                Select a chapter...
+                {t("planning.selectChapterOption")}
               </option>
               {chapters.map((chapter) => {
                 const status = chapterStatus.get(chapter.id);
@@ -1912,7 +1912,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
           disabled={loading || running || !selectedChapter} 
           style={{ padding: "6px 12px", fontSize: "14px" }}
         >
-          {running ? "Generating..." : selectedChapter ? t("planning.generatePlanFor", {chapter: selectedChapter}) : "Select Chapter"}
+          {running ? t("planning.generating") : selectedChapter ? t("planning.generatePlanFor", {chapter: selectedChapter}) : t("planning.selectChapter")}
         </button>
         
         <button 
@@ -1920,7 +1920,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
           disabled={loading || assigningCharacters || !selectedChapter || !segments} 
           style={{ padding: "6px 12px", fontSize: "14px" }}
         >
-          {assigningCharacters ? "Assigning..." : t("planning.assignCharacters")}
+          {assigningCharacters ? t("planning.assigning") : t("planning.assignCharacters")}
         </button>
         
   {segments && selectedChapter && (
@@ -2122,8 +2122,8 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
           borderRadius: "8px", 
           border: "1px dashed var(--border)" 
         }}>
-          <p style={{ color: "var(--text)", fontSize: "18px", marginBottom: "8px" }}>Select a chapter to begin</p>
-          <p style={{ color: "var(--muted)", fontSize: "14px" }}>Choose a chapter from the dropdown above to view or generate its plan.</p>
+          <p style={{ color: "var(--text)", fontSize: "18px", marginBottom: "8px" }}>{t("planning.selectChapterToBegin")}</p>
+          <p style={{ color: "var(--muted)", fontSize: "14px" }}>{t("planning.chooseChapterFromDropdown")}</p>
         </div>
   ) : segments ? (
         <div style={{ display: "grid", gridTemplateRows: "auto 1fr", height: "calc(100% - 200px)", gap: "16px" }}>

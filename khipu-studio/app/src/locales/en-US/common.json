@@ -885,6 +885,18 @@
     "string": "Characters",
     "comment": "Title for the characters page"
   },
+  "characters.voiceAssignment": {
+    "string": "Voice Assignment",
+    "comment": "Label for voice assignment section"
+  },
+  "characters.detecting": {
+    "string": "Detecting...",
+    "comment": "Button text while detecting characters"
+  },
+  "characters.assigningProgress": {
+    "string": "Assigning... {{percent}}%",
+    "comment": "Progress text while assigning voices with percentage"
+  },
   "planning.description": {
     "string": "TTS-compliant chunk breakdown and character voice assignment - work chapter by chapter.",
     "comment": "Description for the planning page"
@@ -904,6 +916,30 @@
   "planning.stats.chars": {
     "string": "chars",
     "comment": "Label for character count statistics"
+  },
+  "planning.selectChapterToBegin": {
+    "string": "Select a chapter to begin",
+    "comment": "Message when no chapter is selected"
+  },
+  "planning.chooseChapterFromDropdown": {
+    "string": "Choose a chapter from the dropdown above to view or generate its plan.",
+    "comment": "Instructions for chapter selection"
+  },
+  "planning.selectChapterOption": {
+    "string": "Select a chapter...",
+    "comment": "Default option in chapter dropdown"
+  },
+  "planning.selectChapter": {
+    "string": "Select Chapter",
+    "comment": "Button text when no chapter is selected"
+  },
+  "planning.generating": {
+    "string": "Generating...",
+    "comment": "Button text while generating plan"
+  },
+  "planning.assigning": {
+    "string": "Assigning...",
+    "comment": "Button text while assigning characters"
   },
   "planning.generateInstruction": {
     "string": "Click \"Generate Plan for {{chapter}}\" to create TTS-compliant chunks with AI speaker detection.",
@@ -1016,10 +1052,6 @@
   "planning.table.character": {
     "string": "character",
     "comment": "Table header for character column"
-  },
-  "characters.voiceAssignment": {
-    "string": "Voice Assignment",
-    "comment": "Label for voice assignment section"
   },
   "characters.defaultStyle": {
     "string": "Default Style",

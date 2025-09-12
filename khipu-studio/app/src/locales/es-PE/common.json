@@ -1032,6 +1032,14 @@
     "string": "Gestión de Personajes",
     "comment": ""
   },
+  "characters.voiceAssignment": {
+    "string": "Asignación de Voz",
+    "comment": ""
+  },
+  "characters.assigningProgress": {
+    "string": "Asignando... {{percent}}%",
+    "comment": ""
+  },
   "characters.description": {
     "string": "Detecta personajes de tu manuscrito y asigna voces para generación TTS.",
     "comment": ""
@@ -1279,6 +1287,30 @@
   },
   "planning.stats.chars": {
     "string": "caracteres",
+    "comment": ""
+  },
+  "planning.selectChapterToBegin": {
+    "string": "Selecciona un capítulo para comenzar",
+    "comment": ""
+  },
+  "planning.chooseChapterFromDropdown": {
+    "string": "Elige un capítulo del menú desplegable para ver o generar su plan.",
+    "comment": ""
+  },
+  "planning.selectChapterOption": {
+    "string": "Selecciona un capítulo...",
+    "comment": ""
+  },
+  "planning.selectChapter": {
+    "string": "Seleccionar Capítulo",
+    "comment": ""
+  },
+  "planning.generating": {
+    "string": "Generando...",
+    "comment": ""
+  },
+  "planning.assigning": {
+    "string": "Asignando...",
     "comment": ""
   },
   "planning.generateInstruction": {
@@ -1542,10 +1574,6 @@
   "planning.table.character": {
     "string": "personaje",
     "comment": "Encabezado de tabla para columna de personaje"
-  },
-  "characters.voiceAssignment": {
-    "string": "Asignación de Voz",
-    "comment": "Etiqueta para sección de asignación de voz"
   },
   "characters.defaultStyle": {
     "string": "Estilo Predeterminado",

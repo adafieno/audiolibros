@@ -310,7 +310,7 @@ function CharactersPage() {
           disabled={loading} 
           style={{ padding: "6px 12px", fontSize: "14px" }}
         >
-          {loading ? "Detecting..." : t("characters.detectRefresh")}
+          {loading ? t("characters.detecting") : t("characters.detectRefresh")}
         </button>
         
         <button 
@@ -337,7 +337,7 @@ function CharactersPage() {
               style={{ padding: "6px 12px", fontSize: "14px" }}
             >
               {assignmentProgress 
-                ? `Assigning... ${assignmentProgress.current}%` 
+                ? t("characters.assigningProgress", { percent: assignmentProgress.current }) 
                 : t("characters.assignVoices")}
             </button>
             
@@ -635,7 +635,7 @@ function CharactersPage() {
                       border: "1px solid var(--border)"
                     }}>
                       <div style={{ fontSize: "12px", fontWeight: "500", color: "var(--text)", marginBottom: "6px" }}>
-                        Voice Assignment
+                        {t("characters.voiceAssignment")}
                       </div>
                       
                       {/* Voice Selection */}
@@ -687,7 +687,7 @@ function CharactersPage() {
                             <option value="">{t("characters.defaultStyle")}</option>
                             {availableVoices.find(v => v.id === c.voiceAssignment?.voiceId)?.styles.map(style => (
                               <option key={style} value={style}>
-                                {style}
+                                {t(`characters.style${style.charAt(0).toUpperCase()}${style.slice(1)}`, { defaultValue: style })}
                               </option>
                             ))}
                           </select>
