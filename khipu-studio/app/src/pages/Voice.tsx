@@ -41,6 +41,14 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   const [generatingAudio, setGeneratingAudio] = useState<Set<string>>(new Set());
   const [selectedRowIndex, setSelectedRowIndex] = useState(0);
 
+  // Helper function to get chapters that have plans
+  const getChaptersWithPlans = useCallback(() => {
+    return chapters.filter((chapter) => {
+      const status = chapterStatus.get(chapter.id);
+      return status && status.hasPlan;
+    });
+  }, [chapters, chapterStatus]);
+
   const checkChapterStatus = useCallback(async (chapterId: string): Promise<ChapterStatus> => {
     if (!root) {
       return { hasText: false, hasPlan: false, isComplete: false, isAudioComplete: false };
@@ -302,12 +310,17 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   // Auto-select first chapter if available and load its data
   useEffect(() => {
     if (chapters.length > 0 && !selectedChapter) {
-      const firstChapter = chapters[0].id;
-      setSelectedChapter(firstChapter);
-      // Load the plan data for the first chapter
-      loadPlanData(firstChapter);
+      // Find the first chapter that has a plan
+      const chaptersWithPlans = getChaptersWithPlans();
+      const firstChapterWithPlan = chaptersWithPlans[0];
+      
+      if (firstChapterWithPlan) {
+        setSelectedChapter(firstChapterWithPlan.id);
+        // Load the plan data for the first chapter with a plan
+        loadPlanData(firstChapterWithPlan.id);
+      }
     }
-  }, [chapters, selectedChapter, loadPlanData]);
+  }, [chapters, selectedChapter, chapterStatus, loadPlanData, getChaptersWithPlans]);
 
   // Auto-select first row when segments change (like Planning page)
   useEffect(() => {
@@ -340,7 +353,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       {/* Subtitle */}
       <div style={{ marginBottom: "24px" }}>
         <p style={{ margin: 0, fontSize: "14px", color: "var(--textSecondary)" }}>
-          Generate high-quality audio from orchestrated segments - work chapter by chapter.
+          Generate high-quality audio from orchestrated segments - work chapter by chapter. Only chapters with plans are available.
         </p>
       </div>
 
@@ -374,7 +387,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               <option value="" style={{ backgroundColor: "var(--panel)", color: "var(--text)" }}>
                 {t("audioProduction.selectChapter", "Select Chapter")}
               </option>
-              {chapters.map((chapter) => (
+              {getChaptersWithPlans().map((chapter) => (
                 <option 
                   key={chapter.id} 
                   value={chapter.id}
@@ -409,7 +422,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                 }}>
                   {allComplete 
                     ? `✅ Audio Production Complete` 
-                    : `Audio Production Progress: ${audioCompleteCount}/${totalChapters} chapters complete`
+                    : `${audioCompleteCount}/${totalChapters} chapters loaded`
                   }
                 </span>
               );
@@ -446,6 +459,22 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           </button>
         </div>
       )}
+
+      {/* Check if no chapters with plans are available */}
+      {chapters.length > 0 && getChaptersWithPlans().length === 0 ? (
+        <div style={{
+          textAlign: "center",
+          padding: "48px",
+          color: "var(--textSecondary)",
+          fontSize: "14px",
+          backgroundColor: "var(--panel)",
+          border: "1px solid var(--border)",
+          borderRadius: "6px"
+        }}>
+          <p style={{ margin: "0 0 8px 0", fontWeight: 500 }}>No chapters with plans available</p>
+          <p style={{ margin: 0 }}>Complete the orchestration step for at least one chapter to begin audio production.</p>
+        </div>
+      ) : null}
 
       {/* Segment Grid */}
       {selectedChapter && audioSegments.length > 0 ? (
