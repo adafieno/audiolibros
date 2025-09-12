@@ -784,9 +784,21 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       console.log(`Chapter ${chapterId}: Plan file error:`, error);
     }
     
-    // A chapter is complete only if it has a plan AND has been saved/finalized
-    // For now, we'll just set it to false - completion should be a manual step
-    const isComplete = false; // TODO: Add proper completion tracking based on user action
+    // Check if this specific chapter has been marked as complete
+    let isComplete = false;
+    const completionPath = `ssml/plans/${chapterId}.complete`;
+    try {
+      const completionData = await window.khipu!.call("fs:read", {
+        projectRoot: root,
+        relPath: completionPath,
+        json: true
+      }) as { complete?: boolean; completedAt?: string } | null;
+      isComplete = completionData?.complete === true;
+      console.log(`Chapter ${chapterId}: Completion file result:`, { exists: isComplete, data: completionData });
+    } catch {
+      console.log(`Chapter ${chapterId}: No completion file found`);
+      isComplete = false;
+    }
     
     const result = { hasText, hasPlan, isComplete };
     console.log(`=== Chapter ${chapterId} final status:`, result, `===`);
@@ -886,6 +898,53 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       }
     }
   }, [projectConfig, charactersData]);
+
+  // Check if all chapters are complete and mark global planning step if so
+  const checkAndMarkGlobalPlanningComplete = useCallback(async () => {
+    if (!root || !projectConfig || chapters.length === 0) return;
+
+    try {
+      // Check completion status of all chapters
+      const allStatuses = await Promise.all(
+        chapters.map(chapter => checkChapterStatus(chapter.id))
+      );
+      
+      const allComplete = allStatuses.every(status => status.isComplete);
+      
+      if (allComplete) {
+        // Mark global planning step as complete
+        const updatedConfig = {
+          ...projectConfig,
+          workflow: {
+            ...projectConfig.workflow,
+            planning: {
+              ...projectConfig.workflow?.planning,
+              complete: true,
+              completedAt: new Date().toISOString()
+            }
+          }
+        };
+        
+        await window.khipu!.call("fs:write", { 
+          projectRoot: root, 
+          relPath: "project.khipu.json", 
+          json: true, 
+          content: updatedConfig 
+        });
+        
+        setProjectConfig(updatedConfig);
+        
+        // Update the project store
+        const { markStepCompleted } = useProject.getState();
+        markStepCompleted("planning");
+        
+        onStatus(t("planning.status.allChaptersCompleted"));
+        setMessage(`All chapters complete! Planning phase is now complete.`);
+      }
+    } catch (error) {
+      console.error("Failed to check global planning completion:", error);
+    }
+  }, [root, projectConfig, chapters, checkChapterStatus, onStatus, t]);
 
   // Load plan and text for selected chapter
   const loadChapterData = useCallback(async (chapterId: string) => {
@@ -1030,6 +1089,13 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
   useEffect(() => {
     loadChapters();
   }, [loadChapters]);
+
+  // Auto-check global planning completion when chapter status changes
+  useEffect(() => {
+    if (chapterStatus.size > 0 && chapters.length > 0) {
+      checkAndMarkGlobalPlanningComplete();
+    }
+  }, [chapterStatus, chapters.length, checkAndMarkGlobalPlanningComplete]);
 
   // Load chapter data when selection changes
   useEffect(() => {
@@ -1311,39 +1377,36 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
     }
   };
 
-  // Mark planning complete
-  const handleMarkComplete = async () => {
-    if (!root || !projectConfig) return;
+  // Mark current chapter as complete
+  const handleMarkChapterComplete = async () => {
+    if (!root || !selectedChapter) return;
     
     try {
-      const updatedConfig = {
-        ...projectConfig,
-        workflow: {
-          ...projectConfig.workflow,
-          planning: {
-            ...projectConfig.workflow?.planning,
-            complete: true,
-            completedAt: new Date().toISOString()
-          }
-        }
+      // Save chapter completion
+      const completionData = {
+        complete: true,
+        completedAt: new Date().toISOString(),
+        chapterId: selectedChapter
       };
       
       await window.khipu!.call("fs:write", { 
         projectRoot: root, 
-        relPath: "project.khipu.json", 
+        relPath: `ssml/plans/${selectedChapter}.complete`, 
         json: true, 
-        content: updatedConfig 
+        content: completionData 
       });
       
-      setProjectConfig(updatedConfig);
+      // Update chapter status in state
+      const updatedStatus = await checkChapterStatus(selectedChapter);
+      setChapterStatus(prev => new Map(prev).set(selectedChapter, updatedStatus));
       
-      // Update the project store
-      const { markStepCompleted } = useProject.getState();
-      markStepCompleted("planning");
+      setMessage(`Chapter ${selectedChapter} marked as complete!`);
       
-      onStatus(t("planning.status.completed"));
+      // Check if all chapters are now complete
+      await checkAndMarkGlobalPlanningComplete();
     } catch (error) {
-      console.error("Failed to mark planning as complete:", error);
+      console.error("Failed to mark chapter as complete:", error);
+      setMessage(`Failed to mark chapter ${selectedChapter} as complete.`);
     }
   };
 
@@ -1768,7 +1831,54 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
   return (
     <div style={{ padding: "16px", maxWidth: "1400px", height: "calc(100vh - 32px)" }}>
       <h1 style={{ fontSize: "32px", fontWeight: "bold", color: "var(--text)", marginBottom: "8px" }}>{t("planning.title")}</h1>
-      <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "24px" }}>{t("planning.description")}</p>
+      <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "16px" }}>{t("planning.description")}</p>
+
+      {/* Global Planning Completion Status */}
+      {(() => {
+        const completedChapters = Array.from(chapterStatus.values()).filter(status => status.isComplete).length;
+        const totalChapters = chapters.length;
+        const allComplete = totalChapters > 0 && completedChapters === totalChapters;
+        
+        return (
+          <div style={{ 
+            marginBottom: "16px", 
+            padding: "12px 16px", 
+            backgroundColor: allComplete ? "var(--successBg)" : "var(--panel)", 
+            border: `1px solid ${allComplete ? "var(--success)" : "var(--border)"}`,
+            borderRadius: "6px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center"
+          }}>
+            <div>
+              <span style={{ 
+                fontSize: "14px", 
+                fontWeight: "500",
+                color: allComplete ? "var(--success)" : "var(--text)"
+              }}>
+                {allComplete ? "✅ Planning Complete" : `Planning Progress: ${completedChapters}/${totalChapters} chapters complete`}
+              </span>
+              {!allComplete && totalChapters > 0 && (
+                <div style={{ marginTop: "4px", fontSize: "12px", color: "var(--muted)" }}>
+                  Complete all chapter plans to unlock the next workflow step
+                </div>
+              )}
+            </div>
+            {allComplete && (
+              <div style={{ 
+                padding: "4px 8px", 
+                backgroundColor: "var(--success)", 
+                color: "white", 
+                borderRadius: "4px", 
+                fontSize: "12px",
+                fontWeight: "500"
+              }}>
+                Ready for SSML
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Status message */}
       {message && !running && (
@@ -1866,8 +1976,8 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
             </button>
             
             <button 
-              onClick={handleMarkComplete}
-              disabled={loading || chapterStatus.get(selectedChapter)?.isComplete} 
+              onClick={handleMarkChapterComplete}
+              disabled={loading || chapterStatus.get(selectedChapter)?.isComplete || !chapterStatus.get(selectedChapter)?.hasPlan} 
               style={{ 
                 padding: "6px 12px", 
                 fontSize: "14px",

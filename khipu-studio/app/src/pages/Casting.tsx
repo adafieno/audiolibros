@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useProject } from "../store/project";
+import { WorkflowCompleteButton } from "../components/WorkflowCompleteButton";
 import { loadProjectConfig } from "../lib/config";
 import { loadVoiceInventory, saveVoiceInventory } from "../lib/voice";
 import { 
@@ -13,7 +14,7 @@ import type { ProjectConfig } from "../types/config";
 
 export default function CastingPage() {
   const { t } = useTranslation();
-  const { root, isStepCompleted } = useProject();
+  const { root } = useProject();
   const [config, setConfig] = useState<ProjectConfig | null>(null);
   const [inventory, setInventory] = useState<VoiceInventory | null>(null);
   const [selectedVoices, setSelectedVoices] = useState<Set<string>>(new Set());
@@ -24,8 +25,6 @@ export default function CastingPage() {
   
   // Use the new audio cache hook
   const { error: audioError, playAudition, stopAudio, clearError } = useAudioCache();
-
-  const isCastingCompleted = isStepCompleted("casting");
 
   useEffect(() => {
     if (!root) return;
@@ -167,25 +166,6 @@ export default function CastingPage() {
     }
   };
 
-  const handleComplete = async () => {
-    if (!root || !inventory) return;
-    
-    try {
-      // Save first if there are unsaved changes
-      await handleSave();
-      
-      // Mark casting step as completed to enable Characters workflow step
-      const { markStepCompleted } = useProject.getState();
-      markStepCompleted("casting");
-      
-      setMessage(t("casting.completed"));
-      setTimeout(() => setMessage(""), 2000);
-    } catch (error) {
-      console.error("Failed to complete casting:", error);
-      setMessage(t("casting.completeError"));
-    }
-  };
-
   if (isLoading) {
     return <div>{t("casting.loading")}</div>;
   }
@@ -269,13 +249,12 @@ export default function CastingPage() {
             >
               {t("casting.save")}
             </button>
-            <button
-              onClick={handleComplete}
-              disabled={selectedVoices.size === 0 || isCastingCompleted}
-              style={{ padding: "6px 12px", fontSize: "14px" }}
+            <WorkflowCompleteButton 
+              step="casting"
+              disabled={selectedVoices.size === 0}
             >
-              {isCastingCompleted ? t("workflow.buttonCompleted") : "✓ " + t("casting.complete")}
-            </button>
+              {t("casting.complete")}
+            </WorkflowCompleteButton>
           </div>
         </div>
 
