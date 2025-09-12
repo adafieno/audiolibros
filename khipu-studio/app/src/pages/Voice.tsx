@@ -234,15 +234,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     }
   }, [loadPlanData]);
 
-  const handleSfxChange = useCallback((rowIndex: number, sfx: string) => {
-    setAudioSegments(prev => {
-      const updated = [...prev];
-      updated[rowIndex] = { ...updated[rowIndex], sfxAfter: sfx || null };
-      return updated;
-    });
-    // TODO: Save changes back to plan file
-  }, []);
-
   const handleRowSelection = useCallback((index: number) => {
     setSelectedRowIndex(prev => prev === index ? -1 : index); // Toggle selection, -1 means none selected
   }, []);
@@ -821,65 +812,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                             </label>
                           </div>
                         </div>
-
-                        {/* Processing Control */}
-                        <div style={{ display: "flex", gap: "8px" }}>
-                          <button
-                            style={{
-                              flex: 1,
-                              padding: "8px 12px",
-                              fontSize: "12px",
-                              backgroundColor: "var(--accent)",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "4px",
-                              cursor: "pointer"
-                            }}
-                          >
-                            Apply Chain
-                          </button>
-                          <button
-                            style={{
-                              padding: "8px 12px",
-                              fontSize: "12px",
-                              backgroundColor: "var(--muted)",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "4px",
-                              cursor: "pointer"
-                            }}
-                          >
-                            Reset
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* SFX Controls */}
-                      <div style={{ padding: "12px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "4px" }}>
-                        <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", color: "var(--text)" }}>
-                          Sound Effects
-                        </h4>
-                        
-                        <select
-                          value={currentSegment.sfxAfter || ""}
-                          onChange={(e) => handleSfxChange(selectedRowIndex, e.target.value)}
-                          style={{
-                            width: "100%",
-                            padding: "8px 12px",
-                            fontSize: "13px",
-                            backgroundColor: "var(--input)",
-                            color: "var(--text)",
-                            border: "1px solid var(--border)",
-                            borderRadius: "4px"
-                          }}
-                        >
-                          <option value="">No sound effect</option>
-                          <option value="pause_short">Short Pause (0.5s)</option>
-                          <option value="pause_medium">Medium Pause (1.0s)</option>
-                          <option value="pause_long">Long Pause (2.0s)</option>
-                          <option value="page_turn">Page Turn Effect</option>
-                          <option value="chapter_break">Chapter Break</option>
-                        </select>
                       </div>
                     </div>
                   );
