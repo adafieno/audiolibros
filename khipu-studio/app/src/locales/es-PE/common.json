@@ -32,7 +32,7 @@
     "comment": ""
   },
   "nav.planning": {
-    "string": "Plan",
+    "string": "Planificación",
     "comment": ""
   },
   "nav.ssml": {
@@ -40,7 +40,7 @@
     "comment": ""
   },
   "nav.voice": {
-    "string": "Voz",
+    "string": "Voces",
     "comment": ""
   },
   "nav.packaging": {
@@ -48,7 +48,7 @@
     "comment": ""
   },
   "nav.settings": {
-    "string": "Ajustes",
+    "string": "Configuración",
     "comment": ""
   },
 
@@ -151,7 +151,7 @@
     "comment": ""
   },
   "plan.loadError": {
-    "string": "Error cargando plan",
+    "string": "Error al cargar el plan",
     "comment": ""
   },
   "plan.saving": {
@@ -188,7 +188,7 @@
     "comment": ""
   },
   "home.cta": {
-    "string": "Selecciona un proyecto y comienza con Manuscrito → Plan.",
+    "string": "Selecciona un proyecto y comienza con Manuscrito → Planificación.",
     "comment": ""
   },
 
@@ -209,11 +209,11 @@
     "comment": ""
   },
   "project.saveError": {
-    "string": "Error guardando configuración",
+    "string": "Error al guardar configuración",
     "comment": ""
   },
   "project.loadError": {
-    "string": "Error cargando configuración",
+    "string": "Error al cargar configuración",
     "comment": ""
   },
   "project.completeButton": {
@@ -568,11 +568,11 @@
     "comment": ""
   },
   "casting.loadError": {
-    "string": "Error cargando datos de voz",
+    "string": "Error al cargar datos de voz",
     "comment": ""
   },
   "casting.saveError": {
-    "string": "Error guardando selección de voz",
+    "string": "Error al guardar selección de voz",
     "comment": ""
   },
   "casting.saving": {
@@ -737,11 +737,11 @@
     "comment": ""
   },
   "book.saveError": {
-    "string": "Error guardando metadatos del libro",
+    "string": "Error al guardar metadatos del libro",
     "comment": ""
   },
   "book.loadError": {
-    "string": "Error cargando metadatos del libro",
+    "string": "Error al cargar metadatos del libro",
     "comment": ""
   },
   "book.completeButton": {
@@ -845,7 +845,7 @@
     "comment": ""
   },
   "book.coverImage.error": {
-    "string": "Error cargando imagen. Por favor selecciona un archivo JPEG (3000×3000 píxeles).",
+    "string": "Error al cargar la imagen. Por favor selecciona un archivo JPEG (3000×3000 píxeles).",
     "comment": ""
   },
   "book.disclosure": {
@@ -870,11 +870,11 @@
     "comment": ""
   },
   "characters.loadError": {
-    "string": "Error cargando datos de personajes",
+    "string": "Error al cargar datos de personajes",
     "comment": ""
   },
   "characters.saveError": {
-    "string": "Error guardando datos de personajes",
+    "string": "Error al guardar datos de personajes",
     "comment": ""
   },
   "characters.saving": {
@@ -915,7 +915,7 @@
     "comment": ""
   },
   "characters.detectError": {
-    "string": "Error detectando personajes",
+    "string": "Error al detectar personajes",
     "comment": ""
   },
   "characters.detectedCount": {
@@ -964,7 +964,7 @@
     "comment": ""
   },
   "characters.assignError": {
-    "string": "Error asignando voces",
+    "string": "Error al asignar voces",
     "comment": ""
   },
   "characters.assignedVoice": {
