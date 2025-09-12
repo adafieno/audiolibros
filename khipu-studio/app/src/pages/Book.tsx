@@ -132,10 +132,10 @@ export default function Book() {
     <div>
       <h2>{t("book.title")}</h2>
       {/* Basic Information */}
-      <section style={{ marginTop: 24 }}>
+      <section className="mt-6">
         <h3>{t("book.basicInfo")}</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        <div className="grid-2 gap-4">
+          <div className="grid-2 grid-gap-2">
             <label>
               <div>{t("book.title.label")}</div>
               <input

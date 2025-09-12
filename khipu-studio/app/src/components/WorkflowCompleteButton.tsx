@@ -9,7 +9,7 @@ import type { WorkflowStep } from '../store/project';
 export function WorkflowCompleteButton({ 
   step, 
   children, 
-  className,
+  className = "",
   disabled = false 
 }: { 
   step: WorkflowStep; 
@@ -21,24 +21,18 @@ export function WorkflowCompleteButton({
   const { completeStep, isCompleted } = useWorkflow();
   const completed = isCompleted(step);
 
+  // Build className based on state
+  const buttonClass = [
+    'btn',
+    completed ? 'success' : '',
+    className
+  ].filter(Boolean).join(' ');
+
   return (
     <button
       onClick={() => completeStep(step)}
       disabled={disabled || completed}
-      className={className}
-      style={{
-        background: completed ? "#10b981" : "#3b82f6",
-        color: "white",
-        border: "none",
-        borderRadius: 8,
-        padding: "8px 16px",
-        cursor: disabled || completed ? "default" : "pointer",
-        opacity: disabled ? 0.5 : 1,
-        ...(!className && {
-          fontSize: 14,
-          fontWeight: 500,
-        })
-      }}
+      className={buttonClass}
     >
       {completed ? t("workflow.buttonCompleted") : children}
     </button>

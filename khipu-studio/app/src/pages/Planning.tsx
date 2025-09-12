@@ -454,28 +454,16 @@ function EditablePreview({
 
   return (
     <div>
-      <div style={{ 
+      <div className="mb-2 flex-end" style={{ 
         fontSize: "12px", 
-        color: "var(--muted)", 
-        marginBottom: "8px", 
-        display: "flex", 
-        justifyContent: "flex-end", 
-        alignItems: "center"
+        color: "var(--muted)"
       }}>
-        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+        <div className="flex gap-2">
           {!isEditing ? (
             <>
               <button
                 onClick={handleStartEdit}
-                style={{
-                  padding: "4px 8px",
-                  fontSize: "12px",
-                  border: "1px solid var(--border)",
-                  borderRadius: "4px",
-                  backgroundColor: "var(--background)",
-                  color: "var(--text)",
-                  cursor: "pointer"
-                }}
+                className="btn compact"
                 title={t("planning.tooltips.clickToEdit")}
               >
                 ✏️ {t("planning.edit")}
@@ -484,15 +472,7 @@ function EditablePreview({
               <button
                 onClick={() => handleMergeSegment('backward')}
                 disabled={!canMergeBackward}
-                style={{
-                  padding: "4px 8px",
-                  fontSize: "12px",
-                  border: "1px solid var(--border)",
-                  borderRadius: "4px",
-                  backgroundColor: canMergeBackward ? "var(--background)" : "var(--disabled)",
-                  color: canMergeBackward ? "var(--text)" : "var(--muted)",
-                  cursor: canMergeBackward ? "pointer" : "not-allowed"
-                }}
+                className="btn compact"
                 title={t("planning.mergeWithPrevious")}
               >
                 ◀ {t("planning.merge")}
@@ -500,15 +480,7 @@ function EditablePreview({
               <button
                 onClick={() => handleMergeSegment('forward')}
                 disabled={!canMergeForward}
-                style={{
-                  padding: "4px 8px",
-                  fontSize: "12px",
-                  border: "1px solid var(--border)",
-                  borderRadius: "4px",
-                  backgroundColor: canMergeForward ? "var(--background)" : "var(--disabled)",
-                  color: canMergeForward ? "var(--text)" : "var(--muted)",
-                  cursor: canMergeForward ? "pointer" : "not-allowed"
-                }}
+                className="btn compact"
                 title={t("planning.mergeWithNext")}
               >
                 {t("planning.merge")} ▶
@@ -516,15 +488,7 @@ function EditablePreview({
               <button
                 onClick={handleDeleteSegment}
                 disabled={!canDelete}
-                style={{
-                  padding: "4px 8px",
-                  fontSize: "12px",
-                  border: "1px solid var(--border)",
-                  borderRadius: "4px",
-                  backgroundColor: canDelete ? "var(--background)" : "var(--disabled)",
-                  color: canDelete ? "var(--error)" : "var(--muted)",
-                  cursor: canDelete ? "pointer" : "not-allowed"
-                }}
+                className="btn compact danger"
                 title={t("planning.deleteThisSegment")}
               >
                 🗑️ {t("planning.delete")}
@@ -532,15 +496,7 @@ function EditablePreview({
               <button
                 onClick={undoSegmentOperation}
                 disabled={!canUndo}
-                style={{
-                  padding: "4px 8px",
-                  fontSize: "12px",
-                  border: "1px solid var(--border)",
-                  borderRadius: "4px",
-                  backgroundColor: canUndo ? "var(--background)" : "var(--disabled)",
-                  color: canUndo ? "var(--text)" : "var(--muted)",
-                  cursor: canUndo ? "pointer" : "not-allowed"
-                }}
+                className="btn compact"
                 title={t("planning.undoLastOperation")}
               >
                 ↶ {t("planning.undo")}
@@ -550,15 +506,7 @@ function EditablePreview({
             <>
               <button
                 onClick={handleSaveEdit}
-                style={{
-                  padding: "4px 8px",
-                  fontSize: "12px",
-                  border: "1px solid var(--accent)",
-                  borderRadius: "4px",
-                  backgroundColor: "var(--accent)",
-                  color: "white",
-                  cursor: "pointer"
-                }}
+                className="btn compact primary"
                 title={t("planning.tooltips.saveChanges")}
               >
                 💾 {t("planning.save")}
@@ -566,30 +514,14 @@ function EditablePreview({
               <button
                 onClick={handleSplitSegment}
                 disabled={!canSplit}
-                style={{
-                  padding: "4px 8px",
-                  fontSize: "12px",
-                  border: "1px solid var(--border)",
-                  borderRadius: "4px",
-                  backgroundColor: canSplit ? "var(--background)" : "var(--disabled)",
-                  color: canSplit ? "var(--text)" : "var(--muted)",
-                  cursor: canSplit ? "pointer" : "not-allowed"
-                }}
+                className="btn compact"
                 title={t("planning.splitAtCursor")}
               >
                 ✂️ {t("planning.splitAtCursor")}
               </button>
               <button
                 onClick={handleCancelEdit}
-                style={{
-                  padding: "4px 8px",
-                  fontSize: "12px",
-                  border: "1px solid var(--border)",
-                  borderRadius: "4px",
-                  backgroundColor: "var(--background)",
-                  color: "var(--text)",
-                  cursor: "pointer"
-                }}
+                className="btn compact"
                 title={t("planning.tooltips.cancelEdit")}
               >
                 ❌ {t("planning.cancel")}

@@ -153,6 +153,72 @@ button.secondary:hover, .btn.secondary:hover {
   border-color: var(--accent);
 }
 
+/* Success button variant */
+button.success, .btn.success {
+  background: var(--success);
+  color: white;
+  border: 1px solid transparent;
+}
+
+button.success:hover, .btn.success:hover {
+  background: #059669; /* Darker success color on hover */
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+button.success:disabled, .btn.success:disabled {
+  background: var(--success);
+  opacity: 0.7;
+  cursor: default;
+  transform: none;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Compact button variant for small UI actions */
+button.compact, .btn.compact {
+  padding: 4px 8px;
+  font-size: 12px;
+  min-height: 32px;
+  min-width: 32px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--background);
+  color: var(--text);
+}
+
+button.compact:hover, .btn.compact:hover {
+  background: var(--panel);
+  transform: none; /* Less dramatic hover for compact buttons */
+  box-shadow: var(--shadow-sm);
+}
+
+button.compact:disabled, .btn.compact:disabled {
+  background: var(--disabled);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+button.compact.danger, .btn.compact.danger {
+  color: var(--error);
+}
+
+button.compact.danger:hover, .btn.compact.danger:hover {
+  background: var(--panel);
+  border-color: var(--error);
+}
+
+/* Primary compact button for important actions */
+button.compact.primary, .btn.compact.primary {
+  background: var(--accent);
+  color: white;
+  border: 1px solid var(--accent);
+}
+
+button.compact.primary:hover, .btn.compact.primary:hover {
+  background: var(--accent-600);
+  border-color: var(--accent-600);
+}
+
 /* Fill viewport & remove default margins */
 html, body, #root { height: 100%; width: 100%; margin: 0; padding: 0; }
 body { overflow: hidden; background: var(--bg); color: var(--text); }
@@ -381,6 +447,72 @@ a:focus {
 .focus-ring {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
+}
+
+/* Layout utilities for common patterns */
+.flex {
+  display: flex;
+}
+
+.flex-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flex-end {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.gap-2 {
+  gap: 8px;
+}
+
+.gap-4 {
+  gap: 16px;
+}
+
+.mb-2 {
+  margin-bottom: 8px;
+}
+
+.mt-6 {
+  margin-top: 24px;
+}
+
+/* Grid utilities */
+.grid {
+  display: grid;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.grid-gap-2 {
+  gap: 8px;
+}
+
+.grid-gap-4 {
+  gap: 16px;
 }
 
 .skip-link {
