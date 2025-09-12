@@ -33,7 +33,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   const { t } = useTranslation();
   const { root } = useProject();
   const [chapters, setChapters] = useState<Chapter[]>([]);
-  const [chapterStatus, setChapterStatus] = useState<Map<string, ChapterStatus>>(new Map());
+  const [chapterStatus, setChapterStatus] = useState<Map<string, ChapterStatus>>(new Map()); // eslint-disable-line @typescript-eslint/no-unused-vars
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string>("");
   const [selectedChapter, setSelectedChapter] = useState<string>("");
@@ -204,13 +204,20 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         
         // Check status for each chapter
         const statusMap = new Map<string, ChapterStatus>();
+        let completedCount = 0;
+        
         for (const chapter of chapterList) {
           const status = await checkChapterStatus(chapter.id);
           statusMap.set(chapter.id, status);
+          if (status.isComplete) completedCount++;
         }
+        
         setChapterStatus(statusMap);
-        setMessage("");
+        setMessage(`${chapterList.length} chapters loaded (${completedCount} completed)`);
         onStatus("");
+        
+        // Clear the message after 2 seconds
+        setTimeout(() => setMessage(""), 2000);
       }
     } catch (error) {
       console.error("Failed to load chapters:", error);
@@ -377,64 +384,20 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               <option value="" style={{ backgroundColor: "var(--panel)", color: "var(--text)" }}>
                 {t("audioProduction.selectChapter", "Select Chapter")}
               </option>
-              {chapters.map((chapter) => {
-                const status = chapterStatus.get(chapter.id);
-                const statusIcon = status?.isAudioComplete ? "🎵" : status?.isComplete ? "📝" : "❌";
-                return (
-                  <option 
-                    key={chapter.id} 
-                    value={chapter.id}
-                    style={{ 
-                      backgroundColor: "var(--panel)", 
-                      color: "var(--text)",
-                      padding: "4px 8px"
-                    }}
-                  >
-                    {statusIcon} {chapter.id} {chapter.title ? `- ${chapter.title}` : ""}
-                  </option>
-                );
-              })}
+              {chapters.map((chapter) => (
+                <option 
+                  key={chapter.id} 
+                  value={chapter.id}
+                  style={{ 
+                    backgroundColor: "var(--panel)", 
+                    color: "var(--text)",
+                    padding: "4px 8px"
+                  }}
+                >
+                  📁 {chapter.id} {chapter.title ? `- ${chapter.title}` : ""}
+                </option>
+              ))}
             </select>
-          </div>
-          
-          {/* Audio Production Progress status */}
-          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-            {(() => {
-              if (selectedChapter && audioSegments.length > 0) {
-                return (
-                  <span style={{ 
-                    fontSize: "12px", 
-                    fontWeight: "400",
-                    color: "var(--muted)",
-                    backgroundColor: "rgba(107, 114, 126, 0.1)",
-                    padding: "4px 8px",
-                    borderRadius: "4px",
-                    whiteSpace: "nowrap"
-                  }}>
-                    {audioSegments.length} segments loaded
-                  </span>
-                );
-              }
-              
-              const status = chapterStatus.get(selectedChapter);
-              if (selectedChapter && status?.isComplete && !status?.isAudioComplete) {
-                return (
-                  <span style={{ 
-                    fontSize: "12px", 
-                    fontWeight: "400",
-                    color: "var(--warning)",
-                    backgroundColor: "rgba(245, 158, 11, 0.1)",
-                    padding: "4px 8px",
-                    borderRadius: "4px",
-                    whiteSpace: "nowrap"
-                  }}>
-                    Not Ready (Orchestration Required)
-                  </span>
-                );
-              }
-              
-              return null;
-            })()}
           </div>
           
           {/* Status message display */}
@@ -487,10 +450,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           >
             Generate Chapter Audio
           </button>
-          
-          <span style={{ marginLeft: "auto", fontSize: "14px", color: "var(--textSecondary)" }}>
-            {audioSegments.length} segments loaded
-          </span>
         </div>
       )}
 
