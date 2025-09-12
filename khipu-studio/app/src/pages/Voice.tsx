@@ -179,7 +179,10 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       });
 
       setAudioSegments(segments);
-      setMessage("");
+      setMessage(`${segments.length} segments loaded`);
+      
+      // Clear success message after 2 seconds
+      setTimeout(() => setMessage(""), 2000);
     } catch (error) {
       console.error("Failed to load plan data:", error);
       setMessage(`Failed to load plan data: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -311,11 +314,13 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
   // Auto-select first row when segments change (like Planning page)
   useEffect(() => {
-    setSelectedRowIndex(prevIndex => {
-      // Clamp the index to valid range, default to 0 if we have segments
-      if (audioSegments.length === 0) return -1; // No selection if no segments
-      return Math.min(prevIndex, audioSegments.length - 1);
-    });
+    if (audioSegments.length > 0) {
+      // Auto-select first row (index 0) when segments are loaded
+      setSelectedRowIndex(0);
+    } else {
+      // No segments, no selection
+      setSelectedRowIndex(-1);
+    }
   }, [audioSegments.length]);
 
   if (loading) {
@@ -383,23 +388,36 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           
           {selectedChapter && (
             <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-              {/* Show loading/processing message if present */}
-              {message && (
-                <span style={{ 
-                  fontSize: "14px", 
-                  color: message.includes("Failed") || message.includes("Error") ? "var(--error)" : "var(--textSecondary)"
-                }}>
-                  {message}
+              {/* Show loading/processing/status message */}
+              {(() => {
+                if (message) {
+                  return (
+                    <span style={{ 
+                      fontSize: "14px", 
+                      color: message.includes("Failed") || message.includes("Error") ? "var(--error)" : 
+                             message.includes("complete") || message.includes("loaded") ? "var(--success)" :
+                             "var(--textSecondary)"
+                    }}>
+                      {message}
+                    </span>
+                  );
+                }
+                
+                const status = chapterStatus.get(selectedChapter);
+                if (status?.isAudioComplete) {
+                  return <span style={{ fontSize: "14px", color: "var(--success)" }}>Audio Production Complete</span>;
+                } else if (status?.isComplete) {
+                  return <span style={{ fontSize: "14px", color: "var(--textSecondary)" }}>Ready for Audio Production</span>;
+                } else {
+                  return <span style={{ fontSize: "14px", color: "var(--warning)" }}>Not Ready (Orchestration Required)</span>;
+                }
+              })()}
+              
+              {audioSegments.length > 0 && (
+                <span style={{ fontSize: "14px", color: "var(--textSecondary)" }}>
+                  {audioSegments.length} segments loaded
                 </span>
               )}
-              <span style={{ fontSize: "14px", color: "var(--textSecondary)" }}>
-                Audio Production Progress: {(() => {
-                  const status = chapterStatus.get(selectedChapter);
-                  if (status?.isAudioComplete) return "Complete";
-                  if (status?.isComplete) return "Ready for Audio";
-                  return "Not Ready";
-                })()}
-              </span>
             </div>
           )}
         </div>
