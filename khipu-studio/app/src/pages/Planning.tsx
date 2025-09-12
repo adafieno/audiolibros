@@ -1852,40 +1852,9 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       <div style={{ marginBottom: "16px", padding: "16px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "6px" }}>
         <div style={{ display: "flex", gap: "16px", alignItems: "center", flexWrap: "wrap" }}>
           <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-            {(() => {
-              const completedChapters = Array.from(chapterStatus.values()).filter(status => status.isComplete).length;
-              const totalChapters = chapters.length;
-              const allComplete = totalChapters > 0 && completedChapters === totalChapters;
-              
-              return (
-                <label style={{ 
-                  fontSize: "14px", 
-                  fontWeight: "500", 
-                  color: "var(--text)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px"
-                }}>
-                  {t("planning.chapterLabel")}
-                  <span style={{ 
-                    fontSize: "12px", 
-                    fontWeight: "400",
-                    color: allComplete ? "var(--success)" : "var(--muted)",
-                    backgroundColor: allComplete ? "rgba(34, 197, 94, 0.1)" : "rgba(107, 114, 126, 0.1)",
-                    padding: "2px 6px",
-                    borderRadius: "4px",
-                    whiteSpace: "nowrap"
-                  }}>
-                    {allComplete 
-                      ? `✅ ${t("planning.status.allChaptersCompleted")}` 
-                      : t("planning.progress.status", { completed: completedChapters, total: totalChapters })
-                    }
-                  </span>
-                </label>
-              );
-            })()}
-          </div>
-          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <label style={{ fontSize: "14px", fontWeight: "500", color: "var(--text)" }}>
+              {t("planning.chapterLabel")}
+            </label>
             <select
               value={selectedChapter}
               onChange={(e) => setSelectedChapter(e.target.value)}
@@ -1927,6 +1896,32 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
                 );
               })}
             </select>
+          </div>
+          
+          {/* Progress status message */}
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            {(() => {
+              const completedChapters = Array.from(chapterStatus.values()).filter(status => status.isComplete).length;
+              const totalChapters = chapters.length;
+              const allComplete = totalChapters > 0 && completedChapters === totalChapters;
+              
+              return (
+                <span style={{ 
+                  fontSize: "12px", 
+                  fontWeight: "400",
+                  color: allComplete ? "var(--success)" : "var(--muted)",
+                  backgroundColor: allComplete ? "rgba(34, 197, 94, 0.1)" : "rgba(107, 114, 126, 0.1)",
+                  padding: "4px 8px",
+                  borderRadius: "4px",
+                  whiteSpace: "nowrap"
+                }}>
+                  {allComplete 
+                    ? `✅ ${t("planning.status.allChaptersCompleted")}` 
+                    : t("planning.progress.status", { completed: completedChapters, total: totalChapters })
+                  }
+                </span>
+              );
+            })()}
           </div>
           
           {/* Ready for SSML indicator when all chapters complete */}
