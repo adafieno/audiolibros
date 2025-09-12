@@ -685,15 +685,16 @@ if __name__ == "__main__":
     manuscript_dir = sys.argv[1]
     characters = detect_characters_from_manuscript(manuscript_dir)
     
-    # Save to project dossier for character management
-    project_root = Path(manuscript_dir).parent if Path(manuscript_dir).parent.name != "sample" else Path(manuscript_dir).parent.parent
-    output_file = project_root / "dossier" / "characters.json"
-    output_file.parent.mkdir(parents=True, exist_ok=True)
+    # Save to dossier directory (within manuscript analysis structure)
+    dossier_dir = Path(manuscript_dir).parent / "dossier"
+    dossier_dir.mkdir(parents=True, exist_ok=True)
+    output_file = dossier_dir / "characters.json"
     
+    # Save characters as array format (current output format)
     with open(output_file, 'w', encoding='utf-8') as f:
         json.dump(characters, f, indent=2, ensure_ascii=False)
     
-    print(f"Saved {len(characters)} characters to {output_file}", file=sys.stderr)
+    print(f"Saved {len(characters)} characters to {output_file}")
     
-    # Print JSON for immediate use
+    # Print array format for immediate use (as shown in terminal output)
     print(json.dumps(characters, ensure_ascii=False, indent=2))
