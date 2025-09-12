@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { PlanFile, PlanChunk } from "../../types/plan";
 import { loadPlan, savePlan } from "../../lib/fs";
 
@@ -60,6 +61,7 @@ function normalizePlan(raw: unknown): PlanFile | null {
 
 /* ---------- component ---------- */
 export default function PlanBoard({ projectRoot, planRelPath, chapterId, onOpenChapter, onRegenerate }: Props) {
+  const { t } = useTranslation();
   const [plan, setPlan] = useState<PlanFile | null>(null);
   const [msg, setMsg] = useState<string>("");
 
@@ -67,23 +69,23 @@ export default function PlanBoard({ projectRoot, planRelPath, chapterId, onOpenC
   useEffect(() => {
     (async () => {
       try {
-        setMsg("Cargando plan…");
+        setMsg(t("plan.loading"));
         const raw: unknown = await loadPlan(projectRoot, planRelPath);
         const norm = normalizePlan(raw);
         if (!norm) {
           setPlan(null);
-          setMsg("No se encontró el plan");
+          setMsg(t("status.planMissing"));
           return;
         }
         setPlan(norm);
-        setMsg("Plan cargado");
+        setMsg(t("status.planLoaded"));
       } catch (e) {
         console.error("[PlanBoard] load error", e);
         setPlan(null);
-        setMsg("Error al cargar el plan");
+        setMsg(t("plan.loadError"));
       }
     })();
-  }, [projectRoot, planRelPath]);
+  }, [projectRoot, planRelPath, t]);
 
   const chunks = useMemo(() => plan?.chunks ?? [], [plan]);
 
@@ -98,21 +100,21 @@ export default function PlanBoard({ projectRoot, planRelPath, chapterId, onOpenC
 
   async function saveAll() {
     if (!plan) return;
-    setMsg("Guardando…");
+    setMsg(t("plan.saving"));
     await savePlan(projectRoot, planRelPath, plan);
-    setMsg("Guardado ✔");
+    setMsg(t("plan.saved"));
   }
 
   async function regen() {
-    setMsg("Regenerando plan…");
+    setMsg(t("plan.generating"));
     await onRegenerate();             // parent calls plan:build
     const raw: unknown = await loadPlan(projectRoot, planRelPath);
     const norm = normalizePlan(raw);
     if (norm) {
       setPlan(norm);
-      setMsg("Plan regenerado");
+      setMsg(t("plan.regenerated"));
     } else {
-      setMsg("No se pudo regenerar");
+      setMsg(t("plan.regenerateFailed"));
     }
   }
 
@@ -158,19 +160,20 @@ export default function PlanBoard({ projectRoot, planRelPath, chapterId, onOpenC
 }
 
 function Row({ chunk, onToggle }: { chunk: PlanChunk; onToggle: () => void }) {
-  const t = typeof chunk.text === "string" ? chunk.text : "";
-  const preview = t.length > 240 ? t.slice(0, 240) + "…" : t;
+  const { t } = useTranslation();
+  const text = typeof chunk.text === "string" ? chunk.text : "";
+  const preview = text.length > 240 ? text.slice(0, 240) + "…" : text;
   return (
     <>
       <code>{chunk.id}</code>
       <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
         <input type="checkbox" checked={!!chunk.locked} onChange={onToggle} />
-        {chunk.locked ? "Bloqueado" : "Editable"}
+        {chunk.locked ? t("plan.locked") : t("plan.editable")}
       </label>
       <div style={{ whiteSpace: "pre-wrap" }}>{preview}</div>
       <div style={{ display: "flex", gap: 6 }}>
-        <button disabled title="(Próx.) Añadir SFX">SFX</button>
-        <button disabled title="(Próx.) Ver origen en capítulo">Ir al texto</button>
+        <button disabled title={t("plan.addSfx")}>SFX</button>
+        <button disabled title={t("plan.goToText")}>Ir al texto</button>
       </div>
     </>
   );

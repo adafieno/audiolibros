@@ -3,3 +3,5 @@
 *.pyc
 *.pyc
 /khipu-studio/reference-code
+khipu-studio/app/src/locales/README.md
+khipu-studio/app/src/locales/TRANSLATION_CONTEXT.md

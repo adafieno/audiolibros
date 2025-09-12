@@ -79,17 +79,17 @@ interface SegmentOpResult {
 }
 
 // Segment operations
-function splitSegmentAtPosition(segments: Segment[], segmentId: number, position: number): SegmentOpResult {
+function splitSegmentAtPosition(segments: Segment[], segmentId: number, position: number, t: (key: string) => string): SegmentOpResult {
   const segmentIndex = segments.findIndex(seg => seg.segment_id === segmentId);
   if (segmentIndex === -1) {
-    return { success: false, message: "Segment not found" };
+    return { success: false, message: t("planning.segmentNotFound") };
   }
 
   const segment = segments[segmentIndex];
   const text = segment.text;
 
   if (position <= 0 || position >= text.length) {
-    return { success: false, message: "Invalid split position" };
+    return { success: false, message: t("planning.invalidSplitPosition") };
   }
 
   // Smart split: try to find a nearby word boundary to avoid breaking words
@@ -171,10 +171,10 @@ function splitSegmentAtPosition(segments: Segment[], segmentId: number, position
   return { success: true, newSegments, message };
 }
 
-function mergeSegments(segments: Segment[], segmentId: number, direction: 'forward' | 'backward'): SegmentOpResult {
+function mergeSegments(segments: Segment[], segmentId: number, direction: 'forward' | 'backward', t: (key: string) => string): SegmentOpResult {
   const segmentIndex = segments.findIndex(seg => seg.segment_id === segmentId);
   if (segmentIndex === -1) {
-    return { success: false, message: "Segment not found" };
+    return { success: false, message: t("planning.segmentNotFound") };
   }
 
   const targetIndex = direction === 'forward' ? segmentIndex + 1 : segmentIndex - 1;
@@ -228,14 +228,14 @@ function mergeSegments(segments: Segment[], segmentId: number, direction: 'forwa
   return { success: true, newSegments };
 }
 
-function deleteSegment(segments: Segment[], segmentId: number): SegmentOpResult {
+function deleteSegment(segments: Segment[], segmentId: number, t: (key: string) => string): SegmentOpResult {
   const segmentIndex = segments.findIndex(seg => seg.segment_id === segmentId);
   if (segmentIndex === -1) {
-    return { success: false, message: "Segment not found" };
+    return { success: false, message: t("planning.segmentNotFound") };
   }
 
   if (segments.length === 1) {
-    return { success: false, message: "Cannot delete the last segment in the chapter" };
+    return { success: false, message: t("planning.cannotDeleteLastSegment") };
   }
 
   const newSegments = segments.filter(seg => seg.segment_id !== segmentId);
@@ -255,6 +255,7 @@ interface EditablePreviewProps {
   isAudioLoading: boolean;
   auditioningSegments: Set<number>;
   isAudioPlaying: boolean;
+  t: (key: string) => string;
 }
 
 function EditablePreview({
@@ -268,7 +269,8 @@ function EditablePreview({
   onInvalidateCache,
   isAudioLoading,
   auditioningSegments,
-  isAudioPlaying
+  isAudioPlaying,
+  t
 }: EditablePreviewProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState("");
@@ -278,7 +280,7 @@ function EditablePreview({
 
   // Find the original segment by ID
   const originalSegment = segments?.find(seg => seg.segment_id === current.segmentId);
-  const displayText = originalSegment?.text || "Segment text not found";
+  const displayText = originalSegment?.text || t("planning.segmentTextNotFound");
   
   // Track if the text has been modified during editing
   const isDirty = isEditing && editedText !== (originalSegment?.text || "");
@@ -367,26 +369,26 @@ function EditablePreview({
       return;
     }
 
-    const result = splitSegmentAtPosition(segments, current.segmentId, cursorPosition);
+    const result = splitSegmentAtPosition(segments, current.segmentId, cursorPosition, t);
     if (result.success && result.newSegments) {
       setSegmentsWithHistory(result.newSegments);
       setIsEditing(false);
-      setMessage("Segment split successfully");
+      setMessage(t("planning.segmentSplitSuccessfully"));
     } else {
-      setMessage(result.message || "Split operation failed");
+      setMessage(result.message || t("planning.splitOperationFailed"));
     }
   };
 
   const handleMergeSegment = (direction: 'forward' | 'backward') => {
     if (!segments || !originalSegment) return;
 
-    const result = mergeSegments(segments, current.segmentId, direction);
+    const result = mergeSegments(segments, current.segmentId, direction, t);
     if (result.success && result.newSegments) {
       setSegmentsWithHistory(result.newSegments);
       if (isEditing) setIsEditing(false);
       setMessage(`Segment merged ${direction} successfully`);
     } else {
-      setMessage(result.message || "Merge operation failed");
+      setMessage(result.message || t("planning.mergeOperationFailed"));
     }
   };
 
@@ -394,13 +396,13 @@ function EditablePreview({
     if (!segments || !originalSegment) return;
 
     if (confirm(`Are you sure you want to delete segment ${current.segmentId}? This action cannot be undone.`)) {
-      const result = deleteSegment(segments, current.segmentId);
+      const result = deleteSegment(segments, current.segmentId, t);
       if (result.success && result.newSegments) {
         setSegmentsWithHistory(result.newSegments);
         if (isEditing) setIsEditing(false);
-        setMessage("Segment deleted successfully");
+        setMessage(t("planning.segmentDeletedSuccessfully"));
       } else {
-        setMessage(result.message || "Delete operation failed");
+        setMessage(result.message || t("planning.deleteOperationFailed"));
       }
     }
   };
@@ -490,7 +492,7 @@ function EditablePreview({
                   color: canMergeBackward ? "var(--text)" : "var(--muted)",
                   cursor: canMergeBackward ? "pointer" : "not-allowed"
                 }}
-                title="Merge with previous segment"
+                title={t("planning.mergeWithPrevious")}
               >
                 ◀ Merge
               </button>
@@ -506,7 +508,7 @@ function EditablePreview({
                   color: canMergeForward ? "var(--text)" : "var(--muted)",
                   cursor: canMergeForward ? "pointer" : "not-allowed"
                 }}
-                title="Merge with next segment"
+                title={t("planning.mergeWithNext")}
               >
                 Merge ▶
               </button>
@@ -522,7 +524,7 @@ function EditablePreview({
                   color: canDelete ? "var(--error)" : "var(--muted)",
                   cursor: canDelete ? "pointer" : "not-allowed"
                 }}
-                title="Delete this segment"
+                title={t("planning.deleteThisSegment")}
               >
                 🗑️ Delete
               </button>
@@ -538,7 +540,7 @@ function EditablePreview({
                   color: canUndo ? "var(--text)" : "var(--muted)",
                   cursor: canUndo ? "pointer" : "not-allowed"
                 }}
-                title="Undo last segment operation"
+                title={t("planning.undoLastOperation")}
               >
                 ↶ Undo
               </button>
@@ -572,7 +574,7 @@ function EditablePreview({
                   color: canSplit ? "var(--text)" : "var(--muted)",
                   cursor: canSplit ? "pointer" : "not-allowed"
                 }}
-                title="Split segment at cursor position"
+                title={t("planning.splitAtCursor")}
               >
                 ✂️ Split at cursor
               </button>
@@ -669,7 +671,7 @@ function EditablePreview({
             cursor: "text",
             backgroundColor: "var(--background)"
           }}
-          title="Click to edit text"
+          title={t("planning.clickToEdit")}
         >
           {renderTextWithCursor(displayText, cursorPosition)}
         </div>
@@ -703,7 +705,7 @@ function EditablePreview({
       })()}
       
       {isEditing && (
-        <div style={{ 
+        <div style={{
           fontSize: "11px", 
           color: "var(--muted)", 
           marginTop: "4px",
@@ -711,7 +713,7 @@ function EditablePreview({
         }}>
           💡 Changes are saved to the plan only, not to the original manuscript. Use Ctrl+Enter to save, Escape to cancel.
           <br />
-          ✂️ Position cursor where you want to split, then click "Split at cursor"
+          {t("planning.splitInstructions")}
         </div>
       )}
 
@@ -795,9 +797,9 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
     if (historyIndex >= 0 && segmentHistory[historyIndex]) {
       setSegments([...segmentHistory[historyIndex]]);
       setHistoryIndex(prev => prev - 1);
-      setMessage("Undo successful");
+      setMessage(t("planning.undoSuccessful"));
     }
-  }, [historyIndex, segmentHistory]);
+  }, [historyIndex, segmentHistory, t]);
 
   const canUndo = historyIndex >= 0;
 
@@ -859,7 +861,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
     if (!root) return;
     
     try {
-      setMessage("Loading project chapters...");
+      setMessage(t("planning.loadingChapters"));
       const chapterList = await window.khipu!.call("chapters:list", { projectRoot: root });
       
       if (chapterList && Array.isArray(chapterList)) {
@@ -878,13 +880,13 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
           setSelectedChapter(chapterList[0].id);
         }
       } else {
-        setMessage("No chapters found in project. Please add chapter files first.");
+        setMessage(t("planning.noChaptersFound"));
       }
     } catch (error) {
       console.warn("Failed to load chapters:", error);
-      setMessage("Failed to load chapters. Please check your project structure.");
+      setMessage(t("planning.failedToLoadChapters"));
     }
-  }, [root, selectedChapter, checkChapterStatus]);
+  }, [root, selectedChapter, checkChapterStatus, t]);
 
   // Clean up stale cache entries for segments where text was edited in previous sessions
   const cleanupStaleCache = useCallback(async (segments: Segment[]) => {
@@ -1082,10 +1084,10 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       setCharacterAssignmentProgress({
         current: progress.current,
         total: totalNum,
-        stage: "Assigning characters..."
+        stage: t("planning.assigningCharacters")
       });
     });
-  }, []);
+  }, [t]);
 
   // Load chapters on mount
   useEffect(() => {
@@ -1126,7 +1128,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
           
           // Also update the simple character names list
           const names = charactersData.characters.map((char: CharacterData) => char.name || char.id);
-          const allCharacters = ["narrador", "Narrador", "desconocido", ...names];
+          const allCharacters = ["narrador", "Narrador", t("planning.unknownCharacter"), ...names];
           const uniqueCharacters = Array.from(new Set(allCharacters));
           setAvailableCharacters(uniqueCharacters);
         }
@@ -1135,12 +1137,12 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
         
       } catch (error) {
         console.warn("Failed to load characters:", error);
-        setAvailableCharacters(["narrador", "Narrador", "desconocido"]);
+        setAvailableCharacters(["narrador", "Narrador", t("planning.unknownCharacter")]);
       }
     };
     
     loadCharacters();
-  }, [root]);
+  }, [root, t]);
 
   // Utility functions from reference solution
   const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(n, hi));
@@ -1184,7 +1186,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
     console.log(`🔍 Starting with ${rs.length} rows`);
     
     if (onlyUnknown) {
-      rs = rs.filter((r) => r.voice.toLowerCase() === "desconocido" || r.voice === "");
+      rs = rs.filter((r) => r.voice.toLowerCase() === t("planning.unknownCharacter") || r.voice === "");
       console.log(`🔍 After onlyUnknown filter: ${rs.length} rows`);
     }
     
@@ -1207,7 +1209,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
     }
     
     return rs;
-  }, [rowsAll, onlyUnknown, chunkFilter, search, segments]);
+  }, [rowsAll, onlyUnknown, chunkFilter, search, segments, t]);
 
   // Adjust selection when filtered rows change
   useEffect(() => {
@@ -1255,7 +1257,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
   // Generate plan for selected chapter only
   const generatePlan = async () => {
     if (!selectedChapter) {
-      setMessage("Please select a chapter first.");
+      setMessage(t("planning.selectChapterFirst"));
       return;
     }
     
@@ -1264,13 +1266,13 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
     // Check if window.khipu is available
     if (!window.khipu || !window.khipu.call) {
       console.error("❌ window.khipu is not available! Electron IPC not ready.");
-      setMessage("IPC not available. Please ensure Electron is running.");
+      setMessage(t("planning.ipcNotAvailable"));
       return;
     }
     
     if (!root) {
       console.error("❌ No project root available! Cannot generate plan.");
-      setMessage("No project loaded. Please open a project first.");
+      setMessage(t("planning.noProjectLoaded"));
       return;
     }
     
@@ -1284,14 +1286,14 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
     setPlanProgress({
       current: 0,
       total: 100,
-      stage: "Starting plan generation..."
+      stage: t("planning.startingPlanGeneration")
     });
     
     try {
       // Find the selected chapter data
       const chapter = chapters.find(ch => ch.id === selectedChapter);
       if (!chapter) {
-        setMessage("Selected chapter not found.");
+        setMessage(t("planning.selectedChapterNotFound"));
         setLoading(false);
         setRunning(false);
         setPlanProgress(null);
@@ -1331,7 +1333,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       
     } catch (error) {
       console.error("Failed to generate plan:", error);
-      setMessage(`Failed to generate plan for chapter ${selectedChapter}. Check console for details.`);
+      setMessage(`${t("planning.failedToGeneratePlan")} ${selectedChapter}. Check console for details.`);
     } finally {
       setLoading(false);
       setRunning(false);
@@ -1342,7 +1344,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
   // Save plan for selected chapter
   const savePlan = async () => {
     if (!segments || !root || !selectedChapter) {
-      setMessage("No plan or chapter selected to save.");
+      setMessage(t("planning.noPlanToSave"));
       return;
     }
     setLoading(true);
@@ -1429,12 +1431,12 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
     // If no segments/plans exist, generate them first
     if (!segments) {
       console.log("📋 No existing plans found - generating plans first...");
-      setMessage("No plans found. Generating plans first, then assigning characters...");
+      setMessage(t("planning.noPlansGeneratingFirst"));
       
       try {
         await generatePlan();
         console.log("✅ Plans generated successfully, proceeding with character assignment...");
-        setMessage("Plans generated successfully. Now assigning characters...");
+        setMessage(t("planning.plansGeneratedAssigning"));
         
         // Note: The generatePlan() function already calls loadChapterData() at the end
         // so segments should be available now, but we need to check the current state
@@ -1450,7 +1452,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
     
     setAssigningCharacters(true);
     setLoading(true);
-    setMessage(`Analyzing chapter ${selectedChapter} for character assignment...`);
+    setMessage(t("planning.analyzingChapterForCharacters", { chapter: selectedChapter }));
     
     // Show immediate progress feedback
     setCharacterAssignmentProgress({
@@ -1506,7 +1508,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       setCharacterAssignmentProgress({
         current: 30,
         total: 100,
-        stage: "Analyzing with AI..."
+        stage: t("planning.analysingWithAI")
       });
       
       // TODO: This will be the payload for the IPC call when the backend service is implemented
@@ -2015,7 +2017,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
               </div>
             </div>
           )}
-          <div style={{ fontSize: "12px", color: "var(--accent)", marginTop: "4px" }}>This may take a moment while analyzing the text...</div>
+          <div style={{ fontSize: "12px", color: "var(--accent)", marginTop: "4px" }}>{t("planning.mayTakeAMoment")}</div>
         </div>
       )}
 
@@ -2096,7 +2098,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
               </div>
             </div>
           )}
-          <div style={{ fontSize: "12px", color: "var(--accent)", marginTop: "4px" }}>Analyzing chapter text and assigning characters to segments...</div>
+          <div style={{ fontSize: "12px", color: "var(--accent)", marginTop: "4px" }}>{t("planning.analysingChapterText")}</div>
         </div>
       )}
 
@@ -2174,10 +2176,11 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
                     isAudioLoading={isAudioLoading}
                     auditioningSegments={auditioningSegments}
                     isAudioPlaying={isAudioPlaying}
+                    t={t}
                   />
                 ) : (
                   <div style={{ color: "var(--muted)", fontStyle: "italic" }}>
-                    Select a row to preview content
+                    {t("planning.selectRowToPreview")}
                   </div>
                 )}
               </div>
@@ -2186,7 +2189,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
             {/* Right: Table */}
             <div style={{ border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
               <div style={{ padding: "8px 12px", backgroundColor: "var(--panelAccent)", borderBottom: "1px solid var(--border)", fontSize: "14px", fontWeight: 500 }}>
-                Chunks & Voice Assignment
+                {t("planning.chunksVoiceAssignment")}
               </div>
               
               <div ref={gridRef} style={{ flex: 1, overflow: "auto" }}>

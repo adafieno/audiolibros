@@ -1,0 +1,6 @@
+{
+  "app.title": {
+    "string": "Khipu Studio",
+    "comment": "Main application title displayed in the header and browser tab"
+  }
+}
