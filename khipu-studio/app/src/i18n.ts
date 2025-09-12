@@ -1,6 +1,6 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import ICU from "i18next-icu";
+// import ICU from "i18next-icu"; // Disabled - causes interpolation conflicts with standard {{variable}} syntax
 import LanguageDetector from "i18next-browser-languagedetector";
 import { extractTranslationStrings, type TranslationResource } from "./lib/i18n-utils";
 
@@ -13,7 +13,7 @@ const extractedEsPE = extractTranslationStrings(esPE as TranslationResource);
 const extractedEnUS = extractTranslationStrings(enUS as TranslationResource);
 
 i18n
-  .use(ICU)
+  // .use(ICU) // Disabled - causes interpolation conflicts with standard {{variable}} syntax
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
