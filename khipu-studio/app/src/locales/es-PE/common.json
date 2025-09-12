@@ -1450,6 +1450,26 @@
     "string": "Página de planificación marcada como completa",
     "comment": ""
   },
+  "planning.status.allChaptersCompleted": {
+    "string": "¡Todos los capítulos completados! La fase de planificación ya está completa.",
+    "comment": ""
+  },
+  "planning.progress.complete": {
+    "string": "Planificación Completa",
+    "comment": ""
+  },
+  "planning.progress.status": {
+    "string": "Progreso de Planificación: {{completed}}/{{total}} capítulos completos",
+    "comment": ""
+  },
+  "planning.progress.unlockNext": {
+    "string": "Completa todos los planes de capítulos para desbloquear el siguiente paso del flujo de trabajo",
+    "comment": ""
+  },
+  "planning.readyForSsml": {
+    "string": "Listo para SSML",
+    "comment": ""
+  },
 
   "planning.errors.selectChapter": {
     "string": "Selecciona un capítulo y asegúrate de que el proyecto esté cargado.",

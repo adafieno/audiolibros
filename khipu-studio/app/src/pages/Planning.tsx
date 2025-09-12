@@ -939,7 +939,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
         markStepCompleted("planning");
         
         onStatus(t("planning.status.allChaptersCompleted"));
-        setMessage(`All chapters complete! Planning phase is now complete.`);
+        setMessage(t("planning.status.allChaptersCompleted"));
       }
     } catch (error) {
       console.error("Failed to check global planning completion:", error);
@@ -1833,53 +1833,6 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       <h1 style={{ fontSize: "32px", fontWeight: "bold", color: "var(--text)", marginBottom: "8px" }}>{t("planning.title")}</h1>
       <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "16px" }}>{t("planning.description")}</p>
 
-      {/* Global Planning Completion Status */}
-      {(() => {
-        const completedChapters = Array.from(chapterStatus.values()).filter(status => status.isComplete).length;
-        const totalChapters = chapters.length;
-        const allComplete = totalChapters > 0 && completedChapters === totalChapters;
-        
-        return (
-          <div style={{ 
-            marginBottom: "16px", 
-            padding: "12px 16px", 
-            backgroundColor: allComplete ? "var(--successBg)" : "var(--panel)", 
-            border: `1px solid ${allComplete ? "var(--success)" : "var(--border)"}`,
-            borderRadius: "6px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center"
-          }}>
-            <div>
-              <span style={{ 
-                fontSize: "14px", 
-                fontWeight: "500",
-                color: allComplete ? "var(--success)" : "var(--text)"
-              }}>
-                {allComplete ? "✅ Planning Complete" : `Planning Progress: ${completedChapters}/${totalChapters} chapters complete`}
-              </span>
-              {!allComplete && totalChapters > 0 && (
-                <div style={{ marginTop: "4px", fontSize: "12px", color: "var(--muted)" }}>
-                  Complete all chapter plans to unlock the next workflow step
-                </div>
-              )}
-            </div>
-            {allComplete && (
-              <div style={{ 
-                padding: "4px 8px", 
-                backgroundColor: "var(--success)", 
-                color: "white", 
-                borderRadius: "4px", 
-                fontSize: "12px",
-                fontWeight: "500"
-              }}>
-                Ready for SSML
-              </div>
-            )}
-          </div>
-        );
-      })()}
-
       {/* Status message */}
       {message && !running && (
         <div style={{
@@ -1895,8 +1848,58 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
         </div>
       )}
 
-      {/* Chapter selector */}
+      {/* Chapter selector with integrated planning progress */}
       <div style={{ marginBottom: "16px", padding: "16px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "6px" }}>
+        {/* Planning Progress Status */}
+        {(() => {
+          const completedChapters = Array.from(chapterStatus.values()).filter(status => status.isComplete).length;
+          const totalChapters = chapters.length;
+          const allComplete = totalChapters > 0 && completedChapters === totalChapters;
+          
+          return (
+            <div style={{ 
+              marginBottom: "16px", 
+              padding: "12px", 
+              backgroundColor: allComplete ? "var(--successBg)" : "var(--panelBackground)", 
+              border: `1px solid ${allComplete ? "var(--success)" : "var(--border)"}`,
+              borderRadius: "4px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center"
+            }}>
+              <div>
+                <span style={{ 
+                  fontSize: "14px", 
+                  fontWeight: "500",
+                  color: allComplete ? "var(--success)" : "var(--text)"
+                }}>
+                  {allComplete 
+                    ? `✅ ${t("planning.progress.complete")}` 
+                    : t("planning.progress.status", { completed: completedChapters, total: totalChapters })
+                  }
+                </span>
+                {!allComplete && totalChapters > 0 && (
+                  <div style={{ marginTop: "4px", fontSize: "12px", color: "var(--muted)" }}>
+                    {t("planning.progress.unlockNext")}
+                  </div>
+                )}
+              </div>
+              {allComplete && (
+                <div style={{ 
+                  padding: "4px 8px", 
+                  backgroundColor: "var(--success)", 
+                  color: "white", 
+                  borderRadius: "4px", 
+                  fontSize: "12px",
+                  fontWeight: "500"
+                }}>
+                  {t("planning.readyForSsml")}
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
         <div style={{ display: "flex", gap: "16px", alignItems: "center", flexWrap: "wrap" }}>
           <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
             <label style={{ fontSize: "14px", fontWeight: "500", color: "var(--text)" }}>

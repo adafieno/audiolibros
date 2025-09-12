@@ -438,6 +438,26 @@
     "string": "Planning page marked as complete",
     "comment": "Status message when planning step is completed"
   },
+  "planning.status.allChaptersCompleted": {
+    "string": "All chapters completed! Planning phase is now complete.",
+    "comment": "Status message when all chapters are completed"
+  },
+  "planning.progress.complete": {
+    "string": "Planning Complete",
+    "comment": "Text shown when all planning is complete"
+  },
+  "planning.progress.status": {
+    "string": "Planning Progress: {{completed}}/{{total}} chapters complete",
+    "comment": "Text showing planning completion progress"
+  },
+  "planning.progress.unlockNext": {
+    "string": "Complete all chapter plans to unlock the next workflow step",
+    "comment": "Text explaining what's needed to proceed"
+  },
+  "planning.readyForSsml": {
+    "string": "Ready for SSML",
+    "comment": "Badge text shown when planning is complete and ready for next step"
+  },
 
   "planning.errors.selectChapter": {
     "string": "Please select a chapter and ensure project is loaded.",
