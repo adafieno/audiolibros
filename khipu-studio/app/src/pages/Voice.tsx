@@ -39,7 +39,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   const [selectedChapter, setSelectedChapter] = useState<string>("");
   const [audioSegments, setAudioSegments] = useState<AudioSegmentRow[]>([]);
   const [generatingAudio, setGeneratingAudio] = useState<Set<string>>(new Set());
-  const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+  const [selectedRowIndex, setSelectedRowIndex] = useState(0);
 
   const checkChapterStatus = useCallback(async (chapterId: string): Promise<ChapterStatus> => {
     if (!root) {
@@ -220,7 +220,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
   const handleChapterSelect = useCallback(async (chapterId: string) => {
     setSelectedChapter(chapterId);
-    setSelectedRowId(null); // Clear row selection when changing chapters
+    setSelectedRowIndex(0); // Automatically select first row when changing chapters
     if (chapterId) {
       await loadPlanData(chapterId);
     }
@@ -235,8 +235,8 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     // TODO: Save changes back to plan file
   }, []);
 
-  const handleRowSelection = useCallback((rowKey: string) => {
-    setSelectedRowId(prev => prev === rowKey ? null : rowKey);
+  const handleRowSelection = useCallback((index: number) => {
+    setSelectedRowIndex(prev => prev === index ? -1 : index); // Toggle selection, -1 means none selected
   }, []);
 
   const handleGenerateSegmentAudio = useCallback(async (rowIndex: number) => {
@@ -308,6 +308,15 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       loadPlanData(firstChapter);
     }
   }, [chapters, selectedChapter, loadPlanData]);
+
+  // Auto-select first row when segments change (like Planning page)
+  useEffect(() => {
+    setSelectedRowIndex(prevIndex => {
+      // Clamp the index to valid range, default to 0 if we have segments
+      if (audioSegments.length === 0) return -1; // No selection if no segments
+      return Math.min(prevIndex, audioSegments.length - 1);
+    });
+  }, [audioSegments.length]);
 
   if (loading) {
     return (
@@ -451,6 +460,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             }}>
               <thead>
                 <tr style={{ backgroundColor: "var(--panelAccent)" }}>
+                  <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}></th>
                   <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>ID</th>
                   <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>Text Preview</th>
                   <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>Voice</th>
@@ -462,14 +472,17 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                 {audioSegments.map((segment, index) => (
                   <tr 
                     key={segment.rowKey} 
-                    onClick={() => handleRowSelection(segment.rowKey)}
+                    onClick={() => handleRowSelection(index)}
                     style={{ 
                       borderBottom: "1px solid var(--border)",
                       cursor: "pointer",
-                      backgroundColor: selectedRowId === segment.rowKey ? "#4A90E2" : "transparent",
-                      color: selectedRowId === segment.rowKey ? "white" : "var(--text)"
+                      backgroundColor: selectedRowIndex === index ? "var(--accent)" : "transparent",
+                      color: selectedRowIndex === index ? "white" : "var(--text)"
                     }}
                   >
+                    <td style={{ padding: "8px", color: "var(--muted)" }}>
+                      {selectedRowIndex === index ? "▶" : ""}
+                    </td>
                     <td style={{ padding: "8px", color: "inherit" }}>
                       {segment.chunkId}
                     </td>
