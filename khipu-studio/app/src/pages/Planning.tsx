@@ -701,8 +701,8 @@ function EditablePreview({
             display: "flex",
             gap: "12px"
           }}>
-            <span>📏 {stats.words}/{SEGMENT_LIMITS.recommendedWords} words</span>
-            <span>🔤 {stats.chars}/{SEGMENT_LIMITS.recommendedChars} chars</span>
+            <span>📏 {stats.words}/{SEGMENT_LIMITS.recommendedWords} {t("planning.stats.words")}</span>
+            <span>🔤 {stats.chars}/{SEGMENT_LIMITS.recommendedChars} {t("planning.stats.chars")}</span>
             <span>💾 {stats.kb.toFixed(1)}/{SEGMENT_LIMITS.maxKB}KB</span>
             {isOverLimit && <span style={{ color: "var(--error)", fontWeight: "bold" }}>⚠️ OVER LIMITS</span>}
           </div>
@@ -1826,8 +1826,8 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
     return (
       <div style={{ padding: "16px", maxWidth: "1200px" }}>
         <div style={{ textAlign: "center", padding: "64px 0", backgroundColor: "var(--panel)", borderRadius: "8px", border: "1px dashed var(--border)" }}>
-          <p style={{ color: "var(--text)", fontSize: "18px", marginBottom: "8px" }}>No project loaded</p>
-          <p style={{ color: "var(--muted)", fontSize: "14px" }}>Please load a project first to manage planning.</p>
+          <p style={{ color: "var(--text)", fontSize: "18px", marginBottom: "8px" }}>{t("status.noProjectLoaded")}</p>
+          <p style={{ color: "var(--muted)", fontSize: "14px" }}>{t("status.loadProjectToManagePlanning")}</p>
         </div>
       </div>
     );
@@ -1835,7 +1835,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
 
   return (
     <div style={{ padding: "16px", maxWidth: "1400px", height: "calc(100vh - 32px)" }}>
-      <h1 style={{ fontSize: "32px", fontWeight: "bold", color: "var(--text)", marginBottom: "8px" }}>Planning</h1>
+      <h1 style={{ fontSize: "32px", fontWeight: "bold", color: "var(--text)", marginBottom: "8px" }}>{t("planning.title")}</h1>
       <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "24px" }}>{t("planning.description")}</p>
 
       {/* Status message */}
@@ -2148,7 +2148,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
             </label>
             
             <input 
-              placeholder="Search text…" 
+              placeholder={t("planning.searchText")} 
               value={search} 
               onChange={(e) => setSearch(e.target.value)}
               style={{ 
