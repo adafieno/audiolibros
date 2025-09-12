@@ -36,8 +36,8 @@
     "comment": "Navigation menu item for orchestration phase"
   },
   "nav.voice": {
-    "string": "Voice",
-    "comment": "Navigation menu item for voice production"
+    "string": "Audio Production",
+    "comment": "Navigation menu item for audio production"
   },
   "nav.export": {
     "string": "Export",
