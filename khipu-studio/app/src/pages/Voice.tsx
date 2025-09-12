@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useProject } from "../store/project";
-import type { PlanFile } from "../types/plan";
+import type { PlanChunk } from "../types/plan";
 
 interface Chapter {
   id: string;
@@ -57,6 +57,8 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       return { hasText: false, hasPlan: false, isComplete: false, isAudioComplete: false };
     }
     
+    console.log(`Checking status for chapter: ${chapterId}`);
+    
     // Check if chapter text exists
     let hasText = false;
     const textPath = `analysis/chapters_txt/${chapterId}.txt`;
@@ -68,8 +70,9 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         json: false
       });
       hasText = textData !== null && textData !== undefined;
-    } catch {
-      // Text file doesn't exist
+      console.log(`  Text exists: ${hasText} (${textPath})`);
+    } catch (error) {
+      console.log(`  Text file check failed: ${textPath}`, error);
     }
     
     // Check if plan exists - this is the key requirement
@@ -83,8 +86,9 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         json: true
       });
       hasPlan = planDataCheck !== null && planDataCheck !== undefined;
-    } catch {
-      // Plan file doesn't exist
+      console.log(`  Plan exists: ${hasPlan} (${planPath})`, planDataCheck ? 'Data found' : 'No data');
+    } catch (error) {
+      console.log(`  Plan file check failed: ${planPath}`, error);
     }
     
     // Check if orchestration is complete for this chapter
@@ -97,8 +101,9 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         json: true
       }) as { complete?: boolean; completedAt?: string } | null;
       isComplete = completionData?.complete === true;
-    } catch {
-      isComplete = false;
+      console.log(`  Orchestration complete: ${isComplete} (${completionPath})`);
+    } catch (error) {
+      console.log(`  Completion check failed: ${completionPath}`, error);
     }
     
     // Check if audio production is complete
@@ -111,11 +116,14 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         json: true
       }) as { complete?: boolean; completedAt?: string } | null;
       isAudioComplete = audioCompletionData?.complete === true;
-    } catch {
-      isAudioComplete = false;
+      console.log(`  Audio complete: ${isAudioComplete} (${audioCompletionPath})`);
+    } catch (error) {
+      console.log(`  Audio completion check failed: ${audioCompletionPath}`, error);
     }
     
-    return { hasText, hasPlan, isComplete, isAudioComplete };
+    const status = { hasText, hasPlan, isComplete, isAudioComplete };
+    console.log(`Chapter ${chapterId} status:`, status);
+    return status;
   }, [root]);
 
   const loadPlanData = useCallback(async (chapterId: string) => {
@@ -127,19 +135,45 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     try {
       setMessage("Loading plan data...");
       const planPath = `ssml/plans/${chapterId}.plan.json`;
-      const planFile = await window.khipu!.call("fs:read", {
+      console.log("Loading plan from:", planPath);
+      
+      const planData = await window.khipu!.call("fs:read", {
         projectRoot: root,
         relPath: planPath,
         json: true
-      }) as PlanFile;
+      });
 
-      if (!planFile) {
+      console.log("Loaded plan file:", planData);
+      console.log("Plan data type:", typeof planData);
+      console.log("Is plan data an array?:", Array.isArray(planData));
+      if (typeof planData === 'object' && planData !== null) {
+        console.log("Plan data keys:", Object.keys(planData));
+      }
+
+      if (!planData) {
+        console.warn("Plan file is null or undefined");
         setMessage("No plan data found");
         return;
       }
 
+      // Handle both formats: direct array or object with chunks property
+      let chunks: PlanChunk[];
+      if (Array.isArray(planData)) {
+        console.log("Plan data is direct array format, length:", planData.length);
+        chunks = planData;
+      } else if (planData.chunks && Array.isArray(planData.chunks)) {
+        console.log("Plan data has chunks property, length:", planData.chunks.length);
+        chunks = planData.chunks;
+      } else {
+        console.warn("Plan file has no valid chunks data:", planData);
+        setMessage("Invalid plan data - no chunks found");
+        return;
+      }
+
+      console.log("Plan chunks found:", chunks.length);
+
       // Convert plan chunks to audio segment rows
-      const segments: AudioSegmentRow[] = planFile.chunks.map((chunk, index) => {
+      const segments: AudioSegmentRow[] = chunks.map((chunk, index) => {
         const audioPath = `audio/${chapterId}/${chunk.id}.wav`;
         return {
           rowKey: `${chapterId}_${chunk.id}_${index}`,
@@ -155,6 +189,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         };
       });
 
+      console.log("Generated segments:", segments.length);
       setAudioSegments(segments);
       
       // For now, just set all segments as not having audio
@@ -163,7 +198,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       setMessage("");
     } catch (error) {
       console.error("Failed to load plan data:", error);
-      setMessage("Failed to load plan data");
+      setMessage(`Failed to load plan data: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }, [root]);
 
