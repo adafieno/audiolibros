@@ -4,6 +4,7 @@ import { AppShell } from "./components/layout/AppShell";
 import Home from "./pages/Home";
 import ManuscriptPage from "./pages/Manuscript";
 import PlanningPage from "./pages/Planning";
+import VoicePage from "./pages/Voice";
 import SettingsPage from "./pages/Settings";
 import ProjectPage from "./pages/Project";
 import BookPage from "./pages/Book";
@@ -40,7 +41,7 @@ export default function App() {
         <Route path="/characters" element={<CharactersPage />} />
         <Route path="/dossier" element={<Placeholder name={t("nav.dossier")} />} />
         <Route path="/planning" element={<PlanningPage onStatus={setStatus} />} />
-        <Route path="/voice" element={<Placeholder name={t("nav.voice")} />} />
+        <Route path="/voice" element={<VoicePage onStatus={setStatus} />} />
         <Route path="/packaging" element={<Placeholder name={t("nav.packaging")} />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Routes>

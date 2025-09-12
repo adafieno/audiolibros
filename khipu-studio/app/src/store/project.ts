@@ -85,7 +85,7 @@ export const useProject = create<ProjectState>()((set, get) => ({
         return completedSteps.has("characters"); // Available after characters
                
       case "voice":
-        return completedSteps.has("planning"); // Available after planning
+        return completedSteps.has("characters"); // Available after characters (parallel with planning)
         
       case "export":
         return completedSteps.has("voice"); // Available after Voice
