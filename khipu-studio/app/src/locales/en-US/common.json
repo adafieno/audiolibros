@@ -348,6 +348,18 @@
     "string": "Failed",
     "comment": "Generic failure status message"
   },
+  "status.noProjectLoaded": {
+    "string": "No project loaded",
+    "comment": "Status message when no project is loaded"
+  },
+  "status.loadProjectToManagePlanning": {
+    "string": "Please load a project first to manage planning.",
+    "comment": "Instructions to load project for planning"
+  },
+  "status.loadProjectToManageCharacters": {
+    "string": "Please load a project first to manage characters.",
+    "comment": "Instructions to load project for characters"
+  },
 
   "image.errors.failedToCopy": {
     "string": "Failed to copy image",
@@ -573,9 +585,17 @@
     "string": "Authors",
     "comment": "Label for book authors field"
   },
+  "book.authors.placeholder": {
+    "string": "Author 1, Author 2",
+    "comment": "Placeholder for authors input"
+  },
   "book.narrators.label": {
     "string": "Narrators",
     "comment": "Label for book narrators field"
+  },
+  "book.narrators.placeholder": {
+    "string": "Narrator 1, Narrator 2",
+    "comment": "Placeholder for narrators input"
   },
   "book.content": {
     "string": "Content Information",
@@ -589,13 +609,25 @@
     "string": "Keywords",
     "comment": "Label for book keywords field"
   },
+  "book.keywords.placeholder": {
+    "string": "keyword1, keyword2, keyword3",
+    "comment": "Placeholder for keywords input"
+  },
   "book.categories.label": {
     "string": "Categories",
     "comment": "Label for book categories field"
   },
+  "book.categories.placeholder": {
+    "string": "Fiction / Literary, Suspense",
+    "comment": "Placeholder for categories input"
+  },
   "book.language.label": {
     "string": "Language",
     "comment": "Label for book language field"
+  },
+  "book.language.selectOption": {
+    "string": "Select language and region...",
+    "comment": "Default option for language selection dropdown"
   },
   "book.publishing": {
     "string": "Publishing Information",
@@ -849,9 +881,29 @@
     "string": "Detection, editing & voice preparation.",
     "comment": "Description for the characters page"
   },
+  "characters.title": {
+    "string": "Characters",
+    "comment": "Title for the characters page"
+  },
   "planning.description": {
     "string": "TTS-compliant chunk breakdown and character voice assignment - work chapter by chapter.",
     "comment": "Description for the planning page"
+  },
+  "planning.title": {
+    "string": "Planning",
+    "comment": "Title for the planning page"
+  },
+  "planning.searchText": {
+    "string": "Search text…",
+    "comment": "Placeholder for search input in planning"
+  },
+  "planning.stats.words": {
+    "string": "words",
+    "comment": "Label for word count statistics"
+  },
+  "planning.stats.chars": {
+    "string": "chars",
+    "comment": "Label for character count statistics"
   },
   "planning.generateInstruction": {
     "string": "Click \"Generate Plan for {{chapter}}\" to create TTS-compliant chunks with AI speaker detection.",

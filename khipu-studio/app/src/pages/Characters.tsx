@@ -263,8 +263,8 @@ function CharactersPage() {
     return (
       <div style={{ padding: "16px", maxWidth: "1200px" }}>
         <div style={{ textAlign: "center", padding: "64px 0", backgroundColor: "var(--panel)", borderRadius: "8px", border: "1px dashed var(--border)" }}>
-          <p style={{ color: "var(--text)", fontSize: "18px", marginBottom: "8px" }}>No project loaded</p>
-          <p style={{ color: "var(--muted)", fontSize: "14px" }}>Please load a project first to manage characters.</p>
+          <p style={{ color: "var(--text)", fontSize: "18px", marginBottom: "8px" }}>{t("status.noProjectLoaded")}</p>
+          <p style={{ color: "var(--muted)", fontSize: "14px" }}>{t("status.loadProjectToManageCharacters")}</p>
         </div>
       </div>
     );
@@ -300,7 +300,7 @@ function CharactersPage() {
 
   return (
     <div style={{ padding: "2px", maxWidth: "90%" }}>
-      <h2>Characters</h2>
+      <h2>{t("characters.title")}</h2>
       <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "24px" }}>{t("characters.description")}</p>
 
       {/* Action buttons */}

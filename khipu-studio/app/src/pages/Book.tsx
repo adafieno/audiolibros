@@ -157,7 +157,7 @@ export default function Book() {
               <input
                 style={{ width: "80%" }}
                 value={bookMeta?.authors?.join(", ") || ""}
-                placeholder="Author 1, Author 2"
+                placeholder={t("book.authors.placeholder")}
                 onChange={(e) => updateBookMeta({ 
                   authors: e.target.value.split(",").map(a => a.trim()).filter(a => a) 
                 })}
@@ -168,7 +168,7 @@ export default function Book() {
               <input
                 style={{ width: "80%" }}
                 value={bookMeta?.narrators?.join(", ") || ""}
-                placeholder="Narrator 1, Narrator 2"
+                placeholder={t("book.narrators.placeholder")}
                 onChange={(e) => updateBookMeta({ 
                   narrators: e.target.value.split(",").map(n => n.trim()).filter(n => n) 
                 })}
@@ -204,7 +204,7 @@ export default function Book() {
                     color: "var(--text-muted)"
                   }}
                 >
-                  Select language and region...
+                  {t("book.language.selectOption")}
                 </option>
                 
                 {/* Spanish variants - most common first */}
@@ -387,7 +387,7 @@ export default function Book() {
             <input
               style={{ width: "40%" }}
               value={bookMeta?.keywords?.join(", ") || ""}
-              placeholder="keyword1, keyword2, keyword3"
+              placeholder={t("book.keywords.placeholder")}
               onChange={(e) => updateBookMeta({ 
                 keywords: e.target.value.split(",").map(k => k.trim()).filter(k => k) 
               })}
@@ -398,7 +398,7 @@ export default function Book() {
             <input
               style={{ width: "40%" }}
               value={bookMeta?.categories?.join(", ") || ""}
-              placeholder="Fiction / Literary, Suspense"
+              placeholder={t("book.categories.placeholder")}
               onChange={(e) => updateBookMeta({ 
                 categories: e.target.value.split(",").map(c => c.trim()).filter(c => c) 
               })}

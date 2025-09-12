@@ -163,6 +163,18 @@
     "string": "Falló ❌",
     "comment": ""
   },
+  "status.noProjectLoaded": {
+    "string": "No hay proyecto cargado",
+    "comment": ""
+  },
+  "status.loadProjectToManagePlanning": {
+    "string": "Carga un proyecto primero para gestionar la planificación.",
+    "comment": ""
+  },
+  "status.loadProjectToManageCharacters": {
+    "string": "Carga un proyecto primero para gestionar los personajes.",
+    "comment": ""
+  },
 
   "manu.save": {
     "string": "Guardar capítulo",
@@ -903,8 +915,16 @@
     "string": "Autores",
     "comment": ""
   },
+  "book.authors.placeholder": {
+    "string": "Autor 1, Autor 2",
+    "comment": ""
+  },
   "book.narrators.label": {
     "string": "Narradores",
+    "comment": ""
+  },
+  "book.narrators.placeholder": {
+    "string": "Narrador 1, Narrador 2",
     "comment": ""
   },
   "book.content": {
@@ -919,12 +939,24 @@
     "string": "Palabras clave",
     "comment": ""
   },
+  "book.keywords.placeholder": {
+    "string": "palabra1, palabra2, palabra3",
+    "comment": ""
+  },
   "book.categories.label": {
     "string": "Categorías",
     "comment": ""
   },
+  "book.categories.placeholder": {
+    "string": "Ficción / Literatura, Suspenso",
+    "comment": ""
+  },
   "book.language.label": {
     "string": "Idioma",
+    "comment": ""
+  },
+  "book.language.selectOption": {
+    "string": "Selecciona idioma y región...",
     "comment": ""
   },
   "book.publishing": {
@@ -1161,10 +1193,6 @@
     "comment": ""
   },
 
-  "planning.title": {
-    "string": "Planificación de Capítulos",
-    "comment": ""
-  },
   "planning.segmentNotFound": {
     "string": "Segmento no encontrado",
     "comment": ""
@@ -1235,6 +1263,22 @@
   },
   "planning.description": {
     "string": "Desglose de fragmentos compatible con TTS y asignación de voces de personajes - trabaja capítulo por capítulo.",
+    "comment": ""
+  },
+  "planning.title": {
+    "string": "Planificación",
+    "comment": ""
+  },
+  "planning.searchText": {
+    "string": "Buscar texto…",
+    "comment": ""
+  },
+  "planning.stats.words": {
+    "string": "palabras",
+    "comment": ""
+  },
+  "planning.stats.chars": {
+    "string": "caracteres",
     "comment": ""
   },
   "planning.generateInstruction": {
