@@ -40,13 +40,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   const [audioSegments, setAudioSegments] = useState<AudioSegmentRow[]>([]);
   const [generatingAudio, setGeneratingAudio] = useState<Set<string>>(new Set());
 
-  // Auto-select first chapter if available
-  useEffect(() => {
-    if (chapters.length > 0 && !selectedChapter) {
-      setSelectedChapter(chapters[0].id);
-    }
-  }, [chapters, selectedChapter]);
-
   const checkChapterStatus = useCallback(async (chapterId: string): Promise<ChapterStatus> => {
     if (!root) {
       return { hasText: false, hasPlan: false, isComplete: false, isAudioComplete: false };
@@ -300,6 +293,16 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     loadChapters();
   }, [loadChapters]);
 
+  // Auto-select first chapter if available and load its data
+  useEffect(() => {
+    if (chapters.length > 0 && !selectedChapter) {
+      const firstChapter = chapters[0].id;
+      setSelectedChapter(firstChapter);
+      // Load the plan data for the first chapter
+      loadPlanData(firstChapter);
+    }
+  }, [chapters, selectedChapter, loadPlanData]);
+
   if (loading) {
     return (
       <div style={{ textAlign: "center", padding: "64px 0" }}>
@@ -337,20 +340,18 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         </div>
       )}
 
-      {/* Main Controls Panel - matching Orchestration style */}
+      {/* Chapter Selection Panel - matching Orchestration style */}
       <div style={{ 
-        marginBottom: "24px", 
+        marginBottom: "16px", 
         padding: "16px", 
         backgroundColor: "var(--panel)", 
         border: "1px solid var(--border)", 
         borderRadius: "8px" 
       }}>
-        {/* Chapter Selection and Status Row */}
         <div style={{ 
           display: "flex", 
           alignItems: "center", 
-          justifyContent: "space-between", 
-          marginBottom: "16px" 
+          justifyContent: "space-between"
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
             <label style={{ fontSize: "14px", fontWeight: 500, color: "var(--text)" }}>
@@ -389,57 +390,40 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             </span>
           )}
         </div>
-
-        {/* Action Buttons Toolbar */}
-        {selectedChapter && (
-          <div style={{ 
-            display: "flex", 
-            alignItems: "center", 
-            gap: "12px",
-            flexWrap: "wrap"
-          }}>
-            <button
-              onClick={handleGenerateChapterAudio}
-              disabled={audioSegments.length === 0}
-              style={{
-                padding: "8px 16px",
-                fontSize: "14px",
-                fontWeight: 500,
-                backgroundColor: "var(--success)",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: audioSegments.length > 0 ? "pointer" : "not-allowed",
-                opacity: audioSegments.length > 0 ? 1 : 0.6
-              }}
-            >
-              🎵 Generate Chapter Audio
-            </button>
-            
-            <button
-              onClick={() => {/* TODO: Implement preview */}}
-              disabled={audioSegments.length === 0}
-              style={{
-                padding: "8px 16px",
-                fontSize: "14px",
-                fontWeight: 500,
-                backgroundColor: "var(--primary)",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: audioSegments.length > 0 ? "pointer" : "not-allowed",
-                opacity: audioSegments.length > 0 ? 1 : 0.6
-              }}
-            >
-              🔊 Preview Audio
-            </button>
-            
-            <span style={{ marginLeft: "auto", fontSize: "14px", color: "var(--textSecondary)" }}>
-              {audioSegments.length} segments loaded
-            </span>
-          </div>
-        )}
       </div>
+
+      {/* Action Buttons Toolbar - Separate from chapter selection */}
+      {selectedChapter && (
+        <div style={{ 
+          display: "flex", 
+          alignItems: "center", 
+          gap: "12px",
+          marginBottom: "24px",
+          flexWrap: "wrap"
+        }}>
+          <button
+            onClick={handleGenerateChapterAudio}
+            disabled={audioSegments.length === 0}
+            style={{
+              padding: "8px 16px",
+              fontSize: "14px",
+              fontWeight: 500,
+              backgroundColor: "var(--success)",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: audioSegments.length > 0 ? "pointer" : "not-allowed",
+              opacity: audioSegments.length > 0 ? 1 : 0.6
+            }}
+          >
+            🎵 Generate Chapter Audio
+          </button>
+          
+          <span style={{ marginLeft: "auto", fontSize: "14px", color: "var(--textSecondary)" }}>
+            {audioSegments.length} segments loaded
+          </span>
+        </div>
+      )}
 
       {/* Segment Grid */}
       {selectedChapter && audioSegments.length > 0 ? (
