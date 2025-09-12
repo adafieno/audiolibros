@@ -1,6 +1,7 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useProject } from "../store/project";
+import type { PlanFile } from "../types/plan";
 
 interface Chapter {
   id: string;
@@ -15,6 +16,19 @@ interface ChapterStatus {
   isAudioComplete: boolean; // This tracks if audio generation is complete
 }
 
+interface AudioSegmentRow {
+  rowKey: string;
+  chunkId: string;
+  text: string;
+  voice: string;
+  locked: boolean;
+  sfxAfter: string | null;
+  hasAudio: boolean;
+  audioPath?: string;
+  start_char?: number;
+  end_char?: number;
+}
+
 export default function AudioProductionPage({ onStatus }: { onStatus: (s: string) => void }) {
   const { t } = useTranslation();
   const { root } = useProject();
@@ -22,6 +36,21 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   const [chapterStatus, setChapterStatus] = useState<Map<string, ChapterStatus>>(new Map());
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string>("");
+  const [selectedChapter, setSelectedChapter] = useState<string>("");
+  const [audioSegments, setAudioSegments] = useState<AudioSegmentRow[]>([]);
+  const [selectedRowIndex, setSelectedRowIndex] = useState<number>(0);
+  const [generatingAudio, setGeneratingAudio] = useState<Set<string>>(new Set());
+  const gridRef = useRef<HTMLDivElement | null>(null);
+
+  // Available sound effects (this could be loaded from assets/sfx folder)
+  const availableSfx = useMemo(() => [
+    "",  // No SFX
+    "pause_short.wav",
+    "pause_long.wav", 
+    "chapter_break.wav",
+    "scene_transition.wav",
+    "dramatic_pause.wav"
+  ], []);
 
   const checkChapterStatus = useCallback(async (chapterId: string): Promise<ChapterStatus> => {
     if (!root) {
@@ -48,12 +77,12 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     const planPath = `ssml/plans/${chapterId}.plan.json`;
     
     try {
-      const planData = await window.khipu!.call("fs:read", {
+      const planDataCheck = await window.khipu!.call("fs:read", {
         projectRoot: root,
         relPath: planPath,
         json: true
       });
-      hasPlan = planData !== null && planData !== undefined;
+      hasPlan = planDataCheck !== null && planDataCheck !== undefined;
     } catch {
       // Plan file doesn't exist
     }
@@ -89,6 +118,55 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     return { hasText, hasPlan, isComplete, isAudioComplete };
   }, [root]);
 
+  const loadPlanData = useCallback(async (chapterId: string) => {
+    if (!root || !chapterId) {
+      setAudioSegments([]);
+      return;
+    }
+
+    try {
+      setMessage("Loading plan data...");
+      const planPath = `ssml/plans/${chapterId}.plan.json`;
+      const planFile = await window.khipu!.call("fs:read", {
+        projectRoot: root,
+        relPath: planPath,
+        json: true
+      }) as PlanFile;
+
+      if (!planFile) {
+        setMessage("No plan data found");
+        return;
+      }
+
+      // Convert plan chunks to audio segment rows
+      const segments: AudioSegmentRow[] = planFile.chunks.map((chunk, index) => {
+        const audioPath = `audio/${chapterId}/${chunk.id}.wav`;
+        return {
+          rowKey: `${chapterId}_${chunk.id}_${index}`,
+          chunkId: chunk.id,
+          text: chunk.text,
+          voice: chunk.voice || "",
+          locked: chunk.locked,
+          sfxAfter: chunk.sfxAfter || null,
+          hasAudio: false, // Will be checked separately
+          audioPath,
+          start_char: chunk.start_char,
+          end_char: chunk.end_char
+        };
+      });
+
+      setAudioSegments(segments);
+      
+      // For now, just set all segments as not having audio
+      // In a real implementation, you'd check individual audio files here
+      
+      setMessage("");
+    } catch (error) {
+      console.error("Failed to load plan data:", error);
+      setMessage("Failed to load plan data");
+    }
+  }, [root]);
+
   const loadChapters = useCallback(async () => {
     if (!root) return;
     
@@ -99,10 +177,10 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       
       const chapterList = await window.khipu!.call("chapters:list", { projectRoot: root });
       
-      if (chapterList && Array.isArray(chapterList)) {
+      if (chapterList) {
         setChapters(chapterList);
         
-        // Check status of each chapter
+        // Check status for each chapter
         const statusMap = new Map<string, ChapterStatus>();
         for (const chapter of chapterList) {
           const status = await checkChapterStatus(chapter.id);
@@ -111,12 +189,9 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         setChapterStatus(statusMap);
         setMessage("");
         onStatus("");
-      } else {
-        setMessage("No chapters found");
-        onStatus("");
       }
     } catch (error) {
-      console.warn("Failed to load chapters:", error);
+      console.error("Failed to load chapters:", error);
       setMessage("Failed to load chapters");
       onStatus("");
     } finally {
@@ -124,234 +199,329 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     }
   }, [root, checkChapterStatus, onStatus]);
 
-  useEffect(() => {
-    if (root) {
-      loadChapters();
+  const handleChapterSelect = useCallback(async (chapterId: string) => {
+    setSelectedChapter(chapterId);
+    if (chapterId) {
+      await loadPlanData(chapterId);
     }
-  }, [root, loadChapters]);
+  }, [loadPlanData]);
 
-  // Filter chapters to show those with plans (for testing) and those with completed orchestration (ready for production)
-  const chaptersWithPlans = chapters.filter(chapter => {
-    const status = chapterStatus.get(chapter.id);
-    return status?.hasPlan === true;
-  });
+  const handleSfxChange = useCallback((rowIndex: number, sfx: string) => {
+    setAudioSegments(prev => {
+      const updated = [...prev];
+      updated[rowIndex] = { ...updated[rowIndex], sfxAfter: sfx || null };
+      return updated;
+    });
+    // TODO: Save changes back to plan file
+  }, []);
 
-  const chaptersReadyForProduction = chaptersWithPlans.filter(chapter => {
-    const status = chapterStatus.get(chapter.id);
-    return status?.isComplete === true; // Orchestration is complete
-  });
+  const handleGenerateSegmentAudio = useCallback(async (rowIndex: number) => {
+    const segment = audioSegments[rowIndex];
+    if (!segment || !selectedChapter || generatingAudio.has(segment.chunkId)) return;
 
-  const completedAudioChapters = chaptersWithPlans.filter(chapter => {
-    const status = chapterStatus.get(chapter.id);
-    return status?.isAudioComplete === true;
-  });
+    setGeneratingAudio(prev => new Set(prev).add(segment.chunkId));
+    
+    try {
+      setMessage(`Generating audio for segment ${segment.chunkId}...`);
+      
+      // TODO: Call audio generation API
+      // await window.khipu!.call("audio:generate", {
+      //   projectRoot: root,
+      //   chapterId: selectedChapter,
+      //   chunkId: segment.chunkId,
+      //   text: segment.text,
+      //   voice: segment.voice,
+      //   sfx: segment.sfxAfter
+      // });
+      
+      // For now, simulate generation
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Update segment to show it has audio
+      setAudioSegments(prev => {
+        const updated = [...prev];
+        updated[rowIndex] = { ...updated[rowIndex], hasAudio: true };
+        return updated;
+      });
+      
+      setMessage(`Audio generated for segment ${segment.chunkId}`);
+    } catch (error) {
+      console.error("Failed to generate audio:", error);
+      setMessage(`Failed to generate audio for segment ${segment.chunkId}`);
+    } finally {
+      setGeneratingAudio(prev => {
+        const next = new Set(prev);
+        next.delete(segment.chunkId);
+        return next;
+      });
+    }
+  }, [audioSegments, selectedChapter, generatingAudio]);
+
+  const handleGenerateChapterAudio = useCallback(async () => {
+    if (!selectedChapter || audioSegments.length === 0) return;
+
+    setMessage("Generating audio for entire chapter...");
+    
+    for (let i = 0; i < audioSegments.length; i++) {
+      if (!audioSegments[i].hasAudio) {
+        await handleGenerateSegmentAudio(i);
+      }
+    }
+    
+    setMessage("Chapter audio generation complete!");
+  }, [selectedChapter, audioSegments, handleGenerateSegmentAudio]);
+
+  useEffect(() => {
+    loadChapters();
+  }, [loadChapters]);
+
+  // Filter chapters that are ready for audio production
+  const chaptersWithPlans = useMemo(() => {
+    return chapters.filter(chapter => {
+      const status = chapterStatus.get(chapter.id);
+      return status?.hasPlan;
+    });
+  }, [chapters, chapterStatus]);
+
+  const chaptersReadyForProduction = useMemo(() => {
+    return chapters.filter(chapter => {
+      const status = chapterStatus.get(chapter.id);
+      return status?.isComplete; // Orchestration is complete
+    });
+  }, [chapters, chapterStatus]);
+
+  const completedAudioChapters = useMemo(() => {
+    return chapters.filter(chapter => {
+      const status = chapterStatus.get(chapter.id);
+      return status?.isAudioComplete;
+    });
+  }, [chapters, chapterStatus]);
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: "center", padding: "64px 0" }}>
+        <p>{t("common.loading")}</p>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ padding: "1rem" }}>
-      <div style={{ marginBottom: "2rem" }}>
-        <h2 style={{ margin: "0 0 1rem 0", fontSize: "1.5rem", fontWeight: "600" }}>
-          {t("nav.voice")}
+    <div style={{ padding: "16px", height: "100%" }}>
+      {/* Header */}
+      <div style={{ marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h2 style={{ margin: 0, fontSize: "24px", color: "var(--text)" }}>
+          {t("audioProduction.title", "Audio Production")}
         </h2>
-        <p style={{ color: "#666", margin: "0" }}>
-          Generate audio files for chapters that have completed orchestration plans.
-        </p>
       </div>
 
-      {loading && (
+      {/* Status message */}
+      {message && (
         <div style={{ 
-          padding: "2rem", 
-          textAlign: "center", 
-          color: "#666" 
-        }}>
-          <div>Loading chapters...</div>
-        </div>
-      )}
-
-      {message && !loading && (
-        <div style={{ 
-          padding: "1rem", 
-          backgroundColor: "#f0f0f0", 
-          borderRadius: "4px",
-          margin: "1rem 0",
-          color: "#666"
+          marginBottom: "16px", 
+          padding: "12px", 
+          backgroundColor: message.includes("Failed") || message.includes("Error") ? "var(--errorBg)" : "var(--panelAccent)",
+          borderRadius: "6px",
+          color: "var(--text)"
         }}>
           {message}
         </div>
       )}
 
-      {!loading && !message && (
-        <>
-          {chaptersWithPlans.length === 0 ? (
-            <div style={{ 
-              padding: "3rem", 
-              textAlign: "center", 
-              color: "#666",
-              backgroundColor: "#f9f9f9",
-              borderRadius: "8px",
-              border: "2px dashed #ccc"
-            }}>
-              <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🪄</div>
-              <h3 style={{ margin: "0 0 0.5rem 0", color: "#999" }}>No chapters ready for audio production</h3>
-              <p style={{ margin: "0", fontSize: "0.9rem" }}>
-                Complete orchestration plans for chapters first, then return here to generate audio files.
-              </p>
-            </div>
-          ) : (
-            <div>
-              <div style={{ 
-                display: "flex", 
-                gap: "2rem", 
-                marginBottom: "1.5rem",
-                fontSize: "0.9rem",
-                color: "#666"
-              }}>
-                <div>
-                  <strong>{chaptersWithPlans.length}</strong> chapters with plans
-                </div>
-                <div>
-                  <strong>{chaptersReadyForProduction.length}</strong> ready for production
-                </div>
-                <div>
-                  <strong>{completedAudioChapters.length}</strong> audio completed
-                </div>
-              </div>
+      {/* Chapter Selection */}
+      <div style={{ marginBottom: "16px", padding: "16px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "6px" }}>
+        <div style={{ marginBottom: "12px" }}>
+          <label style={{ display: "block", marginBottom: "4px", fontSize: "14px", fontWeight: 500, color: "var(--text)" }}>
+            {t("audioProduction.selectChapter", "Select Chapter")}:
+          </label>
+          <select
+            value={selectedChapter}
+            onChange={(e) => handleChapterSelect(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "8px 12px",
+              fontSize: "14px",
+              backgroundColor: "var(--input)",
+              color: "var(--text)",
+              border: "1px solid var(--border)",
+              borderRadius: "4px",
+              backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+              backgroundPosition: "right 8px center",
+              backgroundRepeat: "no-repeat",
+              backgroundSize: "16px",
+              paddingRight: "40px"
+            }}
+          >
+            <option value="" style={{ backgroundColor: "var(--panel)", color: "var(--text)" }}>
+              {t("audioProduction.chooseChapter", "Choose a chapter...")}
+            </option>
+            {chaptersWithPlans.map(chapter => {
+              const status = chapterStatus.get(chapter.id);
+              return (
+                <option 
+                  key={chapter.id} 
+                  value={chapter.id}
+                  style={{ 
+                    backgroundColor: "var(--panel)", 
+                    color: status?.isComplete ? "var(--accent)" : "var(--text)" 
+                  }}
+                >
+                  {chapter.id} {status?.isComplete ? "✓" : status?.hasPlan ? "⚙" : ""}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+        
+        {/* Chapter Stats */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", fontSize: "12px" }}>
+          <div style={{ textAlign: "center", padding: "8px", backgroundColor: "var(--background)", borderRadius: "4px" }}>
+            <div style={{ fontSize: "18px", fontWeight: "bold", color: "var(--muted)" }}>{chaptersWithPlans.length}</div>
+            <div style={{ color: "var(--muted)" }}>{t("audioProduction.withPlans", "With Plans")}</div>
+          </div>
+          <div style={{ textAlign: "center", padding: "8px", backgroundColor: "var(--background)", borderRadius: "4px" }}>
+            <div style={{ fontSize: "18px", fontWeight: "bold", color: "var(--accent)" }}>{chaptersReadyForProduction.length}</div>
+            <div style={{ color: "var(--accent)" }}>{t("audioProduction.readyForProduction", "Ready for Production")}</div>
+          </div>
+          <div style={{ textAlign: "center", padding: "8px", backgroundColor: "var(--background)", borderRadius: "4px" }}>
+            <div style={{ fontSize: "18px", fontWeight: "bold", color: "var(--success)" }}>{completedAudioChapters.length}</div>
+            <div style={{ color: "var(--success)" }}>{t("audioProduction.audioComplete", "Audio Complete")}</div>
+          </div>
+        </div>
+      </div>
 
-              <div style={{ 
-                display: "grid", 
-                gap: "1rem",
-                gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))"
-              }}>
-                {chaptersWithPlans.map((chapter) => {
-                  const status = chapterStatus.get(chapter.id);
-                  const hasOrchestrationPlan = status?.hasPlan === true;
-                  const orchestrationComplete = status?.isComplete === true;
-                  const audioComplete = status?.isAudioComplete === true;
-                  
-                  return (
-                    <div
-                      key={chapter.id}
-                      style={{
-                        padding: "1.5rem",
-                        backgroundColor: audioComplete ? "#f0fff0" : orchestrationComplete ? "#ffffff" : "#f8f9fa",
-                        border: audioComplete ? "2px solid #90ee90" : orchestrationComplete ? "2px solid #007bff" : "2px solid #e0e0e0",
-                        borderRadius: "8px",
-                        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                        opacity: orchestrationComplete ? 1 : 0.7
-                      }}
-                    >
-                      <div style={{ 
-                        display: "flex", 
-                        alignItems: "center", 
-                        gap: "0.5rem",
-                        marginBottom: "1rem"
-                      }}>
-                        <div style={{ fontSize: "1.5rem" }}>
-                          {audioComplete ? "✅" : orchestrationComplete ? "🎙️" : "⏳"}
-                        </div>
-                        <div>
-                          <h3 style={{ 
-                            margin: "0", 
-                            fontSize: "1.1rem",
-                            color: audioComplete ? "#2d5a2d" : orchestrationComplete ? "#333" : "#666"
-                          }}>
-                            {chapter.title || chapter.id}
-                          </h3>
-                          <div style={{ 
-                            fontSize: "0.8rem", 
-                            color: "#666",
-                            marginTop: "0.25rem"
-                          }}>
-                            Chapter ID: {chapter.id}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div style={{ marginBottom: "1rem" }}>
-                        {orchestrationComplete ? (
-                          <div style={{ 
-                            display: "inline-block",
-                            padding: "0.25rem 0.5rem",
-                            backgroundColor: "#e8f5e8",
-                            color: "#2d5a2d",
-                            borderRadius: "4px",
-                            fontSize: "0.75rem",
-                            fontWeight: "500"
-                          }}>
-                            ✓ Orchestration complete - Ready for production
-                          </div>
-                        ) : hasOrchestrationPlan ? (
-                          <div style={{ 
-                            display: "inline-block",
-                            padding: "0.25rem 0.5rem",
-                            backgroundColor: "#fff3cd",
-                            color: "#856404",
-                            borderRadius: "4px",
-                            fontSize: "0.75rem",
-                            fontWeight: "500"
-                          }}>
-                            ⚠️ Plan exists - Orchestration in progress
-                          </div>
-                        ) : null}
-                      </div>
-
-                      <div style={{ 
-                        display: "flex", 
-                        gap: "0.5rem"
-                      }}>
-                        <button
-                          style={{
-                            flex: 1,
-                            padding: "0.5rem",
-                            backgroundColor: audioComplete ? "#6c757d" : orchestrationComplete ? "#007bff" : "#ffc107",
-                            color: orchestrationComplete || audioComplete ? "white" : "#212529",
-                            border: "none",
-                            borderRadius: "4px",
-                            cursor: audioComplete ? "default" : "pointer",
-                            fontSize: "0.85rem",
-                            fontWeight: "500"
-                          }}
-                          disabled={audioComplete}
-                          onClick={() => {
-                            // TODO: Implement audio generation
-                            if (orchestrationComplete) {
-                              alert(`Generate production audio for chapter: ${chapter.id}`);
-                            } else {
-                              alert(`Generate test audio for chapter: ${chapter.id} (orchestration not complete)`);
-                            }
-                          }}
-                        >
-                          {audioComplete ? "Audio Complete" : orchestrationComplete ? "Generate Audio" : "Generate Test Audio"}
-                        </button>
-                        
-                        {audioComplete && (
-                          <button
-                            style={{
-                              padding: "0.5rem",
-                              backgroundColor: "#28a745",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "4px",
-                              cursor: "pointer",
-                              fontSize: "0.85rem",
-                              fontWeight: "500",
-                              minWidth: "80px"
-                            }}
-                            onClick={() => {
-                              // TODO: Implement play audio
-                              alert(`Play audio for chapter: ${chapter.id}`);
-                            }}
-                          >
-                            ▶ Play
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </>
+      {/* Segment Grid */}
+      {selectedChapter && audioSegments.length > 0 ? (
+        <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+          <div style={{ marginBottom: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <h3 style={{ margin: 0, fontSize: "16px", color: "var(--text)" }}>
+              {t("audioProduction.segments", "Audio Segments")} - {selectedChapter}
+            </h3>
+            <button
+              onClick={handleGenerateChapterAudio}
+              disabled={audioSegments.every(s => s.hasAudio)}
+              style={{
+                padding: "8px 16px",
+                fontSize: "14px",
+                backgroundColor: "var(--accent)",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                opacity: audioSegments.every(s => s.hasAudio) ? 0.5 : 1
+              }}
+            >
+              {t("audioProduction.generateChapter", "Generate Full Chapter")}
+            </button>
+          </div>
+          
+          <div ref={gridRef} style={{ flex: 1, overflow: "auto", border: "1px solid var(--border)", borderRadius: "6px" }}>
+            <table style={{ width: "100%", fontSize: "12px" }}>
+              <thead style={{ position: "sticky", top: 0, backgroundColor: "var(--panel)", borderBottom: "1px solid var(--border)" }}>
+                <tr style={{ textAlign: "left" }}>
+                  <th style={{ padding: "8px 6px" }}></th>
+                  <th style={{ padding: "8px 6px" }}>ID</th>
+                  <th style={{ padding: "8px 6px" }}>Voice</th>
+                  <th style={{ padding: "8px 6px", width: "40%" }}>Text</th>
+                  <th style={{ padding: "8px 6px" }}>SFX After</th>
+                  <th style={{ padding: "8px 6px" }}>Status</th>
+                  <th style={{ padding: "8px 6px" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {audioSegments.map((segment, index) => (
+                  <tr 
+                    key={segment.rowKey}
+                    data-row={index}
+                    onClick={() => setSelectedRowIndex(index)}
+                    style={{
+                      cursor: "pointer",
+                      backgroundColor: index === selectedRowIndex ? "var(--accent)" : "transparent",
+                      color: index === selectedRowIndex ? "white" : "var(--text)"
+                    }}
+                  >
+                    <td style={{ padding: "4px 6px", color: "var(--muted)" }}>
+                      {index === selectedRowIndex ? "▶" : ""}
+                    </td>
+                    <td style={{ padding: "4px 6px", whiteSpace: "nowrap" }}>
+                      {segment.chunkId}
+                    </td>
+                    <td style={{ padding: "4px 6px" }}>
+                      {segment.voice || "—"}
+                    </td>
+                    <td style={{ padding: "4px 6px", maxWidth: "300px", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {segment.text}
+                    </td>
+                    <td style={{ padding: "4px 6px" }}>
+                      <select
+                        value={segment.sfxAfter || ""}
+                        onChange={(e) => handleSfxChange(index, e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          width: "100%",
+                          padding: "2px 4px",
+                          fontSize: "11px",
+                          backgroundColor: "var(--panel)",
+                          color: "var(--text)",
+                          border: "1px solid var(--border)",
+                          borderRadius: "3px"
+                        }}
+                      >
+                        <option value="">None</option>
+                        {availableSfx.slice(1).map(sfx => (
+                          <option key={sfx} value={sfx}>{sfx}</option>
+                        ))}
+                      </select>
+                    </td>
+                    <td style={{ padding: "4px 6px", textAlign: "center" }}>
+                      {segment.hasAudio ? (
+                        <span style={{ color: "var(--success)" }}>✓</span>
+                      ) : generatingAudio.has(segment.chunkId) ? (
+                        <span style={{ color: "var(--accent)" }}>⏳</span>
+                      ) : (
+                        <span style={{ color: "var(--muted)" }}>—</span>
+                      )}
+                    </td>
+                    <td style={{ padding: "4px 6px" }}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleGenerateSegmentAudio(index);
+                        }}
+                        disabled={generatingAudio.has(segment.chunkId)}
+                        style={{
+                          padding: "4px 8px",
+                          fontSize: "11px",
+                          backgroundColor: segment.hasAudio ? "var(--success)" : "var(--accent)",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "3px",
+                          cursor: "pointer",
+                          opacity: generatingAudio.has(segment.chunkId) ? 0.5 : 1
+                        }}
+                      >
+                        {segment.hasAudio ? "Regenerate" : "Generate"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : selectedChapter ? (
+        <div style={{ textAlign: "center", padding: "64px 0", backgroundColor: "var(--panel)", borderRadius: "8px", border: "1px dashed var(--border)" }}>
+          <p style={{ color: "var(--text)", fontSize: "18px", marginBottom: "8px" }}>No plan data for {selectedChapter}</p>
+          <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "16px" }}>
+            Complete orchestration for this chapter first.
+          </p>
+        </div>
+      ) : (
+        <div style={{ textAlign: "center", padding: "64px 0", backgroundColor: "var(--panel)", borderRadius: "8px", border: "1px dashed var(--border)" }}>
+          <p style={{ color: "var(--text)", fontSize: "18px", marginBottom: "8px" }}>Select a chapter to begin</p>
+          <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "16px" }}>
+            Choose a chapter with completed orchestration to generate audio.
+          </p>
+        </div>
       )}
     </div>
   );
