@@ -347,77 +347,115 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         </p>
       </div>
 
-      {/* Chapter Selection Panel - matching Orchestration style */}
-      <div style={{ 
-        marginBottom: "16px", 
-        padding: "16px", 
-        backgroundColor: "var(--panel)", 
-        border: "1px solid var(--border)", 
-        borderRadius: "8px" 
-      }}>
-        <div style={{ 
-          display: "flex", 
-          alignItems: "center", 
-          justifyContent: "space-between"
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            <label style={{ fontSize: "14px", fontWeight: 500, color: "var(--text)" }}>
+      {/* Chapter selector with integrated audio production progress */}
+      <div style={{ marginBottom: "16px", padding: "16px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "6px" }}>
+        <div style={{ display: "flex", gap: "16px", alignItems: "center", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <label style={{ fontSize: "14px", fontWeight: "500", color: "var(--text)" }}>
               Chapter:
             </label>
             <select
               value={selectedChapter}
               onChange={(e) => handleChapterSelect(e.target.value)}
               style={{
-                minWidth: "300px",
                 padding: "8px 12px",
                 fontSize: "14px",
+                border: "1px solid var(--border)",
+                borderRadius: "6px",
                 backgroundColor: "var(--input)",
                 color: "var(--text)",
-                border: "1px solid var(--border)",
-                borderRadius: "4px"
+                minWidth: "200px",
+                cursor: "pointer",
+                appearance: "none",
+                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                backgroundPosition: "right 8px center",
+                backgroundRepeat: "no-repeat",
+                backgroundSize: "16px",
+                paddingRight: "32px"
               }}
             >
-              <option value="">{t("audioProduction.selectChapter", "Select Chapter")}</option>
-              {chapters.map((chapter) => (
-                <option key={chapter.id} value={chapter.id}>
-                  📄 {chapter.id} - {chapter.title}
-                </option>
-              ))}
+              <option value="" style={{ backgroundColor: "var(--panel)", color: "var(--text)" }}>
+                {t("audioProduction.selectChapter", "Select Chapter")}
+              </option>
+              {chapters.map((chapter) => {
+                const status = chapterStatus.get(chapter.id);
+                const statusIcon = status?.isAudioComplete ? "🎵" : status?.isComplete ? "📝" : "❌";
+                return (
+                  <option 
+                    key={chapter.id} 
+                    value={chapter.id}
+                    style={{ 
+                      backgroundColor: "var(--panel)", 
+                      color: "var(--text)",
+                      padding: "4px 8px"
+                    }}
+                  >
+                    {statusIcon} {chapter.id} {chapter.title ? `- ${chapter.title}` : ""}
+                  </option>
+                );
+              })}
             </select>
           </div>
           
-          {selectedChapter && (
-            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-              {/* Show loading/processing/status message */}
-              {(() => {
-                if (message) {
-                  return (
-                    <span style={{ 
-                      fontSize: "14px", 
-                      color: message.includes("Failed") || message.includes("Error") ? "var(--error)" : 
-                             message.includes("complete") || message.includes("loaded") ? "var(--success)" :
-                             "var(--textSecondary)"
-                    }}>
-                      {message}
-                    </span>
-                  );
-                }
-                
-                const status = chapterStatus.get(selectedChapter);
-                if (status?.isAudioComplete) {
-                  return <span style={{ fontSize: "14px", color: "var(--success)" }}>Audio Production Complete</span>;
-                } else if (status?.isComplete) {
-                  return <span style={{ fontSize: "14px", color: "var(--textSecondary)" }}>Ready for Audio Production</span>;
-                } else {
-                  return <span style={{ fontSize: "14px", color: "var(--warning)" }}>Not Ready (Orchestration Required)</span>;
-                }
-              })()}
+          {/* Audio Production Progress status */}
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            {(() => {
+              if (selectedChapter && audioSegments.length > 0) {
+                return (
+                  <span style={{ 
+                    fontSize: "12px", 
+                    fontWeight: "400",
+                    color: "var(--muted)",
+                    backgroundColor: "rgba(107, 114, 126, 0.1)",
+                    padding: "4px 8px",
+                    borderRadius: "4px",
+                    whiteSpace: "nowrap"
+                  }}>
+                    {audioSegments.length} segments loaded
+                  </span>
+                );
+              }
               
-              {audioSegments.length > 0 && (
-                <span style={{ fontSize: "14px", color: "var(--textSecondary)" }}>
-                  {audioSegments.length} segments loaded
-                </span>
-              )}
+              const status = chapterStatus.get(selectedChapter);
+              if (selectedChapter && status?.isComplete && !status?.isAudioComplete) {
+                return (
+                  <span style={{ 
+                    fontSize: "12px", 
+                    fontWeight: "400",
+                    color: "var(--warning)",
+                    backgroundColor: "rgba(245, 158, 11, 0.1)",
+                    padding: "4px 8px",
+                    borderRadius: "4px",
+                    whiteSpace: "nowrap"
+                  }}>
+                    Not Ready (Orchestration Required)
+                  </span>
+                );
+              }
+              
+              return null;
+            })()}
+          </div>
+          
+          {/* Status message display */}
+          {message && (
+            <div style={{
+              padding: "6px 12px",
+              borderRadius: "4px",
+              fontSize: "12px",
+              fontWeight: "500",
+              color: message.includes("Failed") || message.includes("Error") ? "var(--error)" : 
+                     message.includes("complete") || message.includes("loaded") ? "var(--success)" : 
+                     "var(--muted)",
+              backgroundColor: message.includes("Failed") || message.includes("Error") ? "rgba(239, 68, 68, 0.1)" : 
+                              message.includes("complete") || message.includes("loaded") ? "rgba(34, 197, 94, 0.1)" : 
+                              "rgba(107, 114, 126, 0.1)",
+              border: `1px solid ${message.includes("Failed") || message.includes("Error") ? "var(--error)" : 
+                                   message.includes("complete") || message.includes("loaded") ? "var(--success)" : 
+                                   "var(--muted)"}`,
+              whiteSpace: "nowrap"
+            }}>
+              {message}
             </div>
           )}
         </div>
