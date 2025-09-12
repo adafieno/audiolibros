@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useProject } from "../store/project";
 import type { PlanChunk } from "../types/plan";
@@ -39,6 +39,8 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   const [selectedChapter, setSelectedChapter] = useState<string>("");
   const [audioSegments, setAudioSegments] = useState<AudioSegmentRow[]>([]);
   const [generatingAudio, setGeneratingAudio] = useState<Set<string>>(new Set());
+  
+  const isProjectLoaded = useMemo(() => !!root, [root]);
 
   // Auto-select first chapter if available
   useEffect(() => {
@@ -156,9 +158,9 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       if (Array.isArray(planData)) {
         console.log("Plan data is direct array format, length:", planData.length);
         chunks = planData;
-      } else if (planData && typeof planData === 'object' && 'chunks' in planData && Array.isArray((planData as { chunks: unknown }).chunks)) {
-        console.log("Plan data has chunks property, length:", ((planData as { chunks: unknown[] }).chunks).length);
-        chunks = (planData as { chunks: PlanChunk[] }).chunks;
+      } else if (planData.chunks && Array.isArray(planData.chunks)) {
+        console.log("Plan data has chunks property, length:", planData.chunks.length);
+        chunks = planData.chunks;
       } else {
         console.warn("Plan file has no valid chunks data:", planData);
         setMessage("Invalid plan data - no chunks found");
@@ -280,7 +282,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         return next;
       });
     }
-  }, [audioSegments, selectedChapter, generatingAudio]);
+  }, [audioSegments, selectedChapter, generatingAudio, root]);
 
   const handleGenerateChapterAudio = useCallback(async () => {
     if (!selectedChapter || audioSegments.length === 0) return;
