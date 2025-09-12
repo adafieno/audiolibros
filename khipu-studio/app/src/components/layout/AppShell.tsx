@@ -24,7 +24,6 @@ const projectRoutes: RouteItem[] = [
   { to: "/casting",    key: "nav.casting",    icon: "🗣️", workflowStep: "casting" },
   { to: "/characters", key: "nav.characters", icon: "🎭", workflowStep: "characters" },
   { to: "/planning",   key: "nav.planning",   icon: "🪄", workflowStep: "planning" },
-  { to: "/ssml",       key: "nav.ssml",       icon: "🏷️", workflowStep: "ssml" },
   { to: "/voice",      key: "nav.voice",      icon: "🎙️", workflowStep: "voice" },
   { to: "/packaging",  key: "nav.packaging",  icon: "📦", workflowStep: "export" },
 ];
@@ -62,7 +61,6 @@ export function AppShell(props: { title?: string; pageName?: string; projectName
       { step: "casting", labelKey: "nav.casting" },
       { step: "characters", labelKey: "nav.characters" },
       { step: "planning", labelKey: "nav.planning" },
-      { step: "ssml", labelKey: "nav.ssml" },
       { step: "voice", labelKey: "nav.voice" },
       { step: "export", labelKey: "nav.export" },
     ];

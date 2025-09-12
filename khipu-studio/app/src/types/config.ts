@@ -60,7 +60,6 @@ export interface ProjectConfig {
     characters?: { complete?: boolean; completedAt?: string };
     dossier?: { complete?: boolean; completedAt?: string };
     planning?: { complete?: boolean; completedAt?: string };
-    ssml?: { complete?: boolean; completedAt?: string };
     voice?: { complete?: boolean; completedAt?: string };
     export?: { complete?: boolean; completedAt?: string };
   };

@@ -32,11 +32,7 @@
     "comment": ""
   },
   "nav.planning": {
-    "string": "Plan",
-    "comment": ""
-  },
-  "nav.ssml": {
-    "string": "SSML",
+    "string": "Orquestación",
     "comment": ""
   },
   "nav.voice": {

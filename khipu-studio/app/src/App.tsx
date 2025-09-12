@@ -40,7 +40,6 @@ export default function App() {
         <Route path="/characters" element={<CharactersPage />} />
         <Route path="/dossier" element={<Placeholder name={t("nav.dossier")} />} />
         <Route path="/planning" element={<PlanningPage onStatus={setStatus} />} />
-        <Route path="/ssml" element={<Placeholder name={t("nav.ssml")} />} />
         <Route path="/voice" element={<Placeholder name={t("nav.voice")} />} />
         <Route path="/packaging" element={<Placeholder name={t("nav.packaging")} />} />
         <Route path="/settings" element={<SettingsPage />} />
@@ -60,7 +59,6 @@ function routeTitle(path: string): string {
   if (path.startsWith("/characters")) return t("nav.characters");
   if (path.startsWith("/dossier")) return t("nav.dossier");
   if (path.startsWith("/planning")) return t("nav.planning");
-  if (path.startsWith("/ssml")) return t("nav.ssml");
   if (path.startsWith("/voice")) return t("nav.voice");
   if (path.startsWith("/packaging")) return t("nav.packaging");
   if (path.startsWith("/settings")) return t("nav.settings");

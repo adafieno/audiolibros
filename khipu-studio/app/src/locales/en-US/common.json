@@ -455,7 +455,7 @@
     "comment": "Text explaining what's needed to proceed"
   },
   "planning.readyForSsml": {
-    "string": "Ready for SSML",
+    "string": "Ready for Voice",
     "comment": "Badge text shown when orchestration is complete and ready for next step"
   },
 

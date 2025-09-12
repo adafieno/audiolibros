@@ -8,7 +8,6 @@ export type WorkflowStep =
   | "characters"   // Characters detected and voices assigned
   | "dossier"      // Dossier work completed
   | "planning"     // Planning work completed  
-  | "ssml"         // SSML work completed
   | "voice"        // Voice work completed
   | "export";      // Export work completed
 
@@ -84,12 +83,9 @@ export const useProject = create<ProjectState>()((set, get) => ({
         
       case "planning": 
         return completedSteps.has("characters"); // Available after characters
-        
-      case "ssml":
-        return completedSteps.has("planning"); // Available after planning
                
       case "voice":
-        return completedSteps.has("ssml"); // Available after SSML
+        return completedSteps.has("planning"); // Available after planning
         
       case "export":
         return completedSteps.has("voice"); // Available after Voice
