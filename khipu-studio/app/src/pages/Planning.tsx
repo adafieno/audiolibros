@@ -180,7 +180,8 @@ function mergeSegments(segments: Segment[], segmentId: number, direction: 'forwa
   const targetIndex = direction === 'forward' ? segmentIndex + 1 : segmentIndex - 1;
   
   if (targetIndex < 0 || targetIndex >= segments.length) {
-    return { success: false, message: `No ${direction === 'forward' ? 'next' : 'previous'} segment to merge with` };
+    const directionKey = direction === 'forward' ? 'next' : 'previous';
+    return { success: false, message: t(`planning.merge.no${directionKey.charAt(0).toUpperCase() + directionKey.slice(1)}Segment`) };
   }
 
   const currentSegment = segments[segmentIndex];
@@ -475,7 +476,7 @@ function EditablePreview({
                   color: "var(--text)",
                   cursor: "pointer"
                 }}
-                title="Click to edit text (changes save to plan only)"
+                title={t("planning.tooltips.clickToEdit")}
               >
                 ✏️ Edit
               </button>
@@ -558,7 +559,7 @@ function EditablePreview({
                   color: "white",
                   cursor: "pointer"
                 }}
-                title="Save changes (Ctrl+Enter)"
+                title={t("planning.tooltips.saveChanges")}
               >
                 💾 Save
               </button>
@@ -589,7 +590,7 @@ function EditablePreview({
                   color: "var(--text)",
                   cursor: "pointer"
                 }}
-                title="Cancel editing (Escape)"
+                title={t("planning.tooltips.cancelEdit")}
               >
                 ❌ Cancel
               </button>
@@ -618,7 +619,11 @@ function EditablePreview({
                 cursor: (isAudioLoading || auditioningSegments.has(current.segmentId)) ? "not-allowed" : "pointer"
               }}
             >
-              {(isAudioLoading || auditioningSegments.has(current.segmentId)) ? "🔊 Loading..." : isAudioPlaying ? "🔊 Playing..." : "🔊 Audition"}
+              {(isAudioLoading || auditioningSegments.has(current.segmentId)) 
+                ? `🔊 ${t("common.loading")}` 
+                : isAudioPlaying 
+                  ? `🔊 ${t("common.playing")}` 
+                  : `🔊 ${t("common.audition")}`}
             </button>
           )}
         </div>
@@ -1058,7 +1063,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
         setPlanProgress({
           current: current,
           total: 100,
-          stage: data.note || "Processing"
+          stage: data.note || t("common.processing")
         });
       } else if (data.event === "done") {
         onStatus(data.ok ? t("status.completed") : t("status.failed"));
@@ -1397,7 +1402,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       const { markStepCompleted } = useProject.getState();
       markStepCompleted("planning");
       
-      onStatus("Planning page marked as complete");
+      onStatus(t("planning.status.completed"));
     } catch (error) {
       console.error("Failed to mark planning as complete:", error);
     }
@@ -1415,7 +1420,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
     
     if (!selectedChapter || !root) {
       console.log("❌ Missing required data:", { selectedChapter, root: !!root });
-      setMessage("Please select a chapter and ensure project is loaded.");
+      setMessage(t("planning.errors.selectChapter"));
       return;
     }
     
@@ -1424,7 +1429,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
     // Check if window.khipu is available
     if (!window.khipu || !window.khipu.call) {
       console.error("❌ window.khipu is not available! Electron IPC not ready.");
-      setMessage("IPC not available. Please ensure Electron is running.");
+      setMessage(t("planning.errors.ipcNotAvailable"));
       return;
     }
 
@@ -1443,7 +1448,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
         // We'll proceed with character assignment regardless since the plan file exists now
       } catch (error) {
         console.error("❌ Failed to generate plans:", error);
-        setMessage("Failed to generate plans. Please try generating plans manually first.");
+        setMessage(t("planning.errors.failedToGeneratePlans"));
         return;
       }
     }
@@ -1465,7 +1470,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       // Find the selected chapter data
       const chapter = chapters.find(ch => ch.id === selectedChapter);
       if (!chapter) {
-        setMessage("Selected chapter not found.");
+        setMessage(t("planning.errors.chapterNotFound"));
         setAssigningCharacters(false);
         setLoading(false);
         setCharacterAssignmentProgress(null);
@@ -1553,7 +1558,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
         
       } catch (error) {
         console.error("❌ Failed to call character assignment service:", error);
-        setMessage("Failed to connect to character assignment service. Using fallback logic.");
+        setMessage(t("planning.errors.serviceConnectionFailed"));
         
         // Fallback: if no existing segments, we can't do fallback assignment
         if (segments) {
@@ -1574,7 +1579,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       setCharacterAssignmentProgress({
         current: 80,
         total: 100,
-        stage: "Plan file updated, reloading..."
+        stage: t("planning.status.reloading")
       });
       
       // The plan file has been updated directly by the Python script
@@ -1614,7 +1619,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
         
       } catch (error) {
         console.error("Failed to reload updated plan:", error);
-        setMessage("Character assignment completed but failed to reload. Please refresh the chapter.");
+        setMessage(t("planning.errors.completedButFailedReload"));
       }
       
       setCharacterAssignmentProgress({

@@ -46,7 +46,7 @@ export function AppShell(props: { title?: string; pageName?: string; projectName
     : [homeRoute, settingsRoute];
 
   // Compose top bar: "Khipu Studio — Page Name — Project Name"
-  let barTitle = "Khipu Studio";
+  let barTitle = t("app.title");
   if (pageName) barTitle += ` — ${pageName}`;
   if (projectName) barTitle += ` — ${projectName}`;
   if (title) barTitle = title; // fallback for legacy usage

@@ -72,6 +72,81 @@
     "string": "Abre un proyecto para continuar.",
     "comment": ""
   },
+
+  "common.loading": {
+    "string": "Cargando…",
+    "comment": ""
+  },
+  "common.playing": {
+    "string": "Reproduciendo…",
+    "comment": ""
+  },
+  "common.audition": {
+    "string": "Audición",
+    "comment": ""
+  },
+  "common.processing": {
+    "string": "Procesando",
+    "comment": ""
+  },
+
+  "image.errors.failedToCopy": {
+    "string": "Error al copiar imagen",
+    "comment": ""
+  },
+  "image.errors.failedToGetFilename": {
+    "string": "Error al obtener el nombre del archivo de la imagen copiada",
+    "comment": ""
+  },
+  "image.errors.failedToSelect": {
+    "string": "Error al seleccionar imagen. Inténtalo de nuevo.",
+    "comment": ""
+  },
+
+  "planning.merge.noNextSegment": {
+    "string": "No hay segmento siguiente para fusionar",
+    "comment": ""
+  },
+  "planning.merge.noPreviousSegment": {
+    "string": "No hay segmento anterior para fusionar",
+    "comment": ""
+  },
+
+  "manuscript.saved": {
+    "string": "Guardado ✔",
+    "comment": ""
+  },
+  "manuscript.saveError": {
+    "string": "Error al guardar",
+    "comment": ""
+  },
+
+  "planning.tooltips.clickToEdit": {
+    "string": "Haz clic para editar el texto (los cambios se guardan solo en el plan)",
+    "comment": ""
+  },
+  "planning.tooltips.saveChanges": {
+    "string": "Guardar cambios (Ctrl+Enter)",
+    "comment": ""
+  },
+  "planning.tooltips.cancelEdit": {
+    "string": "Cancelar edición (Escape)",
+    "comment": ""
+  },
+
+  "plan.noPlanToShow": {
+    "string": "No hay plan para mostrar.",
+    "comment": ""
+  },
+  "plan.goToSourceText": {
+    "string": "Ir al texto",
+    "comment": ""
+  },
+
+  "planning.status.reloading": {
+    "string": "Archivo de plan actualizado, recargando…",
+    "comment": ""
+  },
   "status.planLoaded": {
     "string": "Plan cargado",
     "comment": ""
@@ -1220,6 +1295,36 @@
   },
   "planning.characterAssignmentComplete": {
     "string": "Asignación de personajes completa",
+    "comment": ""
+  },
+
+  "planning.status.completed": {
+    "string": "Página de planificación marcada como completa",
+    "comment": ""
+  },
+
+  "planning.errors.selectChapter": {
+    "string": "Selecciona un capítulo y asegúrate de que el proyecto esté cargado.",
+    "comment": ""
+  },
+  "planning.errors.chapterNotFound": {
+    "string": "Capítulo seleccionado no encontrado.",
+    "comment": ""
+  },
+  "planning.errors.ipcNotAvailable": {
+    "string": "IPC no disponible. Asegúrate de que Electron esté ejecutándose.",
+    "comment": ""
+  },
+  "planning.errors.failedToGeneratePlans": {
+    "string": "Error al generar planes. Intenta generarlos manualmente primero.",
+    "comment": ""
+  },
+  "planning.errors.serviceConnectionFailed": {
+    "string": "Error al conectar con el servicio de asignación de personajes. Usando lógica de respaldo.",
+    "comment": ""
+  },
+  "planning.errors.completedButFailedReload": {
+    "string": "Asignación de personajes completada pero falló la recarga. Actualiza el capítulo.",
     "comment": ""
   }
 }

@@ -64,7 +64,7 @@ export function ImageSelector({ projectRoot, value, onChange }: ImageSelectorPro
       });
 
       if (!result.success) {
-        setError(result.error || "Failed to copy image");
+        setError(result.error || t("image.errors.failedToCopy"));
         setLoading(false);
         return;
       }
@@ -73,7 +73,7 @@ export function ImageSelector({ projectRoot, value, onChange }: ImageSelectorPro
 
       // Step 3: Validate image dimensions using data URL
       if (!result.fileName) {
-        setError("Failed to get filename from copied image");
+        setError(t("image.errors.failedToGetFilename"));
         setLoading(false);
         return;
       }
@@ -134,7 +134,7 @@ export function ImageSelector({ projectRoot, value, onChange }: ImageSelectorPro
       
     } catch (err) {
       console.error("Error selecting image:", err);
-      setError("Error selecting image. Please try again.");
+      setError(t("image.errors.failedToSelect"));
       setLoading(false);
     }
   };
@@ -200,7 +200,7 @@ export function ImageSelector({ projectRoot, value, onChange }: ImageSelectorPro
           }}
         >
           {loading 
-            ? "Loading..." 
+            ? t("common.loading")
             : value 
               ? t("book.coverImage.change") 
               : t("book.coverImage.select")

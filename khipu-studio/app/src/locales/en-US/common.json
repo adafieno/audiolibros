@@ -21,7 +21,7 @@
   },
   "nav.casting": {
     "string": "Casting",
-    "comment": "Navigation menu item for voice casting/assignment"
+    "comment": "Navigation menu item for voice casting"
   },
   "nav.characters": {
     "string": "Characters",
@@ -29,47 +29,208 @@
   },
   "nav.dossier": {
     "string": "Dossier",
-    "comment": "Navigation menu item for character dossier/profiles"
+    "comment": "Navigation menu item for dossier/documentation"
   },
   "nav.planning": {
     "string": "Planning",
-    "comment": "Navigation menu item for audiobook production planning"
-  },
-  "nav.ssml": {
-    "string": "SSML",
-    "comment": "Navigation menu item for SSML generation/editing"
+    "comment": "Navigation menu item for planning phase"
   },
   "nav.voice": {
     "string": "Voice",
-    "comment": "Navigation menu item for voice management"
+    "comment": "Navigation menu item for voice production"
+  },
+  "nav.export": {
+    "string": "Export",
+    "comment": "Navigation menu item for export/packaging"
   },
   "nav.packaging": {
     "string": "Packaging",
-    "comment": "Navigation menu item for final audiobook packaging"
+    "comment": "Navigation menu item for packaging output"
   },
   "nav.settings": {
     "string": "Settings",
     "comment": "Navigation menu item for application settings"
   },
 
-  "status.ready": {
-    "string": "Ready",
-    "comment": "Status indicator showing the system is ready for use"
+  "settings.description": {
+    "string": "Adjust global application settings.",
+    "comment": "Description text for the settings page"
   },
-  "status.generating": {
-    "string": "Generating…",
-    "comment": "Status indicator showing content generation in progress"
+  "settings.theme": {
+    "string": "Theme",
+    "comment": "Label for theme selection setting"
   },
-  "status.planUpdated": {
-    "string": "Plan updated",
-    "comment": "Success message after plan modification"
+  "settings.themeSystem": {
+    "string": "System",
+    "comment": "Theme option to follow system theme"
   },
-  "status.progress": {
-    "string": "Progress: {{pct, number}}% {{note}}",
-    "comment": "Progress indicator with percentage and optional note. {{pct}} is the percentage number, {{note}} is additional progress information"
+  "settings.themeDark": {
+    "string": "Dark",
+    "comment": "Dark theme option"
   },
-  "status.openProject": {
-    "string": "Open a project to continue.",
-    "comment": "Message shown when no project is loaded, prompting user to open one"
+  "settings.themeLight": {
+    "string": "Light",
+    "comment": "Light theme option"
+  },
+  "settings.themeNote": {
+    "string": "Theme applies globally.",
+    "comment": "Note about theme application scope"
+  },
+  "settings.language": {
+    "string": "Language",
+    "comment": "Label for language selection setting"
+  },
+  "settings.languageSelectLabel": {
+    "string": "Select language",
+    "comment": "Label for language selector dropdown"
+  },
+  "settings.save": {
+    "string": "Save",
+    "comment": "Save button text for settings"
+  },
+  "settings.saving": {
+    "string": "Saving…",
+    "comment": "Status message when saving settings"
+  },
+  "settings.saved": {
+    "string": "Saved ✔",
+    "comment": "Success message when settings are saved"
+  },
+  "settings.error": {
+    "string": "Error",
+    "comment": "Error message when settings save fails"
+  },
+  "settings.loading": {
+    "string": "Loading…",
+    "comment": "Loading message for settings page"
+  },
+
+  "common.loading": {
+    "string": "Loading...",
+    "comment": "Generic loading state indicator"
+  },
+  "common.playing": {
+    "string": "Playing...",
+    "comment": "Audio playback state indicator"
+  },
+  "common.audition": {
+    "string": "Audition",
+    "comment": "Button text for audio audition/preview"
+  },
+  "common.processing": {
+    "string": "Processing",
+    "comment": "Default status message during processing operations"
+  },
+
+  "status.completed": {
+    "string": "Completed",
+    "comment": "Generic completion status message"
+  },
+  "status.failed": {
+    "string": "Failed",
+    "comment": "Generic failure status message"
+  },
+
+  "image.errors.failedToCopy": {
+    "string": "Failed to copy image",
+    "comment": "Error message when image copy operation fails"
+  },
+  "image.errors.failedToGetFilename": {
+    "string": "Failed to get filename from copied image", 
+    "comment": "Error message when unable to extract filename from copied image"
+  },
+  "image.errors.failedToSelect": {
+    "string": "Error selecting image. Please try again.",
+    "comment": "Error message when image selection fails"
+  },
+
+  "manuscript.saved": {
+    "string": "Saved ✔",
+    "comment": "Success message when manuscript changes are saved"
+  },
+  "manuscript.saveError": {
+    "string": "Error saving",
+    "comment": "Error message when manuscript save fails"
+  },
+
+  "plan.noPlanToShow": {
+    "string": "No plan to show",
+    "comment": "Message when no plan data is available to display"
+  },
+  "plan.goToText": {
+    "string": "Go to text",
+    "comment": "Button text to navigate to the source text in the manuscript"
+  },
+
+  "planning.tooltips.clickToEdit": {
+    "string": "Click to edit text (changes save to plan only)",
+    "comment": "Tooltip for editable text segments in planning view"
+  },
+  "planning.tooltips.splitSegment": {
+    "string": "Split segment at cursor position",
+    "comment": "Tooltip for split segment button"
+  },
+  "planning.tooltips.mergeBackward": {
+    "string": "Merge with previous segment",
+    "comment": "Tooltip for merge backward button"
+  },
+  "planning.tooltips.mergeForward": {
+    "string": "Merge with next segment",
+    "comment": "Tooltip for merge forward button"
+  },
+  "planning.tooltips.deleteSegment": {
+    "string": "Delete this segment",
+    "comment": "Tooltip for delete segment button"
+  },
+  "planning.tooltips.undoChanges": {
+    "string": "Undo changes to original text",
+    "comment": "Tooltip for undo changes button"
+  },
+  "planning.tooltips.auditionSegment": {
+    "string": "Listen to this segment",
+    "comment": "Tooltip for audition segment button"
+  },
+
+  "planning.merge.noNextSegment": {
+    "string": "No next segment to merge with",
+    "comment": "Error message when trying to merge forward with no next segment"
+  },
+  "planning.merge.noPreviousSegment": {
+    "string": "No previous segment to merge with",
+    "comment": "Error message when trying to merge backward with no previous segment"
+  },
+
+  "planning.status.reloading": {
+    "string": "Plan file updated, reloading...",
+    "comment": "Status message when plan file is updated and being reloaded"
+  },
+  "planning.status.completed": {
+    "string": "Planning page marked as complete",
+    "comment": "Status message when planning step is completed"
+  },
+
+  "planning.errors.selectChapter": {
+    "string": "Please select a chapter and ensure project is loaded.",
+    "comment": "Error message when no chapter is selected or project not loaded"
+  },
+  "planning.errors.chapterNotFound": {
+    "string": "Selected chapter not found.",
+    "comment": "Error message when selected chapter cannot be found"
+  },
+  "planning.errors.ipcNotAvailable": {
+    "string": "IPC not available. Please ensure Electron is running.",
+    "comment": "Error message when Electron IPC is not available"
+  },
+  "planning.errors.failedToGeneratePlans": {
+    "string": "Failed to generate plans. Please try generating plans manually first.",
+    "comment": "Error message when automatic plan generation fails"
+  },
+  "planning.errors.serviceConnectionFailed": {
+    "string": "Failed to connect to character assignment service. Using fallback logic.",
+    "comment": "Error message when character assignment service connection fails"
+  },
+  "planning.errors.completedButFailedReload": {
+    "string": "Character assignment completed but failed to reload. Please refresh the chapter.",
+    "comment": "Error message when character assignment completes but reload fails"
   }
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   projectRoot: string;
@@ -7,6 +8,7 @@ type Props = {
 };
 
 export default function ChapterEditor({ projectRoot, chapterRelPath, onSaved }: Props) {
+  const { t } = useTranslation();
   const [text, setText] = useState<string>("");
   const [dirty, setDirty] = useState(false);
   const [msg, setMsg] = useState<string>("");
@@ -37,7 +39,7 @@ export default function ChapterEditor({ projectRoot, chapterRelPath, onSaved }: 
       json: false,
       content: text,
     });
-    setMsg(ok ? "Guardado ✔" : "Error al guardar");
+    setMsg(ok ? t("manuscript.saved") : t("manuscript.saveError"));
     if (ok) { setDirty(false); onSaved?.(); }
   }
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useCharacters } from "../hooks/useCharacters";
 import { useProject } from "../store/project";
 import { useAudioCache } from "../hooks/useAudioCache";
@@ -7,6 +8,7 @@ import type { ProjectConfig } from "../types/config";
 import type { Voice as VoiceType } from "../types/voice";
 
 function CharactersPage() {
+  const { t } = useTranslation();
   const { root } = useProject();
   const {
     characters,
@@ -250,7 +252,7 @@ function CharactersPage() {
     return (
       <div style={{ padding: "16px", maxWidth: "1200px" }}>
         <div style={{ textAlign: "center", padding: "64px 0" }}>
-          <p style={{ color: "var(--muted)" }}>Loading...</p>
+          <p style={{ color: "var(--muted)" }}>{t("common.loading")}</p>
         </div>
       </div>
     );
@@ -415,7 +417,7 @@ function CharactersPage() {
               borderRadius: "50%",
               animation: "spin 1s linear infinite"
             }}></div>
-            <span style={{ color: "var(--text)" }}>{message || "Loading..."}</span>
+            <span style={{ color: "var(--text)" }}>{message || t("common.loading")}</span>
           </div>
           {detectionProgress ? (
             <div style={{ marginTop: "12px" }}>
@@ -766,7 +768,7 @@ function CharactersPage() {
                           opacity: auditioningVoices.has(c.voiceAssignment.voiceId) ? 0.6 : 1
                         }}
                       >
-                        {auditioningVoices.has(c.voiceAssignment.voiceId) ? "Playing..." : "Audition"}
+                        {auditioningVoices.has(c.voiceAssignment.voiceId) ? t("common.playing") : t("common.audition")}
                       </button>
                     )}
                     
