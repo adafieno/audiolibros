@@ -1,11 +1,39 @@
 [
   {
+    "name": "narrador",
+    "type": "narrator",
+    "importance": "primary",
+    "gender": "neutral",
+    "age": "unknown",
+    "description": "El narrador proporciona la descripción de la escena y el contexto.",
+    "personality": [
+      "neutral",
+      "observant"
+    ],
+    "speaking_style": [
+      "descriptive",
+      "informative"
+    ],
+    "confidence": 1.0,
+    "has_dialogue": false,
+    "dialogue_frequency": "low",
+    "chapter_file": "ch01.txt",
+    "frequency": 1.0,
+    "chapter_appearances": 1,
+    "chapters": [
+      "ch01.txt"
+    ],
+    "average_confidence": 1.0,
+    "accent": "neutral",
+    "id": "character_001"
+  },
+  {
     "name": "Rosa",
     "type": "secondary",
-    "importance": "primary",
+    "importance": "secondary",
     "gender": "female",
     "age": "unknown",
-    "description": "Rosa pregunta a Luis si llegó temprano, mostrando interés en su llegada.",
+    "description": "Rosa pregunta a Luis si llegó temprano.",
     "personality": [
       "curious"
     ],
@@ -15,16 +43,23 @@
     "confidence": 0.95,
     "has_dialogue": true,
     "dialogue_frequency": "medium",
-    "frequency": 0.7,
-    "accent": "neutral"
+    "chapter_file": "ch01.txt",
+    "frequency": 1.0,
+    "chapter_appearances": 1,
+    "chapters": [
+      "ch01.txt"
+    ],
+    "average_confidence": 0.95,
+    "accent": "neutral",
+    "id": "character_002"
   },
   {
     "name": "Luis",
     "type": "secondary",
-    "importance": "primary",
+    "importance": "secondary",
     "gender": "male",
     "age": "unknown",
-    "description": "Luis responde a Rosa sobre su llegada, indicando que llegó un poco temprano.",
+    "description": "Luis responde a Rosa que llegó un poco temprano.",
     "personality": [
       "calm"
     ],
@@ -34,7 +69,14 @@
     "confidence": 0.95,
     "has_dialogue": true,
     "dialogue_frequency": "medium",
-    "frequency": 0.7,
-    "accent": "neutral"
+    "chapter_file": "ch01.txt",
+    "frequency": 1.0,
+    "chapter_appearances": 1,
+    "chapters": [
+      "ch01.txt"
+    ],
+    "average_confidence": 0.95,
+    "accent": "neutral",
+    "id": "character_003"
   }
 ]

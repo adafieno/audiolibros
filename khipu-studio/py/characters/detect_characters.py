@@ -167,10 +167,36 @@ Be LIBERAL with consolidation for name variations of the same person, but CONSER
                         merge_char.get("confidence", 0.0)
                     )
                     
-                    # Increase frequency for multiple appearances
-                    primary_char["frequency"] = min(1.0, 
-                        primary_char.get("frequency", 0.0) + 0.1
-                    )
+                    # Properly merge frequency data
+                    if "chapters" in merge_char and "chapters" in primary_char:
+                        # Merge chapter lists and recalculate frequency
+                        primary_chapters = set(primary_char.get("chapters", []))
+                        merge_chapters = set(merge_char.get("chapters", []))
+                        combined_chapters = primary_chapters.union(merge_chapters)
+                        primary_char["chapters"] = sorted(list(combined_chapters))
+                        
+                        # Update chapter appearances count
+                        primary_char["chapter_appearances"] = len(combined_chapters)
+                        
+                        # Update frequency based on combined appearances
+                        # We need total_chapters from the calling context, but use best available
+                        total_chapters = max(
+                            primary_char.get("chapter_appearances", 1),
+                            merge_char.get("chapter_appearances", 1),
+                            len(combined_chapters)
+                        )
+                        # Try to get actual total from frequency calculation
+                        if "frequency" in primary_char and primary_char["frequency"] > 0:
+                            est_total = primary_char.get("chapter_appearances", 1) / primary_char["frequency"]
+                            total_chapters = max(total_chapters, int(est_total))
+                        
+                        primary_char["frequency"] = len(combined_chapters) / total_chapters
+                    else:
+                        # Fallback: Use max frequency if no chapter data
+                        primary_char["frequency"] = max(
+                            primary_char.get("frequency", 0.0),
+                            merge_char.get("frequency", 0.0)
+                        )
             
             consolidated_characters.append(primary_char)
             used_ids.add(primary_id)
@@ -387,9 +413,10 @@ def detect_characters_from_manuscript(manuscript_dir: str) -> List[Dict[str, Any
         
         print(f"Analyzing {len(txt_files)} chapter files individually for character detection...", file=sys.stderr)
         
-        # Collect characters from each chapter
-        all_characters = []  # Use list instead of dict for initial collection
+        # Collect characters from each chapter with frequency tracking
+        character_appearances = {}  # Track character appearances across chapters
         chapter_count = 0
+        total_chapters = len(txt_files)
         
         for txt_file in txt_files:
             chapter_count += 1
@@ -421,7 +448,7 @@ def detect_characters_from_manuscript(manuscript_dir: str) -> List[Dict[str, Any
                     print(f"Warning: Unexpected response format for {txt_file.name}", file=sys.stderr)
                     continue
                 
-                # Add high-confidence characters to our collection
+                # Track character appearances in this chapter
                 for char in chapter_characters:
                     if isinstance(char, dict) and "name" in char:
                         char_name = char["name"].strip()
@@ -440,7 +467,25 @@ def detect_characters_from_manuscript(manuscript_dir: str) -> List[Dict[str, Any
                             # Add confidence and dialogue info
                             char["confidence"] = confidence
                             char["has_dialogue"] = has_dialogue
-                            all_characters.append(char)
+                            char["chapter_file"] = txt_file.name  # Track source chapter
+                            
+                            # Track character appearances
+                            if char_name not in character_appearances:
+                                character_appearances[char_name] = {
+                                    "character_data": char,
+                                    "chapters": set(),
+                                    "total_confidence": 0.0,
+                                    "appearance_count": 0
+                                }
+                            
+                            # Update appearance tracking
+                            character_appearances[char_name]["chapters"].add(txt_file.name)
+                            character_appearances[char_name]["total_confidence"] += confidence
+                            character_appearances[char_name]["appearance_count"] += 1
+                            
+                            # Keep the most complete character data (highest confidence)
+                            if confidence > character_appearances[char_name]["character_data"].get("confidence", 0):
+                                character_appearances[char_name]["character_data"] = char
                 
                 print(f"  Found {len(chapter_characters)} characters in {txt_file.name}", file=sys.stderr)
                 
@@ -448,15 +493,35 @@ def detect_characters_from_manuscript(manuscript_dir: str) -> List[Dict[str, Any
                 print(f"Warning: Failed to analyze {txt_file.name}: {e}", file=sys.stderr)
                 continue
         
+        # Convert character appearances to final character list with accurate frequency
+        all_characters = []
+        for char_name, appearance_data in character_appearances.items():
+            char = appearance_data["character_data"].copy()
+            
+            # Calculate accurate frequency based on chapter appearances
+            appearance_frequency = len(appearance_data["chapters"]) / total_chapters
+            
+            # Update character with accurate frequency
+            char["frequency"] = round(appearance_frequency, 3)
+            char["chapter_appearances"] = len(appearance_data["chapters"])
+            char["chapters"] = sorted(list(appearance_data["chapters"]))
+            char["average_confidence"] = appearance_data["total_confidence"] / appearance_data["appearance_count"]
+            
+            all_characters.append(char)
+        
+        print(f"Character frequency analysis complete:", file=sys.stderr)
+        for char in sorted(all_characters, key=lambda x: x.get("frequency", 0), reverse=True):
+            print(f"  {char['name']}: {char['frequency']*100:.1f}% ({char['chapter_appearances']}/{total_chapters} chapters)", file=sys.stderr)
+        
         if not all_characters:
             print("No characters detected from any chapter", file=sys.stderr)
             return _get_fallback_narrator()
         
-        # Use LLM-based consolidation to merge similar characters intelligently
+        # Use LLM-based consolidation to merge similar characters intelligently  
         print(f"Starting intelligent character consolidation for {len(all_characters)} characters...", file=sys.stderr)
         consolidated_characters = consolidate_characters_with_llm(all_characters, llm_model)
         
-        # Enhance consolidated characters
+        # Enhance consolidated characters while preserving accurate frequency data
         enhanced_characters = []
         for char in consolidated_characters:
             if isinstance(char, dict) and "name" in char:
@@ -464,6 +529,17 @@ def detect_characters_from_manuscript(manuscript_dir: str) -> List[Dict[str, Any
                 confidence = char.get("confidence", 0.0)
                 if confidence >= 0.95:
                     enhanced_char = _enhance_character_traits(char)
+                    
+                    # Preserve accurate frequency data (don't override with static values)
+                    if "frequency" in char:
+                        enhanced_char["frequency"] = char["frequency"]
+                    if "chapter_appearances" in char:
+                        enhanced_char["chapter_appearances"] = char["chapter_appearances"]
+                    if "chapters" in char:
+                        enhanced_char["chapters"] = char["chapters"]
+                    if "average_confidence" in char:
+                        enhanced_char["average_confidence"] = char["average_confidence"]
+                        
                     # Preserve confidence and dialogue information
                     enhanced_char["confidence"] = confidence
                     enhanced_char["has_dialogue"] = char.get("has_dialogue", False)
@@ -523,7 +599,11 @@ def _enhance_character_traits(character: Dict[str, Any]) -> Dict[str, Any]:
     # Ensure required fields exist with defaults
     enhanced.setdefault("personality", _infer_personality(character))
     enhanced.setdefault("speaking_style", _infer_speaking_style(character))
-    enhanced.setdefault("frequency", _infer_frequency(character))
+    
+    # Only use static frequency inference if no frequency data exists
+    if "frequency" not in enhanced or enhanced["frequency"] is None:
+        enhanced["frequency"] = _infer_frequency(character)
+    
     enhanced.setdefault("accent", "neutral")
     enhanced.setdefault("description", f"Character: {character.get('name', 'Unknown')}")
     enhanced.setdefault("type", "supporting")
