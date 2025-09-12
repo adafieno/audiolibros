@@ -561,44 +561,119 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                         </div>
                       </div>
 
-                      {/* Audio Controls */}
+                      {/* Audio Production Toolbar */}
                       <div style={{ padding: "12px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "4px" }}>
-                        <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", color: "var(--text)" }}>
-                          Audio Generation
-                        </h4>
-                        
-                        {/* Generate Button */}
-                        <button
-                          onClick={() => handleGenerateSegmentAudio(selectedRowIndex)}
-                          disabled={generatingAudio.has(currentSegment.chunkId)}
-                          style={{
-                            width: "100%",
-                            padding: "12px",
-                            fontSize: "14px",
-                            fontWeight: 500,
-                            backgroundColor: currentSegment.hasAudio ? "var(--success)" : "var(--accent)",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "4px",
-                            cursor: generatingAudio.has(currentSegment.chunkId) ? "not-allowed" : "pointer",
-                            opacity: generatingAudio.has(currentSegment.chunkId) ? 0.6 : 1,
-                            marginBottom: "12px"
-                          }}
-                        >
-                          {generatingAudio.has(currentSegment.chunkId) 
-                            ? "Generating..." 
-                            : currentSegment.hasAudio 
-                              ? "✓ Audio Ready" 
-                              : "Generate Audio"
-                          }
-                        </button>
+                        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                          {/* Generate Button */}
+                          <button
+                            onClick={() => handleGenerateSegmentAudio(selectedRowIndex)}
+                            disabled={generatingAudio.has(currentSegment.chunkId)}
+                            style={{
+                              padding: "10px 16px",
+                              fontSize: "13px",
+                              fontWeight: 500,
+                              backgroundColor: currentSegment.hasAudio ? "var(--success)" : "var(--accent)",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "4px",
+                              cursor: generatingAudio.has(currentSegment.chunkId) ? "not-allowed" : "pointer",
+                              opacity: generatingAudio.has(currentSegment.chunkId) ? 0.6 : 1,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "6px"
+                            }}
+                          >
+                            {generatingAudio.has(currentSegment.chunkId) 
+                              ? "⏳ Generating..." 
+                              : currentSegment.hasAudio 
+                                ? "🔄 Regenerate" 
+                                : "🎵 Generate"
+                            }
+                          </button>
 
-                        {/* Audio Status */}
-                        <div style={{ fontSize: "12px", color: "var(--textSecondary)" }}>
-                          Status: {currentSegment.hasAudio ? 
-                            <span style={{ color: "var(--success)" }}>Audio generated</span> : 
-                            <span style={{ color: "var(--muted)" }}>No audio</span>
-                          }
+                          {/* Play Single Segment */}
+                          <button
+                            disabled={!currentSegment.hasAudio}
+                            style={{
+                              padding: "10px 16px",
+                              fontSize: "13px",
+                              fontWeight: 500,
+                              backgroundColor: currentSegment.hasAudio ? "var(--accent)" : "var(--muted)",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "4px",
+                              cursor: currentSegment.hasAudio ? "pointer" : "not-allowed",
+                              opacity: currentSegment.hasAudio ? 1 : 0.5,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "6px"
+                            }}
+                          >
+                            ▶ Play
+                          </button>
+
+                          {/* Play All (Carousel) */}
+                          <button
+                            disabled={!audioSegments.some(seg => seg.hasAudio)}
+                            style={{
+                              padding: "10px 16px",
+                              fontSize: "13px",
+                              fontWeight: 500,
+                              backgroundColor: audioSegments.some(seg => seg.hasAudio) ? "var(--accent)" : "var(--muted)",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "4px",
+                              cursor: audioSegments.some(seg => seg.hasAudio) ? "pointer" : "not-allowed",
+                              opacity: audioSegments.some(seg => seg.hasAudio) ? 1 : 0.5,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "6px"
+                            }}
+                          >
+                            🎬 Play All
+                          </button>
+
+                          {/* Stop/Pause Button */}
+                          <button
+                            style={{
+                              padding: "10px 16px",
+                              fontSize: "13px",
+                              fontWeight: 500,
+                              backgroundColor: "var(--muted)",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "4px",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "6px"
+                            }}
+                          >
+                            ⏹ Stop
+                          </button>
+                        </div>
+
+                        {/* Status Info */}
+                        <div style={{ 
+                          marginTop: "8px", 
+                          padding: "6px 8px", 
+                          fontSize: "11px", 
+                          color: "var(--textSecondary)", 
+                          backgroundColor: "var(--input)", 
+                          borderRadius: "3px",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center"
+                        }}>
+                          <span>
+                            Status: {currentSegment.hasAudio ? 
+                              <span style={{ color: "var(--success)" }}>✓ Audio ready</span> : 
+                              <span style={{ color: "var(--muted)" }}>No audio</span>
+                            }
+                          </span>
+                          <span>
+                            {audioSegments.filter(seg => seg.hasAudio).length}/{audioSegments.length} segments ready
+                          </span>
                         </div>
                       </div>
 
@@ -805,55 +880,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                           <option value="page_turn">Page Turn Effect</option>
                           <option value="chapter_break">Chapter Break</option>
                         </select>
-                      </div>
-
-                      {/* Preview Controls (placeholder for future features) */}
-                      <div style={{ padding: "12px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "4px" }}>
-                        <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", color: "var(--text)" }}>
-                          Preview & Playback
-                        </h4>
-                        
-                        <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
-                          <button
-                            disabled={!currentSegment.hasAudio}
-                            style={{
-                              flex: 1,
-                              padding: "8px 12px",
-                              fontSize: "12px",
-                              backgroundColor: currentSegment.hasAudio ? "var(--accent)" : "var(--muted)",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "4px",
-                              cursor: currentSegment.hasAudio ? "pointer" : "not-allowed",
-                              opacity: currentSegment.hasAudio ? 1 : 0.5
-                            }}
-                          >
-                            ▶ Play
-                          </button>
-                          <button
-                            disabled={!currentSegment.hasAudio}
-                            style={{
-                              flex: 1,
-                              padding: "8px 12px",
-                              fontSize: "12px",
-                              backgroundColor: currentSegment.hasAudio ? "var(--muted)" : "var(--muted)",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "4px",
-                              cursor: currentSegment.hasAudio ? "pointer" : "not-allowed",
-                              opacity: currentSegment.hasAudio ? 1 : 0.5
-                            }}
-                          >
-                            ⏸ Stop
-                          </button>
-                        </div>
-                        
-                        <div style={{ fontSize: "11px", color: "var(--textSecondary)" }}>
-                          {currentSegment.hasAudio 
-                            ? "Audio file ready for playback" 
-                            : "Generate audio to enable playback"
-                          }
-                        </div>
                       </div>
                     </div>
                   );
