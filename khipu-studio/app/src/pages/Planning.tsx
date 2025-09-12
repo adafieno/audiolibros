@@ -1951,8 +1951,8 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
         </div>
       </div>
 
-      {/* Action buttons */}
-      <div style={{ display: "flex", gap: "8px", marginBottom: "16px", alignItems: "center" }}>
+      {/* Action buttons and filters */}
+      <div style={{ display: "flex", gap: "8px", marginBottom: "16px", alignItems: "center", flexWrap: "wrap" }}>
         <button 
           onClick={generatePlan} 
           disabled={loading || running || !selectedChapter} 
@@ -1969,7 +1969,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
           {assigningCharacters ? t("planning.assigning") : t("planning.assignCharacters")}
         </button>
         
-  {segments && selectedChapter && (
+        {segments && selectedChapter && (
           <>
             <button 
               onClick={savePlan} 
@@ -1994,6 +1994,46 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
             >
               {chapterStatus.get(selectedChapter)?.isComplete ? `✓ ${t("planning.chapterComplete")}` : t("planning.markChapterComplete")}
             </button>
+          </>
+        )}
+
+        {/* Filters */}
+        {segments && (
+          <>
+            <div style={{ width: "1px", height: "24px", backgroundColor: "var(--border)", margin: "0 4px" }}></div>
+            
+            <label style={{ fontSize: "14px", color: "var(--text)" }}>{t("planning.chunkLabel")}:</label>
+            <select 
+              value={chunkFilter} 
+              onChange={(e) => setChunkFilter(e.target.value)}
+              style={{ padding: "4px 8px", fontSize: "14px", backgroundColor: "var(--panel)", color: "var(--text)", border: "1px solid var(--border)", borderRadius: "4px" }}
+            >
+              {chunkIds.map((id) => <option key={id} value={id}>{id}</option>)}
+            </select>
+            
+            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "14px", color: "var(--text)" }}>
+              <input 
+                type="checkbox" 
+                checked={onlyUnknown} 
+                onChange={(e) => setOnlyUnknown(e.target.checked)} 
+              />
+              {t("planning.onlyUnknowns")}
+            </label>
+            
+            <input 
+              placeholder={t("planning.searchText")} 
+              value={search} 
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ 
+                padding: "4px 8px", 
+                fontSize: "14px", 
+                width: "200px",
+                backgroundColor: "var(--panel)", 
+                color: "var(--text)", 
+                border: "1px solid var(--border)", 
+                borderRadius: "4px" 
+              }}
+            />
           </>
         )}
       </div>
@@ -2171,49 +2211,10 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
           <p style={{ color: "var(--text)", fontSize: "18px", marginBottom: "8px" }}>{t("planning.selectChapterToBegin")}</p>
           <p style={{ color: "var(--muted)", fontSize: "14px" }}>{t("planning.chooseChapterFromDropdown")}</p>
         </div>
-  ) : segments ? (
-        <div style={{ display: "grid", gridTemplateRows: "auto 1fr", height: "calc(100% - 200px)", gap: "16px" }}>
-          {/* Filters */}
-          <div style={{ display: "flex", gap: "12px", alignItems: "center", padding: "12px", backgroundColor: "var(--panel)", borderRadius: "6px", border: "1px solid var(--border)" }}>
-            <label style={{ fontSize: "14px", color: "var(--text)" }}>{t("planning.chunkLabel")}:</label>
-            <select 
-              value={chunkFilter} 
-              onChange={(e) => setChunkFilter(e.target.value)}
-              style={{ padding: "4px 8px", fontSize: "14px", backgroundColor: "var(--panel)", color: "var(--text)", border: "1px solid var(--border)", borderRadius: "4px" }}
-            >
-              {chunkIds.map((id) => <option key={id} value={id}>{id}</option>)}
-            </select>
-            
-            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "14px", color: "var(--text)" }}>
-              <input 
-                type="checkbox" 
-                checked={onlyUnknown} 
-                onChange={(e) => setOnlyUnknown(e.target.checked)} 
-              />
-              {t("planning.onlyUnknowns")}
-            </label>
-            
-            <input 
-              placeholder={t("planning.searchText")} 
-              value={search} 
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ 
-                padding: "4px 8px", 
-                fontSize: "14px", 
-                width: "200px",
-                backgroundColor: "var(--panel)", 
-                color: "var(--text)", 
-                border: "1px solid var(--border)", 
-                borderRadius: "4px" 
-              }}
-            />
-
-            {/* Stats for current chunk */}
-            {/* No chunk stats in flat segment model */}
-          </div>
-
+      ) : segments ? (
+        <div style={{ display: "flex", flexDirection: "column", height: "calc(100% - 160px)" }}>
           {/* Main content grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", minHeight: 0 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", flex: 1, minHeight: 0 }}>
             {/* Left: Preview */}
             <div style={{ border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
               <div style={{ padding: "8px 12px", backgroundColor: "var(--panelAccent)", borderBottom: "1px solid var(--border)", fontSize: "14px", fontWeight: 500 }}>
