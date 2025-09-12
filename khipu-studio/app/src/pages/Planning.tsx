@@ -92,8 +92,27 @@ function splitSegmentAtPosition(segments: Segment[], segmentId: number, position
     return { success: false, message: "Invalid split position" };
   }
 
-  const leftText = text.slice(0, position);
-  const rightText = text.slice(position);
+  // Smart split: try to find a nearby word boundary to avoid breaking words
+  let splitPosition = position;
+  const maxAdjustment = Math.min(20, Math.floor(text.length * 0.1)); // Max 20 chars or 10% of text
+  
+  if (text[splitPosition] !== ' ' && text[splitPosition - 1] !== ' ') {
+    // Look backward for a space (prefer splitting after a word)
+    for (let i = 0; i < maxAdjustment; i++) {
+      if (splitPosition - i > 0 && text[splitPosition - i - 1] === ' ') {
+        splitPosition = splitPosition - i;
+        break;
+      }
+      // Look forward as fallback
+      if (splitPosition + i < text.length && text[splitPosition + i] === ' ') {
+        splitPosition = splitPosition + i + 1; // Split after the space
+        break;
+      }
+    }
+  }
+
+  const leftText = text.slice(0, splitPosition);
+  const rightText = text.slice(splitPosition);
 
   // Validate both parts would be within limits
   const leftValidation = validateSegmentSize(leftText);
@@ -106,11 +125,16 @@ function splitSegmentAtPosition(segments: Segment[], segmentId: number, position
 
   // Create new segments with incremented IDs
   const maxId = Math.max(...segments.map(s => s.segment_id));
+  
+  // Calculate new indices based on character position within the original text
+  const leftEndIdx = segment.start_idx + splitPosition - 1;
+  const rightStartIdx = segment.start_idx + splitPosition;
+  
   const leftSegment: Segment = {
     ...segment,
     text: leftText,
     originalText: leftText,
-    end_idx: segment.start_idx + position - 1
+    end_idx: leftEndIdx
   };
   
   const rightSegment: Segment = {
@@ -118,9 +142,20 @@ function splitSegmentAtPosition(segments: Segment[], segmentId: number, position
     segment_id: maxId + 1,
     text: rightText,
     originalText: rightText,
-    start_idx: segment.start_idx + position,
+    start_idx: rightStartIdx,
     // end_idx remains the same as original segment
   };
+
+  // Validate that our index calculations are consistent
+  const leftExpectedLength = leftEndIdx - segment.start_idx + 1;
+  const rightExpectedLength = segment.end_idx - rightStartIdx + 1;
+  
+  if (leftExpectedLength !== leftText.length) {
+    console.warn(`Split index mismatch: left segment expected length ${leftExpectedLength}, actual ${leftText.length}`);
+  }
+  if (rightExpectedLength !== rightText.length) {
+    console.warn(`Split index mismatch: right segment expected length ${rightExpectedLength}, actual ${rightText.length}`);
+  }
 
   const newSegments = [
     ...segments.slice(0, segmentIndex),
@@ -129,7 +164,11 @@ function splitSegmentAtPosition(segments: Segment[], segmentId: number, position
     ...segments.slice(segmentIndex + 1)
   ];
 
-  return { success: true, newSegments };
+  const message = splitPosition !== position ? 
+    `Split adjusted to word boundary (moved ${splitPosition - position} characters)` : 
+    undefined;
+
+  return { success: true, newSegments, message };
 }
 
 function mergeSegments(segments: Segment[], segmentId: number, direction: 'forward' | 'backward'): SegmentOpResult {
