@@ -546,12 +546,12 @@ function CharactersPage() {
                   
                   {/* Frequency */}
                   <div style={{ fontSize: "12px", color: "var(--muted)", marginBottom: "8px" }}>
-                    Frequency: {c.frequency}%
+                    {t("characters.frequency")}: {c.frequency}%
                   </div>
                   
                   {/* Basic info */}
                   <div style={{ fontSize: "12px", color: "var(--muted)", marginBottom: "8px" }}>
-                    {c.traits?.gender === 'M' ? 'Male' : c.traits?.gender === 'F' ? 'Female' : 'Neutral'} • {(c.traits?.age || 'Adult').charAt(0).toUpperCase() + (c.traits?.age || 'adult').slice(1)}
+                    {c.traits?.gender === 'M' ? t("casting.male") : c.traits?.gender === 'F' ? t("casting.female") : t("casting.neutral")} • {(c.traits?.age || 'adult') === 'child' ? t("casting.age.child") : (c.traits?.age || 'adult') === 'teen' ? t("casting.age.teen") : (c.traits?.age || 'adult') === 'adult' ? t("casting.age.adult") : t("casting.age.elderly")}
                   </div>
 
                   {/* Character importance badges */}
@@ -614,14 +614,14 @@ function CharactersPage() {
                   {/* Personality */}
                   {c.traits?.personality && c.traits.personality.length > 0 && (
                     <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "4px" }}>
-                      Personality: {Array.isArray(c.traits.personality) ? c.traits.personality.join(', ') : c.traits.personality}
+                      {t("characters.personality")}: {Array.isArray(c.traits.personality) ? c.traits.personality.join(', ') : c.traits.personality}
                     </div>
                   )}
 
                   {/* Speaking Style */}
                   {c.traits?.speaking_style && c.traits.speaking_style.length > 0 && (
                     <div style={{ fontSize: "11px", color: "var(--muted)", marginBottom: "8px" }}>
-                      Speaking Style: {Array.isArray(c.traits.speaking_style) ? c.traits.speaking_style.join(', ') : c.traits.speaking_style}
+                      {t("characters.speakingStyle")}: {Array.isArray(c.traits.speaking_style) ? c.traits.speaking_style.join(', ') : c.traits.speaking_style}
                     </div>
                   )}
 

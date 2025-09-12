@@ -1624,6 +1624,40 @@
     "comment": "Texto del botón para marcar paso de personajes como completo"
   },
 
+  "planning.save": {
+    "string": "Guardar",
+    "comment": "Texto del botón guardar en editor de planificación"
+  },
+  "planning.cancel": {
+    "string": "Cancelar",
+    "comment": "Texto del botón cancelar en editor de planificación"
+  },
+  "planning.editPlaceholder": {
+    "string": "Edita el texto aquí... (Ctrl+Enter para guardar, Escape para cancelar)",
+    "comment": "Texto de marcador de posición para el editor de texto en planificación"
+  },
+  "planning.overLimits": {
+    "string": "EXCEDE LÍMITES",
+    "comment": "Texto de advertencia cuando el segmento excede los límites de tamaño"
+  },
+  "planning.editInstructions": {
+    "string": "Los cambios se guardan solo en el plan, no en el manuscrito original. Usa Ctrl+Enter para guardar, Escape para cancelar.",
+    "comment": "Instrucciones para editar segmentos"
+  },
+  "planning.chapterComplete": {
+    "string": "Capítulo Completo",
+    "comment": "Texto mostrado cuando el capítulo está marcado como completo"
+  },
+
+  "characters.personality": {
+    "string": "Personalidad",
+    "comment": "Etiqueta para los rasgos de personalidad del personaje"
+  },
+  "characters.speakingStyle": {
+    "string": "Estilo de Habla",
+    "comment": "Etiqueta para el estilo de habla del personaje"
+  },
+
   "home.byAuthors": {
     "string": "por {{authors}}",
     "comment": "Texto de atribución de autores en tarjetas de libros"

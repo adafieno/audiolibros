@@ -1118,6 +1118,40 @@
     "comment": "Button text to mark characters step complete"
   },
 
+  "planning.save": {
+    "string": "Save",
+    "comment": "Save button text in planning editor"
+  },
+  "planning.cancel": {
+    "string": "Cancel",
+    "comment": "Cancel button text in planning editor"
+  },
+  "planning.editPlaceholder": {
+    "string": "Edit text here... (Ctrl+Enter to save, Escape to cancel)",
+    "comment": "Placeholder text for text editor in planning"
+  },
+  "planning.overLimits": {
+    "string": "OVER LIMITS",
+    "comment": "Warning text when segment is over size limits"
+  },
+  "planning.editInstructions": {
+    "string": "Changes are saved to the plan only, not to the original manuscript. Use Ctrl+Enter to save, Escape to cancel.",
+    "comment": "Instructions for editing segments"
+  },
+  "planning.chapterComplete": {
+    "string": "Chapter Complete",
+    "comment": "Text shown when chapter is marked complete"
+  },
+
+  "characters.personality": {
+    "string": "Personality",
+    "comment": "Label for character personality traits"
+  },
+  "characters.speakingStyle": {
+    "string": "Speaking Style",
+    "comment": "Label for character speaking style"
+  },
+
   "home.byAuthors": {
     "string": "by {{authors}}",
     "comment": "Author attribution text in book cards"

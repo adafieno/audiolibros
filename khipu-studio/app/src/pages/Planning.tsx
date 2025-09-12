@@ -561,7 +561,7 @@ function EditablePreview({
                 }}
                 title={t("planning.tooltips.saveChanges")}
               >
-                💾 Save
+                💾 {t("planning.save")}
               </button>
               <button
                 onClick={handleSplitSegment}
@@ -577,7 +577,7 @@ function EditablePreview({
                 }}
                 title={t("planning.splitAtCursor")}
               >
-                ✂️ Split at cursor
+                ✂️ {t("planning.splitAtCursor")}
               </button>
               <button
                 onClick={handleCancelEdit}
@@ -592,7 +592,7 @@ function EditablePreview({
                 }}
                 title={t("planning.tooltips.cancelEdit")}
               >
-                ❌ Cancel
+                ❌ {t("planning.cancel")}
               </button>
             </>
           )}
@@ -658,7 +658,7 @@ function EditablePreview({
             resize: "vertical",
             outline: "none"
           }}
-          placeholder="Edit text here... (Ctrl+Enter to save, Escape to cancel)"
+          placeholder={t("planning.editPlaceholder")}
         />
       ) : (
         <div 
@@ -704,7 +704,7 @@ function EditablePreview({
             <span>📏 {stats.words}/{SEGMENT_LIMITS.recommendedWords} {t("planning.stats.words")}</span>
             <span>🔤 {stats.chars}/{SEGMENT_LIMITS.recommendedChars} {t("planning.stats.chars")}</span>
             <span>💾 {stats.kb.toFixed(1)}/{SEGMENT_LIMITS.maxKB}KB</span>
-            {isOverLimit && <span style={{ color: "var(--error)", fontWeight: "bold" }}>⚠️ OVER LIMITS</span>}
+            {isOverLimit && <span style={{ color: "var(--error)", fontWeight: "bold" }}>⚠️ {t("planning.overLimits")}</span>}
           </div>
         );
       })()}
@@ -716,7 +716,7 @@ function EditablePreview({
           marginTop: "4px",
           fontStyle: "italic"
         }}>
-          💡 Changes are saved to the plan only, not to the original manuscript. Use Ctrl+Enter to save, Escape to cancel.
+          💡 {t("planning.editInstructions")}
           <br />
           {t("planning.splitInstructions")}
         </div>
@@ -1946,7 +1946,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
                 opacity: chapterStatus.get(selectedChapter)?.isComplete ? 0.7 : 1
               }}
             >
-              {chapterStatus.get(selectedChapter)?.isComplete ? "✓ Chapter Complete" : t("planning.markChapterComplete")}
+              {chapterStatus.get(selectedChapter)?.isComplete ? `✓ ${t("planning.chapterComplete")}` : t("planning.markChapterComplete")}
             </button>
           </>
         )}
