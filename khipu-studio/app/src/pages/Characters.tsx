@@ -4,12 +4,14 @@ import { useCharacters } from "../hooks/useCharacters";
 import { useProject } from "../store/project";
 import { useAudioCache } from "../hooks/useAudioCache";
 import { loadProjectConfig } from "../lib/config";
+import { WorkflowCompleteButton } from "../components/WorkflowCompleteButton";
 import type { ProjectConfig } from "../types/config";
 import type { Voice as VoiceType } from "../types/voice";
 
 function CharactersPage() {
   const { t } = useTranslation();
   const { root } = useProject();
+  
   const {
     characters,
     loading,
@@ -82,54 +84,17 @@ function CharactersPage() {
     };
   }, [root, load]);
 
-  // Load project config for audition
+  // Load project config for audition and completion status
   useEffect(() => {
     if (!root) return;
     
     loadProjectConfig(root)
-      .then((config: ProjectConfig) => setProjectConfig(config))
+      .then((config: ProjectConfig) => {
+        setProjectConfig(config);
+        console.log("🔄 Loaded project config, characters complete:", config?.workflow?.characters?.complete);
+      })
       .catch((error: unknown) => console.warn("Failed to load project config:", error));
-  }, [root]);
-
-  // Check if characters step is complete
-  const isComplete = projectConfig?.workflow?.characters?.complete || false;
-
-  // Handle marking completion
-  const handleMarkComplete = async () => {
-    if (!root || !projectConfig) return;
-    
-    try {
-      const updatedConfig = {
-        ...projectConfig,
-        workflow: {
-          ...projectConfig.workflow,
-          characters: {
-            ...projectConfig.workflow?.characters,
-            complete: true,
-            completedAt: new Date().toISOString()
-          }
-        }
-      };
-      
-      // Save the updated config
-      await window.khipu!.call("fs:write", { 
-        projectRoot: root, 
-        relPath: "project.khipu.json", 
-        json: true, 
-        content: updatedConfig 
-      });
-      
-      setProjectConfig(updatedConfig);
-      
-      // Update the project store to mark the step as completed
-      const { markStepCompleted } = useProject.getState();
-      markStepCompleted("characters");
-      
-      console.log("Characters page marked as complete");
-    } catch (error) {
-      console.error("Failed to mark characters as complete:", error);
-    }
-  };
+  }, [root]); // Keep dependency on root only to avoid infinite loops
 
   // Handle audio errors
   useEffect(() => {
@@ -350,21 +315,12 @@ function CharactersPage() {
               {dirty && !saving && " *"}
             </button>
             
-            <button 
-              onClick={handleMarkComplete}
-              disabled={loading || characters.length === 0 || isComplete} 
-              style={{ 
-                padding: "6px 12px", 
-                fontSize: "14px",
-                backgroundColor: isComplete ? "var(--success)" : "var(--success)",
-                color: "white",
-                border: `1px solid var(--success)`,
-                borderRadius: "4px",
-                opacity: isComplete ? 0.7 : 1
-              }}
+            <WorkflowCompleteButton 
+              step="characters"
+              disabled={loading || characters.length === 0}
             >
-              {isComplete ? "✓ Completed" : t("characters.markComplete")}
-            </button>
+              {t("characters.markComplete")}
+            </WorkflowCompleteButton>
           </>
         )}
       </div>
