@@ -39,7 +39,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   const [selectedChapter, setSelectedChapter] = useState<string>("");
   const [audioSegments, setAudioSegments] = useState<AudioSegmentRow[]>([]);
   const [generatingAudio, setGeneratingAudio] = useState<Set<string>>(new Set());
-  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+  const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
   const checkChapterStatus = useCallback(async (chapterId: string): Promise<ChapterStatus> => {
     if (!root) {
@@ -220,7 +220,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
   const handleChapterSelect = useCallback(async (chapterId: string) => {
     setSelectedChapter(chapterId);
-    setSelectedRows(new Set()); // Clear row selection when changing chapters
+    setSelectedRowId(null); // Clear row selection when changing chapters
     if (chapterId) {
       await loadPlanData(chapterId);
     }
@@ -236,15 +236,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   }, []);
 
   const handleRowSelection = useCallback((rowKey: string) => {
-    setSelectedRows(prev => {
-      const newSelection = new Set(prev);
-      if (newSelection.has(rowKey)) {
-        newSelection.delete(rowKey);
-      } else {
-        newSelection.add(rowKey);
-      }
-      return newSelection;
-    });
+    setSelectedRowId(prev => prev === rowKey ? null : rowKey);
   }, []);
 
   const handleGenerateSegmentAudio = useCallback(async (rowIndex: number) => {
@@ -341,19 +333,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         </p>
       </div>
 
-      {/* Status message */}
-      {message && (
-        <div style={{ 
-          marginBottom: "16px", 
-          padding: "12px", 
-          backgroundColor: message.includes("Failed") || message.includes("Error") ? "var(--errorBg)" : "var(--panelAccent)",
-          borderRadius: "6px",
-          color: "var(--text)"
-        }}>
-          {message}
-        </div>
-      )}
-
       {/* Chapter Selection Panel - matching Orchestration style */}
       <div style={{ 
         marginBottom: "16px", 
@@ -394,14 +373,25 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           </div>
           
           {selectedChapter && (
-            <span style={{ fontSize: "14px", color: "var(--textSecondary)" }}>
-              Audio Production Progress: {(() => {
-                const status = chapterStatus.get(selectedChapter);
-                if (status?.isAudioComplete) return "Complete";
-                if (status?.isComplete) return "Ready for Audio";
-                return "Not Ready";
-              })()}
-            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              {/* Show loading/processing message if present */}
+              {message && (
+                <span style={{ 
+                  fontSize: "14px", 
+                  color: message.includes("Failed") || message.includes("Error") ? "var(--error)" : "var(--textSecondary)"
+                }}>
+                  {message}
+                </span>
+              )}
+              <span style={{ fontSize: "14px", color: "var(--textSecondary)" }}>
+                Audio Production Progress: {(() => {
+                  const status = chapterStatus.get(selectedChapter);
+                  if (status?.isAudioComplete) return "Complete";
+                  if (status?.isComplete) return "Ready for Audio";
+                  return "Not Ready";
+                })()}
+              </span>
+            </div>
           )}
         </div>
       </div>
@@ -435,7 +425,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           
           <span style={{ marginLeft: "auto", fontSize: "14px", color: "var(--textSecondary)" }}>
             {audioSegments.length} segments loaded
-            {selectedRows.size > 0 && ` • ${selectedRows.size} selected`}
           </span>
         </div>
       )}
@@ -447,11 +436,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             <h3 style={{ margin: 0, fontSize: "16px", color: "var(--text)" }}>
               {t("audioProduction.segments", "Audio Segments")} - {selectedChapter}
             </h3>
-            {selectedRows.size > 0 && (
-              <span style={{ fontSize: "12px", color: "var(--textSecondary)" }}>
-                Click rows to select • {selectedRows.size} selected
-              </span>
-            )}
           </div>
           
           <div style={{
@@ -482,13 +466,14 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                     style={{ 
                       borderBottom: "1px solid var(--border)",
                       cursor: "pointer",
-                      backgroundColor: selectedRows.has(segment.rowKey) ? "var(--panelAccent)" : "transparent"
+                      backgroundColor: selectedRowId === segment.rowKey ? "#4A90E2" : "transparent",
+                      color: selectedRowId === segment.rowKey ? "white" : "var(--text)"
                     }}
                   >
-                    <td style={{ padding: "8px", color: "var(--text)" }}>
+                    <td style={{ padding: "8px", color: "inherit" }}>
                       {segment.chunkId}
                     </td>
-                    <td style={{ padding: "8px", color: "var(--text)", maxWidth: "300px" }}>
+                    <td style={{ padding: "8px", color: "inherit", maxWidth: "300px" }}>
                       <div style={{ 
                         overflow: "hidden", 
                         textOverflow: "ellipsis", 
@@ -497,7 +482,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                         {segment.text}
                       </div>
                     </td>
-                    <td style={{ padding: "8px", color: "var(--text)" }}>
+                    <td style={{ padding: "8px", color: "inherit" }}>
                       {segment.voice}
                     </td>
                     <td style={{ padding: "8px" }}>
