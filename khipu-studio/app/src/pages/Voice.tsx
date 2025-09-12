@@ -602,6 +602,183 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                         </div>
                       </div>
 
+                      {/* Audio Processing Chain */}
+                      <div style={{ padding: "12px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "4px" }}>
+                        <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", color: "var(--text)" }}>
+                          Audio Processing Chain
+                        </h4>
+                        
+                        {/* 1. Noise & Cleanup */}
+                        <div style={{ marginBottom: "16px", padding: "8px", backgroundColor: "var(--input)", borderRadius: "3px", border: "1px solid var(--border)" }}>
+                          <h5 style={{ margin: "0 0 6px 0", fontSize: "12px", color: "var(--text)", fontWeight: 500 }}>
+                            1. Noise & Cleanup
+                          </h5>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
+                              <input type="checkbox" defaultChecked style={{ accentColor: "var(--accent)" }} />
+                              <span>High-pass filter (70-90 Hz)</span>
+                              <select style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}>
+                                <option>70 Hz</option>
+                                <option selected>80 Hz</option>
+                                <option>90 Hz</option>
+                              </select>
+                            </label>
+                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
+                              <input type="checkbox" style={{ accentColor: "var(--accent)" }} />
+                              <span>De-click / De-ess</span>
+                              <select style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}>
+                                <option>Light</option>
+                                <option selected>Medium</option>
+                                <option>Heavy</option>
+                              </select>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* 2. Dynamic Control */}
+                        <div style={{ marginBottom: "16px", padding: "8px", backgroundColor: "var(--input)", borderRadius: "3px", border: "1px solid var(--border)" }}>
+                          <h5 style={{ margin: "0 0 6px 0", fontSize: "12px", color: "var(--text)", fontWeight: 500 }}>
+                            2. Dynamic Control
+                          </h5>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
+                              <input type="checkbox" defaultChecked style={{ accentColor: "var(--accent)" }} />
+                              <span>Gentle compression</span>
+                              <select style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}>
+                                <option>2:1</option>
+                                <option selected>2.5:1</option>
+                                <option>3:1</option>
+                              </select>
+                            </label>
+                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
+                              <input type="checkbox" defaultChecked style={{ accentColor: "var(--accent)" }} />
+                              <span>Limiter safeguard (-1 dBFS)</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* 3. EQ Shaping */}
+                        <div style={{ marginBottom: "16px", padding: "8px", backgroundColor: "var(--input)", borderRadius: "3px", border: "1px solid var(--border)" }}>
+                          <h5 style={{ margin: "0 0 6px 0", fontSize: "12px", color: "var(--text)", fontWeight: 500 }}>
+                            3. EQ Shaping
+                          </h5>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
+                              <input type="checkbox" style={{ accentColor: "var(--accent)" }} />
+                              <span>Low-mid cut (150-300 Hz)</span>
+                              <select style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}>
+                                <option>150 Hz</option>
+                                <option selected>200 Hz</option>
+                                <option>300 Hz</option>
+                              </select>
+                            </label>
+                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
+                              <input type="checkbox" defaultChecked style={{ accentColor: "var(--accent)" }} />
+                              <span>Presence boost (2-5 kHz)</span>
+                              <select style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}>
+                                <option>2 kHz</option>
+                                <option selected>3 kHz</option>
+                                <option>5 kHz</option>
+                              </select>
+                            </label>
+                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
+                              <input type="checkbox" style={{ accentColor: "var(--accent)" }} />
+                              <span>Air lift (8-12 kHz)</span>
+                              <select style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}>
+                                <option>8 kHz</option>
+                                <option selected>10 kHz</option>
+                                <option>12 kHz</option>
+                              </select>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* 4. Spatial / Aesthetic Enhancements */}
+                        <div style={{ marginBottom: "16px", padding: "8px", backgroundColor: "var(--input)", borderRadius: "3px", border: "1px solid var(--border)" }}>
+                          <h5 style={{ margin: "0 0 6px 0", fontSize: "12px", color: "var(--text)", fontWeight: 500 }}>
+                            4. Spatial / Aesthetic Enhancements
+                          </h5>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
+                              <input type="checkbox" defaultChecked style={{ accentColor: "var(--accent)" }} />
+                              <span>Subtle reverb</span>
+                              <select style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}>
+                                <option>Room (0.3s)</option>
+                                <option selected>Room (0.4s)</option>
+                                <option>Room (0.5s)</option>
+                              </select>
+                            </label>
+                            <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "10px", color: "var(--textSecondary)", paddingLeft: "24px" }}>
+                              <span>Wet mix:</span>
+                              <input type="range" min="0" max="15" defaultValue="8" style={{ flex: 1, accentColor: "var(--accent)" }} />
+                              <span>8%</span>
+                            </div>
+                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
+                              <input type="checkbox" style={{ accentColor: "var(--accent)" }} />
+                              <span>Stereo enhancer (subtle)</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* 5. Consistency & Mastering */}
+                        <div style={{ marginBottom: "12px", padding: "8px", backgroundColor: "var(--input)", borderRadius: "3px", border: "1px solid var(--border)" }}>
+                          <h5 style={{ margin: "0 0 6px 0", fontSize: "12px", color: "var(--text)", fontWeight: 500 }}>
+                            5. Consistency & Mastering
+                          </h5>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
+                              <input type="checkbox" defaultChecked style={{ accentColor: "var(--accent)" }} />
+                              <span>Normalize to audiobook standards</span>
+                              <select style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}>
+                                <option>-18 LUFS</option>
+                                <option>-20 LUFS</option>
+                                <option selected>-21 LUFS</option>
+                                <option>-23 LUFS</option>
+                              </select>
+                            </label>
+                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
+                              <input type="checkbox" defaultChecked style={{ accentColor: "var(--accent)" }} />
+                              <span>Peak limit (-3 dB max)</span>
+                            </label>
+                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
+                              <input type="checkbox" style={{ accentColor: "var(--accent)" }} />
+                              <span>Final dither (16-bit export)</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* Processing Control */}
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          <button
+                            style={{
+                              flex: 1,
+                              padding: "8px 12px",
+                              fontSize: "12px",
+                              backgroundColor: "var(--accent)",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "4px",
+                              cursor: "pointer"
+                            }}
+                          >
+                            Apply Chain
+                          </button>
+                          <button
+                            style={{
+                              padding: "8px 12px",
+                              fontSize: "12px",
+                              backgroundColor: "var(--muted)",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "4px",
+                              cursor: "pointer"
+                            }}
+                          >
+                            Reset
+                          </button>
+                        </div>
+                      </div>
+
                       {/* SFX Controls */}
                       <div style={{ padding: "12px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "4px" }}>
                         <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", color: "var(--text)" }}>
