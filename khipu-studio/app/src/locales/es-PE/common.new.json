@@ -244,7 +244,7 @@
   },
   
   "project.planning": {
-    "string": "Planificación",
+    "string": "Orquestación",
     "comment": ""
   },
   "project.maxKb": {
@@ -1023,7 +1023,7 @@
   },
 
   "planning.title": {
-    "string": "Planificación de Capítulos",
+    "string": "Orquestación de Capítulos",
     "comment": ""
   },
   "planning.segmentNotFound": {

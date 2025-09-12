@@ -32,7 +32,7 @@
     "comment": ""
   },
   "nav.planning": {
-    "string": "Planificación",
+    "string": "Orquestación",
     "comment": ""
   },
   "nav.ssml": {
@@ -168,7 +168,7 @@
     "comment": ""
   },
   "status.loadProjectToManagePlanning": {
-    "string": "Carga un proyecto primero para gestionar la planificación.",
+    "string": "Carga un proyecto primero para gestionar la orquestación.",
     "comment": ""
   },
   "status.loadProjectToManageCharacters": {
@@ -275,7 +275,7 @@
     "comment": ""
   },
   "home.cta": {
-    "string": "Selecciona un proyecto y comienza con Manuscrito → Planificación.",
+    "string": "Selecciona un proyecto y comienza con Manuscrito → Orquestación.",
     "comment": ""
   },
 
@@ -331,7 +331,7 @@
   },
   
   "project.planning": {
-    "string": "Planificación",
+    "string": "Orquestación",
     "comment": ""
   },
   "project.maxKb": {
@@ -446,7 +446,7 @@
     "comment": ""
   },
   "project.pauseConfiguration": {
-    "string": "Configura duraciones de pausa (en milisegundos) para insertar en la planificación:",
+    "string": "Configura duraciones de pausa (en milisegundos) para insertar en la orquestación:",
     "comment": ""
   },
   "project.sentencePause": {
@@ -1274,7 +1274,7 @@
     "comment": ""
   },
   "planning.title": {
-    "string": "Planificación",
+    "string": "Orquestación",
     "comment": ""
   },
   "planning.searchText": {
@@ -1447,23 +1447,23 @@
   },
 
   "planning.status.completed": {
-    "string": "Página de planificación marcada como completa",
+    "string": "Página de orquestación marcada como completa",
     "comment": ""
   },
   "planning.status.allChaptersCompleted": {
-    "string": "¡Todos los capítulos completados! La fase de planificación ya está completa.",
+    "string": "¡Todos los capítulos completados! La fase de orquestación ya está completa.",
     "comment": ""
   },
   "planning.progress.complete": {
-    "string": "Planificación Completa",
+    "string": "Orquestación Completa",
     "comment": ""
   },
   "planning.progress.status": {
-    "string": "Progreso de Planificación: {{completed}}/{{total}} capítulos completos",
+    "string": "Progreso de Orquestación: {{completed}}/{{total}} capítulos completos",
     "comment": ""
   },
   "planning.progress.unlockNext": {
-    "string": "Completa todos los planes de capítulos para desbloquear el siguiente paso del flujo de trabajo",
+    "string": "Completa toda la orquestación de capítulos para desbloquear el siguiente paso del flujo de trabajo",
     "comment": ""
   },
   "planning.readyForSsml": {

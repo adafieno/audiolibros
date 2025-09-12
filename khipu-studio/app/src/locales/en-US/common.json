@@ -32,8 +32,8 @@
     "comment": "Navigation menu item for dossier/documentation"
   },
   "nav.planning": {
-    "string": "Planning",
-    "comment": "Navigation menu item for planning phase"
+    "string": "Orchestration",
+    "comment": "Navigation menu item for orchestration phase"
   },
   "nav.voice": {
     "string": "Voice",
@@ -57,7 +57,7 @@
     "comment": "Welcome message on the home page"
   },
   "home.cta": {
-    "string": "Select a project and start with Manuscript → Planning.",
+    "string": "Select a project and start with Manuscript → Orchestration.",
     "comment": "Call to action text on the home page"
   },
   "home.existingProjects": {
@@ -353,8 +353,8 @@
     "comment": "Status message when no project is loaded"
   },
   "status.loadProjectToManagePlanning": {
-    "string": "Please load a project first to manage planning.",
-    "comment": "Instructions to load project for planning"
+    "string": "Please load a project first to manage orchestration.",
+    "comment": "Instructions to load project for orchestration"
   },
   "status.loadProjectToManageCharacters": {
     "string": "Please load a project first to manage characters.",
@@ -394,7 +394,7 @@
 
   "planning.tooltips.clickToEdit": {
     "string": "Click to edit text (changes save to plan only)",
-    "comment": "Tooltip for editable text segments in planning view"
+    "comment": "Tooltip for editable text segments in orchestration view"
   },
   "planning.tooltips.splitSegment": {
     "string": "Split segment at cursor position",
@@ -435,28 +435,28 @@
     "comment": "Status message when plan file is updated and being reloaded"
   },
   "planning.status.completed": {
-    "string": "Planning page marked as complete",
-    "comment": "Status message when planning step is completed"
+    "string": "Orchestration page marked as complete",
+    "comment": "Status message when orchestration step is completed"
   },
   "planning.status.allChaptersCompleted": {
-    "string": "All chapters completed! Planning phase is now complete.",
+    "string": "All chapters completed! Orchestration phase is now complete.",
     "comment": "Status message when all chapters are completed"
   },
   "planning.progress.complete": {
-    "string": "Planning Complete",
-    "comment": "Text shown when all planning is complete"
+    "string": "Orchestration Complete",
+    "comment": "Text shown when all orchestration is complete"
   },
   "planning.progress.status": {
-    "string": "Planning Progress: {{completed}}/{{total}} chapters complete",
-    "comment": "Text showing planning completion progress"
+    "string": "Orchestration Progress: {{completed}}/{{total}} chapters complete",
+    "comment": "Text showing orchestration completion progress"
   },
   "planning.progress.unlockNext": {
-    "string": "Complete all chapter plans to unlock the next workflow step",
+    "string": "Complete all chapter orchestration to unlock the next workflow step",
     "comment": "Text explaining what's needed to proceed"
   },
   "planning.readyForSsml": {
     "string": "Ready for SSML",
-    "comment": "Badge text shown when planning is complete and ready for next step"
+    "comment": "Badge text shown when orchestration is complete and ready for next step"
   },
 
   "planning.errors.selectChapter": {
@@ -719,8 +719,8 @@
     "comment": "Label for chapter file pattern setting"
   },
   "project.planning": {
-    "string": "Planning",
-    "comment": "Section header for planning settings"
+    "string": "Orchestration",
+    "comment": "Section header for orchestration settings"
   },
   "project.maxKb": {
     "string": "Maximum KB per query",
@@ -755,7 +755,7 @@
     "comment": "Label for SSML breaks setting"
   },
   "project.pauseConfiguration": {
-    "string": "Configure pause durations (in milliseconds) to be inserted in the planning:",
+    "string": "Configure pause durations (in milliseconds) to be inserted in the orchestration:",
     "comment": "Description for pause configuration section"
   },
   "project.ttsCachingInfo": {
@@ -922,8 +922,8 @@
     "comment": "Description for the planning page"
   },
   "planning.title": {
-    "string": "Planning",
-    "comment": "Title for the planning page"
+    "string": "Orchestration",
+    "comment": "Title for the orchestration page"
   },
   "planning.searchText": {
     "string": "Search text…",
