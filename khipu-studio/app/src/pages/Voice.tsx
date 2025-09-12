@@ -39,7 +39,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   const [selectedChapter, setSelectedChapter] = useState<string>("");
   const [audioSegments, setAudioSegments] = useState<AudioSegmentRow[]>([]);
   const [generatingAudio, setGeneratingAudio] = useState<Set<string>>(new Set());
-  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 
   const checkChapterStatus = useCallback(async (chapterId: string): Promise<ChapterStatus> => {
     if (!root) {
@@ -179,7 +179,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       });
 
       setAudioSegments(segments);
-      setSelectedRows(new Set()); // Clear selected rows when loading new segments
       setMessage("");
     } catch (error) {
       console.error("Failed to load plan data:", error);
@@ -221,27 +220,11 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
   const handleChapterSelect = useCallback(async (chapterId: string) => {
     setSelectedChapter(chapterId);
-    setSelectedRows(new Set()); // Clear selected rows when changing chapters
+    setSelectedRows(new Set()); // Clear row selection when changing chapters
     if (chapterId) {
       await loadPlanData(chapterId);
     }
   }, [loadPlanData]);
-
-  const handleRowSelect = useCallback((index: number, selected: boolean) => {
-    setSelectedRows(prev => {
-      const newSet = new Set(prev);
-      if (selected) {
-        newSet.add(index);
-      } else {
-        newSet.delete(index);
-      }
-      return newSet;
-    });
-  }, []);
-
-  const handleSelectAll = useCallback((selected: boolean) => {
-    setSelectedRows(selected ? new Set(Array.from({length: audioSegments.length}, (_, i) => i)) : new Set());
-  }, [audioSegments.length]);
 
   const handleSfxChange = useCallback((rowIndex: number, sfx: string) => {
     setAudioSegments(prev => {
@@ -250,6 +233,18 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       return updated;
     });
     // TODO: Save changes back to plan file
+  }, []);
+
+  const handleRowSelection = useCallback((rowKey: string) => {
+    setSelectedRows(prev => {
+      const newSelection = new Set(prev);
+      if (newSelection.has(rowKey)) {
+        newSelection.delete(rowKey);
+      } else {
+        newSelection.add(rowKey);
+      }
+      return newSelection;
+    });
   }, []);
 
   const handleGenerateSegmentAudio = useCallback(async (rowIndex: number) => {
@@ -440,6 +435,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           
           <span style={{ marginLeft: "auto", fontSize: "14px", color: "var(--textSecondary)" }}>
             {audioSegments.length} segments loaded
+            {selectedRows.size > 0 && ` • ${selectedRows.size} selected`}
           </span>
         </div>
       )}
@@ -451,6 +447,11 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             <h3 style={{ margin: 0, fontSize: "16px", color: "var(--text)" }}>
               {t("audioProduction.segments", "Audio Segments")} - {selectedChapter}
             </h3>
+            {selectedRows.size > 0 && (
+              <span style={{ fontSize: "12px", color: "var(--textSecondary)" }}>
+                Click rows to select • {selectedRows.size} selected
+              </span>
+            )}
           </div>
           
           <div style={{
@@ -466,14 +467,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             }}>
               <thead>
                 <tr style={{ backgroundColor: "var(--panelAccent)" }}>
-                  <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500, width: "40px" }}>
-                    <input
-                      type="checkbox"
-                      checked={selectedRows.size === audioSegments.length && audioSegments.length > 0}
-                      onChange={(e) => handleSelectAll(e.target.checked)}
-                      style={{ cursor: "pointer" }}
-                    />
-                  </th>
                   <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>ID</th>
                   <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>Text Preview</th>
                   <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>Voice</th>
@@ -483,15 +476,15 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               </thead>
               <tbody>
                 {audioSegments.map((segment, index) => (
-                  <tr key={segment.rowKey} style={{ borderBottom: "1px solid var(--border)" }}>
-                    <td style={{ padding: "8px" }}>
-                      <input
-                        type="checkbox"
-                        checked={selectedRows.has(index)}
-                        onChange={(e) => handleRowSelect(index, e.target.checked)}
-                        style={{ cursor: "pointer" }}
-                      />
-                    </td>
+                  <tr 
+                    key={segment.rowKey} 
+                    onClick={() => handleRowSelection(segment.rowKey)}
+                    style={{ 
+                      borderBottom: "1px solid var(--border)",
+                      cursor: "pointer",
+                      backgroundColor: selectedRows.has(segment.rowKey) ? "var(--panelAccent)" : "transparent"
+                    }}
+                  >
                     <td style={{ padding: "8px", color: "var(--text)" }}>
                       {segment.chunkId}
                     </td>
@@ -511,6 +504,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                       <select
                         value={segment.sfxAfter || ""}
                         onChange={(e) => handleSfxChange(index, e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
                         style={{
                           padding: "4px 8px",
                           fontSize: "12px",
@@ -530,7 +524,10 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                     </td>
                     <td style={{ padding: "8px" }}>
                       <button
-                        onClick={() => handleGenerateSegmentAudio(index)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleGenerateSegmentAudio(index);
+                        }}
                         style={{
                           padding: "4px 8px",
                           fontSize: "11px",
