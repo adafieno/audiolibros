@@ -39,6 +39,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   const [selectedChapter, setSelectedChapter] = useState<string>("");
   const [audioSegments, setAudioSegments] = useState<AudioSegmentRow[]>([]);
   const [generatingAudio, setGeneratingAudio] = useState<Set<string>>(new Set());
+  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
 
   const checkChapterStatus = useCallback(async (chapterId: string): Promise<ChapterStatus> => {
     if (!root) {
@@ -178,6 +179,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       });
 
       setAudioSegments(segments);
+      setSelectedRows(new Set()); // Clear selected rows when loading new segments
       setMessage("");
     } catch (error) {
       console.error("Failed to load plan data:", error);
@@ -219,10 +221,27 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
   const handleChapterSelect = useCallback(async (chapterId: string) => {
     setSelectedChapter(chapterId);
+    setSelectedRows(new Set()); // Clear selected rows when changing chapters
     if (chapterId) {
       await loadPlanData(chapterId);
     }
   }, [loadPlanData]);
+
+  const handleRowSelect = useCallback((index: number, selected: boolean) => {
+    setSelectedRows(prev => {
+      const newSet = new Set(prev);
+      if (selected) {
+        newSet.add(index);
+      } else {
+        newSet.delete(index);
+      }
+      return newSet;
+    });
+  }, []);
+
+  const handleSelectAll = useCallback((selected: boolean) => {
+    setSelectedRows(selected ? new Set(Array.from({length: audioSegments.length}, (_, i) => i)) : new Set());
+  }, [audioSegments.length]);
 
   const handleSfxChange = useCallback((rowIndex: number, sfx: string) => {
     setAudioSegments(prev => {
@@ -416,7 +435,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               opacity: audioSegments.length > 0 ? 1 : 0.6
             }}
           >
-            🎵 Generate Chapter Audio
+            Generate Chapter Audio
           </button>
           
           <span style={{ marginLeft: "auto", fontSize: "14px", color: "var(--textSecondary)" }}>
@@ -447,6 +466,14 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             }}>
               <thead>
                 <tr style={{ backgroundColor: "var(--panelAccent)" }}>
+                  <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500, width: "40px" }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedRows.size === audioSegments.length && audioSegments.length > 0}
+                      onChange={(e) => handleSelectAll(e.target.checked)}
+                      style={{ cursor: "pointer" }}
+                    />
+                  </th>
                   <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>ID</th>
                   <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>Text Preview</th>
                   <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>Voice</th>
@@ -457,6 +484,14 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               <tbody>
                 {audioSegments.map((segment, index) => (
                   <tr key={segment.rowKey} style={{ borderBottom: "1px solid var(--border)" }}>
+                    <td style={{ padding: "8px" }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedRows.has(index)}
+                        onChange={(e) => handleRowSelect(index, e.target.checked)}
+                        style={{ cursor: "pointer" }}
+                      />
+                    </td>
                     <td style={{ padding: "8px", color: "var(--text)" }}>
                       {segment.chunkId}
                     </td>
@@ -506,7 +541,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                           cursor: "pointer"
                         }}
                       >
-                        🎵 Generate
+                        Generate
                       </button>
                     </td>
                   </tr>
