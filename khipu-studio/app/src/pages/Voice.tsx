@@ -342,7 +342,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   }
 
   return (
-    <div style={{ padding: "16px", height: "100%" }}>
+    <div style={{ padding: "16px", height: "100%", display: "flex", flexDirection: "column" }}>
       {/* Header */}
       <div style={{ marginBottom: "8px" }}>
         <h2 style={{ margin: 0, fontSize: "32px", fontWeight: "bold", color: "var(--text)" }}>
@@ -476,111 +476,261 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         </div>
       ) : null}
 
-      {/* Segment Grid */}
+      {/* Main content grid - Two pane layout */}
       {selectedChapter && audioSegments.length > 0 ? (
-        <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
-          <div style={{ marginBottom: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <h3 style={{ margin: 0, fontSize: "16px", color: "var(--text)" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", flex: 1, minHeight: 0 }}>
+          {/* Left: Audio Segments Grid */}
+          <div style={{ border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+            <div style={{ padding: "8px 12px", backgroundColor: "var(--panelAccent)", borderBottom: "1px solid var(--border)", fontSize: "14px", fontWeight: 500 }}>
               {t("audioProduction.segments", "Audio Segments")} - {selectedChapter}
-            </h3>
-          </div>
-          
-          <div style={{
-            flex: 1,
-            overflow: "auto",
-            border: "1px solid var(--border)",
-            borderRadius: "6px"
-          }}>
-            <table style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              fontSize: "13px"
-            }}>
-              <thead>
-                <tr style={{ backgroundColor: "var(--panelAccent)" }}>
-                  <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}></th>
-                  <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>ID</th>
-                  <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>Text Preview</th>
-                  <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>Voice</th>
-                  <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>SFX</th>
-                  <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {audioSegments.map((segment, index) => (
-                  <tr 
-                    key={segment.rowKey} 
-                    onClick={() => handleRowSelection(index)}
-                    style={{ 
-                      borderBottom: "1px solid var(--border)",
-                      cursor: "pointer",
-                      backgroundColor: selectedRowIndex === index ? "var(--accent)" : "transparent",
-                      color: selectedRowIndex === index ? "white" : "var(--text)"
-                    }}
-                  >
-                    <td style={{ padding: "8px", color: "var(--muted)" }}>
-                      {selectedRowIndex === index ? "▶" : ""}
-                    </td>
-                    <td style={{ padding: "8px", color: "inherit" }}>
-                      {segment.chunkId}
-                    </td>
-                    <td style={{ padding: "8px", color: "inherit", maxWidth: "300px" }}>
-                      <div style={{ 
-                        overflow: "hidden", 
-                        textOverflow: "ellipsis", 
-                        whiteSpace: "nowrap" 
-                      }}>
-                        {segment.text}
-                      </div>
-                    </td>
-                    <td style={{ padding: "8px", color: "inherit" }}>
-                      {segment.voice}
-                    </td>
-                    <td style={{ padding: "8px" }}>
-                      <select
-                        value={segment.sfxAfter || ""}
-                        onChange={(e) => handleSfxChange(index, e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                          padding: "4px 8px",
-                          fontSize: "12px",
-                          backgroundColor: "var(--input)",
-                          color: "var(--text)",
-                          border: "1px solid var(--border)",
-                          borderRadius: "3px"
-                        }}
-                      >
-                        <option value="">None</option>
-                        <option value="pause_short">Short Pause</option>
-                        <option value="pause_medium">Medium Pause</option>
-                        <option value="pause_long">Long Pause</option>
-                        <option value="page_turn">Page Turn</option>
-                        <option value="chapter_break">Chapter Break</option>
-                      </select>
-                    </td>
-                    <td style={{ padding: "8px" }}>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleGenerateSegmentAudio(index);
-                        }}
-                        style={{
-                          padding: "4px 8px",
-                          fontSize: "11px",
-                          backgroundColor: "var(--accent)",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "3px",
-                          cursor: "pointer"
-                        }}
-                      >
-                        Generate
-                      </button>
-                    </td>
+            </div>
+            
+            <div style={{ flex: 1, overflow: "auto" }}>
+              <table style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                fontSize: "13px"
+              }}>
+                <thead>
+                  <tr style={{ backgroundColor: "var(--panelAccent)" }}>
+                    <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}></th>
+                    <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>ID</th>
+                    <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>Text Preview</th>
+                    <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>Voice</th>
+                    <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>SFX</th>
+                    <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {audioSegments.map((segment, index) => (
+                    <tr 
+                      key={segment.rowKey} 
+                      onClick={() => handleRowSelection(index)}
+                      style={{ 
+                        borderBottom: "1px solid var(--border)",
+                        cursor: "pointer",
+                        backgroundColor: selectedRowIndex === index ? "var(--accent)" : "transparent",
+                        color: selectedRowIndex === index ? "white" : "var(--text)"
+                      }}
+                    >
+                      <td style={{ padding: "8px", color: "var(--muted)" }}>
+                        {selectedRowIndex === index ? "▶" : ""}
+                      </td>
+                      <td style={{ padding: "8px", color: "inherit" }}>
+                        {segment.chunkId}
+                      </td>
+                      <td style={{ padding: "8px", color: "inherit", maxWidth: "200px" }}>
+                        <div style={{ 
+                          overflow: "hidden", 
+                          textOverflow: "ellipsis", 
+                          whiteSpace: "nowrap" 
+                        }}>
+                          {segment.text}
+                        </div>
+                      </td>
+                      <td style={{ padding: "8px", color: "inherit", fontSize: "11px" }}>
+                        {segment.voice}
+                      </td>
+                      <td style={{ padding: "8px" }}>
+                        <select
+                          value={segment.sfxAfter || ""}
+                          onChange={(e) => handleSfxChange(index, e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            padding: "2px 4px",
+                            fontSize: "10px",
+                            backgroundColor: "var(--input)",
+                            color: "var(--text)",
+                            border: "1px solid var(--border)",
+                            borderRadius: "3px",
+                            minWidth: "60px"
+                          }}
+                        >
+                          <option value="">None</option>
+                          <option value="pause_short">Short</option>
+                          <option value="pause_medium">Medium</option>
+                          <option value="pause_long">Long</option>
+                          <option value="page_turn">Page</option>
+                          <option value="chapter_break">Break</option>
+                        </select>
+                      </td>
+                      <td style={{ padding: "8px" }}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleGenerateSegmentAudio(index);
+                          }}
+                          style={{
+                            padding: "2px 6px",
+                            fontSize: "10px",
+                            backgroundColor: "var(--accent)",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "3px",
+                            cursor: "pointer"
+                          }}
+                        >
+                          Gen
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Right: Audio Production Module */}
+          <div style={{ border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+            <div style={{ padding: "8px 12px", backgroundColor: "var(--panelAccent)", borderBottom: "1px solid var(--border)", fontSize: "14px", fontWeight: 500 }}>
+              Audio Production Module
+            </div>
+            
+            <div style={{ flex: 1, padding: "12px", overflow: "auto" }}>
+              {selectedRowIndex >= 0 && selectedRowIndex < audioSegments.length ? (
+                (() => {
+                  const currentSegment = audioSegments[selectedRowIndex];
+                  return (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                      {/* Segment Info */}
+                      <div style={{ padding: "12px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "4px" }}>
+                        <h4 style={{ margin: "0 0 8px 0", fontSize: "14px", color: "var(--text)" }}>
+                          Segment {currentSegment.chunkId}
+                        </h4>
+                        <p style={{ margin: "0 0 8px 0", fontSize: "12px", color: "var(--textSecondary)" }}>
+                          Voice: {currentSegment.voice || "Not assigned"}
+                        </p>
+                        <div style={{ fontSize: "13px", color: "var(--text)", lineHeight: "1.4", padding: "8px", backgroundColor: "var(--input)", borderRadius: "3px" }}>
+                          {currentSegment.text}
+                        </div>
+                      </div>
+
+                      {/* Audio Controls */}
+                      <div style={{ padding: "12px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "4px" }}>
+                        <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", color: "var(--text)" }}>
+                          Audio Generation
+                        </h4>
+                        
+                        {/* Generate Button */}
+                        <button
+                          onClick={() => handleGenerateSegmentAudio(selectedRowIndex)}
+                          disabled={generatingAudio.has(currentSegment.chunkId)}
+                          style={{
+                            width: "100%",
+                            padding: "12px",
+                            fontSize: "14px",
+                            fontWeight: 500,
+                            backgroundColor: currentSegment.hasAudio ? "var(--success)" : "var(--accent)",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "4px",
+                            cursor: generatingAudio.has(currentSegment.chunkId) ? "not-allowed" : "pointer",
+                            opacity: generatingAudio.has(currentSegment.chunkId) ? 0.6 : 1,
+                            marginBottom: "12px"
+                          }}
+                        >
+                          {generatingAudio.has(currentSegment.chunkId) 
+                            ? "Generating..." 
+                            : currentSegment.hasAudio 
+                              ? "✓ Audio Ready" 
+                              : "Generate Audio"
+                          }
+                        </button>
+
+                        {/* Audio Status */}
+                        <div style={{ fontSize: "12px", color: "var(--textSecondary)" }}>
+                          Status: {currentSegment.hasAudio ? 
+                            <span style={{ color: "var(--success)" }}>Audio generated</span> : 
+                            <span style={{ color: "var(--muted)" }}>No audio</span>
+                          }
+                        </div>
+                      </div>
+
+                      {/* SFX Controls */}
+                      <div style={{ padding: "12px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "4px" }}>
+                        <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", color: "var(--text)" }}>
+                          Sound Effects
+                        </h4>
+                        
+                        <select
+                          value={currentSegment.sfxAfter || ""}
+                          onChange={(e) => handleSfxChange(selectedRowIndex, e.target.value)}
+                          style={{
+                            width: "100%",
+                            padding: "8px 12px",
+                            fontSize: "13px",
+                            backgroundColor: "var(--input)",
+                            color: "var(--text)",
+                            border: "1px solid var(--border)",
+                            borderRadius: "4px"
+                          }}
+                        >
+                          <option value="">No sound effect</option>
+                          <option value="pause_short">Short Pause (0.5s)</option>
+                          <option value="pause_medium">Medium Pause (1.0s)</option>
+                          <option value="pause_long">Long Pause (2.0s)</option>
+                          <option value="page_turn">Page Turn Effect</option>
+                          <option value="chapter_break">Chapter Break</option>
+                        </select>
+                      </div>
+
+                      {/* Preview Controls (placeholder for future features) */}
+                      <div style={{ padding: "12px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "4px" }}>
+                        <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", color: "var(--text)" }}>
+                          Preview & Playback
+                        </h4>
+                        
+                        <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+                          <button
+                            disabled={!currentSegment.hasAudio}
+                            style={{
+                              flex: 1,
+                              padding: "8px 12px",
+                              fontSize: "12px",
+                              backgroundColor: currentSegment.hasAudio ? "var(--accent)" : "var(--muted)",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "4px",
+                              cursor: currentSegment.hasAudio ? "pointer" : "not-allowed",
+                              opacity: currentSegment.hasAudio ? 1 : 0.5
+                            }}
+                          >
+                            ▶ Play
+                          </button>
+                          <button
+                            disabled={!currentSegment.hasAudio}
+                            style={{
+                              flex: 1,
+                              padding: "8px 12px",
+                              fontSize: "12px",
+                              backgroundColor: currentSegment.hasAudio ? "var(--muted)" : "var(--muted)",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "4px",
+                              cursor: currentSegment.hasAudio ? "pointer" : "not-allowed",
+                              opacity: currentSegment.hasAudio ? 1 : 0.5
+                            }}
+                          >
+                            ⏸ Stop
+                          </button>
+                        </div>
+                        
+                        <div style={{ fontSize: "11px", color: "var(--textSecondary)" }}>
+                          {currentSegment.hasAudio 
+                            ? "Audio file ready for playback" 
+                            : "Generate audio to enable playback"
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()
+              ) : (
+                <div style={{ color: "var(--muted)", fontStyle: "italic", textAlign: "center", padding: "32px" }}>
+                  Select a segment from the grid to begin audio production
+                </div>
+              )}
+            </div>
           </div>
         </div>
       ) : selectedChapter ? (
