@@ -33,7 +33,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   const { t } = useTranslation();
   const { root } = useProject();
   const [chapters, setChapters] = useState<Chapter[]>([]);
-  const [chapterStatus, setChapterStatus] = useState<Map<string, ChapterStatus>>(new Map()); // eslint-disable-line @typescript-eslint/no-unused-vars
+  const [chapterStatus, setChapterStatus] = useState<Map<string, ChapterStatus>>(new Map());
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string>("");
   const [selectedChapter, setSelectedChapter] = useState<string>("");
@@ -179,10 +179,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       });
 
       setAudioSegments(segments);
-      setMessage(`${segments.length} segments loaded`);
-      
-      // Clear success message after 2 seconds
-      setTimeout(() => setMessage(""), 2000);
     } catch (error) {
       console.error("Failed to load plan data:", error);
       setMessage(`Failed to load plan data: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -204,20 +200,14 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         
         // Check status for each chapter
         const statusMap = new Map<string, ChapterStatus>();
-        let completedCount = 0;
         
         for (const chapter of chapterList) {
           const status = await checkChapterStatus(chapter.id);
           statusMap.set(chapter.id, status);
-          if (status.isComplete) completedCount++;
         }
         
         setChapterStatus(statusMap);
-        setMessage(`${chapterList.length} chapters loaded (${completedCount} completed)`);
         onStatus("");
-        
-        // Clear the message after 2 seconds
-        setTimeout(() => setMessage(""), 2000);
       }
     } catch (error) {
       console.error("Failed to load chapters:", error);
@@ -343,7 +333,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       {/* Header */}
       <div style={{ marginBottom: "8px" }}>
         <h2 style={{ margin: 0, fontSize: "32px", fontWeight: "bold", color: "var(--text)" }}>
-          Voice / Audio Production
+          Audio Production
         </h2>
       </div>
       
@@ -394,33 +384,37 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                     padding: "4px 8px"
                   }}
                 >
-                  📁 {chapter.id} {chapter.title ? `- ${chapter.title}` : ""}
+                  � {chapter.id} {chapter.title ? `- ${chapter.title}` : ""}
                 </option>
               ))}
             </select>
           </div>
           
-          {/* Status message display */}
-          {message && (
-            <div style={{
-              padding: "6px 12px",
-              borderRadius: "4px",
-              fontSize: "12px",
-              fontWeight: "500",
-              color: message.includes("Failed") || message.includes("Error") ? "var(--error)" : 
-                     message.includes("complete") || message.includes("loaded") ? "var(--success)" : 
-                     "var(--muted)",
-              backgroundColor: message.includes("Failed") || message.includes("Error") ? "rgba(239, 68, 68, 0.1)" : 
-                              message.includes("complete") || message.includes("loaded") ? "rgba(34, 197, 94, 0.1)" : 
-                              "rgba(107, 114, 126, 0.1)",
-              border: `1px solid ${message.includes("Failed") || message.includes("Error") ? "var(--error)" : 
-                                   message.includes("complete") || message.includes("loaded") ? "var(--success)" : 
-                                   "var(--muted)"}`,
-              whiteSpace: "nowrap"
-            }}>
-              {message}
-            </div>
-          )}
+          {/* Audio Production Progress status */}
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            {(() => {
+              const audioCompleteCount = Array.from(chapterStatus.values()).filter(status => status.isAudioComplete).length;
+              const totalChapters = chapters.length;
+              const allComplete = totalChapters > 0 && audioCompleteCount === totalChapters;
+              
+              return (
+                <span style={{ 
+                  fontSize: "12px", 
+                  fontWeight: "400",
+                  color: allComplete ? "var(--success)" : "var(--muted)",
+                  backgroundColor: allComplete ? "rgba(34, 197, 94, 0.1)" : "rgba(107, 114, 126, 0.1)",
+                  padding: "4px 8px",
+                  borderRadius: "4px",
+                  whiteSpace: "nowrap"
+                }}>
+                  {allComplete 
+                    ? `✅ Audio Production Complete` 
+                    : `Audio Production Progress: ${audioCompleteCount}/${totalChapters} chapters complete`
+                  }
+                </span>
+              );
+            })()}
+          </div>
         </div>
       </div>
 
