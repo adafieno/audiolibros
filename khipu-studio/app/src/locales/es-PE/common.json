@@ -2331,7 +2331,7 @@
     "comment": "Título principal de la página de producción de audio"
   },
   "audioProduction.wetMix": {
-    "string": "Mezcla húmeda:",
+    "string": "Seco/Húmedo:",
     "comment": "Etiqueta para control de mezcla húmeda en configuración de reverberación"
   }
 }

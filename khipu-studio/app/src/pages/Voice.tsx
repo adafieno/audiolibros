@@ -1511,7 +1511,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               <input 
                                 type="range" 
                                 min="0" 
-                                max="15" 
+                                max="100" 
                                 value={currentProcessingChain.spatialEnhancement.reverb.wetMix}
                                 disabled={!customSettingsEnabled}
                                 onChange={(e) => updateCurrentProcessingChain({
