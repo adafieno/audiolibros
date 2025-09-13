@@ -6,6 +6,9 @@ import { createDefaultProcessingChain } from "../lib/audio-production-utils";
 import AudioProductionService from "../lib/audio-production-service";
 import type { PlanChunk } from "../types/plan";
 import type { AudioProcessingChain } from "../types/audio-production";
+import type { Segment } from "../types/plan";
+import type { Character } from "../types/character";
+import type { ProjectConfig } from "../types/config";
 
 interface Chapter {
   id: string;
@@ -337,8 +340,8 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     const index = segmentIndex ?? selectedRowIndex;
     const segment = audioSegments[index];
     
-    if (!segment) {
-      setMessage("No segment selected");
+    if (!segment || !root) {
+      setMessage("No segment selected or project not loaded");
       return;
     }
 
@@ -347,15 +350,68 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         // Pause if currently playing this segment
         await audioPreview.pause();
       } else {
+        // Load necessary data for TTS generation if needed
+        const [projectConfig, charactersData, planData] = await Promise.all([
+          // Load project config
+          window.khipu!.call("fs:read", {
+            projectRoot: root,
+            relPath: "project.khipu.json",
+            json: true,
+          }).catch(() => null),
+          
+          // Load characters data
+          window.khipu!.call("fs:read", {
+            projectRoot: root,
+            relPath: "dossier/characters.json",
+            json: true,
+          }).catch(() => null),
+          
+          // Load plan data to get segment details
+          selectedChapter ? window.khipu!.call("fs:read", {
+            projectRoot: root,
+            relPath: `ssml/plans/${selectedChapter}.plan.json`,
+            json: true,
+          }).catch(() => null) : null
+        ]);
+
+        // Find the full segment data from plan
+        let segmentData = null;
+        if (planData) {
+          const chunks = Array.isArray(planData) ? planData : (planData as { chunks?: unknown[] })?.chunks;
+          segmentData = chunks?.find((chunk: unknown) => (chunk as { id?: string }).id === segment.chunkId);
+        }
+
+        // Find character data
+        let characterData = null;
+        if (charactersData && segment.voice && segment.voice !== "unassigned") {
+          const characters = Array.isArray(charactersData) ? charactersData : (charactersData as { characters?: unknown[] })?.characters;
+          characterData = characters?.find((char: unknown) => {
+            const character = char as { name?: string; id?: string };
+            return character.name === segment.voice || character.id === segment.voice;
+          });
+        }
+
+        console.log('🎤 Audio preview data:', {
+          segmentId: segment.chunkId,
+          hasProjectConfig: !!projectConfig,
+          hasCharacter: !!characterData,
+          hasSegment: !!segmentData,
+          voiceAssignment: (characterData as { voiceAssignment?: unknown })?.voiceAssignment
+        });
+
         // Start playing this segment with current processing chain
         // Preview system will generate audio on-demand if needed
-        await audioPreview.preview(segment.chunkId, processingChain);
+        await audioPreview.preview(segment.chunkId, processingChain, undefined, undefined, {
+          segment: segmentData as Segment,
+          character: characterData as Character,
+          projectConfig: projectConfig as ProjectConfig
+        });
       }
     } catch (error) {
       console.error("Playback failed:", error);
       setMessage(`Preview failed: ${error instanceof Error ? error.message : String(error)}`);
     }
-  }, [selectedRowIndex, audioSegments, audioPreview, processingChain]);
+  }, [selectedRowIndex, audioSegments, audioPreview, processingChain, root, selectedChapter]);
 
   const handlePlayAll = useCallback(async () => {
     // Start playing from the first segment or currently selected segment

@@ -4,6 +4,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { audioPreviewService, type PreviewOptions, type PlaybackState } from '../lib/audio-preview-service';
 import type { AudioProcessingChain } from '../types/audio-production';
+import type { Segment } from '../types/plan';
+import type { Character } from '../types/character';
+import type { ProjectConfig } from '../types/config';
 
 export interface UseAudioPreviewResult {
   // Playback state
@@ -13,7 +16,17 @@ export interface UseAudioPreviewResult {
   duration: number;
   
   // Preview controls
-  preview: (segmentId: string, processingChain: AudioProcessingChain) => Promise<void>;
+  preview: (
+    segmentId: string, 
+    processingChain: AudioProcessingChain, 
+    startTime?: number, 
+    duration?: number,
+    ttsData?: {
+      segment?: Segment;
+      character?: Character;
+      projectConfig?: ProjectConfig;
+    }
+  ) => Promise<void>;
   play: () => Promise<void>;
   pause: () => Promise<void>;
   stop: () => Promise<void>;
@@ -50,7 +63,7 @@ export function useAudioPreview(): UseAudioPreviewResult {
 
   // Subscribe to playback state changes
   useEffect(() => {
-    const unsubscribe = audioPreviewService.onPlaybackStateChange((state) => {
+    const unsubscribe = audioPreviewService.onPlaybackStateChange((state: PlaybackState) => {
       setPlaybackState(state);
     });
 
@@ -61,7 +74,18 @@ export function useAudioPreview(): UseAudioPreviewResult {
   }, []);
 
   // Preview a segment with processing chain
-  const preview = useCallback(async (segmentId: string, processingChain: AudioProcessingChain) => {
+  // Preview a segment with processing chain
+  const preview = useCallback(async (
+    segmentId: string, 
+    processingChain: AudioProcessingChain, 
+    startTime?: number, 
+    duration?: number,
+    ttsData?: {
+      segment?: Segment;
+      character?: Character;
+      projectConfig?: ProjectConfig;
+    }
+  ) => {
     if (!isAvailable) {
       setError('Audio preview not available');
       return;
@@ -73,7 +97,12 @@ export function useAudioPreview(): UseAudioPreviewResult {
     try {
       const options: PreviewOptions = {
         segmentId,
-        processingChain
+        processingChain,
+        startTime,
+        duration,
+        segment: ttsData?.segment,
+        character: ttsData?.character,
+        projectConfig: ttsData?.projectConfig
       };
 
       await audioPreviewService.preview(options);

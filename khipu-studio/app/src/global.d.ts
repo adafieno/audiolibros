@@ -140,6 +140,12 @@ export interface KhipuRequestMap {
 
   // File system
   "fs:readAudioFile": { in: string; out: ArrayBuffer };
+
+  // TTS
+  "tts:saveSegmentAudio": { 
+    in: { audioUrl: string; segmentId: number; targetPath: string };
+    out: { success: boolean; error?: string } 
+  };
 }
 
 export interface Khipu {

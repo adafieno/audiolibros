@@ -2,13 +2,21 @@
 // Handles audio playback with Web Audio API integration and processing chain preview
 
 import { audioProcessor } from './audio-processor-frontend';
+import { generateSegmentAudio } from './segment-tts-generator';
 import type { AudioProcessingChain } from '../types/audio-production';
+import type { Segment } from '../types/plan';
+import type { Character } from '../types/character';
+import type { ProjectConfig } from '../types/config';
 
 export interface PreviewOptions {
   segmentId: string;
   processingChain: AudioProcessingChain;
   startTime?: number;
   duration?: number;
+  // Optional: provide segment and character data for TTS generation
+  segment?: Segment;
+  character?: Character;
+  projectConfig?: ProjectConfig;
 }
 
 export interface PlaybackState {
@@ -119,7 +127,7 @@ export class AudioPreviewService {
    */
   async preview(options: PreviewOptions): Promise<void> {
     try {
-      // Stop any current playback
+      // Stop any current playbook
       await this.stop();
 
       if (!this.audioContext) {
@@ -144,7 +152,24 @@ export class AudioPreviewService {
       }
 
       if (!hasBaseAudio) {
-        throw new Error(`No audio available for segment ${options.segmentId}. Please generate the audio first.`);
+        console.log(`🎤 Base audio not found for segment ${options.segmentId}, generating TTS...`);
+        
+        // Try to generate TTS audio on-demand if we have the necessary data
+        if (options.segment && options.character && options.projectConfig) {
+          const ttsResult = await generateSegmentAudio({
+            segment: options.segment,
+            character: options.character,
+            projectConfig: options.projectConfig
+          });
+
+          if (!ttsResult.success) {
+            throw new Error(`Failed to generate TTS audio: ${ttsResult.error}`);
+          }
+
+          console.log(`✅ Successfully generated TTS audio for segment ${options.segmentId}`);
+        } else {
+          throw new Error(`No audio available for segment ${options.segmentId}. Please provide segment data and character information for TTS generation, or generate the audio first.`);
+        }
       }
 
       // Check if we have cached processed audio
@@ -169,19 +194,20 @@ export class AudioPreviewService {
         });
 
         if (!result.success) {
-          throw new Error(result.error || 'Audio processing failed');
+          throw new Error('Failed to process audio: ' + result.error);
         }
 
         audioPath = result.outputPath!;
       }
 
-      // Load processed audio
-      console.log('Loading processed audio from:', audioPath);
+      console.log('Loading processed audio:', audioPath);
+      
+      // Load and decode the processed audio
       this.currentBuffer = await this.loadAudioFile(audioPath);
       
-      // Create and start audio source
-      await this.play(options.startTime, options.duration);
-
+      // Create audio source and start playbook
+      await this.startPlayback(options.startTime, options.duration);
+      
     } catch (error) {
       console.error('Preview failed:', error);
       throw error;
@@ -189,108 +215,89 @@ export class AudioPreviewService {
   }
 
   /**
-   * Play loaded audio buffer
+   * Start audio playback
    */
-  async play(startOffset = 0, duration?: number): Promise<void> {
-    if (!this.audioContext || !this.currentBuffer) {
-      throw new Error('No audio loaded');
-    }
+  private async startPlayback(startTime?: number, duration?: number) {
+    if (!this.audioContext || !this.currentBuffer) return;
 
-    // Stop any existing playback
-    if (this.currentSource) {
-      this.currentSource.stop();
-      this.currentSource.disconnect();
-    }
-
-    // Create new audio source
-    this.currentSource = this.audioContext.createBufferSource();
-    this.currentSource.buffer = this.currentBuffer;
-    this.currentSource.connect(this.audioContext.destination);
-
-    // Set up event handlers
-    this.currentSource.onended = () => {
-      this.isPlaying = false;
-      this.currentSource = null;
-      this.notifyStateChange();
-    };
-
-    // Start playback
-    const when = this.audioContext.currentTime;
-    const offset = startOffset;
-    const playDuration = duration || (this.currentBuffer.duration - startOffset);
-
-    this.currentSource.start(when, offset, playDuration);
-    this.startTime = when - startOffset;
-    this.isPlaying = true;
-    this.notifyStateChange();
-
-    // Resume audio context if needed
     if (this.audioContext.state === 'suspended') {
       await this.audioContext.resume();
     }
-  }
 
-  /**
-   * Pause current playback
-   */
-  async pause(): Promise<void> {
-    if (!this.isPlaying || !this.currentSource || !this.audioContext) {
-      return;
-    }
-
-    this.pauseTime = this.audioContext.currentTime - this.startTime;
-    this.currentSource.stop();
-    this.currentSource.disconnect();
-    this.currentSource = null;
-    this.isPlaying = false;
+    // Create buffer source
+    this.currentSource = this.audioContext.createBufferSource();
+    this.currentSource.buffer = this.currentBuffer;
+    
+    // Connect to destination
+    this.currentSource.connect(this.audioContext.destination);
+    
+    // Handle playback end
+    this.currentSource.onended = () => {
+      this.isPlaying = false;
+      this.pauseTime = 0;
+      this.notifyStateChange();
+    };
+    
+    // Start playbook
+    const when = 0;
+    const offset = startTime || 0;
+    const playDuration = duration || (this.currentBuffer.duration - offset);
+    
+    this.currentSource.start(when, offset, playDuration);
+    this.startTime = this.audioContext.currentTime - offset;
+    this.pauseTime = 0;
+    this.isPlaying = true;
+    
     this.notifyStateChange();
   }
 
   /**
-   * Resume paused playback
+   * Stop audio playbook
    */
-  async resume(): Promise<void> {
-    if (this.isPlaying || !this.currentBuffer) {
-      return;
-    }
-
-    await this.play(this.pauseTime);
-  }
-
-  /**
-   * Stop playback
-   */
-  async stop(): Promise<void> {
+  async stop() {
     if (this.currentSource) {
-      this.currentSource.stop();
-      this.currentSource.disconnect();
+      try {
+        this.currentSource.stop();
+      } catch {
+        // Ignore errors if already stopped
+      }
       this.currentSource = null;
     }
 
+    this.currentBuffer = null;
     this.isPlaying = false;
-    this.startTime = 0;
     this.pauseTime = 0;
     this.currentSegmentId = null;
+    
     this.notifyStateChange();
   }
 
   /**
-   * Set playback volume
+   * Pause audio playbook
    */
-  async setVolume(volume: number): Promise<void> {
-    if (!this.audioContext) return;
+  async pause() {
+    if (!this.isPlaying || !this.currentSource || !this.audioContext) return;
 
-    // Create gain node for volume control
-    const gainNode = this.audioContext.createGain();
-    gainNode.gain.value = Math.max(0, Math.min(1, volume));
+    this.pauseTime = this.audioContext.currentTime - this.startTime;
+    this.currentSource.stop();
+    this.currentSource = null;
+    this.isPlaying = false;
     
-    // This would need to be integrated into the audio graph
-    // For now, we'll store the volume preference
-    localStorage.setItem('audioPreviewVolume', volume.toString());
+    this.notifyStateChange();
   }
 
   /**
-   * Get current playback state
+   * Resume audio playbook
+   */
+  async resume() {
+    if (this.isPlaying || !this.currentBuffer || !this.audioContext) return;
+
+    // Resume from paused position
+    await this.startPlayback(this.pauseTime);
+  }
+
+  /**
+   * Get current playbook state
    */
   getPlaybackState(): PlaybackState {
     return {
@@ -302,23 +309,9 @@ export class AudioPreviewService {
   }
 
   /**
-   * Check if audio preview is available
+   * Cleanup resources
    */
-  async isAvailable(): Promise<boolean> {
-    try {
-      if (!this.audioContext) {
-        await this.initializeAudioContext();
-      }
-      return this.audioContext !== null;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Clean up resources
-   */
-  dispose(): void {
+  dispose() {
     this.stop();
     
     if (this.audioContext) {
@@ -330,5 +323,5 @@ export class AudioPreviewService {
   }
 }
 
-// Global preview service instance
+// Create singleton instance
 export const audioPreviewService = new AudioPreviewService();

@@ -1080,6 +1080,37 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
     }
   });
 
+  // TTS segment audio generation
+  ipcMain.handle("tts:saveSegmentAudio", async (_e, { audioUrl, segmentId, targetPath }) => {
+    try {
+      console.log(`💾 Saving TTS audio for segment ${segmentId} to: ${targetPath}`);
+      
+      // Convert blob URL to buffer (similar to how we handle audio cache)
+      // The audioUrl is a blob URL from the frontend
+      const response = await fetch(audioUrl);
+      const audioBlob = await response.blob();
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      
+      // Ensure the directory exists
+      const fullPath = path.resolve(targetPath);
+      await fsp.mkdir(path.dirname(fullPath), { recursive: true });
+      
+      // Save the audio file
+      await fsp.writeFile(fullPath, buffer);
+      
+      console.log(`✅ Successfully saved TTS audio for segment ${segmentId}`);
+      
+      return { success: true };
+    } catch (error) {
+      console.error(`❌ Failed to save TTS audio for segment ${segmentId}:`, error);
+      return { 
+        success: false, 
+        error: `Failed to save TTS audio: ${error.message}` 
+      };
+    }
+  });
+
 
   /* Plan build (scoped to project root) */
   ipcMain.handle("plan:build", async (_e, payload = {}) => {
