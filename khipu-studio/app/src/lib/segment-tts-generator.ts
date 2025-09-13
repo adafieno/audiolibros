@@ -13,6 +13,7 @@ export interface SegmentTTSOptions {
   segment: Segment;
   character: Character;
   projectConfig: ProjectConfig;
+  chapterId: string; // Need chapter ID for proper file path
 }
 
 export interface SegmentTTSResult {
@@ -25,7 +26,7 @@ export interface SegmentTTSResult {
  * Generate TTS audio for a segment and save it to the filesystem cache
  */
 export async function generateSegmentAudio(options: SegmentTTSOptions): Promise<SegmentTTSResult> {
-  const { segment, character, projectConfig } = options;
+  const { segment, character, projectConfig, chapterId } = options;
 
   // Check if TTS credentials are configured
   if (!projectConfig.creds?.tts?.azure?.key || !projectConfig.creds?.tts?.azure?.region) {
@@ -116,7 +117,8 @@ export async function generateSegmentAudio(options: SegmentTTSOptions): Promise<
     }
 
     // Save the generated audio to the filesystem cache
-    const targetPath = `audio/segments/${segment.segment_id}.wav`;
+    // Use the same path structure as audio production service expects
+    const targetPath = `audio/${chapterId}/${segment.segment_id}.wav`;
     
     try {
       console.log(`💾 Saving generated audio to: ${targetPath}`);

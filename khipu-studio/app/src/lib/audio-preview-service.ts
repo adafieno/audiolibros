@@ -17,6 +17,7 @@ export interface PreviewOptions {
   segment?: Segment;
   character?: Character;
   projectConfig?: ProjectConfig;
+  chapterId?: string;
 }
 
 export interface PlaybackState {
@@ -165,11 +166,12 @@ export class AudioPreviewService {
         console.log(`🎤 Base audio not found for segment ${options.segmentId}, generating TTS...`);
         
         // Try to generate TTS audio on-demand if we have the necessary data
-        if (options.segment && options.character && options.projectConfig) {
+        if (options.segment && options.character && options.projectConfig && options.chapterId) {
           const ttsResult = await generateSegmentAudio({
             segment: options.segment,
             character: options.character,
-            projectConfig: options.projectConfig
+            projectConfig: options.projectConfig,
+            chapterId: options.chapterId
           });
 
           if (!ttsResult.success) {

@@ -438,7 +438,8 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         await audioPreview.preview(segment.chunkId, processingChain, undefined, undefined, {
           segment: segmentForTTS,
           character: characterData as Character,
-          projectConfig: projectConfig as ProjectConfig
+          projectConfig: projectConfig as ProjectConfig,
+          chapterId: selectedChapter || 'default'
         });
       }
     } catch (error) {
