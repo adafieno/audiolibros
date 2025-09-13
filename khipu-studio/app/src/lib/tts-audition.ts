@@ -198,15 +198,27 @@ function preflightSsml(ssmlXml: string, maxChars: number = 5000): string {
 async function getAzureToken(region: string, key: string, timeout: number = 10000): Promise<string> {
   const now = Date.now();
   
+  console.log('🔍 Debug - Azure Token Request:', {
+    region,
+    hasKey: !!key,
+    keyLength: key?.length,
+    hasCachedToken: !!azureTokenCache.token,
+    cacheRegion: azureTokenCache.region,
+    cacheExpired: now >= azureTokenCache.expiresAt
+  });
+  
   // Check if we have a valid cached token for this region
   if (azureTokenCache.token && 
       azureTokenCache.region === region && 
       now < azureTokenCache.expiresAt) {
+    console.log('✅ Using cached Azure token');
     return azureTokenCache.token;
   }
   
   // Fetch new token
   const tokenUrl = `https://${region}.api.cognitive.microsoft.com/sts/v1.0/issueToken`;
+  
+  console.log('🔄 Fetching new Azure token from:', tokenUrl);
   
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
@@ -223,11 +235,25 @@ async function getAzureToken(region: string, key: string, timeout: number = 1000
     
     clearTimeout(timeoutId);
     
+    console.log('🔍 Debug - Azure Token Response:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
+    });
+    
     if (!response.ok) {
-      throw new Error(`Failed to get Azure token: ${response.status} ${response.statusText}`);
+      const errorText = await response.text().catch(() => '');
+      console.error('❌ Azure token request failed:', { 
+        status: response.status, 
+        statusText: response.statusText,
+        error: errorText 
+      });
+      throw new Error(`Failed to get Azure token: ${response.status} ${response.statusText}${errorText ? ` - ${errorText}` : ''}`);
     }
     
     const token = await response.text();
+    
+    console.log('✅ Azure token obtained successfully, length:', token.trim().length);
     
     // Cache token with 9-minute expiration (following Python implementation)
     azureTokenCache.token = token.trim();
@@ -365,10 +391,17 @@ async function auditAzureVoice(voice: Voice, config: ProjectConfig, text: string
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
       
+      const url = `https://${credentials.region}.tts.speech.microsoft.com/cognitiveservices/v1`;
+      console.log(`🔍 Debug - Azure TTS Request (attempt ${attempt + 1}):`, {
+        url,
+        hasToken: !!token,
+        tokenLength: token?.length,
+        region: credentials.region,
+        textLength: text.length
+      });
+      
       try {
-        const response = await fetch(
-          `https://${credentials.region}.tts.speech.microsoft.com/cognitiveservices/v1`,
-          {
+        const response = await fetch(url, {
             method: "POST",
             headers: {
               "Authorization": `Bearer ${token}`,

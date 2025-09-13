@@ -27,6 +27,23 @@ export interface SegmentTTSResult {
 export async function generateSegmentAudio(options: SegmentTTSOptions): Promise<SegmentTTSResult> {
   const { segment, character, projectConfig } = options;
 
+  // Debug: Log the project config structure
+  console.log('🔍 Debug - Project config structure:', {
+    hasCredsSection: !!projectConfig.creds,
+    hasTTSSection: !!projectConfig.creds?.tts,
+    hasAzureSection: !!projectConfig.creds?.tts?.azure,
+    azureKey: projectConfig.creds?.tts?.azure?.key ? `${projectConfig.creds.tts.azure.key.substring(0, 10)}...` : 'MISSING',
+    azureRegion: projectConfig.creds?.tts?.azure?.region || 'MISSING'
+  });
+
+  // Check if TTS credentials are configured
+  if (!projectConfig.creds?.tts?.azure?.key || !projectConfig.creds?.tts?.azure?.region) {
+    return {
+      success: false,
+      error: `TTS generation requires Azure credentials. Please configure your Azure TTS key and region in Project Settings.`
+    };
+  }
+
   if (!character?.voiceAssignment) {
     return {
       success: false,
@@ -81,10 +98,30 @@ export async function generateSegmentAudio(options: SegmentTTSOptions): Promise<
     });
 
     if (!auditionResult.success || !auditionResult.audioUrl) {
-      return {
-        success: false,
-        error: `TTS generation failed: ${auditionResult.error || 'Unknown error'}`
-      };
+      const errorMessage = auditionResult.error || 'Unknown error';
+      
+      // Provide more helpful error messages for common issues
+      if (errorMessage.includes('credentials not configured')) {
+        return {
+          success: false,
+          error: `Azure TTS credentials not configured. Please add your Azure key and region in Project Settings.`
+        };
+      } else if (errorMessage.includes('Network error') || errorMessage.includes('fetch')) {
+        return {
+          success: false,
+          error: `Network error connecting to Azure TTS. Please check your internet connection and Azure credentials.`
+        };
+      } else if (errorMessage.includes('Rate limited')) {
+        return {
+          success: false,
+          error: `Azure TTS rate limit exceeded. Please wait a moment and try again.`
+        };
+      } else {
+        return {
+          success: false,
+          error: `TTS generation failed: ${errorMessage}`
+        };
+      }
     }
 
     // Save the generated audio to the filesystem cache
