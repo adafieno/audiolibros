@@ -38,6 +38,13 @@ export interface UseAudioPreviewResult {
       projectConfig?: ProjectConfig;
     }
   ) => Promise<void>;
+  playAllAsPlaylist: (segments: Array<{
+    segmentId: string;
+    processingChain: AudioProcessingChain;
+    segment: Segment;
+    character: Character;
+    projectConfig: ProjectConfig;
+  }>) => Promise<void>;
   play: () => Promise<void>;
   pause: () => Promise<void>;
   stop: () => Promise<void>;
@@ -74,12 +81,24 @@ export function useAudioPreview(): UseAudioPreviewResult {
 
   // Subscribe to playback state changes
   useEffect(() => {
+    console.log('🎧 [AudioHook] Setting up playback state change subscription');
+    
     const unsubscribe = audioPreviewService.onPlaybackStateChange((state: PlaybackState) => {
+      console.log('🎧 [AudioHook] Received playback state change:', {
+        isPlaying: state.isPlaying,
+        currentTime: state.currentTime,
+        duration: state.duration,
+        segmentId: state.segmentId
+      });
+      console.log('🎧 [AudioHook] Applying state update to React state...');
       setPlaybackState(state);
+      console.log('🎧 [AudioHook] React state updated with isPlaying:', state.isPlaying);
     });
 
     // Get initial state
-    setPlaybackState(audioPreviewService.getPlaybackState());
+    const initialState = audioPreviewService.getPlaybackState();
+    console.log('🎧 [AudioHook] Setting initial playback state:', initialState);
+    setPlaybackState(initialState);
 
     return unsubscribe;
   }, []);
@@ -211,7 +230,31 @@ export function useAudioPreview(): UseAudioPreviewResult {
     }
   }, [isAvailable]);
 
-  return {
+  // Play All as Playlist implementation
+  const playAllAsPlaylist = useCallback(async (segments: Array<{
+    segmentId: string;
+    processingChain: AudioProcessingChain;
+    segment: Segment;
+    character: Character;
+    projectConfig: ProjectConfig;
+  }>) => {
+    if (!isAvailable || segments.length === 0) return;
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      await audioPreviewService.playAllAsPlaylist(segments);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Play All playlist failed';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isAvailable]);
+
+  // Return hook interface
+  const result = {
     // Playback state
     playbackState,
     isPlaying: playbackState.isPlaying,
@@ -221,6 +264,7 @@ export function useAudioPreview(): UseAudioPreviewResult {
     // Controls
     preview,
     previewWithExaggeratedEffects,
+    playAllAsPlaylist,
     play,
     pause,
     stop,
@@ -230,4 +274,15 @@ export function useAudioPreview(): UseAudioPreviewResult {
     error,
     isAvailable
   };
+
+  // Debug: Log what the hook is actually returning every time the component re-renders
+  console.log('🎧 [AudioHook] HOOK RETURN VALUES:', {
+    isPlaying: result.isPlaying,
+    playbackStateIsPlaying: playbackState.isPlaying,
+    duration: result.duration,
+    segmentId: playbackState.segmentId,
+    timestamp: Date.now()
+  });
+
+  return result;
 }

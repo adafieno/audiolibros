@@ -888,6 +888,133 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               fontWeight: 500,
               backgroundColor: audioSegments.length > 0 ? "var(--accent)" : "var(--muted)",
               color: "white",
+              border: "1px solid transparent",
+              borderRadius: "4px",
+              cursor: audioSegments.length > 0 ? "pointer" : "not-allowed",
+              marginLeft: "12px"
+            }}
+          >
+            🎵 Play All (Original - Complex)
+          </button>
+
+          <button
+            onClick={async () => {
+              // PROVEN: New playlist approach for ALL segments
+              if (audioSegments.length === 0) {
+                setMessage("No segments available to play");
+                return;
+              }
+
+              if (!root) {
+                setMessage("Project not loaded");
+                return;
+              }
+
+              const startIndex = selectedRowIndex >= 0 ? selectedRowIndex : 0;
+              
+              try {
+                console.log(`🎬 [Playlist] Starting ALL segments from ${startIndex}`);
+                setMessage(`🎵 Preparing playlist of ${audioSegments.length - startIndex} segments...`);
+                
+                // Load shared data once
+                const [projectConfig, charactersData] = await Promise.all([
+                  window.khipu!.call("fs:read", {
+                    projectRoot: root,
+                    relPath: "project.khipu.json",
+                    json: true,
+                  }).catch(() => null),
+                  
+                  window.khipu!.call("fs:read", {
+                    projectRoot: root,
+                    relPath: "dossier/characters.json",
+                    json: true,
+                  }).catch(() => null),
+                ]);
+
+                if (!projectConfig || !charactersData) {
+                  throw new Error("Could not load project data");
+                }
+
+                // Prepare ALL segments from startIndex with detailed debugging
+                const segmentsToPlay = audioSegments.slice(startIndex);
+                const playlistSegments = [];
+                
+                console.log(`🔍 [Playlist Debug] Total segments to process: ${segmentsToPlay.length}`);
+                console.log(`🔍 [Playlist Debug] Available characters:`, charactersData);
+
+                for (let i = 0; i < segmentsToPlay.length; i++) {
+                  const segment = segmentsToPlay[i];
+                  
+                  console.log(`🎵 [Playlist] Processing segment ${i + 1}/${segmentsToPlay.length}:`, {
+                    chunkId: segment.chunkId,
+                    voice: segment.voice,
+                    text: segment.text?.substring(0, 50) + "...",
+                  });
+                  
+                  // Find character data
+                  const characters = Array.isArray(charactersData) ? charactersData : (charactersData as { characters?: unknown[] })?.characters;
+                  const characterData = characters?.find((char: unknown) => {
+                    const character = char as { name?: string; id?: string };
+                    return character.name === segment.voice || character.id === segment.voice;
+                  });
+
+                  if (!characterData) {
+                    console.warn(`⚠️ [Playlist] Segment ${i + 1}: No character found for "${segment.voice}"`);
+                    console.log(`🔍 [Playlist] Available character names:`, characters?.map((c: unknown) => (c as { name?: string; id?: string }).name || (c as { name?: string; id?: string }).id));
+                    continue;
+                  }
+
+                  const character = characterData as Character;
+                  if (!character.voiceAssignment) {
+                    console.warn(`⚠️ [Playlist] Segment ${i + 1}: Character "${character.name}" has no voice assignment`);
+                    continue;
+                  }
+
+                  console.log(`✅ [Playlist] Segment ${i + 1}: Valid - Character: ${character.name}, Voice: ${character.voiceAssignment.voiceId}`);
+
+                  const processingChain = segment.processingChain || createDefaultProcessingChain();
+
+                  playlistSegments.push({
+                    segmentId: `segment_${segment.chunkId}`,
+                    processingChain,
+                    segment: {
+                      segment_id: parseInt(segment.chunkId || "0"),
+                      start_idx: 0,
+                      end_idx: segment.text?.length || 0,
+                      delimiter: "",
+                      text: segment.text || "",
+                      voice: segment.voice || ""
+                    },
+                    character,
+                    projectConfig: projectConfig as ProjectConfig
+                  });
+                }
+
+                console.log(`🎯 [Playlist] Summary: Processed ${segmentsToPlay.length} total segments, ${playlistSegments.length} valid segments for playlist`);
+
+                if (playlistSegments.length === 0) {
+                  throw new Error("No valid segments found");
+                }
+
+                console.log(`🎉 Playing ALL ${playlistSegments.length} segments as continuous playlist`);
+                setMessage(`🚀 Playing continuous playlist of ${playlistSegments.length} segments...`);
+
+                await audioPreview.playAllAsPlaylist(playlistSegments);
+                
+                setMessage(`✅ Playlist playback started successfully!`);
+                
+              } catch (error) {
+                console.error("🚫 Playlist failed:", error);
+                setMessage(`❌ Playlist failed: ${error instanceof Error ? error.message : String(error)}`);
+              }
+            }}
+            disabled={audioSegments.length === 0 || audioPreview.isLoading}
+            style={{
+              padding: "10px 16px",
+              fontSize: "13px",
+              fontWeight: 500,
+              backgroundColor: audioSegments.length > 0 ? "var(--success)" : "var(--muted)",
+              color: "white",
               border: "none",
               borderRadius: "4px",
               cursor: (audioSegments.length > 0 && !audioPreview.isLoading) ? "pointer" : "not-allowed",
