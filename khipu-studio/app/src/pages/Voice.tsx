@@ -195,6 +195,12 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         const segmentStatus = completionStatus.segmentStatuses.find(s => s.chunkId === chunk.id);
         const audioPath = `audio/${chapterId}/${chunk.id}.wav`;
         
+        console.log(`🔍 Loading chunk ${index}:`, { 
+          chunkId: chunk.id, 
+          chunkIdType: typeof chunk.id,
+          text: chunk.text?.substring(0, 50) + '...'
+        });
+        
         return {
           rowKey: `${chapterId}_${chunk.id}_${index}`,
           chunkId: chunk.id,
@@ -399,10 +405,21 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           voiceAssignment: (characterData as { voiceAssignment?: unknown })?.voiceAssignment
         });
 
+        // Create proper Segment structure for TTS generation
+        const segmentForTTS: Segment = {
+          segment_id: typeof segment.chunkId === 'string' ? parseInt(segment.chunkId) : segment.chunkId,
+          start_idx: segment.start_char || 0,
+          end_idx: segment.end_char || 0,
+          delimiter: "",
+          text: segment.text,
+          originalText: segment.text,
+          voice: segment.voice
+        };
+
         // Start playing this segment with current processing chain
         // Preview system will generate audio on-demand if needed
         await audioPreview.preview(segment.chunkId, processingChain, undefined, undefined, {
-          segment: segmentData as Segment,
+          segment: segmentForTTS,
           character: characterData as Character,
           projectConfig: projectConfig as ProjectConfig
         });
@@ -754,7 +771,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                         {selectedRowIndex === index ? "▶" : ""}
                       </td>
                       <td style={{ padding: "8px", color: "inherit" }}>
-                        {segment.chunkId}
+                        {segment.chunkId || '(missing)'}
                       </td>
                       <td style={{ padding: "8px", color: "inherit", maxWidth: "250px" }}>
                         <div style={{ 
