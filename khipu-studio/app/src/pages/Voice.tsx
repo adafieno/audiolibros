@@ -534,147 +534,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     }
   }, [selectedRowIndex, audioSegments, audioPreview, currentProcessingChain, root, selectedChapter]);
 
-  const handlePlayAll = useCallback(async () => {
-    // Play all segments sequentially starting from selected segment
-    if (audioSegments.length === 0) {
-      setMessage("No segments available to play");
-      return;
-    }
-
-    if (!root) {
-      setMessage("Project not loaded");
-      return;
-    }
-
-    const startIndex = selectedRowIndex >= 0 ? selectedRowIndex : 0;
-    let userStopped = false;
-    
-    try {
-      console.log(`🎬 Starting Play All from segment ${startIndex}`);
-      setMessage(`Playing all segments starting from ${startIndex + 1}...`);
-      
-      // Load shared data once
-      const [projectConfig, charactersData, planData] = await Promise.all([
-        // Load project config
-        window.khipu!.call("fs:read", {
-          projectRoot: root,
-          relPath: "project.khipu.json",
-          json: true,
-        }).catch(() => null),
-        
-        // Load characters data
-        window.khipu!.call("fs:read", {
-          projectRoot: root,
-          relPath: "dossier/characters.json",
-          json: true,
-        }).catch(() => null),
-        
-        // Load plan data to get segment details
-        selectedChapter ? window.khipu!.call("fs:read", {
-          projectRoot: root,
-          relPath: `ssml/plans/${selectedChapter}.plan.json`,
-          json: true,
-        }).catch(() => null) : null
-      ]);
-      
-      // Play segments sequentially using a for loop with proper await
-      for (let i = startIndex; i < audioSegments.length && !userStopped; i++) {
-        console.log(`🎵 Playing segment ${i + 1}/${audioSegments.length}`);
-        
-        // Update selected row to show which segment is currently playing
-        setSelectedRowIndex(i);
-        
-        const segment = audioSegments[i];
-        
-        // Find the full segment data from plan (not used for TTS but kept for future enhancements)
-        if (planData) {
-          const chunks = Array.isArray(planData) ? planData : (planData as { chunks?: unknown[] })?.chunks;
-          chunks?.find((chunk: unknown) => (chunk as { id?: string }).id === segment.chunkId);
-        }
-
-        // Find character data
-        let characterData = null;
-        if (charactersData && segment.voice && segment.voice !== "unassigned") {
-          const characters = Array.isArray(charactersData) ? charactersData : (charactersData as { characters?: unknown[] })?.characters;
-          characterData = characters?.find((char: unknown) => {
-            const character = char as { name?: string; id?: string };
-            return character.name === segment.voice || character.id === segment.voice;
-          });
-        }
-
-        // Create proper Segment structure for TTS generation
-        const segmentForTTS: Segment = {
-          segment_id: typeof segment.chunkId === 'string' ? parseInt(segment.chunkId) : segment.chunkId,
-          start_idx: segment.start_char || 0,
-          end_idx: segment.end_char || 0,
-          delimiter: "",
-          text: segment.text,
-          originalText: segment.text,
-          voice: segment.voice
-        };
-
-        // Get processing chain for this specific segment
-        const segmentProcessingChain = segment.processingChain || createDefaultProcessingChain();
-        
-        // Start playing this segment
-        await audioPreview.preview(segment.chunkId, segmentProcessingChain, undefined, undefined, {
-          segment: segmentForTTS,
-          character: characterData as Character,
-          projectConfig: projectConfig as ProjectConfig
-        });
-        
-        // Wait for this segment to finish playing before starting the next
-        const segmentFinished = await new Promise<boolean>((resolve) => {
-          let wasPlaying = false;
-          
-          const checkPlayback = () => {
-            // First, detect when playback actually starts
-            if (audioPreview.isPlaying) {
-              wasPlaying = true;
-            }
-            
-            // If we were playing but now we're not, the segment finished naturally
-            if (wasPlaying && !audioPreview.isPlaying) {
-              resolve(true); // Segment finished naturally
-              return;
-            }
-            
-            // Keep checking
-            setTimeout(checkPlayback, 100);
-          };
-          
-          // Start checking immediately
-          checkPlayback();
-          
-          // Also set up a safety timeout (e.g., 60 seconds max per segment)
-          setTimeout(() => {
-            console.warn('⚠️ Segment playback timeout after 60 seconds');
-            resolve(false); // Timeout reached
-          }, 60000);
-        });
-        
-        if (!segmentFinished) {
-          console.log('🛑 Play All stopped (timeout or interruption)');
-          userStopped = true;
-          break;
-        }
-        
-        console.log(`✅ Finished segment ${i + 1}, moving to next`);
-      }
-      
-      if (!userStopped) {
-        console.log('🎉 Play All completed');
-        setMessage("Play All completed");
-      } else {
-        setMessage("Play All stopped");
-      }
-      
-    } catch (error) {
-      console.error("Play All failed:", error);
-      setMessage(`Play All failed: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }, [selectedRowIndex, audioSegments, audioPreview, root, selectedChapter]);
-
   const handleStopAudio = useCallback(async () => {
     try {
       await audioPreview.stop();
@@ -880,26 +739,8 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           </button>
 
           <button
-            onClick={handlePlayAll}
-            disabled={audioSegments.length === 0 || audioPreview.isLoading}
-            style={{
-              padding: "10px 16px",
-              fontSize: "13px",
-              fontWeight: 500,
-              backgroundColor: audioSegments.length > 0 ? "var(--accent)" : "var(--muted)",
-              color: "white",
-              border: "1px solid transparent",
-              borderRadius: "4px",
-              cursor: audioSegments.length > 0 ? "pointer" : "not-allowed",
-              marginLeft: "12px"
-            }}
-          >
-            🎵 Play All (Original - Complex)
-          </button>
-
-          <button
             onClick={async () => {
-              // PROVEN: New playlist approach for ALL segments
+              // Playlist approach - plays all segments continuously
               if (audioSegments.length === 0) {
                 setMessage("No segments available to play");
                 return;
@@ -913,7 +754,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               const startIndex = selectedRowIndex >= 0 ? selectedRowIndex : 0;
               
               try {
-                console.log(`🎬 [Playlist] Starting ALL segments from ${startIndex}`);
+                console.log(`🎬 Starting Play All from segment ${startIndex}`);
                 setMessage(`🎵 Preparing playlist of ${audioSegments.length - startIndex} segments...`);
                 
                 // Load shared data once
@@ -935,22 +776,11 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                   throw new Error("Could not load project data");
                 }
 
-                // Prepare ALL segments from startIndex with detailed debugging
+                // Prepare segments for playlist
                 const segmentsToPlay = audioSegments.slice(startIndex);
                 const playlistSegments = [];
-                
-                console.log(`🔍 [Playlist Debug] Total segments to process: ${segmentsToPlay.length}`);
-                console.log(`🔍 [Playlist Debug] Available characters:`, charactersData);
 
-                for (let i = 0; i < segmentsToPlay.length; i++) {
-                  const segment = segmentsToPlay[i];
-                  
-                  console.log(`🎵 [Playlist] Processing segment ${i + 1}/${segmentsToPlay.length}:`, {
-                    chunkId: segment.chunkId,
-                    voice: segment.voice,
-                    text: segment.text?.substring(0, 50) + "...",
-                  });
-                  
+                for (const segment of segmentsToPlay) {
                   // Find character data
                   const characters = Array.isArray(charactersData) ? charactersData : (charactersData as { characters?: unknown[] })?.characters;
                   const characterData = characters?.find((char: unknown) => {
@@ -959,18 +789,15 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                   });
 
                   if (!characterData) {
-                    console.warn(`⚠️ [Playlist] Segment ${i + 1}: No character found for "${segment.voice}"`);
-                    console.log(`🔍 [Playlist] Available character names:`, characters?.map((c: unknown) => (c as { name?: string; id?: string }).name || (c as { name?: string; id?: string }).id));
+                    console.warn(`⚠️ No character found for ${segment.voice}`);
                     continue;
                   }
 
                   const character = characterData as Character;
                   if (!character.voiceAssignment) {
-                    console.warn(`⚠️ [Playlist] Segment ${i + 1}: Character "${character.name}" has no voice assignment`);
+                    console.warn(`⚠️ No voice assignment for ${character.name}`);
                     continue;
                   }
-
-                  console.log(`✅ [Playlist] Segment ${i + 1}: Valid - Character: ${character.name}, Voice: ${character.voiceAssignment.voiceId}`);
 
                   const processingChain = segment.processingChain || createDefaultProcessingChain();
 
@@ -990,22 +817,20 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                   });
                 }
 
-                console.log(`🎯 [Playlist] Summary: Processed ${segmentsToPlay.length} total segments, ${playlistSegments.length} valid segments for playlist`);
-
                 if (playlistSegments.length === 0) {
                   throw new Error("No valid segments found");
                 }
 
-                console.log(`🎉 Playing ALL ${playlistSegments.length} segments as continuous playlist`);
+                console.log(`🎉 Playing ${playlistSegments.length} segments as continuous playlist`);
                 setMessage(`🚀 Playing continuous playlist of ${playlistSegments.length} segments...`);
 
                 await audioPreview.playAllAsPlaylist(playlistSegments);
                 
-                setMessage(`✅ Playlist playback started successfully!`);
+                setMessage(`✅ Play All started successfully!`);
                 
               } catch (error) {
-                console.error("🚫 Playlist failed:", error);
-                setMessage(`❌ Playlist failed: ${error instanceof Error ? error.message : String(error)}`);
+                console.error("🚫 Play All failed:", error);
+                setMessage(`❌ Play All failed: ${error instanceof Error ? error.message : String(error)}`);
               }
             }}
             disabled={audioSegments.length === 0 || audioPreview.isLoading}
@@ -1013,18 +838,15 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               padding: "10px 16px",
               fontSize: "13px",
               fontWeight: 500,
-              backgroundColor: audioSegments.length > 0 ? "var(--success)" : "var(--muted)",
+              backgroundColor: audioSegments.length > 0 ? "var(--accent)" : "var(--muted)",
               color: "white",
-              border: "none",
+              border: "1px solid transparent",
               borderRadius: "4px",
-              cursor: (audioSegments.length > 0 && !audioPreview.isLoading) ? "pointer" : "not-allowed",
-              opacity: (audioSegments.length > 0 && !audioPreview.isLoading) ? 1 : 0.5,
-              display: "flex",
-              alignItems: "center",
-              gap: "6px"
+              cursor: audioSegments.length > 0 ? "pointer" : "not-allowed",
+              marginLeft: "12px"
             }}
           >
-            🎬 Play All
+            🎵 Play All
           </button>
 
           <button
