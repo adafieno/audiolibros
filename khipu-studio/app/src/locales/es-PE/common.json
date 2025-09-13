@@ -2326,6 +2326,118 @@
     "string": "Mejora ligera para narración profesional",
     "comment": "Descripción para el preset de audio Pulido Limpio"
   },
+  "audioPresets.cleanIntimate.name": {
+    "string": "Íntimo Limpio",
+    "comment": "Nombre para el preset de audio Íntimo Limpio"
+  },
+  "audioPresets.cleanIntimate.description": {
+    "string": "Estilo cercano e íntimo para narrativa",
+    "comment": "Descripción para el preset de audio Íntimo Limpio"
+  },
+  "audioPresets.characterPhone.name": {
+    "string": "Teléfono/Radio",
+    "comment": "Nombre para el preset de audio de personaje Teléfono/Radio"
+  },
+  "audioPresets.characterPhone.description": {
+    "string": "Efecto de teléfono o radio vintage",
+    "comment": "Descripción para el preset de audio de personaje Teléfono/Radio"
+  },
+  "audioPresets.characterVintage.name": {
+    "string": "Radio Vintage",
+    "comment": "Nombre para el preset de audio de personaje Radio Vintage"
+  },
+  "audioPresets.characterVintage.description": {
+    "string": "Sonido clásico de transmisión radial de 1940",
+    "comment": "Descripción para el preset de audio de personaje Radio Vintage"
+  },
+  "audioPresets.characterElderly.name": {
+    "string": "Voz Anciana",
+    "comment": "Nombre para el preset de audio de personaje Voz Anciana"
+  },
+  "audioPresets.characterElderly.description": {
+    "string": "Personaje cálido y envejecido con procesamiento suave",
+    "comment": "Descripción para el preset de audio de personaje Voz Anciana"
+  },
+  "audioPresets.characterChild.name": {
+    "string": "Voz Infantil",
+    "comment": "Nombre para el preset de audio de personaje Voz Infantil"
+  },
+  "audioPresets.characterChild.description": {
+    "string": "Procesamiento brillante y juvenil para personajes",
+    "comment": "Descripción para el preset de audio de personaje Voz Infantil"
+  },
+  "audioPresets.characterMonster.name": {
+    "string": "Voz de Monstruo",
+    "comment": "Nombre para el preset de audio de personaje Voz de Monstruo"
+  },
+  "audioPresets.characterMonster.description": {
+    "string": "Efecto de personaje oscuro y amenazante",
+    "comment": "Descripción para el preset de audio de personaje Voz de Monstruo"
+  },
+  "audioPresets.broadcastRadio.name": {
+    "string": "Transmisión Radial",
+    "comment": "Nombre para el preset de audio Transmisión Radial"
+  },
+  "audioPresets.broadcastRadio.description": {
+    "string": "Procesamiento profesional de estación de radio",
+    "comment": "Descripción para el preset de audio Transmisión Radial"
+  },
+  "audioPresets.broadcastNews.name": {
+    "string": "Presentador de Noticias",
+    "comment": "Nombre para el preset de audio de transmisión Presentador de Noticias"
+  },
+  "audioPresets.broadcastNews.description": {
+    "string": "Presentación clara y autoritaria de noticias",
+    "comment": "Descripción para el preset de audio de transmisión Presentador de Noticias"
+  },
+  "audioPresets.broadcastPodcast.name": {
+    "string": "Podcast Pro",
+    "comment": "Nombre para el preset de audio de transmisión Podcast Pro"
+  },
+  "audioPresets.broadcastPodcast.description": {
+    "string": "Optimizado para distribución de podcast",
+    "comment": "Descripción para el preset de audio de transmisión Podcast Pro"
+  },
+  "audioPresets.broadcastSports.name": {
+    "string": "Comentarios Deportivos",
+    "comment": "Nombre para el preset de audio de transmisión Comentarios Deportivos"
+  },
+  "audioPresets.broadcastSports.description": {
+    "string": "Transmisión deportiva dinámica y enérgica",
+    "comment": "Descripción para el preset de audio de transmisión Comentarios Deportivos"
+  },
+  "audioPresets.vintageWarm.name": {
+    "string": "Vintage Cálido",
+    "comment": "Nombre para el preset de audio Vintage Cálido"
+  },
+  "audioPresets.vintageWarm.description": {
+    "string": "Procesamiento cálido de estilo analógico",
+    "comment": "Descripción para el preset de audio Vintage Cálido"
+  },
+  "audioPresets.vintageGoldenAge.name": {
+    "string": "Radio de la Época Dorada",
+    "comment": "Nombre para el preset de audio vintage Radio de la Época Dorada"
+  },
+  "audioPresets.vintageGoldenAge.description": {
+    "string": "Sonido clásico de radionovela de los 40s-50s",
+    "comment": "Descripción para el preset de audio vintage Radio de la Época Dorada"
+  },
+  "audioPresets.vintageTape.name": {
+    "string": "Cinta Vintage",
+    "comment": "Nombre para el preset de audio Cinta Vintage"
+  },
+  "audioPresets.vintageTape.description": {
+    "string": "Calidez y saturación de cinta analógica",
+    "comment": "Descripción para el preset de audio Cinta Vintage"
+  },
+  "audioPresets.vintageLoFi.name": {
+    "string": "Vintage Lo-Fi",
+    "comment": "Nombre para el preset de audio Vintage Lo-Fi"
+  },
+  "audioPresets.vintageLoFi.description": {
+    "string": "Sonido retro deliberadamente degradado",
+    "comment": "Descripción para el preset de audio Vintage Lo-Fi"
+  },
   "audioProduction.pageTitle": {
     "string": "Producción de Audio",
     "comment": "Título principal de la página de producción de audio"

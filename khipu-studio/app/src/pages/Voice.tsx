@@ -43,8 +43,10 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   
   // Helper function to get translated preset name and description
   const getTranslatedPreset = useCallback((preset: AudioPreset) => {
-    const nameKey = `audioPresets.${preset.id}.name`;
-    const descriptionKey = `audioPresets.${preset.id}.description`;
+    // Convert preset ID from underscore format to camelCase for translation keys
+    const camelCaseId = preset.id.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+    const nameKey = `audioPresets.${camelCaseId}.name`;
+    const descriptionKey = `audioPresets.${camelCaseId}.description`;
     
     // Try to get translation, fallback to original if not found
     const translatedName = t(nameKey, { defaultValue: preset.name });

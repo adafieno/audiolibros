@@ -1824,6 +1824,118 @@
     "string": "Light enhancement for professional narration",
     "comment": "Description for Clean Polished audio preset"
   },
+  "audioPresets.cleanIntimate.name": {
+    "string": "Clean Intimate",
+    "comment": "Name for Clean Intimate audio preset"
+  },
+  "audioPresets.cleanIntimate.description": {
+    "string": "Close, intimate storytelling style",
+    "comment": "Description for Clean Intimate audio preset"
+  },
+  "audioPresets.characterPhone.name": {
+    "string": "Phone/Radio",
+    "comment": "Name for Phone/Radio character audio preset"
+  },
+  "audioPresets.characterPhone.description": {
+    "string": "Telephone or vintage radio effect",
+    "comment": "Description for Phone/Radio character audio preset"
+  },
+  "audioPresets.characterVintage.name": {
+    "string": "Vintage Radio",
+    "comment": "Name for Vintage Radio character audio preset"
+  },
+  "audioPresets.characterVintage.description": {
+    "string": "Classic 1940s radio broadcast sound",
+    "comment": "Description for Vintage Radio character audio preset"
+  },
+  "audioPresets.characterElderly.name": {
+    "string": "Elderly Voice",
+    "comment": "Name for Elderly Voice character audio preset"
+  },
+  "audioPresets.characterElderly.description": {
+    "string": "Warm, aged character with gentle processing",
+    "comment": "Description for Elderly Voice character audio preset"
+  },
+  "audioPresets.characterChild.name": {
+    "string": "Child Voice",
+    "comment": "Name for Child Voice character audio preset"
+  },
+  "audioPresets.characterChild.description": {
+    "string": "Bright, youthful character processing",
+    "comment": "Description for Child Voice character audio preset"
+  },
+  "audioPresets.characterMonster.name": {
+    "string": "Monster Voice",
+    "comment": "Name for Monster Voice character audio preset"
+  },
+  "audioPresets.characterMonster.description": {
+    "string": "Dark, menacing character effect",
+    "comment": "Description for Monster Voice character audio preset"
+  },
+  "audioPresets.broadcastRadio.name": {
+    "string": "Radio Broadcast",
+    "comment": "Name for Radio Broadcast audio preset"
+  },
+  "audioPresets.broadcastRadio.description": {
+    "string": "Professional radio station processing",
+    "comment": "Description for Radio Broadcast audio preset"
+  },
+  "audioPresets.broadcastNews.name": {
+    "string": "News Anchor",
+    "comment": "Name for News Anchor broadcast audio preset"
+  },
+  "audioPresets.broadcastNews.description": {
+    "string": "Crisp, authoritative news presentation",
+    "comment": "Description for News Anchor broadcast audio preset"
+  },
+  "audioPresets.broadcastPodcast.name": {
+    "string": "Podcast Pro",
+    "comment": "Name for Podcast Pro broadcast audio preset"
+  },
+  "audioPresets.broadcastPodcast.description": {
+    "string": "Optimized for podcast distribution",
+    "comment": "Description for Podcast Pro broadcast audio preset"
+  },
+  "audioPresets.broadcastSports.name": {
+    "string": "Sports Commentary",
+    "comment": "Name for Sports Commentary broadcast audio preset"
+  },
+  "audioPresets.broadcastSports.description": {
+    "string": "Dynamic, energetic sports broadcasting",
+    "comment": "Description for Sports Commentary broadcast audio preset"
+  },
+  "audioPresets.vintageWarm.name": {
+    "string": "Warm Vintage",
+    "comment": "Name for Warm Vintage audio preset"
+  },
+  "audioPresets.vintageWarm.description": {
+    "string": "Warm, analog-style processing",
+    "comment": "Description for Warm Vintage audio preset"
+  },
+  "audioPresets.vintageGoldenAge.name": {
+    "string": "Golden Age Radio",
+    "comment": "Name for Golden Age Radio vintage audio preset"
+  },
+  "audioPresets.vintageGoldenAge.description": {
+    "string": "Classic 1940s-50s radio drama sound",
+    "comment": "Description for Golden Age Radio vintage audio preset"
+  },
+  "audioPresets.vintageTape.name": {
+    "string": "Vintage Tape",
+    "comment": "Name for Vintage Tape audio preset"
+  },
+  "audioPresets.vintageTape.description": {
+    "string": "Analog tape warmth and saturation",
+    "comment": "Description for Vintage Tape audio preset"
+  },
+  "audioPresets.vintageLoFi.name": {
+    "string": "Lo-Fi Vintage",
+    "comment": "Name for Lo-Fi Vintage audio preset"
+  },
+  "audioPresets.vintageLoFi.description": {
+    "string": "Deliberately degraded retro sound",
+    "comment": "Description for Lo-Fi Vintage audio preset"
+  },
   "audioProduction.pageTitle": {
     "string": "Audio Production",
     "comment": "Main page title for the audio production page"
