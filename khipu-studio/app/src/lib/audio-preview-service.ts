@@ -137,7 +137,7 @@ export class AudioPreviewService {
    */
   async preview(options: PreviewOptions): Promise<void> {
     try {
-      // Stop any current playbook
+      // Stop any current playback
       await this.stop();
 
       if (!this.audioContext) {

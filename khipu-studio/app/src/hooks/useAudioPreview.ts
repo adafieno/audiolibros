@@ -2,7 +2,7 @@
 // React hook for managing audio preview state and controls
 
 import { useEffect, useState, useCallback } from 'react';
-import { audioPreviewService, type PreviewOptions, type PlaybackState } from '../lib/audio-preview-service';
+import { audioPreviewService, type PreviewOptions, type PlaybackState } from '../lib/audio-preview-service-simple';
 import type { AudioProcessingChain } from '../types/audio-production';
 import type { Segment } from '../types/plan';
 import type { Character } from '../types/character';
@@ -95,14 +95,19 @@ export function useAudioPreview(): UseAudioPreviewResult {
     setError(null);
 
     try {
+      if (!ttsData?.segment || !ttsData?.character || !ttsData?.projectConfig) {
+        setError('Missing required TTS data (segment, character, or project config)');
+        return;
+      }
+
       const options: PreviewOptions = {
         segmentId,
         processingChain,
         startTime,
         duration,
-        segment: ttsData?.segment,
-        character: ttsData?.character,
-        projectConfig: ttsData?.projectConfig
+        segment: ttsData.segment,
+        character: ttsData.character,
+        projectConfig: ttsData.projectConfig
       };
 
       await audioPreviewService.preview(options);
