@@ -4,7 +4,7 @@ const { spawn } = require("node:child_process");
 const path = require("path");
 const fs = require("node:fs");
 const fsp = fs.promises;
-const { FFmpegAudioProcessor } = require("./ffmpeg-audio-processor.js");
+const { FFmpegAudioProcessor } = require("./ffmpeg-audio-processor.cjs");
 
 app.disableHardwareAcceleration();
 
