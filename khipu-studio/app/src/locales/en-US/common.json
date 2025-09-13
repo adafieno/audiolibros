@@ -1506,6 +1506,22 @@
     "string": "Stop",
     "comment": "Button text to stop audio playback"
   },
+  "audioProduction.previous": {
+    "string": "Previous",
+    "comment": "Button text to navigate to previous segment"
+  },
+  "audioProduction.next": {
+    "string": "Next",
+    "comment": "Button text to navigate to next segment"
+  },
+  "audioProduction.previousSegment": {
+    "string": "Previous segment",
+    "comment": "Tooltip for previous navigation button"
+  },
+  "audioProduction.nextSegment": {
+    "string": "Next segment",
+    "comment": "Tooltip for next navigation button"
+  },
   "audioProduction.error": {
     "string": "Error",
     "comment": "Status indicator for audio error state"

@@ -342,6 +342,16 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
       setAudioSegments(segments);
       
+      // Ensure a segment is selected when segments are loaded
+      if (segments.length > 0) {
+        setSelectedRowIndex(prev => {
+          if (prev < 0 || prev >= segments.length) {
+            return 0;
+          }
+          return prev;
+        });
+      }
+      
       // Load saved processing chains for this chapter
       try {
         const savedProcessingChains = await audioProductionService.loadProcessingChains(chapterId);
@@ -422,7 +432,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   }, [loadPlanData]);
 
   const handleRowSelection = useCallback((index: number) => {
-    setSelectedRowIndex(prev => prev === index ? -1 : index); // Toggle selection, -1 means none selected
+    setSelectedRowIndex(index); // Always set selection - don't toggle
   }, []);
 
   const handleGenerateSegmentAudio = useCallback(async (rowIndex: number) => {
@@ -934,6 +944,66 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             }}
           >
             ⏹ {t("audioProduction.stop")}
+          </button>
+
+          {/* Separator */}
+          <div style={{ 
+            width: "1px", 
+            height: "24px", 
+            backgroundColor: "var(--border)" 
+          }}></div>
+
+          {/* Navigation Controls */}
+          <button
+            onClick={() => {
+              if (selectedRowIndex > 0) {
+                setSelectedRowIndex(selectedRowIndex - 1);
+              }
+            }}
+            disabled={audioSegments.length === 0 || selectedRowIndex <= 0}
+            style={{
+              padding: "10px 14px",
+              fontSize: "13px",
+              fontWeight: 500,
+              backgroundColor: (audioSegments.length > 0 && selectedRowIndex > 0) ? "var(--accent)" : "var(--muted)",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: (audioSegments.length > 0 && selectedRowIndex > 0) ? "pointer" : "not-allowed",
+              opacity: (audioSegments.length > 0 && selectedRowIndex > 0) ? 1 : 0.5,
+              display: "flex",
+              alignItems: "center",
+              gap: "6px"
+            }}
+            title={t("audioProduction.previousSegment")}
+          >
+            ◀ {t("audioProduction.previous")}
+          </button>
+
+          <button
+            onClick={() => {
+              if (selectedRowIndex < audioSegments.length - 1) {
+                setSelectedRowIndex(selectedRowIndex + 1);
+              }
+            }}
+            disabled={audioSegments.length === 0 || selectedRowIndex >= audioSegments.length - 1}
+            style={{
+              padding: "10px 14px",
+              fontSize: "13px",
+              fontWeight: 500,
+              backgroundColor: (audioSegments.length > 0 && selectedRowIndex < audioSegments.length - 1) ? "var(--accent)" : "var(--muted)",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: (audioSegments.length > 0 && selectedRowIndex < audioSegments.length - 1) ? "pointer" : "not-allowed",
+              opacity: (audioSegments.length > 0 && selectedRowIndex < audioSegments.length - 1) ? 1 : 0.5,
+              display: "flex",
+              alignItems: "center",
+              gap: "6px"
+            }}
+            title={t("audioProduction.nextSegment")}
+          >
+            {t("audioProduction.next")} ▶
           </button>
 
           {/* Status indicator - minimal */}

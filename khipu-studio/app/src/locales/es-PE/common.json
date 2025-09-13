@@ -1967,6 +1967,22 @@
     "string": "Detener",
     "comment": "Texto del botón para detener reproducción de audio"
   },
+  "audioProduction.previous": {
+    "string": "Anterior",
+    "comment": "Texto del botón para navegar al segmento anterior"
+  },
+  "audioProduction.next": {
+    "string": "Siguiente",
+    "comment": "Texto del botón para navegar al siguiente segmento"
+  },
+  "audioProduction.previousSegment": {
+    "string": "Segmento anterior",
+    "comment": "Tooltip para el botón de navegación anterior"
+  },
+  "audioProduction.nextSegment": {
+    "string": "Siguiente segmento",
+    "comment": "Tooltip para el botón de navegación siguiente"
+  },
   "audioProduction.error": {
     "string": "Error",
     "comment": "Indicador de estado para error de audio"
