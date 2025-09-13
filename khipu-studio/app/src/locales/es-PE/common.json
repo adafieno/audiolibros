@@ -272,7 +272,7 @@
     "comment": ""
   },
   "project.title": {
-    "string": "Configuración del Proyecto",
+    "string": "Configuración del proyecto",
     "comment": ""
   },
   "project.loading": {
@@ -372,7 +372,7 @@
     "comment": ""
   },
   "project.llmEndpoint": {
-    "string": "Endpoint (Local)",
+    "string": "Endpoint (local)",
     "comment": ""
   },
   "project.tts": {
@@ -436,27 +436,27 @@
     "comment": ""
   },
   "project.sentencePause": {
-    "string": "Pausa de Oración",
+    "string": "Pausa de oración",
     "comment": ""
   },
   "project.paragraphPause": {
-    "string": "Pausa de Párrafo",
+    "string": "Pausa de párrafo",
     "comment": ""
   },
   "project.chapterPause": {
-    "string": "Pausa de Capítulo",
+    "string": "Pausa de capítulo",
     "comment": ""
   },
   "project.commaPause": {
-    "string": "Pausa de Coma",
+    "string": "Pausa de coma",
     "comment": ""
   },
   "project.colonPause": {
-    "string": "Pausa de Dos Puntos",
+    "string": "Pausa de dos puntos",
     "comment": ""
   },
   "project.semicolonPause": {
-    "string": "Pausa de Punto y Coma",
+    "string": "Pausa de punto y coma",
     "comment": ""
   },
   "project.ttsCacheEnabled": {
@@ -504,7 +504,7 @@
     "comment": ""
   },
   "project.advancedCreds": {
-    "string": "Credenciales Avanzadas y Rutas",
+    "string": "Credenciales avanzadas y rutas",
     "comment": ""
   },
   "project.useAppAzure": {
@@ -532,11 +532,11 @@
     "comment": ""
   },
   "project.exportSampleRate": {
-    "string": "Frecuencia de Muestreo (Hz)",
+    "string": "Frecuencia de muestreo (Hz)",
     "comment": ""
   },
   "workflow.readyToStart": {
-    "string": "Flujo de trabajo: Listo para comenzar",
+    "string": "Flujo de trabajo: listo para comenzar",
     "comment": ""
   },
   "workflow.completed": {
@@ -572,15 +572,15 @@
     "comment": ""
   },
   "home.existingProjects": {
-    "string": "Proyectos Recientes",
+    "string": "Proyectos recientes",
     "comment": ""
   },
   "home.openExisting": {
-    "string": "Abrir Proyecto Existente",
+    "string": "Abrir proyecto existente",
     "comment": ""
   },
   "home.createNew": {
-    "string": "Crear Nuevo Proyecto",
+    "string": "Crear nuevo proyecto",
     "comment": ""
   },
   "home.baseFolder": {
@@ -692,7 +692,7 @@
     "comment": ""
   },
   "casting.title": {
-    "string": "Casting de Voces",
+    "string": "Casting de voces",
     "comment": ""
   },
   "casting.description": {
@@ -736,15 +736,15 @@
     "comment": ""
   },
   "casting.voicesTitle": {
-    "string": "Voces Disponibles",
+    "string": "Voces disponibles",
     "comment": ""
   },
   "casting.selectAll": {
-    "string": "Seleccionar Todo",
+    "string": "Seleccionar todo",
     "comment": ""
   },
   "casting.deselectAll": {
-    "string": "Deseleccionar Todo",
+    "string": "Deseleccionar todo",
     "comment": ""
   },
   "casting.noVoicesForEngine": {
@@ -756,7 +756,7 @@
     "comment": ""
   },
   "casting.save": {
-    "string": "Guardar Selección",
+    "string": "Guardar selección",
     "comment": ""
   },
   "casting.male": {
@@ -952,7 +952,7 @@
     "comment": ""
   },
   "book.publishingDate.label": {
-    "string": "Fecha de Publicación",
+    "string": "Fecha de publicación",
     "comment": ""
   },
   "book.isbn.label": {
@@ -980,19 +980,19 @@
     "comment": ""
   },
   "book.coverImage.label": {
-    "string": "Imagen de Portada",
+    "string": "Imagen de portada",
     "comment": ""
   },
   "book.coverImage.select": {
-    "string": "Seleccionar Imagen de Portada",
+    "string": "Seleccionar imagen de portada",
     "comment": ""
   },
   "book.coverImage.change": {
-    "string": "Cambiar Imagen",
+    "string": "Cambiar imagen",
     "comment": ""
   },
   "book.coverImage.remove": {
-    "string": "Eliminar Imagen",
+    "string": "Eliminar imagen",
     "comment": ""
   },
   "book.coverImage.requirements": {
@@ -1048,7 +1048,7 @@
     "comment": ""
   },
   "characters.complete": {
-    "string": "Completar Personajes",
+    "string": "Completar personajes",
     "comment": ""
   },
   "characters.completed": {
@@ -1148,11 +1148,11 @@
     "comment": ""
   },
   "characters.mainCharacter": {
-    "string": "Personaje Principal",
+    "string": "Personaje principal",
     "comment": ""
   },
   "characters.audition.button": {
-    "string": "Probar Voz",
+    "string": "Probar voz",
     "comment": ""
   },
   "characters.audition.loading": {
@@ -1176,7 +1176,7 @@
     "comment": ""
   },
   "characters.save": {
-    "string": "Guardar Personajes",
+    "string": "Guardar personajes",
     "comment": ""
   },
   "planning.segmentNotFound": {
@@ -1492,23 +1492,23 @@
     "comment": "Encabezado para la sección de empaquetado"
   },
   "project.outputDirectory": {
-    "string": "Directorio de Salida",
+    "string": "Directorio de salida",
     "comment": "Etiqueta para el campo de directorio de salida"
   },
   "project.targetPlatforms": {
-    "string": "Plataformas Objetivo",
+    "string": "Plataformas objetivo",
     "comment": "Etiqueta para la sección de plataformas objetivo"
   },
   "planning.generatePlanFor": {
-    "string": "Generar Plan para {{chapter}}",
+    "string": "Generar plan para {{chapter}}",
     "comment": "Texto del botón para generar plan para un capítulo específico"
   },
   "planning.assignCharacters": {
-    "string": "Asignar Personajes",
+    "string": "Asignar personajes",
     "comment": "Texto del botón para asignar personajes"
   },
   "planning.savePlan": {
-    "string": "Guardar Plan",
+    "string": "Guardar plan",
     "comment": "Texto del botón para guardar datos de planificación"
   },
   "planning.markChapterComplete": {
@@ -1532,7 +1532,7 @@
     "comment": "Opción para mostrar solo fragmentos desconocidos"
   },
   "planning.preview": {
-    "string": "Vista Previa",
+    "string": "Vista previa",
     "comment": "Encabezado para sección de vista previa"
   },
   "planning.edit": {
@@ -1572,7 +1572,7 @@
     "comment": "Encabezado de tabla para columna de personaje"
   },
   "characters.defaultStyle": {
-    "string": "Estilo Predeterminado",
+    "string": "Estilo predeterminado",
     "comment": "Etiqueta para estilo de voz predeterminado"
   },
   "characters.styleEmpathetic": {
@@ -1608,7 +1608,7 @@
     "comment": "Texto del botón para agregar personaje"
   },
   "characters.sortByFrequency": {
-    "string": "Ordenar por Frecuencia",
+    "string": "Ordenar por frecuencia",
     "comment": "Texto del botón para ordenar personajes por frecuencia"
   },
   "characters.assignVoices": {
@@ -1648,7 +1648,7 @@
     "comment": "Etiqueta para los rasgos de personalidad del personaje"
   },
   "characters.speakingStyle": {
-    "string": "Estilo de Habla",
+    "string": "Estilo de habla",
     "comment": "Etiqueta para el estilo de habla del personaje"
   },
   "home.byAuthors": {
@@ -1836,7 +1836,7 @@
     "comment": "Placeholder para el modelo Azure OpenAI"
   },
   "project.azureEndpointPlaceholder": {
-    "string": "URL del Endpoint",
+    "string": "URL del endpoint",
     "comment": "Placeholder para el endpoint de Azure"
   },
   "project.azureApiVersionPlaceholder": {
@@ -1992,7 +1992,7 @@
     "comment": "Instrucciones para completar la orquestación antes de la producción de audio"
   },
   "audioProduction.segments": {
-    "string": "Segmentos de Audio",
+    "string": "Segmentos de audio",
     "comment": "Encabezado para la tabla de segmentos de audio"
   },
   "audioProduction.tableHeaderId": {
@@ -2000,7 +2000,7 @@
     "comment": "Encabezado de tabla para la columna de ID de segmento"
   },
   "audioProduction.tableHeaderTextPreview": {
-    "string": "Vista Previa del Texto",
+    "string": "Vista previa del texto",
     "comment": "Encabezado de tabla para la columna de vista previa del texto"
   },
   "audioProduction.tableHeaderVoice": {
@@ -2012,11 +2012,11 @@
     "comment": "Etiqueta para la opción de configuración personalizada de procesamiento de audio"
   },
   "audioProduction.presetCleanNatural": {
-    "string": "Limpio y Natural",
+    "string": "Limpio y natural",
     "comment": "Categoría de configuraciones de audio para sonido limpio y natural"
   },
   "audioProduction.presetCharacterVoices": {
-    "string": "Voces de Personajes",
+    "string": "Voces de personajes",
     "comment": "Categoría de configuraciones de audio para voces de personajes"
   },
   "audioProduction.presetBroadcastQuality": {
@@ -2024,7 +2024,7 @@
     "comment": "Categoría de configuraciones de audio para calidad de transmisión"
   },
   "audioProduction.presetVintageSpecialty": {
-    "string": "Vintage y Especialidad",
+    "string": "Vintage y especialidad",
     "comment": "Categoría de configuraciones de audio para efectos vintage y especialidad"
   },
   "audioProduction.presetEnvironmental": {
@@ -2032,23 +2032,23 @@
     "comment": "Categoría de configuraciones de audio para efectos ambientales"
   },
   "audioProduction.presetSpecialEffects": {
-    "string": "Efectos Especiales",
+    "string": "Efectos especiales",
     "comment": "Categoría de configuraciones de audio para efectos especiales"
   },
   "audioProduction.processingStep1": {
-    "string": "1. Ruido y Limpieza",
+    "string": "1. Ruido y limpieza",
     "comment": "Encabezado del paso 1 de procesamiento de audio"
   },
   "audioProduction.processingStep2": {
-    "string": "2. Corrección de Voz",
+    "string": "2. Corrección de voz",
     "comment": "Encabezado del paso 2 de procesamiento de audio"
   },
   "audioProduction.processingStep3": {
-    "string": "3. Mejora de Audio",
+    "string": "3. Mejora de audio",
     "comment": "Encabezado del paso 3 de procesamiento de audio"
   },
   "audioProduction.processingStep4": {
-    "string": "4. Mejoras Espaciales / Estéticas",
+    "string": "4. Mejoras espaciales / estéticas",
     "comment": "Encabezado del paso 4 de procesamiento de audio"
   },
   "audioProduction.processingStep5": {
@@ -2136,15 +2136,15 @@
     "comment": "Etiqueta para el efecto de audio de reverberación sutil"
   },
   "audioProduction.lowMidCutDynamic": {
-    "string": "Corte Medios-Bajos ({{frequency}}Hz)",
+    "string": "Corte medios-bajos ({{frequency}}Hz)",
     "comment": "Etiqueta dinámica para corte de medios-bajos con parámetro de frecuencia"
   },
   "audioProduction.airLiftDynamic": {
-    "string": "Elevación Agudos ({{frequency}}kHz)",
+    "string": "Elevación agudos ({{frequency}}kHz)",
     "comment": "Etiqueta dinámica para elevación de agudos con parámetro de frecuencia"
   },
   "audioProduction.presenceBoostDynamic": {
-    "string": "Realce Presencia ({{frequency}}kHz)",
+    "string": "Realce presencia ({{frequency}}kHz)",
     "comment": "Etiqueta dinámica para realce de presencia con parámetro de frecuencia"
   },
   "audioProduction.hpFilterDynamic": {
@@ -2176,7 +2176,7 @@
     "comment": "Etiqueta dinámica para normalización con objetivo LUFS"
   },
   "audioProduction.peakLimit": {
-    "string": "Límite de Picos",
+    "string": "Límite de picos",
     "comment": "Etiqueta para efecto de limitación de picos"
   },
   "audioProduction.dither": {
@@ -2184,7 +2184,7 @@
     "comment": "Etiqueta para efecto de dithering"
   },
   "audioProduction.activeEffects": {
-    "string": "Efectos Activos:",
+    "string": "Efectos activos:",
     "comment": "Etiqueta para resumen de efectos de procesamiento de audio activos"
   },
   "audioProduction.activeEffectsNone": {
@@ -2252,11 +2252,11 @@
     "comment": "Etiqueta para limitación de picos con nivel máximo de dB"
   },
   "audioProduction.processingChainTitle": {
-    "string": "Cadena de Procesamiento de Audio",
+    "string": "Cadena de procesamiento de audio",
     "comment": "Título para la sección de cadena de procesamiento de audio"
   },
   "audioProduction.professionalVoicePresets": {
-    "string": "Configuraciones Profesionales de Voz",
+    "string": "Configuraciones profesionales de voz",
     "comment": "Título para la sección de configuraciones profesionales de voz"
   },
   "audioProduction.chapterLabel": {
@@ -2388,7 +2388,7 @@
     "comment": "Descripción para el preset de audio Cinta Vintage"
   },
   "audioPresets.vintageLoFi.name": {
-    "string": "Vintage lo-fi",
+    "string": "Vintage Lo-Fi",
     "comment": "Nombre para el preset de audio Vintage Lo-Fi"
   },
   "audioPresets.vintageLoFi.description": {
