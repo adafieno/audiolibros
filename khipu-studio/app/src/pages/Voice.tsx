@@ -10,6 +10,237 @@ import type { Segment } from "../types/plan";
 import type { Character } from "../types/character";
 import type { ProjectConfig } from "../types/config";
 
+// Audio Presets - Inline definitions for reliability
+interface AudioPreset {
+  id: string;
+  name: string;
+  description: string;
+  category: 'clean' | 'character' | 'broadcast' | 'vintage' | 'environmental' | 'effects';
+  processingChain: AudioProcessingChain;
+}
+
+const AUDIO_PRESETS: AudioPreset[] = [
+  // Clean & Natural Category
+  {
+    id: 'clean_natural',
+    name: 'Clean Natural',
+    description: 'Minimal processing for pristine natural voice',
+    category: 'clean',
+    processingChain: {
+      noiseCleanup: {
+        highPassFilter: { enabled: true, frequency: "80" },
+        deClickDeEss: { enabled: true, intensity: "light" }
+      },
+      dynamicControl: {
+        compression: { enabled: false, ratio: "2:1", threshold: -18 },
+        limiter: { enabled: false, ceiling: -3 }
+      },
+      eqShaping: {
+        lowMidCut: { enabled: false, frequency: "200", gain: -2 },
+        presenceBoost: { enabled: false, frequency: "3", gain: 1.5 },
+        airLift: { enabled: false, frequency: "10", gain: 1.0 }
+      },
+      spatialEnhancement: {
+        reverb: { enabled: false, type: "room_0.3", wetMix: 15 },
+        stereoEnhancer: { enabled: false, width: 1.2 }
+      },
+      mastering: {
+        normalization: { enabled: true, targetLUFS: "-18" },
+        peakLimiting: { enabled: true, maxPeak: -0.1 },
+        dithering: { enabled: false, bitDepth: "24" }
+      }
+    }
+  },
+  {
+    id: 'clean_polished',
+    name: 'Clean Polished',
+    description: 'Light enhancement for professional narration',
+    category: 'clean',
+    processingChain: {
+      noiseCleanup: {
+        highPassFilter: { enabled: true, frequency: "70" },
+        deClickDeEss: { enabled: true, intensity: "medium" }
+      },
+      dynamicControl: {
+        compression: { enabled: true, ratio: "2.5:1", threshold: -20 },
+        limiter: { enabled: true, ceiling: -1 }
+      },
+      eqShaping: {
+        lowMidCut: { enabled: true, frequency: "150", gain: -1 },
+        presenceBoost: { enabled: true, frequency: "3", gain: 2.0 },
+        airLift: { enabled: true, frequency: "10", gain: 0.5 }
+      },
+      spatialEnhancement: {
+        reverb: { enabled: false, type: "room_0.3", wetMix: 10 },
+        stereoEnhancer: { enabled: false, width: 1.1 }
+      },
+      mastering: {
+        normalization: { enabled: true, targetLUFS: "-20" },
+        peakLimiting: { enabled: true, maxPeak: -0.3 },
+        dithering: { enabled: true, bitDepth: "24" }
+      }
+    }
+  },
+  {
+    id: 'character_phone',
+    name: 'Phone/Radio',
+    description: 'Telephone or vintage radio effect',
+    category: 'character',
+    processingChain: {
+      noiseCleanup: {
+        highPassFilter: { enabled: true, frequency: "90" },
+        deClickDeEss: { enabled: true, intensity: "medium" }
+      },
+      dynamicControl: {
+        compression: { enabled: true, ratio: "3:1", threshold: -18 },
+        limiter: { enabled: true, ceiling: -1 }
+      },
+      eqShaping: {
+        lowMidCut: { enabled: true, frequency: "300", gain: -6 },
+        presenceBoost: { enabled: true, frequency: "2", gain: 1.0 },
+        airLift: { enabled: false, frequency: "10", gain: 0 }
+      },
+      spatialEnhancement: {
+        reverb: { enabled: false, type: "room_0.3", wetMix: 0 },
+        stereoEnhancer: { enabled: false, width: 1.0 }
+      },
+      mastering: {
+        normalization: { enabled: true, targetLUFS: "-18" },
+        peakLimiting: { enabled: true, maxPeak: -1.0 },
+        dithering: { enabled: false, bitDepth: "16" }
+      }
+    }
+  },
+  {
+    id: 'broadcast_radio',
+    name: 'Radio Broadcast',
+    description: 'Professional radio station processing',
+    category: 'broadcast',
+    processingChain: {
+      noiseCleanup: {
+        highPassFilter: { enabled: true, frequency: "80" },
+        deClickDeEss: { enabled: true, intensity: "heavy" }
+      },
+      dynamicControl: {
+        compression: { enabled: true, ratio: "3:1", threshold: -18 },
+        limiter: { enabled: true, ceiling: -1 }
+      },
+      eqShaping: {
+        lowMidCut: { enabled: true, frequency: "150", gain: -1 },
+        presenceBoost: { enabled: true, frequency: "5", gain: 3.0 },
+        airLift: { enabled: true, frequency: "12", gain: 2.0 }
+      },
+      spatialEnhancement: {
+        reverb: { enabled: false, type: "room_0.3", wetMix: 5 },
+        stereoEnhancer: { enabled: true, width: 1.3 }
+      },
+      mastering: {
+        normalization: { enabled: true, targetLUFS: "-18" },
+        peakLimiting: { enabled: true, maxPeak: -0.1 },
+        dithering: { enabled: true, bitDepth: "24" }
+      }
+    }
+  },
+  {
+    id: 'vintage_warm',
+    name: 'Warm Vintage',
+    description: 'Warm, analog-style processing',
+    category: 'vintage',
+    processingChain: {
+      noiseCleanup: {
+        highPassFilter: { enabled: true, frequency: "90" },
+        deClickDeEss: { enabled: true, intensity: "light" }
+      },
+      dynamicControl: {
+        compression: { enabled: true, ratio: "2:1", threshold: -22 },
+        limiter: { enabled: true, ceiling: -2 }
+      },
+      eqShaping: {
+        lowMidCut: { enabled: true, frequency: "150", gain: 2 },
+        presenceBoost: { enabled: true, frequency: "3", gain: 1.5 },
+        airLift: { enabled: false, frequency: "8", gain: 0.5 }
+      },
+      spatialEnhancement: {
+        reverb: { enabled: true, type: "room_0.4", wetMix: 15 },
+        stereoEnhancer: { enabled: true, width: 1.1 }
+      },
+      mastering: {
+        normalization: { enabled: true, targetLUFS: "-18" },
+        peakLimiting: { enabled: true, maxPeak: -0.5 },
+        dithering: { enabled: true, bitDepth: "24" }
+      }
+    }
+  },
+  {
+    id: 'env_cathedral',
+    name: 'Cathedral',
+    description: 'Large reverberant space like cathedral',
+    category: 'environmental',
+    processingChain: {
+      noiseCleanup: {
+        highPassFilter: { enabled: true, frequency: "70" },
+        deClickDeEss: { enabled: true, intensity: "light" }
+      },
+      dynamicControl: {
+        compression: { enabled: false, ratio: "2:1", threshold: -22 },
+        limiter: { enabled: true, ceiling: -3 }
+      },
+      eqShaping: {
+        lowMidCut: { enabled: true, frequency: "150", gain: 3 },
+        presenceBoost: { enabled: true, frequency: "3", gain: 1.0 },
+        airLift: { enabled: true, frequency: "10", gain: 1.5 }
+      },
+      spatialEnhancement: {
+        reverb: { enabled: true, type: "room_0.5", wetMix: 15 },
+        stereoEnhancer: { enabled: true, width: 1.8 }
+      },
+      mastering: {
+        normalization: { enabled: true, targetLUFS: "-20" },
+        peakLimiting: { enabled: true, maxPeak: -1.0 },
+        dithering: { enabled: true, bitDepth: "24" }
+      }
+    }
+  },
+  {
+    id: 'fx_robot',
+    name: 'Robot Voice',
+    description: 'Robotic/synthetic character effect',
+    category: 'effects',
+    processingChain: {
+      noiseCleanup: {
+        highPassFilter: { enabled: false, frequency: "70" },
+        deClickDeEss: { enabled: false, intensity: "light" }
+      },
+      dynamicControl: {
+        compression: { enabled: true, ratio: "3:1", threshold: -12 },
+        limiter: { enabled: true, ceiling: -1 }
+      },
+      eqShaping: {
+        lowMidCut: { enabled: true, frequency: "300", gain: -12 },
+        presenceBoost: { enabled: true, frequency: "5", gain: -2.0 },
+        airLift: { enabled: false, frequency: "12", gain: -3.0 }
+      },
+      spatialEnhancement: {
+        reverb: { enabled: false, type: "room_0.3", wetMix: 0 },
+        stereoEnhancer: { enabled: false, width: 1.0 }
+      },
+      mastering: {
+        normalization: { enabled: true, targetLUFS: "-18" },
+        peakLimiting: { enabled: true, maxPeak: -0.1 },
+        dithering: { enabled: false, bitDepth: "16" }
+      }
+    }
+  }
+];
+
+function getPresetsByCategory(category: AudioPreset['category']): AudioPreset[] {
+  return AUDIO_PRESETS.filter(preset => preset.category === category);
+}
+
+function getPresetById(id: string): AudioPreset | undefined {
+  return AUDIO_PRESETS.find(preset => preset.id === id);
+}
+
 interface Chapter {
   id: string;
   title?: string;
@@ -1024,6 +1255,83 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                         <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", color: "var(--text)" }}>
                           Audio Processing Chain
                         </h4>
+                        
+                        {/* Audio Presets Selector */}
+                        <div style={{ marginBottom: "16px", padding: "8px", backgroundColor: "var(--input)", borderRadius: "3px", border: "1px solid var(--border)" }}>
+                          <h5 style={{ margin: "0 0 8px 0", fontSize: "12px", color: "var(--text)", fontWeight: 500 }}>
+                            Professional Voice Presets
+                          </h5>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                            <select 
+                              style={{ 
+                                padding: "6px", 
+                                fontSize: "11px", 
+                                backgroundColor: "var(--input)", 
+                                border: "1px solid var(--border)", 
+                                borderRadius: "3px",
+                                color: "var(--text)"
+                              }}
+                              onChange={(e) => {
+                                if (e.target.value && e.target.value !== 'custom') {
+                                  const preset = getPresetById(e.target.value);
+                                  if (preset) {
+                                    updateCurrentProcessingChain(preset.processingChain);
+                                  }
+                                }
+                              }}
+                              defaultValue=""
+                            >
+                              <option value="">Select a voice preset...</option>
+                              <optgroup label="Clean & Natural">
+                                {getPresetsByCategory('clean').map(preset => (
+                                  <option key={preset.id} value={preset.id}>
+                                    {preset.name} - {preset.description}
+                                  </option>
+                                ))}
+                              </optgroup>
+                              <optgroup label="Character Voices">
+                                {getPresetsByCategory('character').map(preset => (
+                                  <option key={preset.id} value={preset.id}>
+                                    {preset.name} - {preset.description}
+                                  </option>
+                                ))}
+                              </optgroup>
+                              <optgroup label="Broadcast Quality">
+                                {getPresetsByCategory('broadcast').map(preset => (
+                                  <option key={preset.id} value={preset.id}>
+                                    {preset.name} - {preset.description}
+                                  </option>
+                                ))}
+                              </optgroup>
+                              <optgroup label="Vintage & Specialty">
+                                {getPresetsByCategory('vintage').map(preset => (
+                                  <option key={preset.id} value={preset.id}>
+                                    {preset.name} - {preset.description}
+                                  </option>
+                                ))}
+                              </optgroup>
+                              <optgroup label="Environmental">
+                                {getPresetsByCategory('environmental').map(preset => (
+                                  <option key={preset.id} value={preset.id}>
+                                    {preset.name} - {preset.description}
+                                  </option>
+                                ))}
+                              </optgroup>
+                              <optgroup label="Special Effects">
+                                {getPresetsByCategory('effects').map(preset => (
+                                  <option key={preset.id} value={preset.id}>
+                                    {preset.name} - {preset.description}
+                                  </option>
+                                ))}
+                              </optgroup>
+                              <option value="custom">--- Custom Settings ---</option>
+                            </select>
+                            <div style={{ fontSize: "10px", color: "var(--textSecondary)", fontStyle: "italic" }}>
+                              Choose from 21 professional voice processing presets designed for audiobook production. 
+                              Select "Custom Settings" to manually configure individual effects below.
+                            </div>
+                          </div>
+                        </div>
                         
                         {/* Processing Summary */}
                         <div style={{ marginBottom: "12px", padding: "6px", backgroundColor: "var(--accent)", color: "white", borderRadius: "3px", fontSize: "10px" }}>
