@@ -40,6 +40,21 @@ interface AudioSegmentRow {
 
 export default function AudioProductionPage({ onStatus }: { onStatus: (s: string) => void }) {
   const { t } = useTranslation();
+  
+  // Helper function to get translated preset name and description
+  const getTranslatedPreset = useCallback((preset: AudioPreset) => {
+    const nameKey = `audioPresets.${preset.id}.name`;
+    const descriptionKey = `audioPresets.${preset.id}.description`;
+    
+    // Try to get translation, fallback to original if not found
+    const translatedName = t(nameKey, { defaultValue: preset.name });
+    const translatedDescription = t(descriptionKey, { defaultValue: preset.description });
+    
+    return {
+      name: translatedName,
+      description: translatedDescription
+    };
+  }, [t]);
   const { root } = useProject();
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [chapterStatus, setChapterStatus] = useState<Map<string, ChapterStatus>>(new Map());
@@ -624,7 +639,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       {/* Subtitle */}
       <div style={{ marginBottom: "24px" }}>
         <p style={{ margin: 0, fontSize: "14px", color: "var(--textSecondary)" }}>
-          Generate high-quality audio from orchestrated segments - work chapter by chapter. Only chapters with plans are available.
+          {t("audioProduction.pageDescription")}
         </p>
       </div>
 
@@ -1087,46 +1102,64 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               }}
                             >
                               <optgroup label={t("audioProduction.presetCleanNatural")}>
-                                {getPresetsByCategory('clean').map((preset: AudioPreset) => (
-                                  <option key={preset.id} value={preset.id}>
-                                    {preset.name} - {preset.description}
-                                  </option>
-                                ))}
+                                {getPresetsByCategory('clean').map((preset: AudioPreset) => {
+                                  const translated = getTranslatedPreset(preset);
+                                  return (
+                                    <option key={preset.id} value={preset.id}>
+                                      {translated.name} - {translated.description}
+                                    </option>
+                                  );
+                                })}
                               </optgroup>
                               <optgroup label={t("audioProduction.presetCharacterVoices")}>
-                                {getPresetsByCategory('character').map((preset: AudioPreset) => (
-                                  <option key={preset.id} value={preset.id}>
-                                    {preset.name} - {preset.description}
-                                  </option>
-                                ))}
+                                {getPresetsByCategory('character').map((preset: AudioPreset) => {
+                                  const translated = getTranslatedPreset(preset);
+                                  return (
+                                    <option key={preset.id} value={preset.id}>
+                                      {translated.name} - {translated.description}
+                                    </option>
+                                  );
+                                })}
                               </optgroup>
                               <optgroup label={t("audioProduction.presetBroadcastQuality")}>
-                                {getPresetsByCategory('broadcast').map((preset: AudioPreset) => (
-                                  <option key={preset.id} value={preset.id}>
-                                    {preset.name} - {preset.description}
-                                  </option>
-                                ))}
+                                {getPresetsByCategory('broadcast').map((preset: AudioPreset) => {
+                                  const translated = getTranslatedPreset(preset);
+                                  return (
+                                    <option key={preset.id} value={preset.id}>
+                                      {translated.name} - {translated.description}
+                                    </option>
+                                  );
+                                })}
                               </optgroup>
                               <optgroup label={t("audioProduction.presetVintageSpecialty")}>
-                                {getPresetsByCategory('vintage').map((preset: AudioPreset) => (
-                                  <option key={preset.id} value={preset.id}>
-                                    {preset.name} - {preset.description}
-                                  </option>
-                                ))}
+                                {getPresetsByCategory('vintage').map((preset: AudioPreset) => {
+                                  const translated = getTranslatedPreset(preset);
+                                  return (
+                                    <option key={preset.id} value={preset.id}>
+                                      {translated.name} - {translated.description}
+                                    </option>
+                                  );
+                                })}
                               </optgroup>
                               <optgroup label={t("audioProduction.presetEnvironmental")}>
-                                {getPresetsByCategory('environmental').map((preset: AudioPreset) => (
-                                  <option key={preset.id} value={preset.id}>
-                                    {preset.name} - {preset.description}
-                                  </option>
-                                ))}
+                                {getPresetsByCategory('environmental').map((preset: AudioPreset) => {
+                                  const translated = getTranslatedPreset(preset);
+                                  return (
+                                    <option key={preset.id} value={preset.id}>
+                                      {translated.name} - {translated.description}
+                                    </option>
+                                  );
+                                })}
                               </optgroup>
                               <optgroup label={t("audioProduction.presetSpecialEffects")}>
-                                {getPresetsByCategory('effects').map((preset: AudioPreset) => (
-                                  <option key={preset.id} value={preset.id}>
-                                    {preset.name} - {preset.description}
-                                  </option>
-                                ))}
+                                {getPresetsByCategory('effects').map((preset: AudioPreset) => {
+                                  const translated = getTranslatedPreset(preset);
+                                  return (
+                                    <option key={preset.id} value={preset.id}>
+                                      {translated.name} - {translated.description}
+                                    </option>
+                                  );
+                                })}
                               </optgroup>
                               <option value="custom">--- {t("audioProduction.customSettings")} ---</option>
                             </select>

@@ -1801,7 +1801,27 @@
     "comment": "Title for professional voice presets section"
   },
   "audioProduction.chapterLabel": {
-    "string": "Chapter:",
+    "string": "Chapter",
     "comment": "Label for chapter selection in audio production"
+  },
+  "audioProduction.pageDescription": {
+    "string": "Generate high-quality audio from orchestrated segments - work chapter by chapter. Only chapters with plans are available.",
+    "comment": "Main description text for the audio production page"
+  },
+  "audioPresets.cleanNatural.name": {
+    "string": "Clean Natural",
+    "comment": "Name for Clean Natural audio preset"
+  },
+  "audioPresets.cleanNatural.description": {
+    "string": "Minimal processing for pristine natural voice",
+    "comment": "Description for Clean Natural audio preset"
+  },
+  "audioPresets.cleanPolished.name": {
+    "string": "Clean Polished",
+    "comment": "Name for Clean Polished audio preset"
+  },
+  "audioPresets.cleanPolished.description": {
+    "string": "Light enhancement for professional narration",
+    "comment": "Description for Clean Polished audio preset"
   }
 }

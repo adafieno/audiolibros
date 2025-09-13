@@ -2303,7 +2303,27 @@
     "comment": "Título para la sección de configuraciones profesionales de voz"
   },
   "audioProduction.chapterLabel": {
-    "string": "Capítulo:",
+    "string": "Capítulo",
     "comment": "Etiqueta para selección de capítulo en producción de audio"
+  },
+  "audioProduction.pageDescription": {
+    "string": "Genera audio de alta calidad a partir de segmentos orquestados - trabaja capítulo por capítulo. Solo están disponibles los capítulos con planes.",
+    "comment": "Texto de descripción principal para la página de producción de audio"
+  },
+  "audioPresets.cleanNatural.name": {
+    "string": "Natural Limpio",
+    "comment": "Nombre para el preset de audio Natural Limpio"
+  },
+  "audioPresets.cleanNatural.description": {
+    "string": "Procesamiento mínimo para voz natural prístina",
+    "comment": "Descripción para el preset de audio Natural Limpio"
+  },
+  "audioPresets.cleanPolished.name": {
+    "string": "Pulido Limpio",
+    "comment": "Nombre para el preset de audio Pulido Limpio"
+  },
+  "audioPresets.cleanPolished.description": {
+    "string": "Mejora ligera para narración profesional",
+    "comment": "Descripción para el preset de audio Pulido Limpio"
   }
 }
