@@ -2277,5 +2277,33 @@
   "audioProduction.room05": {
     "string": "Sala (0.5s)",
     "comment": "Reverberación de sala con decaimiento de 0.5 segundos"
+  },
+  "audioProduction.stereoEnhancerSubtle": {
+    "string": "Realce estéreo (sutil)",
+    "comment": "Etiqueta para efecto de audio de realce estéreo sutil"
+  },
+  "audioProduction.consistencyMasteringTitle": {
+    "string": "5. Consistencia y Masterización",
+    "comment": "Título para la sección de procesamiento de consistencia y masterización"
+  },
+  "audioProduction.normalizeAudiobook": {
+    "string": "Normalizar a estándares de audiolibro",
+    "comment": "Etiqueta para efecto de audio de normalización de audiolibro"
+  },
+  "audioProduction.peakLimitMax": {
+    "string": "Límite de picos (-3 dB máx.)",
+    "comment": "Etiqueta para limitación de picos con nivel máximo de dB"
+  },
+  "audioProduction.processingChainTitle": {
+    "string": "Cadena de Procesamiento de Audio",
+    "comment": "Título para la sección de cadena de procesamiento de audio"
+  },
+  "audioProduction.professionalVoicePresets": {
+    "string": "Presets Profesionales de Voz",
+    "comment": "Título para la sección de presets profesionales de voz"
+  },
+  "audioProduction.chapterLabel": {
+    "string": "Capítulo:",
+    "comment": "Etiqueta para selección de capítulo en producción de audio"
   }
 }

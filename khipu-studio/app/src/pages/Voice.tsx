@@ -633,7 +633,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         <div style={{ display: "flex", gap: "16px", alignItems: "center", flexWrap: "wrap" }}>
           <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
             <label style={{ fontSize: "14px", fontWeight: "500", color: "var(--text)" }}>
-              Chapter:
+              {t("audioProduction.chapterLabel")}:
             </label>
             <select
               value={selectedChapter}
@@ -1054,13 +1054,13 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                       {/* Audio Processing Chain */}
                       <div style={{ padding: "12px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "4px" }}>
                         <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", color: "var(--text)" }}>
-                          Audio Processing Chain
+                          {t("audioProduction.processingChainTitle")}
                         </h4>
                         
                         {/* Audio Presets Selector */}
                         <div style={{ marginBottom: "16px", padding: "8px", backgroundColor: "var(--input)", borderRadius: "3px", border: "1px solid var(--border)" }}>
                           <h5 style={{ margin: "0 0 8px 0", fontSize: "12px", color: "var(--text)", fontWeight: 500 }}>
-                            Professional Voice Presets
+                            {t("audioProduction.professionalVoicePresets")}
                           </h5>
                           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                             <select 
@@ -1512,7 +1512,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 })}
                                 style={{ accentColor: "var(--accent)" }} 
                               />
-                              <span>Stereo enhancer (subtle)</span>
+                              <span>{t("audioProduction.stereoEnhancerSubtle")}</span>
                             </label>
                           </div>
                         </div>
@@ -1520,7 +1520,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                         {/* 5. Consistency & Mastering */}
                         <div style={{ marginBottom: "12px", padding: "8px", backgroundColor: "var(--input)", borderRadius: "3px", border: "1px solid var(--border)" }}>
                           <h5 style={{ margin: "0 0 6px 0", fontSize: "12px", color: "var(--text)", fontWeight: 500 }}>
-                            5. Consistency & Mastering
+                            5. {t("audioProduction.consistencyMasteringTitle")}
                           </h5>
                           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
@@ -1540,7 +1540,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 })}
                                 style={{ accentColor: "var(--accent)" }} 
                               />
-                              <span>Normalize to audiobook standards</span>
+                              <span>{t("audioProduction.normalizeAudiobook")}</span>
                               <select 
                                 value={currentProcessingChain.mastering.normalization.targetLUFS}
                                 disabled={!customSettingsEnabled}
@@ -1579,7 +1579,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 })}
                                 style={{ accentColor: "var(--accent)" }} 
                               />
-                              <span>Peak limit (-3 dB max)</span>
+                              <span>{t("audioProduction.peakLimitMax")}</span>
                             </label>
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
                               <input 

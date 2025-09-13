@@ -1775,5 +1775,33 @@
   "audioProduction.room05": {
     "string": "Room (0.5s)",
     "comment": "Room reverb with 0.5 second decay"
+  },
+  "audioProduction.stereoEnhancerSubtle": {
+    "string": "Stereo enhancer (subtle)",
+    "comment": "Label for subtle stereo enhancement audio effect"
+  },
+  "audioProduction.consistencyMasteringTitle": {
+    "string": "5. Consistency & Mastering",
+    "comment": "Title for consistency and mastering processing section"
+  },
+  "audioProduction.normalizeAudiobook": {
+    "string": "Normalize to audiobook standards",
+    "comment": "Label for audiobook normalization audio effect"
+  },
+  "audioProduction.peakLimitMax": {
+    "string": "Peak limit (-3 dB max)",
+    "comment": "Label for peak limiting with maximum dB level"
+  },
+  "audioProduction.processingChainTitle": {
+    "string": "Audio Processing Chain",
+    "comment": "Title for the audio processing chain section"
+  },
+  "audioProduction.professionalVoicePresets": {
+    "string": "Professional Voice Presets",
+    "comment": "Title for professional voice presets section"
+  },
+  "audioProduction.chapterLabel": {
+    "string": "Chapter:",
+    "comment": "Label for chapter selection in audio production"
   }
 }
