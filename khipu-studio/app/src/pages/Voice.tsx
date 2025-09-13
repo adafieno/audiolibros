@@ -52,6 +52,11 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   const audioPreview = useAudioPreview();
   const [processingChain, setProcessingChain] = useState<AudioProcessingChain>(() => createDefaultProcessingChain());
 
+  // Debug: Log processing chain changes
+  useEffect(() => {
+    console.log('🎛️ Processing chain updated:', JSON.stringify(processingChain, null, 2));
+  }, [processingChain]);
+
   // Audio production service for metadata persistence
   const audioProductionService = useMemo(() => {
     return root ? new AudioProductionService(root) : null;
@@ -842,6 +847,24 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                           Audio Processing Chain
                         </h4>
                         
+                        {/* Processing Summary */}
+                        <div style={{ marginBottom: "12px", padding: "6px", backgroundColor: "var(--accent)", color: "white", borderRadius: "3px", fontSize: "10px" }}>
+                          <strong>Active Effects:</strong> {[
+                            processingChain.noiseCleanup.highPassFilter.enabled && `HP Filter (${processingChain.noiseCleanup.highPassFilter.frequency}Hz)`,
+                            processingChain.noiseCleanup.deClickDeEss.enabled && `De-ess (${processingChain.noiseCleanup.deClickDeEss.intensity})`,
+                            processingChain.dynamicControl.compression.enabled && `Compression (${processingChain.dynamicControl.compression.ratio})`,
+                            processingChain.dynamicControl.limiter.enabled && 'Limiter',
+                            processingChain.eqShaping.lowMidCut.enabled && `Low-Mid Cut (${processingChain.eqShaping.lowMidCut.frequency}Hz)`,
+                            processingChain.eqShaping.presenceBoost.enabled && `Presence (${processingChain.eqShaping.presenceBoost.frequency}kHz)`,
+                            processingChain.eqShaping.airLift.enabled && `Air Lift (${processingChain.eqShaping.airLift.frequency}kHz)`,
+                            processingChain.spatialEnhancement.reverb.enabled && `Reverb (${processingChain.spatialEnhancement.reverb.wetMix}%)`,
+                            processingChain.spatialEnhancement.stereoEnhancer.enabled && 'Stereo Enhance',
+                            processingChain.mastering.normalization.enabled && `Normalize (${processingChain.mastering.normalization.targetLUFS}LUFS)`,
+                            processingChain.mastering.peakLimiting.enabled && 'Peak Limit',
+                            processingChain.mastering.dithering.enabled && 'Dither'
+                          ].filter(Boolean).join(', ') || 'None'}
+                        </div>
+                        
                         {/* 1. Noise & Cleanup */}
                         <div style={{ marginBottom: "16px", padding: "8px", backgroundColor: "var(--input)", borderRadius: "3px", border: "1px solid var(--border)" }}>
                           <h5 style={{ margin: "0 0 6px 0", fontSize: "12px", color: "var(--text)", fontWeight: 500 }}>
@@ -849,21 +872,75 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                           </h5>
                           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
-                              <input type="checkbox" defaultChecked style={{ accentColor: "var(--accent)" }} />
+                              <input 
+                                type="checkbox" 
+                                checked={processingChain.noiseCleanup.highPassFilter.enabled}
+                                onChange={(e) => setProcessingChain(prev => ({
+                                  ...prev,
+                                  noiseCleanup: {
+                                    ...prev.noiseCleanup,
+                                    highPassFilter: {
+                                      ...prev.noiseCleanup.highPassFilter,
+                                      enabled: e.target.checked
+                                    }
+                                  }
+                                }))}
+                                style={{ accentColor: "var(--accent)" }} 
+                              />
                               <span>High-pass filter (70-90 Hz)</span>
-                              <select style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}>
-                                <option>70 Hz</option>
-                                <option selected>80 Hz</option>
-                                <option>90 Hz</option>
+                              <select 
+                                value={processingChain.noiseCleanup.highPassFilter.frequency}
+                                onChange={(e) => setProcessingChain(prev => ({
+                                  ...prev,
+                                  noiseCleanup: {
+                                    ...prev.noiseCleanup,
+                                    highPassFilter: {
+                                      ...prev.noiseCleanup.highPassFilter,
+                                      frequency: e.target.value as "70" | "80" | "90"
+                                    }
+                                  }
+                                }))}
+                                style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}
+                              >
+                                <option value="70">70 Hz</option>
+                                <option value="80">80 Hz</option>
+                                <option value="90">90 Hz</option>
                               </select>
                             </label>
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
-                              <input type="checkbox" style={{ accentColor: "var(--accent)" }} />
+                              <input 
+                                type="checkbox" 
+                                checked={processingChain.noiseCleanup.deClickDeEss.enabled}
+                                onChange={(e) => setProcessingChain(prev => ({
+                                  ...prev,
+                                  noiseCleanup: {
+                                    ...prev.noiseCleanup,
+                                    deClickDeEss: {
+                                      ...prev.noiseCleanup.deClickDeEss,
+                                      enabled: e.target.checked
+                                    }
+                                  }
+                                }))}
+                                style={{ accentColor: "var(--accent)" }} 
+                              />
                               <span>De-click / De-ess</span>
-                              <select style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}>
-                                <option>Light</option>
-                                <option selected>Medium</option>
-                                <option>Heavy</option>
+                              <select 
+                                value={processingChain.noiseCleanup.deClickDeEss.intensity}
+                                onChange={(e) => setProcessingChain(prev => ({
+                                  ...prev,
+                                  noiseCleanup: {
+                                    ...prev.noiseCleanup,
+                                    deClickDeEss: {
+                                      ...prev.noiseCleanup.deClickDeEss,
+                                      intensity: e.target.value as "light" | "medium" | "heavy"
+                                    }
+                                  }
+                                }))}
+                                style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}
+                              >
+                                <option value="light">Light</option>
+                                <option value="medium">Medium</option>
+                                <option value="heavy">Heavy</option>
                               </select>
                             </label>
                           </div>
@@ -876,16 +953,57 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                           </h5>
                           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
-                              <input type="checkbox" defaultChecked style={{ accentColor: "var(--accent)" }} />
+                              <input 
+                                type="checkbox" 
+                                checked={processingChain.dynamicControl.compression.enabled}
+                                onChange={(e) => setProcessingChain(prev => ({
+                                  ...prev,
+                                  dynamicControl: {
+                                    ...prev.dynamicControl,
+                                    compression: {
+                                      ...prev.dynamicControl.compression,
+                                      enabled: e.target.checked
+                                    }
+                                  }
+                                }))}
+                                style={{ accentColor: "var(--accent)" }} 
+                              />
                               <span>Gentle compression</span>
-                              <select style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}>
-                                <option>2:1</option>
-                                <option selected>2.5:1</option>
-                                <option>3:1</option>
+                              <select 
+                                value={processingChain.dynamicControl.compression.ratio}
+                                onChange={(e) => setProcessingChain(prev => ({
+                                  ...prev,
+                                  dynamicControl: {
+                                    ...prev.dynamicControl,
+                                    compression: {
+                                      ...prev.dynamicControl.compression,
+                                      ratio: e.target.value as "2:1" | "2.5:1" | "3:1"
+                                    }
+                                  }
+                                }))}
+                                style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}
+                              >
+                                <option value="2:1">2:1</option>
+                                <option value="2.5:1">2.5:1</option>
+                                <option value="3:1">3:1</option>
                               </select>
                             </label>
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
-                              <input type="checkbox" defaultChecked style={{ accentColor: "var(--accent)" }} />
+                              <input 
+                                type="checkbox" 
+                                checked={processingChain.dynamicControl.limiter.enabled}
+                                onChange={(e) => setProcessingChain(prev => ({
+                                  ...prev,
+                                  dynamicControl: {
+                                    ...prev.dynamicControl,
+                                    limiter: {
+                                      ...prev.dynamicControl.limiter,
+                                      enabled: e.target.checked
+                                    }
+                                  }
+                                }))}
+                                style={{ accentColor: "var(--accent)" }} 
+                              />
                               <span>Limiter safeguard (-1 dBFS)</span>
                             </label>
                           </div>
@@ -898,30 +1016,111 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                           </h5>
                           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
-                              <input type="checkbox" style={{ accentColor: "var(--accent)" }} />
+                              <input 
+                                type="checkbox" 
+                                checked={processingChain.eqShaping.lowMidCut.enabled}
+                                onChange={(e) => setProcessingChain(prev => ({
+                                  ...prev,
+                                  eqShaping: {
+                                    ...prev.eqShaping,
+                                    lowMidCut: {
+                                      ...prev.eqShaping.lowMidCut,
+                                      enabled: e.target.checked
+                                    }
+                                  }
+                                }))}
+                                style={{ accentColor: "var(--accent)" }} 
+                              />
                               <span>Low-mid cut (150-300 Hz)</span>
-                              <select style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}>
-                                <option>150 Hz</option>
-                                <option selected>200 Hz</option>
-                                <option>300 Hz</option>
+                              <select 
+                                value={processingChain.eqShaping.lowMidCut.frequency}
+                                onChange={(e) => setProcessingChain(prev => ({
+                                  ...prev,
+                                  eqShaping: {
+                                    ...prev.eqShaping,
+                                    lowMidCut: {
+                                      ...prev.eqShaping.lowMidCut,
+                                      frequency: e.target.value as "150" | "200" | "300"
+                                    }
+                                  }
+                                }))}
+                                style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}
+                              >
+                                <option value="150">150 Hz</option>
+                                <option value="200">200 Hz</option>
+                                <option value="300">300 Hz</option>
                               </select>
                             </label>
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
-                              <input type="checkbox" defaultChecked style={{ accentColor: "var(--accent)" }} />
+                              <input 
+                                type="checkbox" 
+                                checked={processingChain.eqShaping.presenceBoost.enabled}
+                                onChange={(e) => setProcessingChain(prev => ({
+                                  ...prev,
+                                  eqShaping: {
+                                    ...prev.eqShaping,
+                                    presenceBoost: {
+                                      ...prev.eqShaping.presenceBoost,
+                                      enabled: e.target.checked
+                                    }
+                                  }
+                                }))}
+                                style={{ accentColor: "var(--accent)" }} 
+                              />
                               <span>Presence boost (2-5 kHz)</span>
-                              <select style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}>
-                                <option>2 kHz</option>
-                                <option selected>3 kHz</option>
-                                <option>5 kHz</option>
+                              <select 
+                                value={processingChain.eqShaping.presenceBoost.frequency}
+                                onChange={(e) => setProcessingChain(prev => ({
+                                  ...prev,
+                                  eqShaping: {
+                                    ...prev.eqShaping,
+                                    presenceBoost: {
+                                      ...prev.eqShaping.presenceBoost,
+                                      frequency: e.target.value as "2" | "3" | "5"
+                                    }
+                                  }
+                                }))}
+                                style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}
+                              >
+                                <option value="2">2 kHz</option>
+                                <option value="3">3 kHz</option>
+                                <option value="5">5 kHz</option>
                               </select>
                             </label>
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
-                              <input type="checkbox" style={{ accentColor: "var(--accent)" }} />
+                              <input 
+                                type="checkbox" 
+                                checked={processingChain.eqShaping.airLift.enabled}
+                                onChange={(e) => setProcessingChain(prev => ({
+                                  ...prev,
+                                  eqShaping: {
+                                    ...prev.eqShaping,
+                                    airLift: {
+                                      ...prev.eqShaping.airLift,
+                                      enabled: e.target.checked
+                                    }
+                                  }
+                                }))}
+                                style={{ accentColor: "var(--accent)" }} 
+                              />
                               <span>Air lift (8-12 kHz)</span>
-                              <select style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}>
-                                <option>8 kHz</option>
-                                <option selected>10 kHz</option>
-                                <option>12 kHz</option>
+                              <select 
+                                value={processingChain.eqShaping.airLift.frequency}
+                                onChange={(e) => setProcessingChain(prev => ({
+                                  ...prev,
+                                  eqShaping: {
+                                    ...prev.eqShaping,
+                                    airLift: {
+                                      ...prev.eqShaping.airLift,
+                                      frequency: e.target.value as "8" | "10" | "12"
+                                    }
+                                  }
+                                }))}
+                                style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}
+                              >
+                                <option value="8">8 kHz</option>
+                                <option value="10">10 kHz</option>
+                                <option value="12">12 kHz</option>
                               </select>
                             </label>
                           </div>
@@ -934,21 +1133,78 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                           </h5>
                           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
-                              <input type="checkbox" defaultChecked style={{ accentColor: "var(--accent)" }} />
+                              <input 
+                                type="checkbox" 
+                                checked={processingChain.spatialEnhancement.reverb.enabled}
+                                onChange={(e) => setProcessingChain(prev => ({
+                                  ...prev,
+                                  spatialEnhancement: {
+                                    ...prev.spatialEnhancement,
+                                    reverb: {
+                                      ...prev.spatialEnhancement.reverb,
+                                      enabled: e.target.checked
+                                    }
+                                  }
+                                }))}
+                                style={{ accentColor: "var(--accent)" }} 
+                              />
                               <span>Subtle reverb</span>
-                              <select style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}>
-                                <option>Room (0.3s)</option>
-                                <option selected>Room (0.4s)</option>
-                                <option>Room (0.5s)</option>
+                              <select 
+                                value={processingChain.spatialEnhancement.reverb.type}
+                                onChange={(e) => setProcessingChain(prev => ({
+                                  ...prev,
+                                  spatialEnhancement: {
+                                    ...prev.spatialEnhancement,
+                                    reverb: {
+                                      ...prev.spatialEnhancement.reverb,
+                                      type: e.target.value as "room_0.3" | "room_0.4" | "room_0.5"
+                                    }
+                                  }
+                                }))}
+                                style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}
+                              >
+                                <option value="room_0.3">Room (0.3s)</option>
+                                <option value="room_0.4">Room (0.4s)</option>
+                                <option value="room_0.5">Room (0.5s)</option>
                               </select>
                             </label>
                             <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "10px", color: "var(--textSecondary)", paddingLeft: "24px" }}>
                               <span>Wet mix:</span>
-                              <input type="range" min="0" max="15" defaultValue="8" style={{ flex: 1, accentColor: "var(--accent)" }} />
-                              <span>8%</span>
+                              <input 
+                                type="range" 
+                                min="0" 
+                                max="15" 
+                                value={processingChain.spatialEnhancement.reverb.wetMix}
+                                onChange={(e) => setProcessingChain(prev => ({
+                                  ...prev,
+                                  spatialEnhancement: {
+                                    ...prev.spatialEnhancement,
+                                    reverb: {
+                                      ...prev.spatialEnhancement.reverb,
+                                      wetMix: parseInt(e.target.value)
+                                    }
+                                  }
+                                }))}
+                                style={{ flex: 1, accentColor: "var(--accent)" }} 
+                              />
+                              <span>{processingChain.spatialEnhancement.reverb.wetMix}%</span>
                             </div>
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
-                              <input type="checkbox" style={{ accentColor: "var(--accent)" }} />
+                              <input 
+                                type="checkbox" 
+                                checked={processingChain.spatialEnhancement.stereoEnhancer.enabled}
+                                onChange={(e) => setProcessingChain(prev => ({
+                                  ...prev,
+                                  spatialEnhancement: {
+                                    ...prev.spatialEnhancement,
+                                    stereoEnhancer: {
+                                      ...prev.spatialEnhancement.stereoEnhancer,
+                                      enabled: e.target.checked
+                                    }
+                                  }
+                                }))}
+                                style={{ accentColor: "var(--accent)" }} 
+                              />
                               <span>Stereo enhancer (subtle)</span>
                             </label>
                           </div>
@@ -961,21 +1217,76 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                           </h5>
                           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
-                              <input type="checkbox" defaultChecked style={{ accentColor: "var(--accent)" }} />
+                              <input 
+                                type="checkbox" 
+                                checked={processingChain.mastering.normalization.enabled}
+                                onChange={(e) => setProcessingChain(prev => ({
+                                  ...prev,
+                                  mastering: {
+                                    ...prev.mastering,
+                                    normalization: {
+                                      ...prev.mastering.normalization,
+                                      enabled: e.target.checked
+                                    }
+                                  }
+                                }))}
+                                style={{ accentColor: "var(--accent)" }} 
+                              />
                               <span>Normalize to audiobook standards</span>
-                              <select style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}>
-                                <option>-18 LUFS</option>
-                                <option>-20 LUFS</option>
-                                <option selected>-21 LUFS</option>
-                                <option>-23 LUFS</option>
+                              <select 
+                                value={processingChain.mastering.normalization.targetLUFS}
+                                onChange={(e) => setProcessingChain(prev => ({
+                                  ...prev,
+                                  mastering: {
+                                    ...prev.mastering,
+                                    normalization: {
+                                      ...prev.mastering.normalization,
+                                      targetLUFS: e.target.value as "-18" | "-20" | "-21" | "-23"
+                                    }
+                                  }
+                                }))}
+                                style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}
+                              >
+                                <option value="-18">-18 LUFS</option>
+                                <option value="-20">-20 LUFS</option>
+                                <option value="-21">-21 LUFS</option>
+                                <option value="-23">-23 LUFS</option>
                               </select>
                             </label>
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
-                              <input type="checkbox" defaultChecked style={{ accentColor: "var(--accent)" }} />
+                              <input 
+                                type="checkbox" 
+                                checked={processingChain.mastering.peakLimiting.enabled}
+                                onChange={(e) => setProcessingChain(prev => ({
+                                  ...prev,
+                                  mastering: {
+                                    ...prev.mastering,
+                                    peakLimiting: {
+                                      ...prev.mastering.peakLimiting,
+                                      enabled: e.target.checked
+                                    }
+                                  }
+                                }))}
+                                style={{ accentColor: "var(--accent)" }} 
+                              />
                               <span>Peak limit (-3 dB max)</span>
                             </label>
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
-                              <input type="checkbox" style={{ accentColor: "var(--accent)" }} />
+                              <input 
+                                type="checkbox" 
+                                checked={processingChain.mastering.dithering.enabled}
+                                onChange={(e) => setProcessingChain(prev => ({
+                                  ...prev,
+                                  mastering: {
+                                    ...prev.mastering,
+                                    dithering: {
+                                      ...prev.mastering.dithering,
+                                      enabled: e.target.checked
+                                    }
+                                  }
+                                }))}
+                                style={{ accentColor: "var(--accent)" }} 
+                              />
                               <span>Final dither (16-bit export)</span>
                             </label>
                           </div>

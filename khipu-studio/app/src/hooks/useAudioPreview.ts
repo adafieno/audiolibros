@@ -27,6 +27,17 @@ export interface UseAudioPreviewResult {
       projectConfig?: ProjectConfig;
     }
   ) => Promise<void>;
+  previewWithExaggeratedEffects: (
+    segmentId: string, 
+    processingChain: AudioProcessingChain, 
+    startTime?: number, 
+    duration?: number,
+    ttsData?: {
+      segment?: Segment;
+      character?: Character;
+      projectConfig?: ProjectConfig;
+    }
+  ) => Promise<void>;
   play: () => Promise<void>;
   pause: () => Promise<void>;
   stop: () => Promise<void>;
@@ -163,6 +174,43 @@ export function useAudioPreview(): UseAudioPreviewResult {
     }
   }, [isAvailable]);
 
+  // Preview with exaggerated effects for comparison
+  const previewWithExaggeratedEffects = useCallback(async (
+    segmentId: string,
+    processingChain: AudioProcessingChain,
+    startTime?: number,
+    duration?: number,
+    ttsData?: {
+      segment?: Segment;
+      character?: Character;
+      projectConfig?: ProjectConfig;
+    }
+  ) => {
+    if (!isAvailable || !ttsData?.segment || !ttsData?.character || !ttsData?.projectConfig) return;
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const options: PreviewOptions = {
+        segmentId,
+        processingChain,
+        startTime,
+        duration,
+        segment: ttsData.segment,
+        character: ttsData.character,
+        projectConfig: ttsData.projectConfig
+      };
+
+      await audioPreviewService.previewWithExaggeratedEffects(options);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Preview with exaggerated effects failed';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isAvailable]);
+
   return {
     // Playback state
     playbackState,
@@ -172,6 +220,7 @@ export function useAudioPreview(): UseAudioPreviewResult {
     
     // Controls
     preview,
+    previewWithExaggeratedEffects,
     play,
     pause,
     stop,

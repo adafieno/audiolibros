@@ -126,6 +126,88 @@ export class AudioPreviewService {
    * Preview audio with SoX processing chain applied (now that we have reliable SoX)
    */
   async preview(options: PreviewOptions): Promise<void> {
+    return this.previewInternal(options, false);
+  }
+
+  /**
+   * Preview audio with exaggerated effects to make processing more audible
+   */
+  async previewWithExaggeratedEffects(options: PreviewOptions): Promise<void> {
+    // Create an exaggerated version of the processing chain for comparison
+    const exaggeratedChain: AudioProcessingChain = {
+      noiseCleanup: {
+        highPassFilter: {
+          enabled: true,
+          frequency: "90" // Higher cutoff to be more noticeable
+        },
+        deClickDeEss: {
+          enabled: false,
+          intensity: "medium"
+        }
+      },
+      dynamicControl: {
+        compression: {
+          enabled: true,
+          ratio: "3:1", // More aggressive compression
+          threshold: -18 // Lower threshold
+        },
+        limiter: {
+          enabled: true,
+          ceiling: -1
+        }
+      },
+      eqShaping: {
+        presenceBoost: {
+          enabled: true,
+          frequency: "3",
+          gain: 6 // Much more boost
+        },
+        lowMidCut: {
+          enabled: true,
+          frequency: "300",
+          gain: -4 // Cut low mids more
+        },
+        airLift: {
+          enabled: true,
+          frequency: "10",
+          gain: 3 // Add high frequency sparkle
+        }
+      },
+      spatialEnhancement: {
+        reverb: {
+          enabled: true,
+          type: "room_0.4",
+          wetMix: 25 // Much more reverb
+        },
+        stereoEnhancer: {
+          enabled: false,
+          width: 10
+        }
+      },
+      mastering: {
+        normalization: {
+          enabled: true,
+          targetLUFS: "-18" // Louder
+        },
+        peakLimiting: {
+          enabled: true,
+          maxPeak: -3
+        },
+        dithering: {
+          enabled: false,
+          bitDepth: "16"
+        }
+      }
+    };
+
+    console.log('🎭 Using EXAGGERATED effects for comparison');
+    return this.previewInternal({ ...options, processingChain: exaggeratedChain }, true);
+  }
+
+  /**
+   * Internal preview method that handles both normal and exaggerated processing
+   */
+  private async previewInternal(options: PreviewOptions, isExaggerated: boolean = false): Promise<void> {
     try {
       // Stop any current playback
       await this.stop();
@@ -236,6 +318,29 @@ export class AudioPreviewService {
           }
 
           console.log(`✅ Found TTS audio file at: ${ttsAudioPath}`);
+
+          // Debug: Log the processing chain being applied
+          console.log('🔧 Processing chain being applied:', JSON.stringify(options.processingChain, null, 2));
+
+          // Debug: Check which effects are actually enabled
+          const enabledEffects = [];
+          if (options.processingChain.noiseCleanup?.highPassFilter?.enabled) {
+            enabledEffects.push(`High Pass Filter: ${options.processingChain.noiseCleanup.highPassFilter.frequency}Hz`);
+          }
+          if (options.processingChain.dynamicControl?.compression?.enabled) {
+            enabledEffects.push(`Compression: ${options.processingChain.dynamicControl.compression.ratio} @ ${options.processingChain.dynamicControl.compression.threshold}dB`);
+          }
+          if (options.processingChain.eqShaping?.presenceBoost?.enabled) {
+            enabledEffects.push(`Presence Boost: +${options.processingChain.eqShaping.presenceBoost.gain}dB @ ${options.processingChain.eqShaping.presenceBoost.frequency}kHz`);
+          }
+          if (options.processingChain.spatialEnhancement?.reverb?.enabled) {
+            enabledEffects.push(`Reverb: ${options.processingChain.spatialEnhancement.reverb.type} ${options.processingChain.spatialEnhancement.reverb.wetMix}%`);
+          }
+          if (options.processingChain.mastering?.normalization?.enabled) {
+            enabledEffects.push(`Normalization: ${options.processingChain.mastering.normalization.targetLUFS} LUFS`);
+          }
+          
+          console.log('🎛️ Enabled effects:', enabledEffects.length > 0 ? enabledEffects : ['NONE - Effects might be disabled!']);
 
           const processingResult = await window.khipu!.call('audioProcessor:processAudio', {
             audioUrl: ttsAudioPath, // Pass the actual cached file path
