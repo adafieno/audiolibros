@@ -34,6 +34,7 @@ interface AudioSegmentRow {
   audioPath?: string;
   start_char?: number;
   end_char?: number;
+  processingChain?: AudioProcessingChain; // Per-segment processing preferences
 }
 
 export default function AudioProductionPage({ onStatus }: { onStatus: (s: string) => void }) {
@@ -50,12 +51,34 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
   // Audio preview functionality
   const audioPreview = useAudioPreview();
-  const [processingChain, setProcessingChain] = useState<AudioProcessingChain>(() => createDefaultProcessingChain());
+
+  // Get current segment's processing chain (or default if none set)
+  const getCurrentProcessingChain = useCallback((): AudioProcessingChain => {
+    if (selectedRowIndex >= 0 && selectedRowIndex < audioSegments.length) {
+      const selectedSegment = audioSegments[selectedRowIndex];
+      return selectedSegment.processingChain || createDefaultProcessingChain();
+    }
+    return createDefaultProcessingChain();
+  }, [audioSegments, selectedRowIndex]);
+
+  // Current processing chain for the selected segment
+  const currentProcessingChain = getCurrentProcessingChain();
+
+  // Update segment's processing chain
+  const updateCurrentProcessingChain = useCallback((newChain: AudioProcessingChain) => {
+    if (selectedRowIndex >= 0 && selectedRowIndex < audioSegments.length) {
+      setAudioSegments(prev => prev.map((segment, index) => 
+        index === selectedRowIndex 
+          ? { ...segment, processingChain: newChain }
+          : segment
+      ));
+    }
+  }, [selectedRowIndex, audioSegments.length]);
 
   // Debug: Log processing chain changes
   useEffect(() => {
-    console.log('🎛️ Processing chain updated:', JSON.stringify(processingChain, null, 2));
-  }, [processingChain]);
+    console.log('🎛️ Processing chain for selected segment (row ' + selectedRowIndex + '):', JSON.stringify(currentProcessingChain, null, 2));
+  }, [currentProcessingChain, selectedRowIndex]);
 
   // Audio production service for metadata persistence
   const audioProductionService = useMemo(() => {
@@ -204,7 +227,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
       // Initialize audio production metadata from plan data
       // This will create/load the audio production configuration and check existing files
-      const audioMetadata = await audioProductionService.initializeFromPlan(chapterId, chunks);
+      await audioProductionService.initializeFromPlan(chapterId, chunks);
       const completionStatus = await audioProductionService.getChapterCompletionStatus(chapterId);
 
       // Convert plan chunks to audio segment rows with proper audio tracking
@@ -239,15 +262,16 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
       setAudioSegments(segments);
       
-      // Update processing chain from metadata
-      setProcessingChain(audioMetadata.globalProcessingChain);
+      // Update processing chain from metadata - this would set a default for all segments
+      // For now, we'll comment this out to let segments manage their own chains
+      // setProcessingChain(audioMetadata.globalProcessingChain);
       
       setMessage(`Loaded ${segments.length} segments (${completionStatus.completedSegments} with audio)`);
     } catch (error) {
       console.error("Failed to load plan data:", error);
       setMessage(`Failed to load plan data: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-  }, [root, audioProductionService, setProcessingChain]);
+  }, [root, audioProductionService]);
 
   const loadChapters = useCallback(async () => {
     if (!root) return;
@@ -440,7 +464,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
         // Start playing this segment with current processing chain
         // Preview system will generate audio on-demand if needed
-        await audioPreview.preview(segment.chunkId, processingChain, undefined, undefined, {
+        await audioPreview.preview(segment.chunkId, currentProcessingChain, undefined, undefined, {
           segment: segmentForTTS,
           character: characterData as Character,
           projectConfig: projectConfig as ProjectConfig
@@ -450,7 +474,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       console.error("Playback failed:", error);
       setMessage(`Preview failed: ${error instanceof Error ? error.message : String(error)}`);
     }
-  }, [selectedRowIndex, audioSegments, audioPreview, processingChain, root, selectedChapter]);
+  }, [selectedRowIndex, audioSegments, audioPreview, currentProcessingChain, root, selectedChapter]);
 
   const handlePlayAll = useCallback(async () => {
     // Start playing from the first segment or currently selected segment
@@ -850,18 +874,18 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                         {/* Processing Summary */}
                         <div style={{ marginBottom: "12px", padding: "6px", backgroundColor: "var(--accent)", color: "white", borderRadius: "3px", fontSize: "10px" }}>
                           <strong>Active Effects:</strong> {[
-                            processingChain.noiseCleanup.highPassFilter.enabled && `HP Filter (${processingChain.noiseCleanup.highPassFilter.frequency}Hz)`,
-                            processingChain.noiseCleanup.deClickDeEss.enabled && `De-ess (${processingChain.noiseCleanup.deClickDeEss.intensity})`,
-                            processingChain.dynamicControl.compression.enabled && `Compression (${processingChain.dynamicControl.compression.ratio})`,
-                            processingChain.dynamicControl.limiter.enabled && 'Limiter',
-                            processingChain.eqShaping.lowMidCut.enabled && `Low-Mid Cut (${processingChain.eqShaping.lowMidCut.frequency}Hz)`,
-                            processingChain.eqShaping.presenceBoost.enabled && `Presence (${processingChain.eqShaping.presenceBoost.frequency}kHz)`,
-                            processingChain.eqShaping.airLift.enabled && `Air Lift (${processingChain.eqShaping.airLift.frequency}kHz)`,
-                            processingChain.spatialEnhancement.reverb.enabled && `Reverb (${processingChain.spatialEnhancement.reverb.wetMix}%)`,
-                            processingChain.spatialEnhancement.stereoEnhancer.enabled && 'Stereo Enhance',
-                            processingChain.mastering.normalization.enabled && `Normalize (${processingChain.mastering.normalization.targetLUFS}LUFS)`,
-                            processingChain.mastering.peakLimiting.enabled && 'Peak Limit',
-                            processingChain.mastering.dithering.enabled && 'Dither'
+                            currentProcessingChain.noiseCleanup.highPassFilter.enabled && `HP Filter (${currentProcessingChain.noiseCleanup.highPassFilter.frequency}Hz)`,
+                            currentProcessingChain.noiseCleanup.deClickDeEss.enabled && `De-ess (${currentProcessingChain.noiseCleanup.deClickDeEss.intensity})`,
+                            currentProcessingChain.dynamicControl.compression.enabled && `Compression (${currentProcessingChain.dynamicControl.compression.ratio})`,
+                            currentProcessingChain.dynamicControl.limiter.enabled && 'Limiter',
+                            currentProcessingChain.eqShaping.lowMidCut.enabled && `Low-Mid Cut (${currentProcessingChain.eqShaping.lowMidCut.frequency}Hz)`,
+                            currentProcessingChain.eqShaping.presenceBoost.enabled && `Presence (${currentProcessingChain.eqShaping.presenceBoost.frequency}kHz)`,
+                            currentProcessingChain.eqShaping.airLift.enabled && `Air Lift (${currentProcessingChain.eqShaping.airLift.frequency}kHz)`,
+                            currentProcessingChain.spatialEnhancement.reverb.enabled && `Reverb (${currentProcessingChain.spatialEnhancement.reverb.wetMix}%)`,
+                            currentProcessingChain.spatialEnhancement.stereoEnhancer.enabled && 'Stereo Enhance',
+                            currentProcessingChain.mastering.normalization.enabled && `Normalize (${currentProcessingChain.mastering.normalization.targetLUFS}LUFS)`,
+                            currentProcessingChain.mastering.peakLimiting.enabled && 'Peak Limit',
+                            currentProcessingChain.mastering.dithering.enabled && 'Dither'
                           ].filter(Boolean).join(', ') || 'None'}
                         </div>
                         
@@ -874,32 +898,32 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
                               <input 
                                 type="checkbox" 
-                                checked={processingChain.noiseCleanup.highPassFilter.enabled}
-                                onChange={(e) => setProcessingChain(prev => ({
-                                  ...prev,
+                                checked={currentProcessingChain.noiseCleanup.highPassFilter.enabled}
+                                onChange={(e) => updateCurrentProcessingChain({
+                                  ...currentProcessingChain,
                                   noiseCleanup: {
-                                    ...prev.noiseCleanup,
+                                    ...currentProcessingChain.noiseCleanup,
                                     highPassFilter: {
-                                      ...prev.noiseCleanup.highPassFilter,
+                                      ...currentProcessingChain.noiseCleanup.highPassFilter,
                                       enabled: e.target.checked
                                     }
                                   }
-                                }))}
+                                })}
                                 style={{ accentColor: "var(--accent)" }} 
                               />
                               <span>High-pass filter (70-90 Hz)</span>
                               <select 
-                                value={processingChain.noiseCleanup.highPassFilter.frequency}
-                                onChange={(e) => setProcessingChain(prev => ({
-                                  ...prev,
+                                value={currentProcessingChain.noiseCleanup.highPassFilter.frequency}
+                                onChange={(e) => updateCurrentProcessingChain({
+                                  ...currentProcessingChain,
                                   noiseCleanup: {
-                                    ...prev.noiseCleanup,
+                                    ...currentProcessingChain.noiseCleanup,
                                     highPassFilter: {
-                                      ...prev.noiseCleanup.highPassFilter,
+                                      ...currentProcessingChain.noiseCleanup.highPassFilter,
                                       frequency: e.target.value as "70" | "80" | "90"
                                     }
                                   }
-                                }))}
+                                })}
                                 style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}
                               >
                                 <option value="70">70 Hz</option>
@@ -910,32 +934,32 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
                               <input 
                                 type="checkbox" 
-                                checked={processingChain.noiseCleanup.deClickDeEss.enabled}
-                                onChange={(e) => setProcessingChain(prev => ({
-                                  ...prev,
+                                checked={currentProcessingChain.noiseCleanup.deClickDeEss.enabled}
+                                onChange={(e) => updateCurrentProcessingChain({
+                                  ...currentProcessingChain,
                                   noiseCleanup: {
-                                    ...prev.noiseCleanup,
+                                    ...currentProcessingChain.noiseCleanup,
                                     deClickDeEss: {
-                                      ...prev.noiseCleanup.deClickDeEss,
+                                      ...currentProcessingChain.noiseCleanup.deClickDeEss,
                                       enabled: e.target.checked
                                     }
                                   }
-                                }))}
+                                })}
                                 style={{ accentColor: "var(--accent)" }} 
                               />
                               <span>De-click / De-ess</span>
                               <select 
-                                value={processingChain.noiseCleanup.deClickDeEss.intensity}
-                                onChange={(e) => setProcessingChain(prev => ({
-                                  ...prev,
+                                value={currentProcessingChain.noiseCleanup.deClickDeEss.intensity}
+                                onChange={(e) => updateCurrentProcessingChain({
+                                  ...currentProcessingChain,
                                   noiseCleanup: {
-                                    ...prev.noiseCleanup,
+                                    ...currentProcessingChain.noiseCleanup,
                                     deClickDeEss: {
-                                      ...prev.noiseCleanup.deClickDeEss,
+                                      ...currentProcessingChain.noiseCleanup.deClickDeEss,
                                       intensity: e.target.value as "light" | "medium" | "heavy"
                                     }
                                   }
-                                }))}
+                                })}
                                 style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}
                               >
                                 <option value="light">Light</option>
@@ -955,32 +979,32 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
                               <input 
                                 type="checkbox" 
-                                checked={processingChain.dynamicControl.compression.enabled}
-                                onChange={(e) => setProcessingChain(prev => ({
-                                  ...prev,
+                                checked={currentProcessingChain.dynamicControl.compression.enabled}
+                                onChange={(e) => updateCurrentProcessingChain({
+                                  ...currentProcessingChain,
                                   dynamicControl: {
-                                    ...prev.dynamicControl,
+                                    ...currentProcessingChain.dynamicControl,
                                     compression: {
-                                      ...prev.dynamicControl.compression,
+                                      ...currentProcessingChain.dynamicControl.compression,
                                       enabled: e.target.checked
                                     }
                                   }
-                                }))}
+                                })}
                                 style={{ accentColor: "var(--accent)" }} 
                               />
                               <span>Gentle compression</span>
                               <select 
-                                value={processingChain.dynamicControl.compression.ratio}
-                                onChange={(e) => setProcessingChain(prev => ({
-                                  ...prev,
+                                value={currentProcessingChain.dynamicControl.compression.ratio}
+                                onChange={(e) => updateCurrentProcessingChain({
+                                  ...currentProcessingChain,
                                   dynamicControl: {
-                                    ...prev.dynamicControl,
+                                    ...currentProcessingChain.dynamicControl,
                                     compression: {
-                                      ...prev.dynamicControl.compression,
+                                      ...currentProcessingChain.dynamicControl.compression,
                                       ratio: e.target.value as "2:1" | "2.5:1" | "3:1"
                                     }
                                   }
-                                }))}
+                                })}
                                 style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}
                               >
                                 <option value="2:1">2:1</option>
@@ -991,17 +1015,17 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
                               <input 
                                 type="checkbox" 
-                                checked={processingChain.dynamicControl.limiter.enabled}
-                                onChange={(e) => setProcessingChain(prev => ({
-                                  ...prev,
+                                checked={currentProcessingChain.dynamicControl.limiter.enabled}
+                                onChange={(e) => updateCurrentProcessingChain({
+                                  ...currentProcessingChain,
                                   dynamicControl: {
-                                    ...prev.dynamicControl,
+                                    ...currentProcessingChain.dynamicControl,
                                     limiter: {
-                                      ...prev.dynamicControl.limiter,
+                                      ...currentProcessingChain.dynamicControl.limiter,
                                       enabled: e.target.checked
                                     }
                                   }
-                                }))}
+                                })}
                                 style={{ accentColor: "var(--accent)" }} 
                               />
                               <span>Limiter safeguard (-1 dBFS)</span>
@@ -1018,32 +1042,32 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
                               <input 
                                 type="checkbox" 
-                                checked={processingChain.eqShaping.lowMidCut.enabled}
-                                onChange={(e) => setProcessingChain(prev => ({
-                                  ...prev,
+                                checked={currentProcessingChain.eqShaping.lowMidCut.enabled}
+                                onChange={(e) => updateCurrentProcessingChain({
+                                  ...currentProcessingChain,
                                   eqShaping: {
-                                    ...prev.eqShaping,
+                                    ...currentProcessingChain.eqShaping,
                                     lowMidCut: {
-                                      ...prev.eqShaping.lowMidCut,
+                                      ...currentProcessingChain.eqShaping.lowMidCut,
                                       enabled: e.target.checked
                                     }
                                   }
-                                }))}
+                                })}
                                 style={{ accentColor: "var(--accent)" }} 
                               />
                               <span>Low-mid cut (150-300 Hz)</span>
                               <select 
-                                value={processingChain.eqShaping.lowMidCut.frequency}
-                                onChange={(e) => setProcessingChain(prev => ({
-                                  ...prev,
+                                value={currentProcessingChain.eqShaping.lowMidCut.frequency}
+                                onChange={(e) => updateCurrentProcessingChain({
+                                  ...currentProcessingChain,
                                   eqShaping: {
-                                    ...prev.eqShaping,
+                                    ...currentProcessingChain.eqShaping,
                                     lowMidCut: {
-                                      ...prev.eqShaping.lowMidCut,
+                                      ...currentProcessingChain.eqShaping.lowMidCut,
                                       frequency: e.target.value as "150" | "200" | "300"
                                     }
                                   }
-                                }))}
+                                })}
                                 style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}
                               >
                                 <option value="150">150 Hz</option>
@@ -1054,32 +1078,32 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
                               <input 
                                 type="checkbox" 
-                                checked={processingChain.eqShaping.presenceBoost.enabled}
-                                onChange={(e) => setProcessingChain(prev => ({
-                                  ...prev,
+                                checked={currentProcessingChain.eqShaping.presenceBoost.enabled}
+                                onChange={(e) => updateCurrentProcessingChain({
+                                  ...currentProcessingChain,
                                   eqShaping: {
-                                    ...prev.eqShaping,
+                                    ...currentProcessingChain.eqShaping,
                                     presenceBoost: {
-                                      ...prev.eqShaping.presenceBoost,
+                                      ...currentProcessingChain.eqShaping.presenceBoost,
                                       enabled: e.target.checked
                                     }
                                   }
-                                }))}
+                                })}
                                 style={{ accentColor: "var(--accent)" }} 
                               />
                               <span>Presence boost (2-5 kHz)</span>
                               <select 
-                                value={processingChain.eqShaping.presenceBoost.frequency}
-                                onChange={(e) => setProcessingChain(prev => ({
-                                  ...prev,
+                                value={currentProcessingChain.eqShaping.presenceBoost.frequency}
+                                onChange={(e) => updateCurrentProcessingChain({
+                                  ...currentProcessingChain,
                                   eqShaping: {
-                                    ...prev.eqShaping,
+                                    ...currentProcessingChain.eqShaping,
                                     presenceBoost: {
-                                      ...prev.eqShaping.presenceBoost,
+                                      ...currentProcessingChain.eqShaping.presenceBoost,
                                       frequency: e.target.value as "2" | "3" | "5"
                                     }
                                   }
-                                }))}
+                                })}
                                 style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}
                               >
                                 <option value="2">2 kHz</option>
@@ -1090,32 +1114,32 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
                               <input 
                                 type="checkbox" 
-                                checked={processingChain.eqShaping.airLift.enabled}
-                                onChange={(e) => setProcessingChain(prev => ({
-                                  ...prev,
+                                checked={currentProcessingChain.eqShaping.airLift.enabled}
+                                onChange={(e) => updateCurrentProcessingChain({
+                                  ...currentProcessingChain,
                                   eqShaping: {
-                                    ...prev.eqShaping,
+                                    ...currentProcessingChain.eqShaping,
                                     airLift: {
-                                      ...prev.eqShaping.airLift,
+                                      ...currentProcessingChain.eqShaping.airLift,
                                       enabled: e.target.checked
                                     }
                                   }
-                                }))}
+                                })}
                                 style={{ accentColor: "var(--accent)" }} 
                               />
                               <span>Air lift (8-12 kHz)</span>
                               <select 
-                                value={processingChain.eqShaping.airLift.frequency}
-                                onChange={(e) => setProcessingChain(prev => ({
-                                  ...prev,
+                                value={currentProcessingChain.eqShaping.airLift.frequency}
+                                onChange={(e) => updateCurrentProcessingChain({
+                                  ...currentProcessingChain,
                                   eqShaping: {
-                                    ...prev.eqShaping,
+                                    ...currentProcessingChain.eqShaping,
                                     airLift: {
-                                      ...prev.eqShaping.airLift,
+                                      ...currentProcessingChain.eqShaping.airLift,
                                       frequency: e.target.value as "8" | "10" | "12"
                                     }
                                   }
-                                }))}
+                                })}
                                 style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}
                               >
                                 <option value="8">8 kHz</option>
@@ -1135,32 +1159,32 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
                               <input 
                                 type="checkbox" 
-                                checked={processingChain.spatialEnhancement.reverb.enabled}
-                                onChange={(e) => setProcessingChain(prev => ({
-                                  ...prev,
+                                checked={currentProcessingChain.spatialEnhancement.reverb.enabled}
+                                onChange={(e) => updateCurrentProcessingChain({
+                                  ...currentProcessingChain,
                                   spatialEnhancement: {
-                                    ...prev.spatialEnhancement,
+                                    ...currentProcessingChain.spatialEnhancement,
                                     reverb: {
-                                      ...prev.spatialEnhancement.reverb,
+                                      ...currentProcessingChain.spatialEnhancement.reverb,
                                       enabled: e.target.checked
                                     }
                                   }
-                                }))}
+                                })}
                                 style={{ accentColor: "var(--accent)" }} 
                               />
                               <span>Subtle reverb</span>
                               <select 
-                                value={processingChain.spatialEnhancement.reverb.type}
-                                onChange={(e) => setProcessingChain(prev => ({
-                                  ...prev,
+                                value={currentProcessingChain.spatialEnhancement.reverb.type}
+                                onChange={(e) => updateCurrentProcessingChain({
+                                  ...currentProcessingChain,
                                   spatialEnhancement: {
-                                    ...prev.spatialEnhancement,
+                                    ...currentProcessingChain.spatialEnhancement,
                                     reverb: {
-                                      ...prev.spatialEnhancement.reverb,
+                                      ...currentProcessingChain.spatialEnhancement.reverb,
                                       type: e.target.value as "room_0.3" | "room_0.4" | "room_0.5"
                                     }
                                   }
-                                }))}
+                                })}
                                 style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}
                               >
                                 <option value="room_0.3">Room (0.3s)</option>
@@ -1174,35 +1198,35 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 type="range" 
                                 min="0" 
                                 max="15" 
-                                value={processingChain.spatialEnhancement.reverb.wetMix}
-                                onChange={(e) => setProcessingChain(prev => ({
-                                  ...prev,
+                                value={currentProcessingChain.spatialEnhancement.reverb.wetMix}
+                                onChange={(e) => updateCurrentProcessingChain({
+                                  ...currentProcessingChain,
                                   spatialEnhancement: {
-                                    ...prev.spatialEnhancement,
+                                    ...currentProcessingChain.spatialEnhancement,
                                     reverb: {
-                                      ...prev.spatialEnhancement.reverb,
+                                      ...currentProcessingChain.spatialEnhancement.reverb,
                                       wetMix: parseInt(e.target.value)
                                     }
                                   }
-                                }))}
+                                })}
                                 style={{ flex: 1, accentColor: "var(--accent)" }} 
                               />
-                              <span>{processingChain.spatialEnhancement.reverb.wetMix}%</span>
+                              <span>{currentProcessingChain.spatialEnhancement.reverb.wetMix}%</span>
                             </div>
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
                               <input 
                                 type="checkbox" 
-                                checked={processingChain.spatialEnhancement.stereoEnhancer.enabled}
-                                onChange={(e) => setProcessingChain(prev => ({
-                                  ...prev,
+                                checked={currentProcessingChain.spatialEnhancement.stereoEnhancer.enabled}
+                                onChange={(e) => updateCurrentProcessingChain({
+                                  ...currentProcessingChain,
                                   spatialEnhancement: {
-                                    ...prev.spatialEnhancement,
+                                    ...currentProcessingChain.spatialEnhancement,
                                     stereoEnhancer: {
-                                      ...prev.spatialEnhancement.stereoEnhancer,
+                                      ...currentProcessingChain.spatialEnhancement.stereoEnhancer,
                                       enabled: e.target.checked
                                     }
                                   }
-                                }))}
+                                })}
                                 style={{ accentColor: "var(--accent)" }} 
                               />
                               <span>Stereo enhancer (subtle)</span>
@@ -1219,32 +1243,32 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
                               <input 
                                 type="checkbox" 
-                                checked={processingChain.mastering.normalization.enabled}
-                                onChange={(e) => setProcessingChain(prev => ({
-                                  ...prev,
+                                checked={currentProcessingChain.mastering.normalization.enabled}
+                                onChange={(e) => updateCurrentProcessingChain({
+                                  ...currentProcessingChain,
                                   mastering: {
-                                    ...prev.mastering,
+                                    ...currentProcessingChain.mastering,
                                     normalization: {
-                                      ...prev.mastering.normalization,
+                                      ...currentProcessingChain.mastering.normalization,
                                       enabled: e.target.checked
                                     }
                                   }
-                                }))}
+                                })}
                                 style={{ accentColor: "var(--accent)" }} 
                               />
                               <span>Normalize to audiobook standards</span>
                               <select 
-                                value={processingChain.mastering.normalization.targetLUFS}
-                                onChange={(e) => setProcessingChain(prev => ({
-                                  ...prev,
+                                value={currentProcessingChain.mastering.normalization.targetLUFS}
+                                onChange={(e) => updateCurrentProcessingChain({
+                                  ...currentProcessingChain,
                                   mastering: {
-                                    ...prev.mastering,
+                                    ...currentProcessingChain.mastering,
                                     normalization: {
-                                      ...prev.mastering.normalization,
+                                      ...currentProcessingChain.mastering.normalization,
                                       targetLUFS: e.target.value as "-18" | "-20" | "-21" | "-23"
                                     }
                                   }
-                                }))}
+                                })}
                                 style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}
                               >
                                 <option value="-18">-18 LUFS</option>
@@ -1256,17 +1280,17 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
                               <input 
                                 type="checkbox" 
-                                checked={processingChain.mastering.peakLimiting.enabled}
-                                onChange={(e) => setProcessingChain(prev => ({
-                                  ...prev,
+                                checked={currentProcessingChain.mastering.peakLimiting.enabled}
+                                onChange={(e) => updateCurrentProcessingChain({
+                                  ...currentProcessingChain,
                                   mastering: {
-                                    ...prev.mastering,
+                                    ...currentProcessingChain.mastering,
                                     peakLimiting: {
-                                      ...prev.mastering.peakLimiting,
+                                      ...currentProcessingChain.mastering.peakLimiting,
                                       enabled: e.target.checked
                                     }
                                   }
-                                }))}
+                                })}
                                 style={{ accentColor: "var(--accent)" }} 
                               />
                               <span>Peak limit (-3 dB max)</span>
@@ -1274,17 +1298,17 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
                               <input 
                                 type="checkbox" 
-                                checked={processingChain.mastering.dithering.enabled}
-                                onChange={(e) => setProcessingChain(prev => ({
-                                  ...prev,
+                                checked={currentProcessingChain.mastering.dithering.enabled}
+                                onChange={(e) => updateCurrentProcessingChain({
+                                  ...currentProcessingChain,
                                   mastering: {
-                                    ...prev.mastering,
+                                    ...currentProcessingChain.mastering,
                                     dithering: {
-                                      ...prev.mastering.dithering,
+                                      ...currentProcessingChain.mastering.dithering,
                                       enabled: e.target.checked
                                     }
                                   }
-                                }))}
+                                })}
                                 style={{ accentColor: "var(--accent)" }} 
                               />
                               <span>Final dither (16-bit export)</span>
