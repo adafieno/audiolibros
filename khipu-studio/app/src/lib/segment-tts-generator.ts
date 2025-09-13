@@ -27,15 +27,6 @@ export interface SegmentTTSResult {
 export async function generateSegmentAudio(options: SegmentTTSOptions): Promise<SegmentTTSResult> {
   const { segment, character, projectConfig } = options;
 
-  // Debug: Log the project config structure
-  console.log('🔍 Debug - Project config structure:', {
-    hasCredsSection: !!projectConfig.creds,
-    hasTTSSection: !!projectConfig.creds?.tts,
-    hasAzureSection: !!projectConfig.creds?.tts?.azure,
-    azureKey: projectConfig.creds?.tts?.azure?.key ? `${projectConfig.creds.tts.azure.key.substring(0, 10)}...` : 'MISSING',
-    azureRegion: projectConfig.creds?.tts?.azure?.region || 'MISSING'
-  });
-
   // Check if TTS credentials are configured
   if (!projectConfig.creds?.tts?.azure?.key || !projectConfig.creds?.tts?.azure?.region) {
     return {
@@ -130,9 +121,15 @@ export async function generateSegmentAudio(options: SegmentTTSOptions): Promise<
     try {
       console.log(`💾 Saving generated audio to: ${targetPath}`);
       
-      // Convert blob URL to audio data and save to filesystem
+      // Convert blob URL to raw audio data for IPC transfer
+      const response = await fetch(auditionResult.audioUrl);
+      const audioBlob = await response.blob();
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      const audioData = new Uint8Array(arrayBuffer);
+      
+      // Send raw audio data to main process for saving
       const result = await window.khipu!.call('tts:saveSegmentAudio', {
-        audioUrl: auditionResult.audioUrl,
+        audioData: audioData,
         segmentId: segment.segment_id,
         targetPath
       }) as { success: boolean; error?: string };

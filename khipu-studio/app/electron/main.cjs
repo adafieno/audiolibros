@@ -1081,16 +1081,12 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
   });
 
   // TTS segment audio generation
-  ipcMain.handle("tts:saveSegmentAudio", async (_e, { audioUrl, segmentId, targetPath }) => {
+  ipcMain.handle("tts:saveSegmentAudio", async (_e, { audioData, segmentId, targetPath }) => {
     try {
       console.log(`💾 Saving TTS audio for segment ${segmentId} to: ${targetPath}`);
       
-      // Convert blob URL to buffer (similar to how we handle audio cache)
-      // The audioUrl is a blob URL from the frontend
-      const response = await fetch(audioUrl);
-      const audioBlob = await response.blob();
-      const arrayBuffer = await audioBlob.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
+      // Convert Uint8Array back to Buffer
+      const buffer = Buffer.from(audioData);
       
       // Ensure the directory exists
       const fullPath = path.resolve(targetPath);

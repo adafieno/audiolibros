@@ -143,7 +143,7 @@ export interface KhipuRequestMap {
 
   // TTS
   "tts:saveSegmentAudio": { 
-    in: { audioUrl: string; segmentId: number; targetPath: string };
+    in: { audioData: Uint8Array; segmentId: number; targetPath: string };
     out: { success: boolean; error?: string } 
   };
 }
