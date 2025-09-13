@@ -1,8 +1,9 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useProject } from "../store/project";
 import { useAudioPreview } from "../hooks/useAudioPreview";
 import { createDefaultProcessingChain } from "../lib/audio-production-utils";
+import AudioProductionService from "../lib/audio-production-service";
 import type { PlanChunk } from "../types/plan";
 import type { AudioProcessingChain } from "../types/audio-production";
 
@@ -47,6 +48,11 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   // Audio preview functionality
   const audioPreview = useAudioPreview();
   const [processingChain, setProcessingChain] = useState<AudioProcessingChain>(() => createDefaultProcessingChain());
+
+  // Audio production service for metadata persistence
+  const audioProductionService = useMemo(() => {
+    return root ? new AudioProductionService(root) : null;
+  }, [root]);
 
   // Helper function to get chapters that have plans
   const getChaptersWithPlans = useCallback(() => {
@@ -131,7 +137,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   }, [root]);
 
   const loadPlanData = useCallback(async (chapterId: string) => {
-    if (!root || !chapterId) {
+    if (!root || !chapterId || !audioProductionService) {
       setAudioSegments([]);
       return;
     }
@@ -176,9 +182,16 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
       console.log("Plan chunks found:", chunks.length);
 
-      // Convert plan chunks to audio segment rows
+      // Initialize audio production metadata from plan data
+      // This will create/load the audio production configuration and check existing files
+      const audioMetadata = await audioProductionService.initializeFromPlan(chapterId, chunks);
+      const completionStatus = await audioProductionService.getChapterCompletionStatus(chapterId);
+
+      // Convert plan chunks to audio segment rows with proper audio tracking
       const segments: AudioSegmentRow[] = chunks.map((chunk, index) => {
+        const segmentStatus = completionStatus.segmentStatuses.find(s => s.chunkId === chunk.id);
         const audioPath = `audio/${chapterId}/${chunk.id}.wav`;
+        
         return {
           rowKey: `${chapterId}_${chunk.id}_${index}`,
           chunkId: chunk.id,
@@ -186,7 +199,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           voice: chunk.voice || "",
           locked: chunk.locked,
           sfxAfter: null, // Will be loaded if available
-          hasAudio: false, // Will be checked
+          hasAudio: segmentStatus?.hasAudio || false, // Actual file existence check
           audioPath,
           start_char: chunk.start_char,
           end_char: chunk.end_char
@@ -194,11 +207,16 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       });
 
       setAudioSegments(segments);
+      
+      // Update processing chain from metadata
+      setProcessingChain(audioMetadata.globalProcessingChain);
+      
+      setMessage(`Loaded ${segments.length} segments (${completionStatus.completedSegments} with audio)`);
     } catch (error) {
       console.error("Failed to load plan data:", error);
       setMessage(`Failed to load plan data: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-  }, [root]);
+  }, [root, audioProductionService, setProcessingChain]);
 
   const loadChapters = useCallback(async () => {
     if (!root) return;
@@ -247,7 +265,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
   const handleGenerateSegmentAudio = useCallback(async (rowIndex: number) => {
     const segment = audioSegments[rowIndex];
-    if (!segment || !selectedChapter || generatingAudio.has(segment.chunkId)) return;
+    if (!segment || !selectedChapter || !audioProductionService || generatingAudio.has(segment.chunkId)) return;
 
     setGeneratingAudio(prev => new Set(prev).add(segment.chunkId));
     
@@ -267,6 +285,19 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       // For now, simulate generation
       await new Promise(resolve => setTimeout(resolve, 2000));
       
+      // Update audio production metadata
+      await audioProductionService.markSegmentAsCompleted(
+        selectedChapter,
+        segment.chunkId,
+        {
+          filename: `${segment.chunkId}.wav`,
+          duration: 10, // TODO: Get actual duration from generated file
+          sampleRate: 22050,
+          bitDepth: 16,
+          fileSize: 1024000 // TODO: Get actual file size
+        }
+      );
+      
       // Update segment to show it has audio
       setAudioSegments(prev => {
         const updated = [...prev];
@@ -285,7 +316,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         return next;
       });
     }
-  }, [audioSegments, selectedChapter, generatingAudio]);
+  }, [audioSegments, selectedChapter, audioProductionService, generatingAudio]);
 
   const handleGenerateChapterAudio = useCallback(async () => {
     if (!selectedChapter || audioSegments.length === 0) return;
@@ -494,7 +525,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               padding: "10px 16px",
               fontSize: "13px",
               fontWeight: 500,
-              backgroundColor: "var(--success)",
+              backgroundColor: audioSegments.length > 0 ? "var(--accent)" : "var(--muted)",
               color: "white",
               border: "none",
               borderRadius: "4px",
@@ -505,7 +536,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               gap: "6px"
             }}
           >
-            🎵 Generate Chapter Audio
+            Generate Chapter Audio
           </button>
 
           {/* Separator */}
@@ -538,7 +569,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           >
             {audioPreview.isLoading ? "⏳ Loading..." :
              audioPreview.isPlaying && audioPreview.playbackState.segmentId === audioSegments[selectedRowIndex]?.chunkId ? "⏸ Pause" :
-             "▶ Preview Segment"}
+             "▶ Play"}
           </button>
 
           <button
@@ -559,7 +590,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               gap: "6px"
             }}
           >
-            🎬 Preview All
+            🎬 Play All
           </button>
 
           <button
