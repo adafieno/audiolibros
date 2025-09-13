@@ -4,6 +4,7 @@ const { spawn } = require("node:child_process");
 const path = require("path");
 const fs = require("node:fs");
 const fsp = fs.promises;
+const { FFmpegAudioProcessor } = require("./ffmpeg-audio-processor.js");
 
 app.disableHardwareAcceleration();
 
@@ -512,6 +513,19 @@ function resolveUnder(root, p) {
   return abs;
 }
 
+/* ---------------- Audio Processing Setup ---------------- */
+// Initialize audio processor with project-specific paths
+let audioProcessor;
+function getAudioProcessor() {
+  if (!audioProcessor) {
+    const ffmpegPath = path.join(repoRoot, "bin", "ffmpeg", "ffmpeg.exe");
+    const tempDir = path.join(repoRoot, "temp");
+    const cacheDir = path.join(repoRoot, "cache");
+    audioProcessor = new FFmpegAudioProcessor(ffmpegPath, tempDir, cacheDir);
+  }
+  return audioProcessor;
+}
+
 /* ---------------- BrowserWindow + IPC ---------------- */
 function createWin() {
   const win = new BrowserWindow({
@@ -991,6 +1005,69 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
   await fsp.writeFile(abs, String(text ?? ""), "utf-8");
   return true;
 });
+
+  /* Audio processing handlers */
+  ipcMain.handle("audio:process", async (_e, options) => {
+    try {
+      const processor = getAudioProcessor();
+      const result = await processor.processAudio(options, (progress) => {
+        // Send progress updates to renderer
+        win?.webContents.send('audio:progress', { id: options.id, progress });
+      });
+      return result;
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  });
+
+  ipcMain.handle("audio:info", async (_e, filePath) => {
+    try {
+      const processor = getAudioProcessor();
+      return await processor.getAudioInfo(filePath);
+    } catch (error) {
+      throw new Error(`Failed to get audio info: ${error.message}`);
+    }
+  });
+
+  ipcMain.handle("audio:cache:has", async (_e, cacheKey) => {
+    try {
+      const processor = getAudioProcessor();
+      return processor.hasCachedAudio(cacheKey);
+    } catch (error) {
+      return false;
+    }
+  });
+
+  ipcMain.handle("audio:cache:path", async (_e, cacheKey) => {
+    try {
+      const processor = getAudioProcessor();
+      return processor.getCachedAudioPath(cacheKey);
+    } catch (error) {
+      return null;
+    }
+  });
+
+  ipcMain.handle("audio:cancel", async (_e, id) => {
+    try {
+      const processor = getAudioProcessor();
+      return processor.cancelProcessing(id);
+    } catch (error) {
+      console.error('Failed to cancel audio processing:', error);
+      return false;
+    }
+  });
+
+  ipcMain.handle("audio:available", async () => {
+    try {
+      const processor = getAudioProcessor();
+      return await processor.isAvailable();
+    } catch (error) {
+      return false;
+    }
+  });
 
 
   /* Plan build (scoped to project root) */

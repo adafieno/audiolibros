@@ -103,6 +103,39 @@ export interface KhipuRequestMap {
   "chapters:list": { in: { projectRoot: string }; out: ChapterItem[] };
   "chapter:read":  { in: { projectRoot: string; relPath: string }; out: { text: string } };
   "chapter:write": { in: { projectRoot: string; relPath: string; text: string }; out: boolean };
+
+  // Audio processing
+  "audio:process": { 
+    in: {
+      id: string;
+      inputPath: string;
+      outputPath: string;
+      processingChain: import("./types/audio-production").AudioProcessingChain;
+      tempDir?: string;
+    };
+    out: {
+      success: boolean;
+      outputPath?: string;
+      error?: string;
+      duration?: number;
+      fileSize?: number;
+      cached?: boolean;
+    };
+  };
+  "audio:info": { 
+    in: string;
+    out: {
+      duration: number;
+      channels: number;
+      sampleRate: number;
+      bitRate: number;
+      format: string;
+    };
+  };
+  "audio:cache:has": { in: string; out: boolean };
+  "audio:cache:path": { in: string; out: string | null };
+  "audio:cancel": { in: string; out: boolean };
+  "audio:available": { in: undefined; out: boolean };
 }
 
 export interface Khipu {
