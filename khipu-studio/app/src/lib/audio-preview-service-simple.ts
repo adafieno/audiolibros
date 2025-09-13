@@ -207,7 +207,7 @@ export class AudioPreviewService {
   /**
    * Internal preview method that handles both normal and exaggerated processing
    */
-  private async previewInternal(options: PreviewOptions, isExaggerated: boolean = false): Promise<void> {
+  private async previewInternal(options: PreviewOptions, _isExaggerated: boolean = false): Promise<void> {
     try {
       // Stop any current playback
       await this.stop();
@@ -503,7 +503,7 @@ export class AudioPreviewService {
    * Save audio data to a temporary file for SoX processing
    * @deprecated Not needed anymore - using direct cached TTS files
    */
-  private async saveTempAudio(arrayBuffer: ArrayBuffer, segmentId: string): Promise<string> {
+  private async saveTempAudio(_arrayBuffer: ArrayBuffer, _segmentId: string): Promise<string> {
     // This method is kept for reference but not used
     // We now use cached TTS files directly
     throw new Error('saveTempAudio is deprecated - using cached TTS files directly');

@@ -64,7 +64,12 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   // Current processing chain for the selected segment
   const currentProcessingChain = getCurrentProcessingChain();
 
-  // Update segment's processing chain
+  // Audio production service for metadata persistence
+  const audioProductionService = useMemo(() => {
+    return root ? new AudioProductionService(root) : null;
+  }, [root]);
+
+  // Update segment's processing chain with automatic persistence
   const updateCurrentProcessingChain = useCallback((newChain: AudioProcessingChain) => {
     if (selectedRowIndex >= 0 && selectedRowIndex < audioSegments.length) {
       setAudioSegments(prev => prev.map((segment, index) => 
@@ -72,18 +77,44 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           ? { ...segment, processingChain: newChain }
           : segment
       ));
+      
+      // Auto-save processing chain changes
+      if (audioProductionService && selectedChapter && root) {
+        // Debounce the save operation to avoid too many saves
+        setTimeout(async () => {
+          try {
+            // Create a map with all current processing chains
+            const processingChainMap: Record<string, AudioProcessingChain> = {};
+            
+            // Add the newly updated segment
+            const currentSegment = audioSegments[selectedRowIndex];
+            if (currentSegment) {
+              processingChainMap[currentSegment.chunkId] = newChain;
+              
+              // Also add other segments that have custom processing chains
+              audioSegments.forEach(segment => {
+                if (segment.processingChain && segment.chunkId !== currentSegment.chunkId) {
+                  processingChainMap[segment.chunkId] = segment.processingChain;
+                }
+              });
+            }
+            
+            console.log('💾 Auto-saving processing chain changes for segment:', currentSegment?.chunkId);
+            await audioProductionService.saveProcessingChains(selectedChapter, processingChainMap);
+            
+          } catch (error) {
+            console.warn('Auto-save failed:', error);
+            // Don't show error to user for auto-save failures, just log them
+          }
+        }, 1000); // Debounce: save 1 second after last change
+      }
     }
-  }, [selectedRowIndex, audioSegments.length]);
+  }, [selectedRowIndex, audioSegments, audioProductionService, selectedChapter, root]);
 
   // Debug: Log processing chain changes
   useEffect(() => {
     console.log('🎛️ Processing chain for selected segment (row ' + selectedRowIndex + '):', JSON.stringify(currentProcessingChain, null, 2));
   }, [currentProcessingChain, selectedRowIndex]);
-
-  // Audio production service for metadata persistence
-  const audioProductionService = useMemo(() => {
-    return root ? new AudioProductionService(root) : null;
-  }, [root]);
 
   // Helper function to get chapters that have plans
   const getChaptersWithPlans = useCallback(() => {
@@ -516,6 +547,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     }
 
     const startIndex = selectedRowIndex >= 0 ? selectedRowIndex : 0;
+    let userStopped = false;
     
     try {
       console.log(`🎬 Starting Play All from segment ${startIndex}`);
@@ -546,7 +578,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       ]);
       
       // Play segments sequentially using a for loop with proper await
-      for (let i = startIndex; i < audioSegments.length; i++) {
+      for (let i = startIndex; i < audioSegments.length && !userStopped; i++) {
         console.log(`🎵 Playing segment ${i + 1}/${audioSegments.length}`);
         
         // Update selected row to show which segment is currently playing
@@ -592,30 +624,50 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         });
         
         // Wait for this segment to finish playing before starting the next
-        await new Promise<void>((resolve) => {
+        const segmentFinished = await new Promise<boolean>((resolve) => {
+          let wasPlaying = false;
+          
           const checkPlayback = () => {
-            if (!audioPreview.isPlaying) {
-              resolve();
-            } else {
-              setTimeout(checkPlayback, 100); // Check every 100ms
+            // First, detect when playback actually starts
+            if (audioPreview.isPlaying) {
+              wasPlaying = true;
             }
+            
+            // If we were playing but now we're not, the segment finished naturally
+            if (wasPlaying && !audioPreview.isPlaying) {
+              resolve(true); // Segment finished naturally
+              return;
+            }
+            
+            // Keep checking
+            setTimeout(checkPlayback, 100);
           };
-          // Start checking after a brief delay to ensure playback has started
-          setTimeout(checkPlayback, 500);
+          
+          // Start checking immediately
+          checkPlayback();
+          
+          // Also set up a safety timeout (e.g., 60 seconds max per segment)
+          setTimeout(() => {
+            console.warn('⚠️ Segment playback timeout after 60 seconds');
+            resolve(false); // Timeout reached
+          }, 60000);
         });
         
-        // Check if user stopped playback
-        if (!audioPreview.isPlaying) {
-          console.log('🛑 Play All stopped by user');
-          setMessage("Play All stopped");
+        if (!segmentFinished) {
+          console.log('🛑 Play All stopped (timeout or interruption)');
+          userStopped = true;
           break;
         }
         
         console.log(`✅ Finished segment ${i + 1}, moving to next`);
       }
       
-      console.log('🎉 Play All completed');
-      setMessage("Play All completed");
+      if (!userStopped) {
+        console.log('🎉 Play All completed');
+        setMessage("Play All completed");
+      } else {
+        setMessage("Play All stopped");
+      }
       
     } catch (error) {
       console.error("Play All failed:", error);
@@ -630,43 +682,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       console.error("Stop failed:", error);
     }
   }, [audioPreview]);
-
-  const handleSaveProcessingChains = useCallback(async () => {
-    if (!root || !selectedChapter || !audioProductionService) {
-      setMessage("Cannot save: missing project root or selected chapter");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setMessage("Saving processing chain preferences...");
-
-      // Create a map of segment processing chains
-      const processingChainMap: Record<string, AudioProcessingChain> = {};
-      
-      // Only save segments that have custom processing chains (not default)
-      audioSegments.forEach(segment => {
-        if (segment.processingChain) {
-          processingChainMap[segment.chunkId] = segment.processingChain;
-        }
-      });
-
-      console.log('💾 Saving processing chains for chapter:', selectedChapter);
-      console.log('💾 Processing chain data:', processingChainMap);
-
-      // Save to audioProductionService (which handles file persistence)
-      await audioProductionService.saveProcessingChains(selectedChapter, processingChainMap);
-      
-      setMessage(`Saved processing preferences for ${Object.keys(processingChainMap).length} segments`);
-      console.log(`✅ Successfully saved processing chains for ${Object.keys(processingChainMap).length} segments`);
-
-    } catch (error) {
-      console.error("Save processing chains failed:", error);
-      setMessage(`Save failed: ${error instanceof Error ? error.message : String(error)}`);
-    } finally {
-      setLoading(false);
-    }
-  }, [root, selectedChapter, audioProductionService, audioSegments]);
 
   useEffect(() => {
     loadChapters();
@@ -904,27 +919,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             }}
           >
             ⏹ Stop
-          </button>
-
-          <button
-            onClick={handleSaveProcessingChains}
-            disabled={audioSegments.length === 0 || loading}
-            style={{
-              padding: "10px 16px",
-              fontSize: "13px",
-              fontWeight: 500,
-              backgroundColor: audioSegments.length > 0 ? "var(--success)" : "var(--muted)",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: (audioSegments.length > 0 && !loading) ? "pointer" : "not-allowed",
-              opacity: (audioSegments.length > 0 && !loading) ? 1 : 0.5,
-              display: "flex",
-              alignItems: "center",
-              gap: "6px"
-            }}
-          >
-            {loading ? "💾 Saving..." : "💾 Save"}
           </button>
 
           {/* Status indicator */}
