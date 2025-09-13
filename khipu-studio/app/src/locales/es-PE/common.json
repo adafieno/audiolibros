@@ -2054,27 +2054,27 @@
   },
   "audioProduction.presetCleanNatural": {
     "string": "Limpio y Natural",
-    "comment": "Categoría de preset de audio para sonido limpio y natural"
+    "comment": "Categoría de configuraciones de audio para sonido limpio y natural"
   },
   "audioProduction.presetCharacterVoices": {
     "string": "Voces de Personajes",
-    "comment": "Categoría de preset de audio para voces de personajes"
+    "comment": "Categoría de configuraciones de audio para voces de personajes"
   },
   "audioProduction.presetBroadcastQuality": {
     "string": "Calidad de Transmisión",
-    "comment": "Categoría de preset de audio para calidad de transmisión"
+    "comment": "Categoría de configuraciones de audio para calidad de transmisión"
   },
   "audioProduction.presetVintageSpecialty": {
     "string": "Vintage y Especialidad",
-    "comment": "Categoría de preset de audio para efectos vintage y especialidad"
+    "comment": "Categoría de configuraciones de audio para efectos vintage y especialidad"
   },
   "audioProduction.presetEnvironmental": {
     "string": "Ambiental",
-    "comment": "Categoría de preset de audio para efectos ambientales"
+    "comment": "Categoría de configuraciones de audio para efectos ambientales"
   },
   "audioProduction.presetSpecialEffects": {
     "string": "Efectos Especiales",
-    "comment": "Categoría de preset de audio para efectos especiales"
+    "comment": "Categoría de configuraciones de audio para efectos especiales"
   },
   "audioProduction.processingStep1": {
     "string": "1. Ruido y Limpieza",
@@ -2235,8 +2235,8 @@
     "comment": "Texto cuando no hay efectos de procesamiento de audio activos"
   },
   "audioProduction.presetsDescription": {
-    "string": "Elige entre 21 presets profesionales de procesamiento de voz diseñados para producción de audiolibros.",
-    "comment": "Texto de descripción para los presets de procesamiento de voz"
+    "string": "Elige entre 21 configuraciones profesionales de procesamiento de voz diseñados para producción de audiolibros.",
+    "comment": "Texto de descripción para los configuraciones de procesamiento de voz"
   },
   "audioProduction.customSettingsInstruction": {
     "string": "Selecciona \"{{customSettings}}\" para configurar manualmente los efectos individuales a continuación.",
@@ -2299,8 +2299,8 @@
     "comment": "Título para la sección de cadena de procesamiento de audio"
   },
   "audioProduction.professionalVoicePresets": {
-    "string": "Presets Profesionales de Voz",
-    "comment": "Título para la sección de presets profesionales de voz"
+    "string": "Configuraciones Profesionales de Voz",
+    "comment": "Título para la sección de configuraciones profesionales de voz"
   },
   "audioProduction.chapterLabel": {
     "string": "Capítulo:",
