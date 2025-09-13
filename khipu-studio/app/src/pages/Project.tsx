@@ -69,7 +69,6 @@ export default function Project() {
   const { t } = useTranslation();
   const { root } = useProject();
   const [cfg, setCfg] = useState<ProjectConfig | null>(null);
-  const [msg, setMsg] = useState("");
 
   // Load config on mount or project change
   useEffect(() => {
@@ -82,7 +81,6 @@ export default function Project() {
       .then(setCfg)
       .catch(err => {
         console.error("Failed to load project config:", err);
-        setMsg(t("project.loadError"));
       });
   }, [root, t]);
 
@@ -101,17 +99,21 @@ export default function Project() {
     if (!isNaN(n)) fn(n);
   };
 
-  const saveAll = async () => {
-    if (!root || !cfg) return;
-    try {
-      await saveProjectConfig(root, cfg);
-      setMsg(t("project.saved"));
-      setTimeout(() => setMsg(""), 2000);
-    } catch (err) {
-      console.error("Failed to save config:", err);
-      setMsg(t("project.saveError"));
-    }
-  };
+  // Auto-save configuration changes
+  useEffect(() => {
+    if (!cfg || !root) return;
+    
+    const timeoutId = setTimeout(async () => {
+      try {
+        await saveProjectConfig(root, cfg);
+        console.log("Project config auto-saved");
+      } catch (error) {
+        console.warn("Failed to auto-save project config:", error);
+      }
+    }, 2000);
+
+    return () => clearTimeout(timeoutId);
+  }, [cfg, root]);
 
   if (!root) {
     return <div>{t("status.openProject")}</div>;
@@ -481,11 +483,12 @@ export default function Project() {
       </section>
 
       <div style={{ marginTop: 24, display: "flex", gap: 12, alignItems: "center" }}>
-        <button onClick={saveAll}>{t("project.save")}</button>
         <WorkflowCompleteButton step="project">
           {t("project.markComplete")}
         </WorkflowCompleteButton>
-        <div style={{ fontSize: 12, color: "#9ca3af" }}>{msg}</div>
+        <div style={{ fontSize: 12, color: "#9ca3af" }}>
+          {t("project.autoSave")}
+        </div>
       </div>
     </div>
   );

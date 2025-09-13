@@ -15,15 +15,12 @@ function CharactersPage() {
   const {
     characters,
     loading,
-    saving,
-    dirty,
     message,
     reloadDetection,
     addCharacter,
     removeCharacter,
     updateCharacter,
     sortByFrequency,
-    save,
     load,
     assignVoices,
     updateVoiceAssignment,
@@ -208,7 +205,6 @@ function CharactersPage() {
       setDetectionProgress(null);
     }
   };
-  const saveCharacters = () => void save();
   const add = () => addCharacter();
   const remove = (id: string) => removeCharacter(id);
 
@@ -304,15 +300,6 @@ function CharactersPage() {
               {assignmentProgress 
                 ? t("characters.assigningProgress", { percent: assignmentProgress.current }) 
                 : t("characters.assignVoices")}
-            </button>
-            
-            <button 
-              onClick={saveCharacters} 
-              disabled={saving || loading || !dirty} 
-              style={{ padding: "6px 12px", fontSize: "14px" }}
-            >
-              {saving ? "Saving..." : t("characters.save")}
-              {dirty && !saving && " *"}
             </button>
             
             <WorkflowCompleteButton 

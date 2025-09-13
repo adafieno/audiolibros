@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useProject } from "../store/project";
 import { WorkflowCompleteButton } from "../components/WorkflowCompleteButton";
@@ -90,35 +90,35 @@ export default function Book() {
     setBookMeta(newMeta);
   };
 
-  const saveAll = useCallback(async () => {
-    if (!root || !cfg || !bookMeta) {
-      console.log("Save aborted: missing root, cfg, or bookMeta", { root: !!root, cfg: !!cfg, bookMeta: !!bookMeta });
-      return;
-    }
+  // Auto-save when cfg or bookMeta changes (debounced)
+  useEffect(() => {
+    if (!root || !cfg || !bookMeta) return;
     
-    try {
-      console.log("Saving book metadata:", bookMeta);
-      
-      // Save project config (without book metadata)
-      await saveProjectConfig(root, cfg);
-      
-      // Save book metadata to book.meta.json
-      const result = await window.khipu!.call("fs:write", {
-        projectRoot: root,
-        relPath: "book.meta.json",
-        json: true,
-        content: bookMeta
-      });
-      
-      console.log("Save result:", result);
-      
-      setMsg(t("book.saved"));
-      setTimeout(() => setMsg(""), 2000);
-    } catch (err) {
-      console.error("Failed to save config:", err);
-      setMsg(t("book.saveError"));
-    }
-  }, [root, cfg, bookMeta, t]);
+    const timeoutId = setTimeout(async () => {
+      try {
+        console.log('💾 Auto-saving book configuration and metadata');
+        
+        // Save project config
+        await saveProjectConfig(root, cfg);
+        
+        // Save book metadata to book.meta.json
+        await window.khipu!.call("fs:write", {
+          projectRoot: root,
+          relPath: "book.meta.json",
+          json: true,
+          content: bookMeta
+        });
+        
+        console.log('💾 Auto-saved book configuration and metadata');
+        
+      } catch (error) {
+        console.warn('Auto-save failed:', error);
+        // Don't show error to user for auto-save failures, just log them
+      }
+    }, 2000); // Debounce: save 2 seconds after last change
+
+    return () => clearTimeout(timeoutId);
+  }, [cfg, bookMeta, root]);
 
   if (!root) {
     return <div>{t("status.openProject")}</div>;
@@ -507,7 +507,6 @@ export default function Book() {
       </section>
 
       <div style={{ marginTop: 24, display: "flex", gap: 12, alignItems: "center" }}>
-        <button onClick={saveAll}>{t("book.save")}</button>
         <WorkflowCompleteButton step="project">
           {t("book.completeButton")}
         </WorkflowCompleteButton>

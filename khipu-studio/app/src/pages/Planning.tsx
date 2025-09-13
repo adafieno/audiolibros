@@ -309,7 +309,7 @@ function EditablePreview({
     if (!segments || !originalSegment) return;
 
     const textChanged = editedText !== originalSegment.text;
-    console.log(`📝 SAVE EDIT - Segment ${current.segmentId}:`);
+    console.log(`📝 AUTO-SAVE EDIT - Segment ${current.segmentId}:`);
     console.log(`  - Text changed: ${textChanged}`);
     console.log(`  - Original text: "${originalSegment.text}"`);
     console.log(`  - New text: "${editedText}"`);
@@ -317,7 +317,7 @@ function EditablePreview({
 
     // If text changed, invalidate the old cache entry
     if (textChanged && onInvalidateCache) {
-      console.log(`🗑️ SAVE EDIT - Invalidating cache for old text: "${originalSegment.originalText || originalSegment.text}"`);
+      console.log(`🗑️ AUTO-SAVE EDIT - Invalidating cache for old text: "${originalSegment.originalText || originalSegment.text}"`);
       await onInvalidateCache(current.segmentId, originalSegment.originalText || originalSegment.text);
     }
 
@@ -333,7 +333,7 @@ function EditablePreview({
         : seg
     );
 
-    console.log(`📝 SAVE EDIT - Updated segment:`, updatedSegments.find(s => s.segment_id === current.segmentId));
+    console.log(`📝 AUTO-SAVE EDIT - Updated segment:`, updatedSegments.find(s => s.segment_id === current.segmentId));
     setSegments(updatedSegments);
     setIsEditing(false);
     
@@ -354,8 +354,16 @@ function EditablePreview({
       handleCancelEdit();
     } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
-      handleSaveEdit();
+      handleSaveEdit(); // Auto-save on Ctrl+Enter
+    } else if (e.key === 'Tab') {
+      e.preventDefault();
+      handleSaveEdit(); // Auto-save on Tab (exit edit mode)
     }
+  };
+
+  // Auto-save on blur (when leaving the textarea)
+  const handleTextareaBlur = () => {
+    handleSaveEdit();
   };
 
   // Update cursor position
@@ -505,13 +513,6 @@ function EditablePreview({
           ) : (
             <>
               <button
-                onClick={handleSaveEdit}
-                className="btn compact primary"
-                title={t("planning.tooltips.saveChanges")}
-              >
-                💾 {t("planning.save")}
-              </button>
-              <button
                 onClick={handleSplitSegment}
                 disabled={!canSplit}
                 className="btn compact"
@@ -575,6 +576,7 @@ function EditablePreview({
           value={editedText}
           onChange={handleTextareaChange}
           onKeyDown={handleKeyDown}
+          onBlur={handleTextareaBlur}
           onSelect={(e) => setCursorPosition((e.target as HTMLTextAreaElement).selectionStart)}
           style={{
             width: "100%",
@@ -1351,31 +1353,32 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
     }
   };
 
-  // Save plan for selected chapter
-  const savePlan = async () => {
-    if (!segments || !root || !selectedChapter) {
-      setMessage(t("planning.noPlanToSave"));
-      return;
-    }
-    setLoading(true);
-    try {
-      await window.khipu!.call("fs:write", {
-        projectRoot: root,
-        relPath: `ssml/plans/${selectedChapter}.plan.json`,
-        json: true,
-        content: segments
-      });
-      setMessage(`Plan for chapter ${selectedChapter} saved successfully!`);
-      // Update chapter status
-      const status = await checkChapterStatus(selectedChapter);
-      setChapterStatus(prev => new Map(prev).set(selectedChapter, status));
-    } catch (error) {
-      console.error("Failed to save plan:", error);
-      setMessage(`Failed to save plan for chapter ${selectedChapter}.`);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Auto-save plan when segments change (debounced)
+  useEffect(() => {
+    if (!segments || !root || !selectedChapter) return;
+    
+    const timeoutId = setTimeout(async () => {
+      try {
+        console.log('💾 Auto-saving plan for chapter:', selectedChapter);
+        await window.khipu!.call("fs:write", {
+          projectRoot: root,
+          relPath: `ssml/plans/${selectedChapter}.plan.json`,
+          json: true,
+          content: segments
+        });
+        console.log(`💾 Auto-saved plan for chapter ${selectedChapter}`);
+        
+        // Update chapter status
+        const status = await checkChapterStatus(selectedChapter);
+        setChapterStatus(prev => new Map(prev).set(selectedChapter, status));
+      } catch (error) {
+        console.warn('Auto-save failed:', error);
+        // Don't show error to user for auto-save failures, just log them
+      }
+    }, 2000); // Debounce: save 2 seconds after last change
+
+    return () => clearTimeout(timeoutId);
+  }, [segments, root, selectedChapter, checkChapterStatus]);
 
   // Mark current chapter as complete
   const handleMarkChapterComplete = async () => {
@@ -1971,14 +1974,6 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
         
         {segments && selectedChapter && (
           <>
-            <button 
-              onClick={savePlan} 
-              disabled={loading} 
-              style={{ padding: "6px 12px", fontSize: "14px" }}
-            >
-              {t("planning.savePlan")}
-            </button>
-            
             <button 
               onClick={handleMarkChapterComplete}
               disabled={loading || chapterStatus.get(selectedChapter)?.isComplete || !chapterStatus.get(selectedChapter)?.hasPlan} 

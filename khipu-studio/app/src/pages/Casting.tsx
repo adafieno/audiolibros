@@ -144,27 +144,31 @@ export default function CastingPage() {
     setSelectedVoices(newSelected);
   };
 
-  const handleSave = async () => {
-    if (!root || !inventory) return;
+  // Auto-save voice selection when selectedVoices changes (debounced)
+  useEffect(() => {
+    if (!root || !inventory || selectedVoices.size === 0) return;
     
-    try {
-      setMessage(t("casting.saving"));
-      
-      // Update inventory with current selection
-      const updatedInventory: VoiceInventory = {
-        voices: inventory.voices, // Keep all available voices
-        selectedVoiceIds: Array.from(selectedVoices) // Save current selection
-      };
-      
-      await saveVoiceInventory(root, updatedInventory);
-      setMessage(t("casting.saved"));
-      
-      setTimeout(() => setMessage(""), 2000);
-    } catch (error) {
-      console.error("Failed to save voice selection:", error);
-      setMessage(t("casting.saveError"));
-    }
-  };
+    const timeoutId = setTimeout(async () => {
+      try {
+        console.log('💾 Auto-saving voice selection:', Array.from(selectedVoices));
+        
+        // Update inventory with current selection
+        const updatedInventory: VoiceInventory = {
+          voices: inventory.voices, // Keep all available voices
+          selectedVoiceIds: Array.from(selectedVoices) // Save current selection
+        };
+        
+        await saveVoiceInventory(root, updatedInventory);
+        console.log('💾 Auto-saved voice selection');
+        
+      } catch (error) {
+        console.warn('Auto-save failed:', error);
+        // Don't show error to user for auto-save failures, just log them
+      }
+    }, 1500); // Debounce: save 1.5 seconds after last change
+
+    return () => clearTimeout(timeoutId);
+  }, [selectedVoices, root, inventory]);
 
   if (isLoading) {
     return <div>{t("casting.loading")}</div>;
@@ -241,13 +245,6 @@ export default function CastingPage() {
               style={{ padding: "6px 12px", fontSize: "14px" }}
             >
               {t("casting.deselectAll")}
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={selectedVoices.size === 0}
-              style={{ padding: "6px 12px", fontSize: "14px" }}
-            >
-              {t("casting.save")}
             </button>
             <WorkflowCompleteButton 
               step="casting"

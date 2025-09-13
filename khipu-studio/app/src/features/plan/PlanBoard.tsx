@@ -98,12 +98,21 @@ export default function PlanBoard({ projectRoot, planRelPath, chapterId, onOpenC
     setPlan(next);
   }
 
-  async function saveAll() {
+  // Auto-save plan changes
+  useEffect(() => {
     if (!plan) return;
-    setMsg(t("plan.saving"));
-    await savePlan(projectRoot, planRelPath, plan);
-    setMsg(t("plan.saved"));
-  }
+    
+    const timeoutId = setTimeout(async () => {
+      try {
+        await savePlan(projectRoot, planRelPath, plan);
+        console.log(`Plan ${planRelPath} auto-saved`);
+      } catch (error) {
+        console.warn(`Failed to auto-save plan ${planRelPath}:`, error);
+      }
+    }, 2000);
+
+    return () => clearTimeout(timeoutId);
+  }, [plan, projectRoot, planRelPath]);
 
   async function regen() {
     setMsg(t("plan.generating"));
@@ -121,7 +130,6 @@ export default function PlanBoard({ projectRoot, planRelPath, chapterId, onOpenC
   return (
     <div style={{ marginTop: 16 }}>
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-        <button onClick={saveAll} disabled={!plan}>Guardar plan</button>
         <button onClick={() => onOpenChapter(chapterId)}>Editar capítulo</button>
         <button onClick={regen}>Regenerar plan</button>
         <span style={{ color: "#9ca3af" }}>{msg}</span>

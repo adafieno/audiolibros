@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
 
 type Props = {
   projectRoot: string;
@@ -8,7 +7,6 @@ type Props = {
 };
 
 export default function ChapterEditor({ projectRoot, chapterRelPath, onSaved }: Props) {
-  const { t } = useTranslation();
   const [text, setText] = useState<string>("");
   const [dirty, setDirty] = useState(false);
   const [msg, setMsg] = useState<string>("");
@@ -31,23 +29,36 @@ export default function ChapterEditor({ projectRoot, chapterRelPath, onSaved }: 
     })();
   }, [projectRoot, chapterRelPath]);
 
-  async function save() {
-    setMsg("Guardando…");
-    const ok = await window.khipu!.call("fs:write", {
-      projectRoot,
-      relPath: chapterRelPath,
-      json: false,
-      content: text,
-    });
-    setMsg(ok ? t("manuscript.saved") : t("manuscript.saveError"));
-    if (ok) { setDirty(false); onSaved?.(); }
-  }
+  // Auto-save chapter changes when text changes and is dirty
+  useEffect(() => {
+    if (!dirty || !text) return;
+    
+    const timeoutId = setTimeout(async () => {
+      try {
+        const ok = await window.khipu!.call("fs:write", {
+          projectRoot,
+          relPath: chapterRelPath,
+          json: false,
+          content: text,
+        });
+        if (ok) {
+          setDirty(false);
+          onSaved?.();
+          console.log(`Chapter ${chapterRelPath} auto-saved`);
+        }
+      } catch (error) {
+        console.warn(`Failed to auto-save chapter ${chapterRelPath}:`, error);
+      }
+    }, 2000);
+
+    return () => clearTimeout(timeoutId);
+  }, [text, dirty, projectRoot, chapterRelPath, onSaved]);
 
   return (
     <div style={{ marginTop: 16 }}>
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <button onClick={save} disabled={!dirty}>Guardar capítulo</button>
         <span style={{ color: "#9ca3af" }}>{msg}</span>
+        {dirty && <span style={{ color: "var(--accent)", fontSize: 12 }}>Auto-guardando...</span>}
       </div>
       <div style={{ marginTop: 8 }}>
         <textarea

@@ -9,7 +9,6 @@ import { applyTheme } from "../lib/theme";
 export default function SettingsPage() {
   const { t } = useTranslation();
   const [cfg, setCfg] = useState<AppConfig | null>(null);
-  const [msg, setMsg] = useState("");
 
   useEffect(() => { (async () => {
     const c = await loadAppConfig();
@@ -17,13 +16,22 @@ export default function SettingsPage() {
     applyTheme(c.theme);                 // apply on open
   })(); }, []);
 
-  async function save() {
+  // Auto-save configuration changes
+  useEffect(() => {
     if (!cfg) return;
-    setMsg(t("settings.saving"));
-    const ok = await saveAppConfig(cfg);
-    applyTheme(cfg.theme);               // re-apply after save
-    setMsg(ok ? t("settings.saved") : t("settings.error"));
-  }
+    
+    const timeoutId = setTimeout(async () => {
+      try {
+        await saveAppConfig(cfg);
+        applyTheme(cfg.theme); // re-apply after save
+        console.log("Settings auto-saved");
+      } catch (error) {
+        console.warn("Failed to auto-save settings:", error);
+      }
+    }, 1500);
+
+    return () => clearTimeout(timeoutId);
+  }, [cfg]);
 
   if (!cfg) return <div>{t("settings.loading")}</div>;
 
@@ -51,9 +59,10 @@ export default function SettingsPage() {
         <LangSelector />
       </section>
 
-      <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
-        <button className="btn" onClick={save}>{t("settings.save")}</button>
-        <div style={{ color: "var(--muted)" }}>{msg}</div>
+      <div style={{ marginTop: 16 }}>
+        <div style={{ color: "var(--muted)", fontSize: 12 }}>
+          {t("settings.autoSave")}
+        </div>
       </div>
     </>
   );

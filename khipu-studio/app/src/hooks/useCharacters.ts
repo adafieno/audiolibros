@@ -586,6 +586,52 @@ export function useCharacters(): UseCharactersApi {
     }
   }, [characters, safeProjectRoot]);
 
+  // Auto-save when characters change and are marked as dirty (debounced)
+  useEffect(() => {
+    if (!dirty || !safeProjectRoot || characters.length === 0) return;
+    
+    const timeoutId = setTimeout(async () => {
+      try {
+        console.log('💾 Auto-saving characters:', characters.length);
+        
+        // Save in the same format as the Python detection script
+        const savedCharacters = characters.map(c => ({
+          id: c.id,
+          name: c.name,
+          type: c.isNarrator ? "narrator" : "character",
+          importance: c.isMainCharacter ? "primary" : "secondary",
+          gender: c.traits.gender === "M" ? "male" : c.traits.gender === "F" ? "female" : "unknown",
+          age: c.traits.age || "adult",
+          description: c.description,
+          personality: c.traits.personality || [],
+          speaking_style: c.traits.speaking_style || [],
+          frequency: c.frequency / 100,
+          accent: c.traits.accent || "neutral",
+          confidence: 1.0,
+          has_dialogue: true,
+          dialogue_frequency: "medium",
+          // CRITICAL: Preserve voice assignment data
+          ...(c.voiceAssignment && { voiceAssignment: c.voiceAssignment })
+        }));
+
+        await window.khipu!.call("fs:write", {
+          projectRoot: safeProjectRoot,
+          relPath: "dossier/characters.json",
+          json: true,
+          content: { characters: savedCharacters }
+        });
+        
+        setDirty(false);
+        console.log('💾 Auto-saved characters');
+      } catch (error) {
+        console.warn('Auto-save failed:', error);
+        // Don't show error to user for auto-save failures, just log them
+      }
+    }, 2000); // Debounce: save 2 seconds after last change
+
+    return () => clearTimeout(timeoutId);
+  }, [characters, dirty, safeProjectRoot]);
+
   const exportJson = useCallback(() => {
     const blob = new Blob([JSON.stringify(characters, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
