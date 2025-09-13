@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useProject } from "../store/project";
 import { bootstrapVoiceInventory } from "../lib/voice";
+import { bootstrapProjectFiles } from "../lib/project-bootstrap";
 import type { ProjectConfig, BookMeta } from "../types/config";
 
 type RecentItem = { 
@@ -224,6 +225,14 @@ export default function Home() {
     } catch (error) {
       console.warn('Failed to bootstrap voice inventory:', error);
       // Continue with project creation even if voice inventory fails
+    }
+
+    // Bootstrap initial project files
+    try {
+      await bootstrapProjectFiles(res.path);
+    } catch (error) {
+      console.warn('Failed to bootstrap project files:', error);
+      // Continue - files will be created as needed
     }
 
     await window.khipu!.call("project:open", { path: res.path });
