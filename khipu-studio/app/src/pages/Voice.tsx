@@ -89,24 +89,24 @@ const AUDIO_PRESETS: AudioPreset[] = [
     processingChain: {
       noiseCleanup: {
         highPassFilter: { enabled: true, frequency: "90" },
-        deClickDeEss: { enabled: true, intensity: "medium" }
+        deClickDeEss: { enabled: true, intensity: "heavy" }
       },
       dynamicControl: {
-        compression: { enabled: true, ratio: "3:1", threshold: -18 },
-        limiter: { enabled: true, ceiling: -1 }
+        compression: { enabled: true, ratio: "3:1", threshold: -15 },
+        limiter: { enabled: true, ceiling: -0.5 }
       },
       eqShaping: {
-        lowMidCut: { enabled: true, frequency: "300", gain: -6 },
-        presenceBoost: { enabled: true, frequency: "2", gain: 1.0 },
-        airLift: { enabled: false, frequency: "10", gain: 0 }
+        lowMidCut: { enabled: true, frequency: "300", gain: -8 },
+        presenceBoost: { enabled: true, frequency: "2", gain: -1.0 },
+        airLift: { enabled: true, frequency: "8", gain: -3.0 }
       },
       spatialEnhancement: {
         reverb: { enabled: false, type: "room_0.3", wetMix: 0 },
-        stereoEnhancer: { enabled: false, width: 1.0 }
+        stereoEnhancer: { enabled: false, width: 0.8 }
       },
       mastering: {
         normalization: { enabled: true, targetLUFS: "-18" },
-        peakLimiting: { enabled: true, maxPeak: -1.0 },
+        peakLimiting: { enabled: true, maxPeak: -1.5 },
         dithering: { enabled: false, bitDepth: "16" }
       }
     }
@@ -122,17 +122,17 @@ const AUDIO_PRESETS: AudioPreset[] = [
         deClickDeEss: { enabled: true, intensity: "heavy" }
       },
       dynamicControl: {
-        compression: { enabled: true, ratio: "3:1", threshold: -18 },
-        limiter: { enabled: true, ceiling: -1 }
+        compression: { enabled: true, ratio: "3:1", threshold: -16 },
+        limiter: { enabled: true, ceiling: -0.1 }
       },
       eqShaping: {
-        lowMidCut: { enabled: true, frequency: "150", gain: -1 },
-        presenceBoost: { enabled: true, frequency: "5", gain: 3.0 },
-        airLift: { enabled: true, frequency: "12", gain: 2.0 }
+        lowMidCut: { enabled: true, frequency: "200", gain: -2 },
+        presenceBoost: { enabled: true, frequency: "5", gain: 4.0 },
+        airLift: { enabled: true, frequency: "12", gain: 3.0 }
       },
       spatialEnhancement: {
-        reverb: { enabled: false, type: "room_0.3", wetMix: 5 },
-        stereoEnhancer: { enabled: true, width: 1.3 }
+        reverb: { enabled: false, type: "room_0.3", wetMix: 2 },
+        stereoEnhancer: { enabled: true, width: 1.4 }
       },
       mastering: {
         normalization: { enabled: true, targetLUFS: "-18" },
@@ -148,25 +148,25 @@ const AUDIO_PRESETS: AudioPreset[] = [
     category: 'vintage',
     processingChain: {
       noiseCleanup: {
-        highPassFilter: { enabled: true, frequency: "90" },
+        highPassFilter: { enabled: true, frequency: "70" },
         deClickDeEss: { enabled: true, intensity: "light" }
       },
       dynamicControl: {
-        compression: { enabled: true, ratio: "2:1", threshold: -22 },
-        limiter: { enabled: true, ceiling: -2 }
+        compression: { enabled: true, ratio: "2:1", threshold: -24 },
+        limiter: { enabled: true, ceiling: -3 }
       },
       eqShaping: {
-        lowMidCut: { enabled: true, frequency: "150", gain: 2 },
-        presenceBoost: { enabled: true, frequency: "3", gain: 1.5 },
-        airLift: { enabled: false, frequency: "8", gain: 0.5 }
+        lowMidCut: { enabled: false, frequency: "150", gain: 0 },
+        presenceBoost: { enabled: true, frequency: "2", gain: 2.5 },
+        airLift: { enabled: false, frequency: "8", gain: -1.0 }
       },
       spatialEnhancement: {
-        reverb: { enabled: true, type: "room_0.4", wetMix: 15 },
-        stereoEnhancer: { enabled: true, width: 1.1 }
+        reverb: { enabled: true, type: "room_0.5", wetMix: 12 },
+        stereoEnhancer: { enabled: true, width: 1.2 }
       },
       mastering: {
-        normalization: { enabled: true, targetLUFS: "-18" },
-        peakLimiting: { enabled: true, maxPeak: -0.5 },
+        normalization: { enabled: true, targetLUFS: "-21" },
+        peakLimiting: { enabled: true, maxPeak: -1.5 },
         dithering: { enabled: true, bitDepth: "24" }
       }
     }
@@ -182,21 +182,21 @@ const AUDIO_PRESETS: AudioPreset[] = [
         deClickDeEss: { enabled: true, intensity: "light" }
       },
       dynamicControl: {
-        compression: { enabled: false, ratio: "2:1", threshold: -22 },
-        limiter: { enabled: true, ceiling: -3 }
+        compression: { enabled: false, ratio: "2:1", threshold: -26 },
+        limiter: { enabled: true, ceiling: -6 }
       },
       eqShaping: {
-        lowMidCut: { enabled: true, frequency: "150", gain: 3 },
-        presenceBoost: { enabled: true, frequency: "3", gain: 1.0 },
-        airLift: { enabled: true, frequency: "10", gain: 1.5 }
+        lowMidCut: { enabled: false, frequency: "150", gain: 0 },
+        presenceBoost: { enabled: true, frequency: "3", gain: 0.5 },
+        airLift: { enabled: true, frequency: "10", gain: 2.5 }
       },
       spatialEnhancement: {
-        reverb: { enabled: true, type: "room_0.5", wetMix: 15 },
-        stereoEnhancer: { enabled: true, width: 1.8 }
+        reverb: { enabled: true, type: "room_0.5", wetMix: 25 },
+        stereoEnhancer: { enabled: true, width: 2.0 }
       },
       mastering: {
-        normalization: { enabled: true, targetLUFS: "-20" },
-        peakLimiting: { enabled: true, maxPeak: -1.0 },
+        normalization: { enabled: true, targetLUFS: "-23" },
+        peakLimiting: { enabled: true, maxPeak: -3.0 },
         dithering: { enabled: true, bitDepth: "24" }
       }
     }
@@ -208,21 +208,21 @@ const AUDIO_PRESETS: AudioPreset[] = [
     category: 'effects',
     processingChain: {
       noiseCleanup: {
-        highPassFilter: { enabled: false, frequency: "70" },
+        highPassFilter: { enabled: true, frequency: "90" },
         deClickDeEss: { enabled: false, intensity: "light" }
       },
       dynamicControl: {
-        compression: { enabled: true, ratio: "3:1", threshold: -12 },
-        limiter: { enabled: true, ceiling: -1 }
+        compression: { enabled: true, ratio: "3:1", threshold: -10 },
+        limiter: { enabled: true, ceiling: -0.5 }
       },
       eqShaping: {
-        lowMidCut: { enabled: true, frequency: "300", gain: -12 },
-        presenceBoost: { enabled: true, frequency: "5", gain: -2.0 },
-        airLift: { enabled: false, frequency: "12", gain: -3.0 }
+        lowMidCut: { enabled: true, frequency: "300", gain: -15 },
+        presenceBoost: { enabled: true, frequency: "5", gain: -3.0 },
+        airLift: { enabled: true, frequency: "12", gain: -5.0 }
       },
       spatialEnhancement: {
         reverb: { enabled: false, type: "room_0.3", wetMix: 0 },
-        stereoEnhancer: { enabled: false, width: 1.0 }
+        stereoEnhancer: { enabled: false, width: 0.9 }
       },
       mastering: {
         normalization: { enabled: true, targetLUFS: "-18" },
@@ -283,14 +283,23 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   // Audio preview functionality
   const audioPreview = useAudioPreview();
 
-  // Get current segment's processing chain (or default if none set)
+  // Get the Clean Polished preset as default
+  const getCleanPolishedPreset = useCallback((): AudioProcessingChain => {
+    const cleanPolished = getPresetById('clean_polished');
+    return cleanPolished?.processingChain || createDefaultProcessingChain();
+  }, []);
+
+  // Track whether custom settings mode is enabled
+  const [customSettingsEnabled, setCustomSettingsEnabled] = useState(false);
+
+  // Get current segment's processing chain (or Clean Polished default if none set)
   const getCurrentProcessingChain = useCallback((): AudioProcessingChain => {
     if (selectedRowIndex >= 0 && selectedRowIndex < audioSegments.length) {
       const selectedSegment = audioSegments[selectedRowIndex];
-      return selectedSegment.processingChain || createDefaultProcessingChain();
+      return selectedSegment.processingChain || getCleanPolishedPreset();
     }
-    return createDefaultProcessingChain();
-  }, [audioSegments, selectedRowIndex]);
+    return getCleanPolishedPreset();
+  }, [audioSegments, selectedRowIndex, getCleanPolishedPreset]);
 
   // Current processing chain for the selected segment
   const currentProcessingChain = getCurrentProcessingChain();
@@ -1029,7 +1038,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                     continue;
                   }
 
-                  const processingChain = segment.processingChain || createDefaultProcessingChain();
+                  const processingChain = segment.processingChain || getCleanPolishedPreset();
 
                   playlistSegments.push({
                     segmentId: `segment_${segment.chunkId}`,
@@ -1271,54 +1280,56 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 borderRadius: "3px",
                                 color: "var(--text)"
                               }}
+                              value={customSettingsEnabled ? 'custom' : 'clean_polished'}
                               onChange={(e) => {
-                                if (e.target.value && e.target.value !== 'custom') {
+                                if (e.target.value === 'custom') {
+                                  setCustomSettingsEnabled(true);
+                                } else {
+                                  setCustomSettingsEnabled(false);
                                   const preset = getPresetById(e.target.value);
                                   if (preset) {
                                     updateCurrentProcessingChain(preset.processingChain);
                                   }
                                 }
                               }}
-                              defaultValue=""
                             >
-                              <option value="">Select a voice preset...</option>
                               <optgroup label="Clean & Natural">
-                                {getPresetsByCategory('clean').map(preset => (
+                                {getPresetsByCategory('clean').map((preset: AudioPreset) => (
                                   <option key={preset.id} value={preset.id}>
                                     {preset.name} - {preset.description}
                                   </option>
                                 ))}
                               </optgroup>
                               <optgroup label="Character Voices">
-                                {getPresetsByCategory('character').map(preset => (
+                                {getPresetsByCategory('character').map((preset: AudioPreset) => (
                                   <option key={preset.id} value={preset.id}>
                                     {preset.name} - {preset.description}
                                   </option>
                                 ))}
                               </optgroup>
                               <optgroup label="Broadcast Quality">
-                                {getPresetsByCategory('broadcast').map(preset => (
+                                {getPresetsByCategory('broadcast').map((preset: AudioPreset) => (
                                   <option key={preset.id} value={preset.id}>
                                     {preset.name} - {preset.description}
                                   </option>
                                 ))}
                               </optgroup>
                               <optgroup label="Vintage & Specialty">
-                                {getPresetsByCategory('vintage').map(preset => (
+                                {getPresetsByCategory('vintage').map((preset: AudioPreset) => (
                                   <option key={preset.id} value={preset.id}>
                                     {preset.name} - {preset.description}
                                   </option>
                                 ))}
                               </optgroup>
                               <optgroup label="Environmental">
-                                {getPresetsByCategory('environmental').map(preset => (
+                                {getPresetsByCategory('environmental').map((preset: AudioPreset) => (
                                   <option key={preset.id} value={preset.id}>
                                     {preset.name} - {preset.description}
                                   </option>
                                 ))}
                               </optgroup>
                               <optgroup label="Special Effects">
-                                {getPresetsByCategory('effects').map(preset => (
+                                {getPresetsByCategory('effects').map((preset: AudioPreset) => (
                                   <option key={preset.id} value={preset.id}>
                                     {preset.name} - {preset.description}
                                   </option>
@@ -1361,6 +1372,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               <input 
                                 type="checkbox" 
                                 checked={currentProcessingChain.noiseCleanup.highPassFilter.enabled}
+                                disabled={!customSettingsEnabled}
                                 onChange={(e) => updateCurrentProcessingChain({
                                   ...currentProcessingChain,
                                   noiseCleanup: {
@@ -1376,6 +1388,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               <span>High-pass filter (70-90 Hz)</span>
                               <select 
                                 value={currentProcessingChain.noiseCleanup.highPassFilter.frequency}
+                                disabled={!customSettingsEnabled}
                                 onChange={(e) => updateCurrentProcessingChain({
                                   ...currentProcessingChain,
                                   noiseCleanup: {
@@ -1397,6 +1410,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               <input 
                                 type="checkbox" 
                                 checked={currentProcessingChain.noiseCleanup.deClickDeEss.enabled}
+                                disabled={!customSettingsEnabled}
                                 onChange={(e) => updateCurrentProcessingChain({
                                   ...currentProcessingChain,
                                   noiseCleanup: {
@@ -1412,6 +1426,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               <span>De-click / De-ess</span>
                               <select 
                                 value={currentProcessingChain.noiseCleanup.deClickDeEss.intensity}
+                                disabled={!customSettingsEnabled}
                                 onChange={(e) => updateCurrentProcessingChain({
                                   ...currentProcessingChain,
                                   noiseCleanup: {
@@ -1442,6 +1457,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               <input 
                                 type="checkbox" 
                                 checked={currentProcessingChain.dynamicControl.compression.enabled}
+                                disabled={!customSettingsEnabled}
                                 onChange={(e) => updateCurrentProcessingChain({
                                   ...currentProcessingChain,
                                   dynamicControl: {
@@ -1457,6 +1473,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               <span>Gentle compression</span>
                               <select 
                                 value={currentProcessingChain.dynamicControl.compression.ratio}
+                                disabled={!customSettingsEnabled}
                                 onChange={(e) => updateCurrentProcessingChain({
                                   ...currentProcessingChain,
                                   dynamicControl: {
@@ -1478,6 +1495,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               <input 
                                 type="checkbox" 
                                 checked={currentProcessingChain.dynamicControl.limiter.enabled}
+                                disabled={!customSettingsEnabled}
                                 onChange={(e) => updateCurrentProcessingChain({
                                   ...currentProcessingChain,
                                   dynamicControl: {
@@ -1505,6 +1523,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               <input 
                                 type="checkbox" 
                                 checked={currentProcessingChain.eqShaping.lowMidCut.enabled}
+                                disabled={!customSettingsEnabled}
                                 onChange={(e) => updateCurrentProcessingChain({
                                   ...currentProcessingChain,
                                   eqShaping: {
@@ -1520,6 +1539,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               <span>Low-mid cut (150-300 Hz)</span>
                               <select 
                                 value={currentProcessingChain.eqShaping.lowMidCut.frequency}
+                                disabled={!customSettingsEnabled}
                                 onChange={(e) => updateCurrentProcessingChain({
                                   ...currentProcessingChain,
                                   eqShaping: {
@@ -1541,6 +1561,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               <input 
                                 type="checkbox" 
                                 checked={currentProcessingChain.eqShaping.presenceBoost.enabled}
+                                disabled={!customSettingsEnabled}
                                 onChange={(e) => updateCurrentProcessingChain({
                                   ...currentProcessingChain,
                                   eqShaping: {
@@ -1556,6 +1577,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               <span>Presence boost (2-5 kHz)</span>
                               <select 
                                 value={currentProcessingChain.eqShaping.presenceBoost.frequency}
+                                disabled={!customSettingsEnabled}
                                 onChange={(e) => updateCurrentProcessingChain({
                                   ...currentProcessingChain,
                                   eqShaping: {
@@ -1577,6 +1599,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               <input 
                                 type="checkbox" 
                                 checked={currentProcessingChain.eqShaping.airLift.enabled}
+                                disabled={!customSettingsEnabled}
                                 onChange={(e) => updateCurrentProcessingChain({
                                   ...currentProcessingChain,
                                   eqShaping: {
@@ -1592,6 +1615,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               <span>Air lift (8-12 kHz)</span>
                               <select 
                                 value={currentProcessingChain.eqShaping.airLift.frequency}
+                                disabled={!customSettingsEnabled}
                                 onChange={(e) => updateCurrentProcessingChain({
                                   ...currentProcessingChain,
                                   eqShaping: {
@@ -1622,6 +1646,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               <input 
                                 type="checkbox" 
                                 checked={currentProcessingChain.spatialEnhancement.reverb.enabled}
+                                disabled={!customSettingsEnabled}
                                 onChange={(e) => updateCurrentProcessingChain({
                                   ...currentProcessingChain,
                                   spatialEnhancement: {
@@ -1637,6 +1662,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               <span>Subtle reverb</span>
                               <select 
                                 value={currentProcessingChain.spatialEnhancement.reverb.type}
+                                disabled={!customSettingsEnabled}
                                 onChange={(e) => updateCurrentProcessingChain({
                                   ...currentProcessingChain,
                                   spatialEnhancement: {
@@ -1661,6 +1687,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 min="0" 
                                 max="15" 
                                 value={currentProcessingChain.spatialEnhancement.reverb.wetMix}
+                                disabled={!customSettingsEnabled}
                                 onChange={(e) => updateCurrentProcessingChain({
                                   ...currentProcessingChain,
                                   spatialEnhancement: {
@@ -1679,6 +1706,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               <input 
                                 type="checkbox" 
                                 checked={currentProcessingChain.spatialEnhancement.stereoEnhancer.enabled}
+                                disabled={!customSettingsEnabled}
                                 onChange={(e) => updateCurrentProcessingChain({
                                   ...currentProcessingChain,
                                   spatialEnhancement: {
@@ -1706,6 +1734,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               <input 
                                 type="checkbox" 
                                 checked={currentProcessingChain.mastering.normalization.enabled}
+                                disabled={!customSettingsEnabled}
                                 onChange={(e) => updateCurrentProcessingChain({
                                   ...currentProcessingChain,
                                   mastering: {
@@ -1721,6 +1750,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               <span>Normalize to audiobook standards</span>
                               <select 
                                 value={currentProcessingChain.mastering.normalization.targetLUFS}
+                                disabled={!customSettingsEnabled}
                                 onChange={(e) => updateCurrentProcessingChain({
                                   ...currentProcessingChain,
                                   mastering: {
@@ -1743,6 +1773,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               <input 
                                 type="checkbox" 
                                 checked={currentProcessingChain.mastering.peakLimiting.enabled}
+                                disabled={!customSettingsEnabled}
                                 onChange={(e) => updateCurrentProcessingChain({
                                   ...currentProcessingChain,
                                   mastering: {
@@ -1761,6 +1792,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               <input 
                                 type="checkbox" 
                                 checked={currentProcessingChain.mastering.dithering.enabled}
+                                disabled={!customSettingsEnabled}
                                 onChange={(e) => updateCurrentProcessingChain({
                                   ...currentProcessingChain,
                                   mastering: {
