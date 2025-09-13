@@ -207,21 +207,32 @@ export class AudioPreviewService {
         // Step 2: Apply SoX processing to the TTS audio
         try {
           // Get the cached file path for TTS audio using the same cache key generation as TTS
-          const { generateCacheKey } = await import('./audio-cache');
+          const { generateCacheKey, generateCacheHash } = await import('./audio-cache');
           const ttsCacheKey = generateCacheKey(auditionOptions);
+          const hashedCacheKey = generateCacheHash(ttsCacheKey);
           
-          let ttsAudioPath = await window.khipu!.call('audioCache:path', ttsCacheKey);
+          // Build the expected cache file path (same as audio-cache.ts logic)
+          const expectedCacheFile = `${hashedCacheKey}.wav`;
+          
+          console.log(`🔍 Looking for TTS cache file: ${expectedCacheFile}`);
+          
+          // Try to find the cached TTS file using the proper cache path
+          const ttsAudioPath = await window.khipu!.call('audioCache:path', hashedCacheKey);
           
           if (!ttsAudioPath) {
-            // Fallback: create a temporary file from the blob URL
+            console.warn('❌ Could not find cached TTS file, falling back to raw audio');
+            // Fallback: play without SoX processing
             const response = await fetch(result.audioUrl);
             const arrayBuffer = await response.arrayBuffer();
-            ttsAudioPath = await this.saveTempAudio(arrayBuffer, options.segmentId);
+            this.currentBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+            await this.startPlayback(options.startTime, options.duration);
+            return;
           }
 
-          // At this point ttsAudioPath is guaranteed to be non-null
+          console.log(`✅ Found TTS audio file at: ${ttsAudioPath}`);
+
           const processingResult = await window.khipu!.call('audioProcessor:processAudio', {
-            audioUrl: ttsAudioPath!,
+            audioUrl: ttsAudioPath, // Pass the actual cached file path
             processingChain: options.processingChain,
             cacheKey: cacheKey
           });
@@ -359,26 +370,12 @@ export class AudioPreviewService {
 
   /**
    * Save audio data to a temporary file for SoX processing
+   * @deprecated Not needed anymore - using direct cached TTS files
    */
   private async saveTempAudio(arrayBuffer: ArrayBuffer, segmentId: string): Promise<string> {
-    // Create a temporary file path
-    const tempFileName = `temp_audio_${segmentId}_${Date.now()}.wav`;
-    
-    // Convert ArrayBuffer to Uint8Array for IPC
-    const uint8Array = new Uint8Array(arrayBuffer);
-    
-    // Get temp directory from the main process
-    const tempDir = 'C:\\code\\audiolibros\\khipu-studio\\temp';
-    
-    // Write to temp file using IPC
-    await window.khipu!.call('fs:writeBinary', {
-      projectRoot: tempDir,
-      relPath: tempFileName,
-      content: Array.from(uint8Array)
-    });
-    
-    // Return the full absolute path
-    return `${tempDir}\\${tempFileName}`;
+    // This method is kept for reference but not used
+    // We now use cached TTS files directly
+    throw new Error('saveTempAudio is deprecated - using cached TTS files directly');
   }
 }
 

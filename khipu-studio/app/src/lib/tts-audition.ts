@@ -372,7 +372,7 @@ async function auditAzureVoice(voice: Voice, config: ProjectConfig, text: string
             headers: {
               "Authorization": `Bearer ${token}`,
               "Content-Type": "application/ssml+xml; charset=utf-8",
-              "X-Microsoft-OutputFormat": "audio-16khz-128kbitrate-mono-mp3",
+              "X-Microsoft-OutputFormat": "riff-16khz-16bit-mono-pcm", // WAV format for SoX compatibility
               "User-Agent": "KhipuStudio/1.0",
               "Accept": "*/*",
               "Connection": "keep-alive",
