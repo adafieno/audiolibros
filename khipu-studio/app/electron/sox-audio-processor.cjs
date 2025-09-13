@@ -105,14 +105,16 @@ class SoxAudioProcessor {
     if (chain.dynamicControl.compression.enabled) {
       const threshold = chain.dynamicControl.compression.threshold;
       const ratio = parseFloat(chain.dynamicControl.compression.ratio.split(':')[0]);
-      // SoX compand: attack,decay,soft-knee,threshold/ratio
-      effects.push('compand', '0.003,0.09', `6:${threshold},-${Math.abs(threshold)},-${Math.abs(threshold)}/${ratio},-${Math.abs(threshold) - 10}`);
+      // SoX compand: attack,decay,soft-knee,in-dB:out-dB points
+      // Simple compression: above threshold, reduce by ratio
+      const outputLevel = threshold / ratio;
+      effects.push('compand', '0.003,0.09', `6:${threshold},${outputLevel}`);
     }
 
     if (chain.dynamicControl.limiter.enabled) {
       const ceiling = Math.abs(chain.dynamicControl.limiter.ceiling);
-      effects.push('gain', `-${ceiling}`);
-      effects.push('compand', '0.02,0.20', `6:0,-${ceiling},-${ceiling}/100:0`);
+      effects.push('gain', `-1`);
+      effects.push('compand', '0.02,0.20', `6:0,${-ceiling}`);
     }
 
     // Stage 3: EQ Shaping
