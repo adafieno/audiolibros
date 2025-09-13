@@ -1,32 +1,31 @@
 /**
  * Segment TTS Generation Service
- * Handles on-demand TTS generation for segments when base audio doesn't exist
+ * Uses the existing audio cache system instead of custom file saving
  */
 
 import type { Segment } from '../types/plan';
 import type { Character } from '../types/character';
 import type { ProjectConfig } from '../types/config';
 import type { Voice } from '../types/voice';
-import { generateAuditionDirect } from './tts-audition';
+import { generateCachedAudition } from './audio-cache';
 
 export interface SegmentTTSOptions {
   segment: Segment;
   character: Character;
   projectConfig: ProjectConfig;
-  chapterId: string; // Need chapter ID for proper file path
 }
 
 export interface SegmentTTSResult {
   success: boolean;
-  audioFilePath?: string;
+  audioUrl?: string; // Return the cached audio URL instead of file path
   error?: string;
 }
 
 /**
- * Generate TTS audio for a segment and save it to the filesystem cache
+ * Generate TTS audio for a segment using the existing cache system
  */
 export async function generateSegmentAudio(options: SegmentTTSOptions): Promise<SegmentTTSResult> {
-  const { segment, character, projectConfig, chapterId } = options;
+  const { segment, character, projectConfig } = options;
 
   // Check if TTS credentials are configured
   if (!projectConfig.creds?.tts?.azure?.key || !projectConfig.creds?.tts?.azure?.region) {
@@ -78,8 +77,8 @@ export async function generateSegmentAudio(options: SegmentTTSOptions): Promise<
       pitch_pct: character.voiceAssignment.pitch_pct
     });
 
-    // Generate TTS audio using the audition system
-    const auditionResult = await generateAuditionDirect({
+    // Use the existing cached audition system instead of custom file saving
+    const auditionResult = await generateCachedAudition({
       voice,
       config: projectConfig,
       text: segmentText,
@@ -116,50 +115,12 @@ export async function generateSegmentAudio(options: SegmentTTSOptions): Promise<
       }
     }
 
-    // Save the generated audio to the filesystem cache
-    // Use the same path structure as audio production service expects
-    const targetPath = `audio/${chapterId}/${segment.segment_id}.wav`;
+    console.log(`✅ Successfully generated and cached TTS audio for segment ${segment.segment_id}`);
     
-    try {
-      console.log(`💾 Saving generated audio to: ${targetPath}`);
-      
-      // Convert blob URL to raw audio data for IPC transfer
-      const response = await fetch(auditionResult.audioUrl);
-      const audioBlob = await response.blob();
-      const arrayBuffer = await audioBlob.arrayBuffer();
-      const audioData = new Uint8Array(arrayBuffer);
-      
-      // Send raw audio data to main process for saving
-      const result = await window.khipu!.call('tts:saveSegmentAudio', {
-        audioData: audioData,
-        segmentId: segment.segment_id,
-        targetPath
-      }) as { success: boolean; error?: string };
-
-      if (!result.success) {
-        return {
-          success: false,
-          error: `Failed to save audio to filesystem: ${result.error}`
-        };
-      }
-
-      // Clean up the blob URL to prevent memory leaks
-      URL.revokeObjectURL(auditionResult.audioUrl);
-
-      console.log(`✅ Successfully generated and saved TTS audio for segment ${segment.segment_id}`);
-      
-      return {
-        success: true,
-        audioFilePath: targetPath
-      };
-
-    } catch (saveError) {
-      console.error('Failed to save TTS audio to filesystem:', saveError);
-      return {
-        success: false,
-        error: `Failed to save audio: ${saveError instanceof Error ? saveError.message : 'Unknown error'}`
-      };
-    }
+    return {
+      success: true,
+      audioUrl: auditionResult.audioUrl
+    };
 
   } catch (error) {
     console.error('TTS generation failed:', error);

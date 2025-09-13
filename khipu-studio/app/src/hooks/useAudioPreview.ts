@@ -25,7 +25,6 @@ export interface UseAudioPreviewResult {
       segment?: Segment;
       character?: Character;
       projectConfig?: ProjectConfig;
-      chapterId?: string;
     }
   ) => Promise<void>;
   play: () => Promise<void>;
