@@ -36,6 +36,9 @@ export class AudioPreviewService {
   private isPlaying = false;
   private playbackStateCallbacks: ((state: PlaybackState) => void)[] = [];
   private currentSegmentId: string | null = null;
+  private progressTrackingInterval: number | null = null;
+  private segmentDurations: number[] = [];
+  private progressCallback: ((currentSegmentIndex: number, segmentDurations: number[]) => void) | null = null;
 
   constructor() {
     this.initializeAudioContext();
@@ -516,11 +519,63 @@ export class AudioPreviewService {
       this.currentSource = null;
     }
     
+    // Clear progress tracking
+    this.stopProgressTracking();
+    
     this.isPlaying = false;
     this.pauseTime = 0;
     this.currentBuffer = null;
     this.currentSegmentId = null;
     this.notifyStateChange();
+  }
+
+  /**
+   * Start playlist progress tracking
+   */
+  private startPlaylistProgressTracking(segmentDurations: number[], progressCallback: (currentSegmentIndex: number, segmentDurations: number[]) => void): void {
+    this.segmentDurations = segmentDurations;
+    this.progressCallback = progressCallback;
+    
+    // Start tracking progress every 100ms
+    this.progressTrackingInterval = window.setInterval(() => {
+      if (!this.isPlaying || !this.audioContext) return;
+      
+      const currentTime = this.getCurrentTime();
+      const currentSegmentIndex = this.getCurrentSegmentIndex(currentTime);
+      
+      if (this.progressCallback) {
+        this.progressCallback(currentSegmentIndex, this.segmentDurations);
+      }
+    }, 100);
+  }
+
+  /**
+   * Calculate which segment is currently playing based on elapsed time
+   */
+  private getCurrentSegmentIndex(currentTime: number): number {
+    let accumulatedTime = 0;
+    
+    for (let i = 0; i < this.segmentDurations.length; i++) {
+      if (currentTime >= accumulatedTime && currentTime < accumulatedTime + this.segmentDurations[i]) {
+        return i;
+      }
+      accumulatedTime += this.segmentDurations[i];
+    }
+    
+    // If we're past all segments, return the last one
+    return Math.max(0, this.segmentDurations.length - 1);
+  }
+
+  /**
+   * Stop progress tracking
+   */
+  private stopProgressTracking(): void {
+    if (this.progressTrackingInterval !== null) {
+      window.clearInterval(this.progressTrackingInterval);
+      this.progressTrackingInterval = null;
+    }
+    this.segmentDurations = [];
+    this.progressCallback = null;
   }
 
   /**
@@ -533,11 +588,11 @@ export class AudioPreviewService {
     segment: Segment;
     character: Character;
     projectConfig: ProjectConfig;
-  }>): Promise<void> {
+  }>, onProgress?: (currentSegmentIndex: number, segmentDurations: number[]) => void): Promise<void> {
     try {
       console.log(`🎬 [Playlist] Starting Play All with ${segments.length} segments`);
       
-      // Stop any current playback
+      // Stop any current playbook
       await this.stop();
 
       if (!this.audioContext) {
@@ -550,6 +605,7 @@ export class AudioPreviewService {
       // Step 1: Pre-process all segments and collect audio buffers
       const audioBuffers: AudioBuffer[] = [];
       const segmentIds: string[] = [];
+      const segmentDurations: number[] = [];
       
       for (let i = 0; i < segments.length; i++) {
         const segmentData = segments[i];
@@ -560,6 +616,7 @@ export class AudioPreviewService {
           const audioBuffer = await this.generateSegmentAudioBuffer(segmentData);
           audioBuffers.push(audioBuffer);
           segmentIds.push(segmentData.segmentId);
+          segmentDurations.push(audioBuffer.duration);
           console.log(`✅ [Playlist] Segment ${i + 1} processed: ${audioBuffer.duration.toFixed(2)}s`);
         } catch (error) {
           console.warn(`⚠️ [Playlist] Failed to process segment ${i + 1}, skipping:`, error);
@@ -576,9 +633,14 @@ export class AudioPreviewService {
       const concatenatedBuffer = await this.concatenateAudioBuffers(audioBuffers);
       console.log(`✅ [Playlist] Created continuous audio: ${concatenatedBuffer.duration.toFixed(2)}s total`);
 
-      // Step 3: Play the concatenated audio as a single stream
+      // Step 3: Play the concatenated audio with progress tracking
       this.currentBuffer = concatenatedBuffer;
       this.currentSegmentId = `playlist_${segmentIds.join('_')}`;
+      
+      // Set up progress tracking if callback provided
+      if (onProgress) {
+        this.startPlaylistProgressTracking(segmentDurations, onProgress);
+      }
       
       await this.startPlayback();
       console.log(`🎉 [Playlist] Started continuous playback of ${segments.length} segments`);

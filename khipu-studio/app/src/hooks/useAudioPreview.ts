@@ -44,7 +44,7 @@ export interface UseAudioPreviewResult {
     segment: Segment;
     character: Character;
     projectConfig: ProjectConfig;
-  }>) => Promise<void>;
+  }>, onProgress?: (currentSegmentIndex: number, segmentDurations: number[]) => void) => Promise<void>;
   play: () => Promise<void>;
   pause: () => Promise<void>;
   stop: () => Promise<void>;
@@ -237,14 +237,14 @@ export function useAudioPreview(): UseAudioPreviewResult {
     segment: Segment;
     character: Character;
     projectConfig: ProjectConfig;
-  }>) => {
+  }>, onProgress?: (currentSegmentIndex: number, segmentDurations: number[]) => void) => {
     if (!isAvailable || segments.length === 0) return;
 
     try {
       setIsLoading(true);
       setError(null);
 
-      await audioPreviewService.playAllAsPlaylist(segments);
+      await audioPreviewService.playAllAsPlaylist(segments, onProgress);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Play All playlist failed';
       setError(errorMessage);

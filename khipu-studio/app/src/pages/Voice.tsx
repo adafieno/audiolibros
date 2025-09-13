@@ -755,7 +755,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               
               try {
                 console.log(`🎬 Starting Play All from segment ${startIndex}`);
-                setMessage(`🎵 Preparing playlist of ${audioSegments.length - startIndex} segments...`);
                 
                 // Load shared data once
                 const [projectConfig, charactersData] = await Promise.all([
@@ -822,15 +821,33 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                 }
 
                 console.log(`🎉 Playing ${playlistSegments.length} segments as continuous playlist`);
-                setMessage(`🚀 Playing continuous playlist of ${playlistSegments.length} segments...`);
 
-                await audioPreview.playAllAsPlaylist(playlistSegments);
+                // Track which segments are actually in the playlist (may be fewer than total)
+                const playlistStartIndex = startIndex;
+                const processedSegmentIndexes: number[] = [];
                 
-                setMessage(`✅ Play All started successfully!`);
+                // Build mapping of processed segments back to original indexes
+                for (let i = 0; i < segmentsToPlay.length; i++) {
+                  const segment = segmentsToPlay[i];
+                  const segmentInPlaylist = playlistSegments.find(ps => ps.segmentId === `segment_${segment.chunkId}`);
+                  if (segmentInPlaylist) {
+                    processedSegmentIndexes.push(playlistStartIndex + i);
+                  }
+                }
+
+                await audioPreview.playAllAsPlaylist(playlistSegments, (currentSegmentIndex: number, segmentDurations: number[]) => {
+                  // Map the playlist segment index back to the original grid index
+                  if (currentSegmentIndex >= 0 && currentSegmentIndex < processedSegmentIndexes.length) {
+                    const gridIndex = processedSegmentIndexes[currentSegmentIndex];
+                    if (gridIndex !== selectedRowIndex) {
+                      console.log(`🎯 Progress: Playing segment ${currentSegmentIndex + 1}/${segmentDurations.length}, grid row ${gridIndex + 1}`);
+                      setSelectedRowIndex(gridIndex);
+                    }
+                  }
+                });
                 
               } catch (error) {
                 console.error("🚫 Play All failed:", error);
-                setMessage(`❌ Play All failed: ${error instanceof Error ? error.message : String(error)}`);
               }
             }}
             disabled={audioSegments.length === 0 || audioPreview.isLoading}
@@ -870,7 +887,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             ⏹ Stop
           </button>
 
-          {/* Status indicator */}
+          {/* Status indicator - minimal */}
           <div style={{
             marginLeft: "auto",
             fontSize: "11px",
@@ -880,12 +897,12 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             gap: "8px"
           }}>
             {audioPreview.error ? (
-              <span style={{ color: "var(--error)" }}>❌ {audioPreview.error}</span>
+              <span style={{ color: "var(--error)" }}>❌ Error</span>
             ) : audioPreview.isLoading ? (
               <span style={{ color: "var(--warning)" }}>🔄 Processing...</span>
             ) : audioPreview.isPlaying ? (
-              <span style={{ color: "var(--accent)" }}>
-                🎵 Playing: {audioPreview.playbackState.segmentId}
+              <span style={{ color: "var(--success)" }}>
+                🎵 Playing
                 {audioPreview.duration > 0 && (
                   <span style={{ marginLeft: "8px" }}>
                     {Math.floor(audioPreview.currentTime)}s / {Math.floor(audioPreview.duration)}s
