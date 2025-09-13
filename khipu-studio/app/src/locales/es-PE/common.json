@@ -36,7 +36,7 @@
     "comment": ""
   },
   "nav.voice": {
-    "string": "Producción de Audio",
+    "string": "Producción de audio",
     "comment": ""
   },
   "nav.packaging": {
@@ -47,7 +47,6 @@
     "string": "Configuración",
     "comment": ""
   },
-
   "status.ready": {
     "string": "Listo",
     "comment": ""
@@ -68,7 +67,6 @@
     "string": "Abre un proyecto para continuar.",
     "comment": ""
   },
-
   "common.loading": {
     "string": "Cargando…",
     "comment": ""
@@ -85,7 +83,6 @@
     "string": "Procesando",
     "comment": ""
   },
-
   "image.errors.failedToCopy": {
     "string": "Error al copiar imagen",
     "comment": ""
@@ -98,7 +95,6 @@
     "string": "Error al seleccionar imagen. Inténtalo de nuevo.",
     "comment": ""
   },
-
   "planning.merge.noNextSegment": {
     "string": "No hay segmento siguiente para fusionar",
     "comment": ""
@@ -107,7 +103,6 @@
     "string": "No hay segmento anterior para fusionar",
     "comment": ""
   },
-
   "manuscript.saved": {
     "string": "Guardado ✔",
     "comment": ""
@@ -124,7 +119,6 @@
     "string": "Actualizar",
     "comment": ""
   },
-
   "planning.tooltips.clickToEdit": {
     "string": "Haz clic para editar el texto (los cambios se guardan solo en el plan)",
     "comment": ""
@@ -137,7 +131,6 @@
     "string": "Cancelar edición (Escape)",
     "comment": ""
   },
-
   "plan.noPlanToShow": {
     "string": "No hay plan para mostrar.",
     "comment": ""
@@ -146,7 +139,6 @@
     "string": "Ir al texto",
     "comment": ""
   },
-
   "planning.status.reloading": {
     "string": "Archivo de plan actualizado, recargando…",
     "comment": ""
@@ -179,7 +171,6 @@
     "string": "Carga un proyecto primero para gestionar los personajes.",
     "comment": ""
   },
-
   "manu.save": {
     "string": "Guardar capítulo",
     "comment": ""
@@ -208,7 +199,6 @@
     "string": "Manuscrito",
     "comment": ""
   },
-
   "plan.regen": {
     "string": "Regenerar plan",
     "comment": ""
@@ -269,7 +259,6 @@
     "string": "(Siguiente) Ver fuente en capítulo",
     "comment": ""
   },
-
   "footer.route": {
     "string": "Ruta: {{path}}",
     "comment": ""
@@ -282,7 +271,6 @@
     "string": "Selecciona un proyecto y comienza con Manuscrito → Orquestación.",
     "comment": ""
   },
-
   "project.title": {
     "string": "Configuración del Proyecto",
     "comment": ""
@@ -315,16 +303,14 @@
     "string": "Marcar configuración como completa",
     "comment": ""
   },
-  
   "project.general": {
-    "string": "Configuración General",
+    "string": "Configuración general",
     "comment": ""
   },
   "project.language": {
     "string": "Idioma del proyecto",
     "comment": ""
   },
-  
   "project.manuscript": {
     "string": "Manuscrito",
     "comment": ""
@@ -333,7 +319,6 @@
     "string": "Patrón de archivos de capítulos",
     "comment": ""
   },
-  
   "project.planning": {
     "string": "Orquestación",
     "comment": ""
@@ -354,7 +339,6 @@
     "string": "Deshabilitado",
     "comment": ""
   },
-  
   "project.ssml": {
     "string": "SSML",
     "comment": ""
@@ -371,7 +355,6 @@
     "string": "Pausas (ms)",
     "comment": ""
   },
-  
   "project.llm": {
     "string": "Motor LLM",
     "comment": ""
@@ -392,7 +375,6 @@
     "string": "Endpoint (Local)",
     "comment": ""
   },
-  
   "project.tts": {
     "string": "Motor TTS",
     "comment": ""
@@ -481,7 +463,6 @@
     "string": "Caché habilitado",
     "comment": ""
   },
-  
   "project.creds": {
     "string": "Credenciales",
     "comment": ""
@@ -498,7 +479,6 @@
     "string": "URL Base OpenAI",
     "comment": ""
   },
-  
   "project.export": {
     "string": "Exportar",
     "comment": ""
@@ -523,7 +503,6 @@
     "string": "Spotify",
     "comment": ""
   },
-  
   "project.advancedCreds": {
     "string": "Credenciales Avanzadas y Rutas",
     "comment": ""
@@ -544,7 +523,6 @@
     "string": "Ruta del archivo de configuración de producción",
     "comment": ""
   },
-  
   "project.exportFormat": {
     "string": "Formato",
     "comment": ""
@@ -557,7 +535,6 @@
     "string": "Frecuencia de Muestreo (Hz)",
     "comment": ""
   },
-
   "workflow.readyToStart": {
     "string": "Flujo de trabajo: Listo para comenzar",
     "comment": ""
@@ -590,12 +567,10 @@
     "string": "Paso completado",
     "comment": ""
   },
-  
   "manuscript.completeButton": {
     "string": "Marcar manuscrito como completo",
     "comment": ""
   },
-  
   "home.existingProjects": {
     "string": "Proyectos Recientes",
     "comment": ""
@@ -656,7 +631,6 @@
     "string": "Configura un nuevo proyecto de audiolibro con la estructura de carpetas requerida.",
     "comment": ""
   },
-
   "settings.title": {
     "string": "Configuración",
     "comment": ""
@@ -717,7 +691,6 @@
     "string": "Los cambios se guardan automáticamente.",
     "comment": ""
   },
-
   "casting.title": {
     "string": "Casting de Voces",
     "comment": ""
@@ -882,7 +855,6 @@
     "string": "Error completando casting",
     "comment": ""
   },
-
   "book.title": {
     "string": "Metadatos del Libro",
     "comment": ""
@@ -912,7 +884,7 @@
     "comment": ""
   },
   "book.basicInfo": {
-    "string": "Información Básica",
+    "string": "Información básica",
     "comment": ""
   },
   "book.title.label": {
@@ -940,7 +912,7 @@
     "comment": ""
   },
   "book.content": {
-    "string": "Información del Contenido",
+    "string": "Información del contenido",
     "comment": ""
   },
   "book.description.label": {
@@ -972,7 +944,7 @@
     "comment": ""
   },
   "book.publishing": {
-    "string": "Información de Publicación",
+    "string": "Información de publicación",
     "comment": ""
   },
   "book.publisher.label": {
@@ -996,7 +968,7 @@
     "comment": ""
   },
   "book.series": {
-    "string": "Información de Serie",
+    "string": "Información de serie",
     "comment": ""
   },
   "book.seriesName.label": {
@@ -1032,20 +1004,19 @@
     "comment": ""
   },
   "book.disclosure": {
-    "string": "Divulgación de Voz Digital",
+    "string": "Divulgación de voz digital",
     "comment": ""
   },
   "book.hasDigitalVoices.label": {
     "string": "Contiene voces digitales/IA",
     "comment": ""
   },
-
   "characters.title": {
-    "string": "Gestión de Personajes",
+    "string": "Gestión de personajes",
     "comment": ""
   },
   "characters.voiceAssignment": {
-    "string": "Asignación de Voz",
+    "string": "Asignación de voz",
     "comment": ""
   },
   "characters.assigningProgress": {
@@ -1088,13 +1059,12 @@
     "string": "Error completando personajes",
     "comment": ""
   },
-  
   "characters.detectionTitle": {
-    "string": "Detección de Personajes",
+    "string": "Detección de personajes",
     "comment": ""
   },
   "characters.detectButton": {
-    "string": "Detectar Personajes",
+    "string": "Detectar personajes",
     "comment": ""
   },
   "characters.detecting": {
@@ -1137,13 +1107,12 @@
     "string": "personajes detectados",
     "comment": ""
   },
-  
   "characters.assignmentTitle": {
-    "string": "Asignación de Voces",
+    "string": "Asignación de voces",
     "comment": ""
   },
   "characters.generateAssignments": {
-    "string": "Generar Asignaciones",
+    "string": "Generar asignaciones",
     "comment": ""
   },
   "characters.assigningVoices": {
@@ -1182,7 +1151,6 @@
     "string": "Personaje Principal",
     "comment": ""
   },
-  
   "characters.audition.button": {
     "string": "Probar Voz",
     "comment": ""
@@ -1207,12 +1175,10 @@
     "string": "Error al cargar audio",
     "comment": ""
   },
-  
   "characters.save": {
     "string": "Guardar Personajes",
     "comment": ""
   },
-
   "planning.segmentNotFound": {
     "string": "Segmento no encontrado",
     "comment": ""
@@ -1314,7 +1280,7 @@
     "comment": ""
   },
   "planning.selectChapter": {
-    "string": "Seleccionar Capítulo",
+    "string": "Seleccionar capítulo",
     "comment": ""
   },
   "planning.generating": {
@@ -1394,7 +1360,7 @@
     "comment": ""
   },
   "planning.chunksVoiceAssignment": {
-    "string": "Fragmentos y Asignación de Voces",
+    "string": "Fragmentos y asignación de voces",
     "comment": ""
   },
   "planning.playingPreview": {
@@ -1457,7 +1423,6 @@
     "string": "Asignación de personajes completa",
     "comment": ""
   },
-
   "planning.status.completed": {
     "string": "Página de orquestación marcada como completa",
     "comment": ""
@@ -1467,7 +1432,7 @@
     "comment": ""
   },
   "planning.progress.complete": {
-    "string": "Orquestación Completa",
+    "string": "Orquestación completa",
     "comment": ""
   },
   "planning.progress.status": {
@@ -1482,7 +1447,6 @@
     "string": "Listo para SSML",
     "comment": ""
   },
-
   "planning.errors.selectChapter": {
     "string": "Selecciona un capítulo y asegúrate de que el proyecto esté cargado.",
     "comment": ""
@@ -1548,7 +1512,7 @@
     "comment": "Texto del botón para guardar datos de planificación"
   },
   "planning.markChapterComplete": {
-    "string": "Marcar Capítulo como Completo",
+    "string": "Marcar capítulo como completo",
     "comment": "Texto del botón para marcar capítulo como completo"
   },
   "planning.chapterLabel": {
@@ -1655,7 +1619,6 @@
     "string": "Marcar como Completo",
     "comment": "Texto del botón para marcar paso de personajes como completo"
   },
-
   "planning.save": {
     "string": "Guardar",
     "comment": "Texto del botón guardar en editor de planificación"
@@ -1677,10 +1640,9 @@
     "comment": "Instrucciones para editar segmentos"
   },
   "planning.chapterComplete": {
-    "string": "Capítulo Completo",
+    "string": "Capítulo completo",
     "comment": "Texto mostrado cuando el capítulo está marcado como completo"
   },
-
   "characters.personality": {
     "string": "Personalidad",
     "comment": "Etiqueta para los rasgos de personalidad del personaje"
@@ -1689,12 +1651,10 @@
     "string": "Estilo de Habla",
     "comment": "Etiqueta para el estilo de habla del personaje"
   },
-
   "home.byAuthors": {
     "string": "por {{authors}}",
     "comment": "Texto de atribución de autores en tarjetas de libros"
   },
-
   "languages.ar": {
     "string": "Árabe",
     "comment": "Nombre del idioma para Árabe"
@@ -1903,7 +1863,6 @@
     "string": "output",
     "comment": "Placeholder para la carpeta de salida"
   },
-
   "audioProduction.loadingPlanData": {
     "string": "Cargando datos del plan...",
     "comment": "Mensaje de estado al cargar datos del plan"
@@ -1973,11 +1932,11 @@
     "comment": "Mensaje de error cuando falla la carga de datos del plan con error específico"
   },
   "audioProduction.selectChapter": {
-    "string": "Seleccionar Capítulo",
+    "string": "Seleccionar capítulo",
     "comment": "Texto de opción por defecto en el desplegable de capítulos"
   },
   "audioProduction.audioProductionComplete": {
-    "string": "Producción de Audio Completa",
+    "string": "Producción de audio completa",
     "comment": "Texto de estado cuando todos los capítulos tienen audio generado"
   },
   "audioProduction.chaptersLoaded": {
@@ -1985,7 +1944,7 @@
     "comment": "Estado mostrando cuántos capítulos están cargados con planes"
   },
   "audioProduction.generateChapterAudio": {
-    "string": "Generar Audio del Capítulo",
+    "string": "Generar audio del capítulo",
     "comment": "Texto del botón para generar audio de todo el capítulo"
   },
   "audioProduction.play": {
@@ -2049,7 +2008,7 @@
     "comment": "Encabezado de tabla para la columna de asignación de voz"
   },
   "audioProduction.customSettings": {
-    "string": "Configuración Personalizada",
+    "string": "Configuración personalizada",
     "comment": "Etiqueta para la opción de configuración personalizada de procesamiento de audio"
   },
   "audioProduction.presetCleanNatural": {
@@ -2061,7 +2020,7 @@
     "comment": "Categoría de configuraciones de audio para voces de personajes"
   },
   "audioProduction.presetBroadcastQuality": {
-    "string": "Calidad de Transmisión",
+    "string": "Calidad de transmisión",
     "comment": "Categoría de configuraciones de audio para calidad de transmisión"
   },
   "audioProduction.presetVintageSpecialty": {
@@ -2120,7 +2079,6 @@
     "string": "Seleccione un capítulo para comenzar la producción de audio",
     "comment": "Mensaje pidiendo al usuario que seleccione un capítulo"
   },
-
   "manuscript.loadingChapter": {
     "string": "Cargando capítulo…",
     "comment": "Mensaje de estado al cargar un capítulo"
@@ -2141,9 +2099,8 @@
     "string": "Caracteres: {{count}}",
     "comment": "Mostrar conteo de caracteres en el editor"
   },
-
   "audioProduction.moduleTitle": {
-    "string": "Módulo de Producción de Audio",
+    "string": "Módulo de producción de audio",
     "comment": "Título para el panel del módulo de producción de audio"
   },
   "audioProduction.dynamicControlTitle": {
@@ -2211,7 +2168,7 @@
     "comment": "Etiqueta dinámica para reverb con porcentaje de mezcla húmeda"
   },
   "audioProduction.stereoEnhance": {
-    "string": "Realce Estéreo",
+    "string": "Realce estéreo",
     "comment": "Etiqueta para efecto de realce estéreo"
   },
   "audioProduction.normalizeDynamic": {
@@ -2235,7 +2192,7 @@
     "comment": "Texto cuando no hay efectos de procesamiento de audio activos"
   },
   "audioProduction.presetsDescription": {
-    "string": "Elige entre 21 configuraciones profesionales de procesamiento de voz diseñados para producción de audiolibros.",
+    "string": "Elige configuraciones profesionales de procesamiento de voz diseñados para producción de audiolibros.",
     "comment": "Texto de descripción para los configuraciones de procesamiento de voz"
   },
   "audioProduction.customSettingsInstruction": {
@@ -2283,7 +2240,7 @@
     "comment": "Etiqueta para efecto de audio de realce estéreo sutil"
   },
   "audioProduction.consistencyMasteringTitle": {
-    "string": "Consistencia y Masterización",
+    "string": "Consistencia y masterización",
     "comment": "Título para la sección de procesamiento de consistencia y masterización"
   },
   "audioProduction.normalizeAudiobook": {
@@ -2311,7 +2268,7 @@
     "comment": "Texto de descripción principal para la página de producción de audio"
   },
   "audioPresets.cleanNatural.name": {
-    "string": "Natural Limpio",
+    "string": "Natural limpio",
     "comment": "Nombre para el preset de audio Natural Limpio"
   },
   "audioPresets.cleanNatural.description": {
@@ -2319,7 +2276,7 @@
     "comment": "Descripción para el preset de audio Natural Limpio"
   },
   "audioPresets.cleanPolished.name": {
-    "string": "Pulido Limpio",
+    "string": "Pulido limpio",
     "comment": "Nombre para el preset de audio Pulido Limpio"
   },
   "audioPresets.cleanPolished.description": {
@@ -2327,7 +2284,7 @@
     "comment": "Descripción para el preset de audio Pulido Limpio"
   },
   "audioPresets.cleanIntimate.name": {
-    "string": "Íntimo Limpio",
+    "string": "Íntimo limpio",
     "comment": "Nombre para el preset de audio Íntimo Limpio"
   },
   "audioPresets.cleanIntimate.description": {
@@ -2335,7 +2292,7 @@
     "comment": "Descripción para el preset de audio Íntimo Limpio"
   },
   "audioPresets.characterPhone.name": {
-    "string": "Teléfono/Radio",
+    "string": "Teléfono/radio",
     "comment": "Nombre para el preset de audio de personaje Teléfono/Radio"
   },
   "audioPresets.characterPhone.description": {
@@ -2343,7 +2300,7 @@
     "comment": "Descripción para el preset de audio de personaje Teléfono/Radio"
   },
   "audioPresets.characterVintage.name": {
-    "string": "Radio Vintage",
+    "string": "Radio vintage",
     "comment": "Nombre para el preset de audio de personaje Radio Vintage"
   },
   "audioPresets.characterVintage.description": {
@@ -2351,7 +2308,7 @@
     "comment": "Descripción para el preset de audio de personaje Radio Vintage"
   },
   "audioPresets.characterElderly.name": {
-    "string": "Voz Anciana",
+    "string": "Voz anciana",
     "comment": "Nombre para el preset de audio de personaje Voz Anciana"
   },
   "audioPresets.characterElderly.description": {
@@ -2359,7 +2316,7 @@
     "comment": "Descripción para el preset de audio de personaje Voz Anciana"
   },
   "audioPresets.characterChild.name": {
-    "string": "Voz Infantil",
+    "string": "Voz infantil",
     "comment": "Nombre para el preset de audio de personaje Voz Infantil"
   },
   "audioPresets.characterChild.description": {
@@ -2367,7 +2324,7 @@
     "comment": "Descripción para el preset de audio de personaje Voz Infantil"
   },
   "audioPresets.characterMonster.name": {
-    "string": "Voz de Monstruo",
+    "string": "Voz de monstruo",
     "comment": "Nombre para el preset de audio de personaje Voz de Monstruo"
   },
   "audioPresets.characterMonster.description": {
@@ -2375,7 +2332,7 @@
     "comment": "Descripción para el preset de audio de personaje Voz de Monstruo"
   },
   "audioPresets.broadcastRadio.name": {
-    "string": "Transmisión Radial",
+    "string": "Transmisión radial",
     "comment": "Nombre para el preset de audio Transmisión Radial"
   },
   "audioPresets.broadcastRadio.description": {
@@ -2383,7 +2340,7 @@
     "comment": "Descripción para el preset de audio Transmisión Radial"
   },
   "audioPresets.broadcastNews.name": {
-    "string": "Presentador de Noticias",
+    "string": "Presentador de noticias",
     "comment": "Nombre para el preset de audio de transmisión Presentador de Noticias"
   },
   "audioPresets.broadcastNews.description": {
@@ -2391,7 +2348,7 @@
     "comment": "Descripción para el preset de audio de transmisión Presentador de Noticias"
   },
   "audioPresets.broadcastPodcast.name": {
-    "string": "Podcast Pro",
+    "string": "Podcast pro",
     "comment": "Nombre para el preset de audio de transmisión Podcast Pro"
   },
   "audioPresets.broadcastPodcast.description": {
@@ -2399,7 +2356,7 @@
     "comment": "Descripción para el preset de audio de transmisión Podcast Pro"
   },
   "audioPresets.broadcastSports.name": {
-    "string": "Comentarios Deportivos",
+    "string": "Comentarios deportivos",
     "comment": "Nombre para el preset de audio de transmisión Comentarios Deportivos"
   },
   "audioPresets.broadcastSports.description": {
@@ -2407,7 +2364,7 @@
     "comment": "Descripción para el preset de audio de transmisión Comentarios Deportivos"
   },
   "audioPresets.vintageWarm.name": {
-    "string": "Vintage Cálido",
+    "string": "Vintage cálido",
     "comment": "Nombre para el preset de audio Vintage Cálido"
   },
   "audioPresets.vintageWarm.description": {
@@ -2415,7 +2372,7 @@
     "comment": "Descripción para el preset de audio Vintage Cálido"
   },
   "audioPresets.vintageGoldenAge.name": {
-    "string": "Radio de la Época Dorada",
+    "string": "Radio de la época dorada",
     "comment": "Nombre para el preset de audio vintage Radio de la Época Dorada"
   },
   "audioPresets.vintageGoldenAge.description": {
@@ -2423,7 +2380,7 @@
     "comment": "Descripción para el preset de audio vintage Radio de la Época Dorada"
   },
   "audioPresets.vintageTape.name": {
-    "string": "Cinta Vintage",
+    "string": "Cinta vintage",
     "comment": "Nombre para el preset de audio Cinta Vintage"
   },
   "audioPresets.vintageTape.description": {
@@ -2431,7 +2388,7 @@
     "comment": "Descripción para el preset de audio Cinta Vintage"
   },
   "audioPresets.vintageLoFi.name": {
-    "string": "Vintage Lo-Fi",
+    "string": "Vintage lo-fi",
     "comment": "Nombre para el preset de audio Vintage Lo-Fi"
   },
   "audioPresets.vintageLoFi.description": {
@@ -2439,7 +2396,7 @@
     "comment": "Descripción para el preset de audio Vintage Lo-Fi"
   },
   "audioProduction.pageTitle": {
-    "string": "Producción de Audio",
+    "string": "Producción de audio",
     "comment": "Título principal de la página de producción de audio"
   },
   "audioProduction.wetMix": {

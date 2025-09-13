@@ -10,3 +10,7 @@ khipu-studio/app/src/locales/TRANSLATION_CONTEXT.md
 /khipu-studio/cache
 khipu-studio/cache/sox_39a8d49b.wav
 khipu-studio/test-playlist.js
+khipu-studio/app/src/locales/es-PE/fix-capitalization.ps1
+khipu-studio/app/src/locales/es-PE/fix-spanish-capitalization.ps1
+khipu-studio/app/src/locales/es-PE/common.json.backup
+khipu-studio/app/src/locales/es-PE/common.json.backup-before-caps

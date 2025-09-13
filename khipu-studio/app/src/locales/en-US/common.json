@@ -1733,7 +1733,7 @@
     "comment": "Text when no audio processing effects are active"
   },
   "audioProduction.presetsDescription": {
-    "string": "Choose from 21 professional voice processing presets designed for audiobook production.",
+    "string": "Choose from professional voice processing presets designed for audiobook production.",
     "comment": "Description text for voice processing presets"
   },
   "audioProduction.customSettingsInstruction": {
