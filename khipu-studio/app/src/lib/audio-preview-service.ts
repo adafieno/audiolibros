@@ -131,6 +131,22 @@ export class AudioPreviewService {
 
       this.currentSegmentId = options.segmentId;
 
+      // First check if the base segment audio exists
+      // This is the TTS-generated audio that we'll apply processing to
+      const baseAudioPath = `audio/segments/${options.segmentId}.wav`;
+      
+      // Check if base audio file exists
+      let hasBaseAudio = false;
+      try {
+        hasBaseAudio = await window.khipu!.call('file:exists', baseAudioPath) as boolean;
+      } catch (error) {
+        console.warn('Could not check if base audio exists:', error);
+      }
+
+      if (!hasBaseAudio) {
+        throw new Error(`No audio available for segment ${options.segmentId}. Please generate the audio first.`);
+      }
+
       // Check if we have cached processed audio
       const cacheKey = audioProcessor.generateCacheKey(
         `segment_${options.segmentId}`, 
@@ -141,8 +157,10 @@ export class AudioPreviewService {
       
       if (!audioPath) {
         // Need to process audio first
-        const tempInputPath = `temp/segments/${options.segmentId}.wav`;
+        const tempInputPath = baseAudioPath; // Use the actual base audio file
         const tempOutputPath = `temp/processed/${cacheKey}.wav`;
+        
+        console.log('Processing audio for preview:', tempInputPath, '->', tempOutputPath);
         
         const result = await audioProcessor.processAudio({
           inputPath: tempInputPath,
@@ -158,6 +176,7 @@ export class AudioPreviewService {
       }
 
       // Load processed audio
+      console.log('Loading processed audio from:', audioPath);
       this.currentBuffer = await this.loadAudioFile(audioPath);
       
       // Create and start audio source

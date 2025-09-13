@@ -38,11 +38,14 @@ class FFmpegAudioProcessor {
   findFFmpegPath() {
     // Check bundled FFmpeg first
     const bundledPath = path.join(__dirname, '../../bin/ffmpeg/ffmpeg.exe');
+    console.log('Checking bundled FFmpeg at:', bundledPath);
     if (fs.existsSync(bundledPath)) {
+      console.log('Using bundled FFmpeg');
       return bundledPath;
     }
     
     // Fallback to system FFmpeg
+    console.log('Bundled FFmpeg not found, using system FFmpeg');
     return 'ffmpeg';
   }
 
@@ -176,6 +179,8 @@ class FFmpegAudioProcessor {
   async executeFFmpeg(args, onProgress) {
     return new Promise((resolve, reject) => {
       const processId = `ffmpeg_${Date.now()}`;
+      console.log('Executing FFmpeg:', this.ffmpegPath, 'with args:', args);
+      
       const process = spawn(this.ffmpegPath, args);
       
       this.activeProcesses.set(processId, process);
@@ -212,15 +217,18 @@ class FFmpegAudioProcessor {
 
       process.on('close', (code) => {
         this.activeProcesses.delete(processId);
+        console.log('FFmpeg process closed with code:', code);
         if (code === 0) {
           resolve();
         } else {
+          console.error('FFmpeg process failed:', stderr);
           reject(new Error(`FFmpeg process failed with code ${code}: ${stderr}`));
         }
       });
 
       process.on('error', (error) => {
         this.activeProcesses.delete(processId);
+        console.error('FFmpeg spawn error:', error);
         reject(error);
       });
     });

@@ -60,6 +60,7 @@ export interface KhipuRequestMap {
   "fs:readJson":{ in: { root: string; rel: string }; out: { data: unknown; path: string; raw: string } };
 
   // File operations
+  "file:exists": { in: string; out: boolean };
   "file:chooseImage": { in: undefined; out: string | null };
   "file:validateAndCopyImage": { 
     in: { filePath: string; projectRoot: string }; 
