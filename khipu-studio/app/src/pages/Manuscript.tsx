@@ -85,8 +85,8 @@ export default function ManuscriptPage() {
             border: "1px solid var(--border)",
             borderRadius: "6px"
           }}>
-            <button className="btn" onClick={chooseDocxAndParse}>Importar .docx…</button>
-            <button className="btn" onClick={refreshList}>Refrescar</button>
+            <button className="btn" onClick={chooseDocxAndParse}>{t("manuscript.importDocx")}</button>
+            <button className="btn" onClick={refreshList}>{t("manuscript.refresh")}</button>
             <div style={{ width: "1px", height: "20px", backgroundColor: "var(--border)", margin: "0 4px" }}></div>
             <WorkflowCompleteButton 
               step="manuscript" 

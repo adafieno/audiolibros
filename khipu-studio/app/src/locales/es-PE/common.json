@@ -116,6 +116,14 @@
     "string": "Error al guardar",
     "comment": ""
   },
+  "manuscript.importDocx": {
+    "string": "Importar .docx…",
+    "comment": ""
+  },
+  "manuscript.refresh": {
+    "string": "Actualizar",
+    "comment": ""
+  },
 
   "planning.tooltips.clickToEdit": {
     "string": "Haz clic para editar el texto (los cambios se guardan solo en el plan)",
@@ -649,6 +657,10 @@
     "comment": ""
   },
 
+  "settings.title": {
+    "string": "Configuración",
+    "comment": ""
+  },
   "settings.description": {
     "string": "Ajustar configuración global de la aplicación.",
     "comment": ""
@@ -699,6 +711,10 @@
   },
   "settings.loading": {
     "string": "Cargando…",
+    "comment": ""
+  },
+  "settings.autoSave": {
+    "string": "Los cambios se guardan automáticamente.",
     "comment": ""
   },
 

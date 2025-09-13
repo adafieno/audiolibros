@@ -36,7 +36,8 @@ export default function SettingsPage() {
   if (!cfg) return <div>{t("settings.loading")}</div>;
 
   return (
-    <>
+    <div>
+      <h2>{t("settings.title")}</h2>
       <p>{t("settings.description")}</p>
 
       <section style={{ marginTop: 16 }}>
@@ -55,7 +56,6 @@ export default function SettingsPage() {
       </section>
 
       <section style={{ marginTop: 16 }}>
-        <label style={{ display: "block", marginBottom: 8 }}>{t("settings.language")}</label>
         <LangSelector />
       </section>
 
@@ -64,6 +64,6 @@ export default function SettingsPage() {
           {t("settings.autoSave")}
         </div>
       </div>
-    </>
+    </div>
   );
 }

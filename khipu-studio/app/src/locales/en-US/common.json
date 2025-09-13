@@ -270,6 +270,10 @@
     "comment": "Button text when audition is playing"
   },
 
+  "settings.title": {
+    "string": "Settings",
+    "comment": "Page title for settings"
+  },
   "settings.description": {
     "string": "Adjust global application settings.",
     "comment": "Description text for the settings page"
@@ -321,6 +325,10 @@
   "settings.loading": {
     "string": "Loading…",
     "comment": "Loading message for settings page"
+  },
+  "settings.autoSave": {
+    "string": "Changes are automatically saved.",
+    "comment": "Message indicating that settings auto-save"
   },
 
   "common.loading": {
@@ -381,6 +389,14 @@
   "manuscript.saveError": {
     "string": "Error saving",
     "comment": "Error message when manuscript save fails"
+  },
+  "manuscript.importDocx": {
+    "string": "Import .docx…",
+    "comment": "Button text for importing docx files"
+  },
+  "manuscript.refresh": {
+    "string": "Refresh",
+    "comment": "Button text for refreshing manuscript list"
   },
 
   "plan.noPlanToShow": {
