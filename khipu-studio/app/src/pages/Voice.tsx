@@ -863,7 +863,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               marginLeft: "12px"
             }}
           >
-            🎵 Play All
+            🎬 Play All
           </button>
 
           <button
