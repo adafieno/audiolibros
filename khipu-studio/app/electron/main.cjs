@@ -827,6 +827,23 @@ function createWin() {
       
       // Write audio data (convert from base64)
       const audioBuffer = Buffer.from(audioData, 'base64');
+      
+      // Validate that we have a proper WAV file with RIFF header
+      if (audioBuffer.length < 44) {
+        throw new Error('Audio buffer too small to be a valid WAV file');
+      }
+      
+      const header = audioBuffer.subarray(0, 12);
+      const riffMarker = header.subarray(0, 4).toString('ascii');
+      const waveMarker = header.subarray(8, 12).toString('ascii');
+      
+      if (riffMarker !== 'RIFF' || waveMarker !== 'WAVE') {
+        console.warn(`⚠️  Invalid WAV file detected: RIFF='${riffMarker}', WAVE='${waveMarker}', size=${audioBuffer.length}`);
+        console.warn('First 16 bytes:', Array.from(audioBuffer.subarray(0, 16)).map(b => `0x${b.toString(16).padStart(2, '0')}`).join(' '));
+        throw new Error(`Invalid audio format: expected WAV file with RIFF header, got RIFF='${riffMarker}', WAVE='${waveMarker}'`);
+      }
+      
+      console.log(`✅ Valid WAV file detected: ${audioBuffer.length} bytes`);
       await fsp.writeFile(audioFile, audioBuffer);
       
       // Write metadata
@@ -855,12 +872,36 @@ function createWin() {
       // First, let's try if the cacheKey is already hashed
       let audioFile = path.join(cacheDir, `${cacheKey}.wav`);
       
-      // Check if file exists
+      // Check if file exists and is valid
       const audioExists = await fsp.access(audioFile).then(() => true).catch(() => false);
       
       if (audioExists) {
-        console.log("🎵 CACHE PATH FOUND:", audioFile);
-        return audioFile;
+        // Validate WAV header to detect corruption
+        try {
+          const buffer = await fsp.readFile(audioFile);
+          if (buffer.length < 44) {
+            console.warn(`🗑️  Corrupted cache file (too small): ${audioFile}`);
+            await fsp.unlink(audioFile).catch(() => {}); // Clean up corrupted file
+            return null;
+          }
+          
+          const header = buffer.subarray(0, 12);
+          const riffMarker = header.subarray(0, 4).toString('ascii');
+          const waveMarker = header.subarray(8, 12).toString('ascii');
+          
+          if (riffMarker !== 'RIFF' || waveMarker !== 'WAVE') {
+            console.warn(`🗑️  Corrupted cache file (invalid WAV): ${audioFile}`);
+            await fsp.unlink(audioFile).catch(() => {}); // Clean up corrupted file
+            return null;
+          }
+          
+          console.log("🎵 CACHE PATH FOUND:", audioFile);
+          return audioFile;
+        } catch (validationError) {
+          console.warn(`🗑️  Cache validation failed: ${audioFile}`, validationError.message);
+          await fsp.unlink(audioFile).catch(() => {}); // Clean up corrupted file
+          return null;
+        }
       }
       
       console.log("🎵 CACHE PATH NOT FOUND:", cacheKey);

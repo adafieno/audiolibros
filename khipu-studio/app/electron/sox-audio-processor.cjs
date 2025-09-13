@@ -133,7 +133,17 @@ class SoxAudioProcessor {
     if (chain.eqShaping.airLift.enabled) {
       const freq = parseFloat(chain.eqShaping.airLift.frequency) * 1000; // Convert kHz to Hz
       const gain = chain.eqShaping.airLift.gain;
-      effects.push('equalizer', freq.toString(), '1q', gain.toString());
+      
+      // Cap frequency at Nyquist limit (8kHz for 16kHz sample rate audio)
+      // SoX fails if frequency >= sample_rate / 2
+      const maxFreq = 7800; // Leave some headroom below 8kHz Nyquist limit
+      const cappedFreq = Math.min(freq, maxFreq);
+      
+      if (freq > maxFreq) {
+        console.log(`⚠️  Air lift frequency ${freq}Hz exceeds Nyquist limit, capping to ${cappedFreq}Hz`);
+      }
+      
+      effects.push('equalizer', cappedFreq.toString(), '1q', gain.toString());
     }
 
     // Stage 4: Spatial Enhancement
