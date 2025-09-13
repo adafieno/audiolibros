@@ -279,6 +279,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   const [audioSegments, setAudioSegments] = useState<AudioSegmentRow[]>([]);
   const [generatingAudio, setGeneratingAudio] = useState<Set<string>>(new Set());
   const [selectedRowIndex, setSelectedRowIndex] = useState(0);
+  const [selectedPresetId, setSelectedPresetId] = useState<string>('clean_polished');
 
   // Audio preview functionality
   const audioPreview = useAudioPreview();
@@ -301,8 +302,29 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     return getCleanPolishedPreset();
   }, [audioSegments, selectedRowIndex, getCleanPolishedPreset]);
 
+  // Function to find which preset matches a processing chain
+  const findMatchingPreset = useCallback((processingChain: AudioProcessingChain): string | null => {
+    for (const preset of AUDIO_PRESETS) {
+      if (JSON.stringify(preset.processingChain) === JSON.stringify(processingChain)) {
+        return preset.id;
+      }
+    }
+    return null;
+  }, []);
+
   // Current processing chain for the selected segment
   const currentProcessingChain = getCurrentProcessingChain();
+
+  // Update selected preset when segment changes
+  useEffect(() => {
+    const matchingPresetId = findMatchingPreset(currentProcessingChain);
+    if (matchingPresetId) {
+      setSelectedPresetId(matchingPresetId);
+      setCustomSettingsEnabled(false);
+    } else {
+      setCustomSettingsEnabled(true);
+    }
+  }, [currentProcessingChain, findMatchingPreset]);
 
   // Audio production service for metadata persistence
   const audioProductionService = useMemo(() => {
@@ -1280,12 +1302,13 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 borderRadius: "3px",
                                 color: "var(--text)"
                               }}
-                              value={customSettingsEnabled ? 'custom' : 'clean_polished'}
+                              value={customSettingsEnabled ? 'custom' : selectedPresetId}
                               onChange={(e) => {
                                 if (e.target.value === 'custom') {
                                   setCustomSettingsEnabled(true);
                                 } else {
                                   setCustomSettingsEnabled(false);
+                                  setSelectedPresetId(e.target.value);
                                   const preset = getPresetById(e.target.value);
                                   if (preset) {
                                     updateCurrentProcessingChain(preset.processingChain);
