@@ -2,6 +2,7 @@
 // Handles audio playback with Web Audio API integration and processing chain preview
 
 import { generateSegmentAudio } from './segment-tts-generator';
+import { audioProcessor } from './audio-processor-frontend';
 import type { AudioProcessingChain } from '../types/audio-production';
 import type { Segment } from '../types/plan';
 import type { Character } from '../types/character';
@@ -148,33 +149,66 @@ export class AudioPreviewService {
 
       this.currentSegmentId = options.segmentId;
 
-      // Try to get TTS audio directly from cache
-      let audioUrl: string | null = null;
+      // Check if we have cached processed audio (TTS + Processing Chain combined)
+      const processingCacheKey = audioProcessor.generateCacheKey(
+        `segment_${options.segmentId}`, 
+        options.processingChain
+      );
 
-      if (options.segment && options.character && options.projectConfig) {
-        // Try to generate TTS audio on-demand if we have the necessary data
-        const ttsResult = await generateSegmentAudio({
-          segment: options.segment,
-          character: options.character,
-          projectConfig: options.projectConfig
-        });
+      let processedAudioPath = await audioProcessor.getCachedAudioPath(processingCacheKey);
+      
+      if (!processedAudioPath) {
+        console.log(`🎤 No cached processed audio found for segment ${options.segmentId}, generating TTS + applying processing...`);
+        
+        // Step 1: Generate raw TTS audio
+        if (options.segment && options.character && options.projectConfig) {
+          const ttsResult = await generateSegmentAudio({
+            segment: options.segment,
+            character: options.character,
+            projectConfig: options.projectConfig
+          });
 
-        if (!ttsResult.success || !ttsResult.audioUrl) {
-          throw new Error(`Failed to generate TTS audio: ${ttsResult.error}`);
+          if (!ttsResult.success || !ttsResult.audioUrl) {
+            throw new Error(`Failed to generate TTS audio: ${ttsResult.error}`);
+          }
+
+          // Step 2: Convert TTS blob URL to audio buffer for processing
+          const response = await fetch(ttsResult.audioUrl);
+          const audioBuffer = await response.arrayBuffer();
+          
+          // Step 3: Save TTS to temp file for processing
+          const tempTTSPath = `temp/tts_${options.segmentId}.wav`;
+          await window.electron?.invoke('fs:createDirectory', 'temp');
+          await window.electron?.invoke('fs:writeFile', tempTTSPath, new Uint8Array(audioBuffer));
+          
+          // Step 4: Apply processing chain
+          const tempProcessedPath = `temp/processed_${processingCacheKey}.wav`;
+          
+          const processingResult = await audioProcessor.processAudio({
+            inputPath: tempTTSPath,
+            outputPath: tempProcessedPath,
+            processingChain: options.processingChain
+          });
+
+          if (!processingResult.success) {
+            throw new Error('Failed to apply processing chain: ' + processingResult.error);
+          }
+
+          processedAudioPath = processingResult.outputPath!;
+          console.log(`✅ Generated TTS + applied processing chain for segment ${options.segmentId}`);
+        } else {
+          throw new Error(`No audio available for segment ${options.segmentId}. Please provide segment data and character information.`);
         }
-
-        audioUrl = ttsResult.audioUrl;
-        console.log(`✅ Got TTS audio URL for segment ${options.segmentId}`);
       } else {
-        throw new Error(`No audio available for segment ${options.segmentId}. Please provide segment data and character information for TTS generation.`);
+        console.log(`� Found cached processed audio for segment ${options.segmentId}`);
       }
 
-      // Use the TTS audio URL directly for preview
-      console.log(`🔊 Playing TTS audio directly from cache for segment ${options.segmentId}`);
+      // Step 5: Load and play the processed audio
+      console.log('Loading processed audio:', processedAudioPath);
+      this.currentBuffer = await this.loadAudioFile(processedAudioPath);
       
-      // Create an audio element and play the cached audio
-      const audio = new Audio(audioUrl);
-      audio.play();
+      // Create audio source and start playback
+      await this.startPlayback(options.startTime, options.duration);
       
     } catch (error) {
       console.error('Preview failed:', error);
