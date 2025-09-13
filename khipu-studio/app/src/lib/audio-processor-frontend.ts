@@ -51,8 +51,7 @@ export class AudioProcessorFrontend {
    * Process audio with the given processing chain
    */
   async processAudio(
-    options: ProcessingOptions,
-    onProgress?: (progress: ProcessingProgress) => void
+    options: ProcessingOptions
   ): Promise<AudioProcessingResult> {
     const id = `process_${++this.processingId}`;
     
