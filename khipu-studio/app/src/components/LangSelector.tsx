@@ -33,18 +33,15 @@ export default function LangSelector() {
   }
 
   return (
-    <label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-      <span style={{ fontSize: 12, color: "#9ca3af" }}>{t("settings.language")}</span>
-      <select
-        aria-label={t("settings.languageSelectLabel")}
-        className="langSelect"
-        value={value}
-        onChange={(e) => change((e.target as HTMLSelectElement).value)}
-      >
-        {options.map((l) => (
-          <option key={l.code} value={l.code}>{l.label}</option>
-        ))}
-      </select>
-    </label>
+    <select
+      aria-label={t("settings.languageSelectLabel")}
+      className="langSelect"
+      value={value}
+      onChange={(e) => change((e.target as HTMLSelectElement).value)}
+    >
+      {options.map((l) => (
+        <option key={l.code} value={l.code}>{l.label}</option>
+      ))}
+    </select>
   );
 }

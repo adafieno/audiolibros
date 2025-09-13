@@ -50,20 +50,12 @@ export default function SettingsPage() {
           <option value="dark">{t("settings.themeDark")}</option>
           <option value="light">{t("settings.themeLight")}</option>
         </select>
-        <div style={{ marginTop: 8, fontSize: 12, color: "#9ca3af" }}>
-          {t("settings.themeNote")}
-        </div>
       </section>
 
       <section style={{ marginTop: 16 }}>
+        <label style={{ display: "block", marginBottom: 8 }}>{t("settings.language")}</label>
         <LangSelector />
       </section>
-
-      <div style={{ marginTop: 16 }}>
-        <div style={{ color: "var(--muted)", fontSize: 12 }}>
-          {t("settings.autoSave")}
-        </div>
-      </div>
     </div>
   );
 }
