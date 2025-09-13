@@ -110,24 +110,24 @@ export const AUDIO_PRESETS: AudioPreset[] = [
     processingChain: {
       noiseCleanup: {
         highPassFilter: { enabled: true, frequency: "90" },
-        deClickDeEss: { enabled: true, intensity: "medium" }
+        deClickDeEss: { enabled: true, intensity: "heavy" }
       },
       dynamicControl: {
-        compression: { enabled: true, ratio: "3:1", threshold: -18 },
-        limiter: { enabled: true, ceiling: -1 }
+        compression: { enabled: true, ratio: "3:1", threshold: -12 },
+        limiter: { enabled: true, ceiling: -0.3 }
       },
       eqShaping: {
-        lowMidCut: { enabled: true, frequency: "300", gain: -6 },
-        presenceBoost: { enabled: true, frequency: "2", gain: 1.0 },
-        airLift: { enabled: false, frequency: "10", gain: 0 }
+        lowMidCut: { enabled: true, frequency: "300", gain: -12 },
+        presenceBoost: { enabled: true, frequency: "2", gain: -2.0 },
+        airLift: { enabled: true, frequency: "8", gain: -8.0 }
       },
       spatialEnhancement: {
         reverb: { enabled: false, type: "room_0.3", wetMix: 0 },
-        stereoEnhancer: { enabled: false, width: 1.0 }
+        stereoEnhancer: { enabled: false, width: 0.6 }
       },
       mastering: {
         normalization: { enabled: true, targetLUFS: "-18" },
-        peakLimiting: { enabled: true, maxPeak: -1.0 },
+        peakLimiting: { enabled: true, maxPeak: -2.0 },
         dithering: { enabled: false, bitDepth: "16" }
       }
     }
@@ -143,21 +143,21 @@ export const AUDIO_PRESETS: AudioPreset[] = [
         deClickDeEss: { enabled: false, intensity: "light" }
       },
       dynamicControl: {
-        compression: { enabled: true, ratio: "3:1", threshold: -20 },
-        limiter: { enabled: true, ceiling: -2 }
+        compression: { enabled: true, ratio: "3:1", threshold: -15 },
+        limiter: { enabled: true, ceiling: -1.5 }
       },
       eqShaping: {
-        lowMidCut: { enabled: true, frequency: "300", gain: -12 },
-        presenceBoost: { enabled: true, frequency: "3", gain: 2.0 },
-        airLift: { enabled: false, frequency: "8", gain: 0 }
+        lowMidCut: { enabled: true, frequency: "300", gain: -15 },
+        presenceBoost: { enabled: true, frequency: "2", gain: 1.0 },
+        airLift: { enabled: true, frequency: "8", gain: -5.0 }
       },
       spatialEnhancement: {
-        reverb: { enabled: false, type: "room_0.4", wetMix: 15 },
-        stereoEnhancer: { enabled: false, width: 0.8 }
+        reverb: { enabled: true, type: "room_0.4", wetMix: 8 },
+        stereoEnhancer: { enabled: false, width: 0.7 }
       },
       mastering: {
-        normalization: { enabled: true, targetLUFS: "-18" },
-        peakLimiting: { enabled: true, maxPeak: -1.5 },
+        normalization: { enabled: true, targetLUFS: "-20" },
+        peakLimiting: { enabled: true, maxPeak: -3.0 },
         dithering: { enabled: false, bitDepth: "16" }
       }
     }
@@ -175,21 +175,21 @@ export const AUDIO_PRESETS: AudioPreset[] = [
         deClickDeEss: { enabled: true, intensity: "heavy" }
       },
       dynamicControl: {
-        compression: { enabled: true, ratio: "3:1", threshold: -18 },
-        limiter: { enabled: true, ceiling: -1 }
+        compression: { enabled: true, ratio: "3:1", threshold: -16 },
+        limiter: { enabled: true, ceiling: -0.5 }
       },
       eqShaping: {
-        lowMidCut: { enabled: true, frequency: "150", gain: -1 },
-        presenceBoost: { enabled: true, frequency: "5", gain: 3.0 },
-        airLift: { enabled: true, frequency: "12", gain: 2.0 }
+        lowMidCut: { enabled: true, frequency: "150", gain: -6 },
+        presenceBoost: { enabled: true, frequency: "5", gain: 8.0 },
+        airLift: { enabled: true, frequency: "12", gain: 6.0 }
       },
       spatialEnhancement: {
         reverb: { enabled: false, type: "room_0.3", wetMix: 5 },
-        stereoEnhancer: { enabled: true, width: 1.3 }
+        stereoEnhancer: { enabled: true, width: 1.8 }
       },
       mastering: {
         normalization: { enabled: true, targetLUFS: "-18" },
-        peakLimiting: { enabled: true, maxPeak: -0.1 },
+        peakLimiting: { enabled: true, maxPeak: 0.0 },
         dithering: { enabled: true, bitDepth: "24" }
       }
     }
@@ -211,17 +211,17 @@ export const AUDIO_PRESETS: AudioPreset[] = [
         limiter: { enabled: true, ceiling: -3 }
       },
       eqShaping: {
-        lowMidCut: { enabled: true, frequency: "150", gain: 3 },
-        presenceBoost: { enabled: true, frequency: "3", gain: 1.0 },
-        airLift: { enabled: true, frequency: "10", gain: 1.5 }
+        lowMidCut: { enabled: true, frequency: "150", gain: 8 },
+        presenceBoost: { enabled: true, frequency: "3", gain: 4.0 },
+        airLift: { enabled: true, frequency: "10", gain: 6.0 }
       },
       spatialEnhancement: {
-        reverb: { enabled: true, type: "room_0.5", wetMix: 15 },
-        stereoEnhancer: { enabled: true, width: 1.8 }
+        reverb: { enabled: true, type: "room_0.5", wetMix: 45 },
+        stereoEnhancer: { enabled: true, width: 2.2 }
       },
       mastering: {
-        normalization: { enabled: true, targetLUFS: "-20" },
-        peakLimiting: { enabled: true, maxPeak: -1.0 },
+        normalization: { enabled: true, targetLUFS: "-23" },
+        peakLimiting: { enabled: true, maxPeak: -2.0 },
         dithering: { enabled: true, bitDepth: "24" }
       }
     }
@@ -239,20 +239,20 @@ export const AUDIO_PRESETS: AudioPreset[] = [
         deClickDeEss: { enabled: true, intensity: "light" }
       },
       dynamicControl: {
-        compression: { enabled: true, ratio: "2:1", threshold: -22 },
-        limiter: { enabled: true, ceiling: -2 }
+        compression: { enabled: true, ratio: "3:1", threshold: -18 },
+        limiter: { enabled: true, ceiling: -1.5 }
       },
       eqShaping: {
-        lowMidCut: { enabled: true, frequency: "150", gain: 2 },
-        presenceBoost: { enabled: true, frequency: "3", gain: 1.5 },
-        airLift: { enabled: false, frequency: "8", gain: 0.5 }
+        lowMidCut: { enabled: true, frequency: "150", gain: 6 },
+        presenceBoost: { enabled: true, frequency: "3", gain: 4.5 },
+        airLift: { enabled: true, frequency: "8", gain: -8.0 }
       },
       spatialEnhancement: {
-        reverb: { enabled: true, type: "room_0.4", wetMix: 15 },
-        stereoEnhancer: { enabled: true, width: 1.1 }
+        reverb: { enabled: true, type: "room_0.4", wetMix: 25 },
+        stereoEnhancer: { enabled: true, width: 0.8 }
       },
       mastering: {
-        normalization: { enabled: true, targetLUFS: "-18" },
+        normalization: { enabled: true, targetLUFS: "-20" },
         peakLimiting: { enabled: true, maxPeak: -0.5 },
         dithering: { enabled: true, bitDepth: "24" }
       }
@@ -271,21 +271,21 @@ export const AUDIO_PRESETS: AudioPreset[] = [
         deClickDeEss: { enabled: true, intensity: "light" }
       },
       dynamicControl: {
-        compression: { enabled: true, ratio: "2:1", threshold: -22 },
-        limiter: { enabled: true, ceiling: -2 }
+        compression: { enabled: true, ratio: "3:1", threshold: -16 },
+        limiter: { enabled: true, ceiling: -1.5 }
       },
       eqShaping: {
-        lowMidCut: { enabled: true, frequency: "200", gain: -1 },
-        presenceBoost: { enabled: true, frequency: "2", gain: 1.5 },
-        airLift: { enabled: false, frequency: "8", gain: -1.5 }
+        lowMidCut: { enabled: true, frequency: "200", gain: -8 },
+        presenceBoost: { enabled: true, frequency: "2", gain: 6.0 },
+        airLift: { enabled: true, frequency: "8", gain: -6.0 }
       },
       spatialEnhancement: {
-        reverb: { enabled: true, type: "room_0.4", wetMix: 8 },
-        stereoEnhancer: { enabled: false, width: 1.0 }
+        reverb: { enabled: true, type: "room_0.4", wetMix: 20 },
+        stereoEnhancer: { enabled: true, width: 0.8 }
       },
       mastering: {
-        normalization: { enabled: true, targetLUFS: "-21" },
-        peakLimiting: { enabled: true, maxPeak: -1.0 },
+        normalization: { enabled: true, targetLUFS: "-23" },
+        peakLimiting: { enabled: true, maxPeak: -2.0 },
         dithering: { enabled: true, bitDepth: "24" }
       }
     }
@@ -301,21 +301,21 @@ export const AUDIO_PRESETS: AudioPreset[] = [
         deClickDeEss: { enabled: true, intensity: "medium" }
       },
       dynamicControl: {
-        compression: { enabled: true, ratio: "2.5:1", threshold: -18 },
-        limiter: { enabled: true, ceiling: -1 }
+        compression: { enabled: true, ratio: "3:1", threshold: -14 },
+        limiter: { enabled: true, ceiling: -0.5 }
       },
       eqShaping: {
-        lowMidCut: { enabled: true, frequency: "150", gain: -2 },
-        presenceBoost: { enabled: true, frequency: "5", gain: 3.0 },
-        airLift: { enabled: true, frequency: "12", gain: 2.0 }
+        lowMidCut: { enabled: true, frequency: "150", gain: -10 },
+        presenceBoost: { enabled: true, frequency: "5", gain: 8.0 },
+        airLift: { enabled: true, frequency: "12", gain: 6.0 }
       },
       spatialEnhancement: {
-        reverb: { enabled: true, type: "room_0.3", wetMix: 5 },
-        stereoEnhancer: { enabled: true, width: 1.2 }
+        reverb: { enabled: true, type: "room_0.3", wetMix: 15 },
+        stereoEnhancer: { enabled: true, width: 1.6 }
       },
       mastering: {
         normalization: { enabled: true, targetLUFS: "-18" },
-        peakLimiting: { enabled: true, maxPeak: -0.5 },
+        peakLimiting: { enabled: true, maxPeak: 0.0 },
         dithering: { enabled: true, bitDepth: "24" }
       }
     }
@@ -331,21 +331,21 @@ export const AUDIO_PRESETS: AudioPreset[] = [
         deClickDeEss: { enabled: false, intensity: "light" }
       },
       dynamicControl: {
-        compression: { enabled: true, ratio: "3:1", threshold: -12 },
-        limiter: { enabled: true, ceiling: -0.5 }
+        compression: { enabled: true, ratio: "3:1", threshold: -8 },
+        limiter: { enabled: true, ceiling: 0.0 }
       },
       eqShaping: {
-        lowMidCut: { enabled: false, frequency: "150", gain: 3.0 },
-        presenceBoost: { enabled: true, frequency: "2", gain: -2.0 },
-        airLift: { enabled: true, frequency: "8", gain: -4.0 }
+        lowMidCut: { enabled: true, frequency: "150", gain: 12.0 },
+        presenceBoost: { enabled: true, frequency: "2", gain: -8.0 },
+        airLift: { enabled: true, frequency: "8", gain: -12.0 }
       },
       spatialEnhancement: {
-        reverb: { enabled: true, type: "room_0.5", wetMix: 20 },
-        stereoEnhancer: { enabled: true, width: 1.6 }
+        reverb: { enabled: true, type: "room_0.5", wetMix: 35 },
+        stereoEnhancer: { enabled: true, width: 2.0 }
       },
       mastering: {
-        normalization: { enabled: true, targetLUFS: "-18" },
-        peakLimiting: { enabled: true, maxPeak: -0.1 },
+        normalization: { enabled: true, targetLUFS: "-20" },
+        peakLimiting: { enabled: true, maxPeak: 0.0 },
         dithering: { enabled: false, bitDepth: "24" }
       }
     }
@@ -363,21 +363,21 @@ export const AUDIO_PRESETS: AudioPreset[] = [
         deClickDeEss: { enabled: true, intensity: "heavy" }
       },
       dynamicControl: {
-        compression: { enabled: true, ratio: "3:1", threshold: -16 },
-        limiter: { enabled: true, ceiling: -0.1 }
+        compression: { enabled: true, ratio: "3:1", threshold: -12 },
+        limiter: { enabled: true, ceiling: 0.0 }
       },
       eqShaping: {
-        lowMidCut: { enabled: true, frequency: "150", gain: -1 },
-        presenceBoost: { enabled: true, frequency: "3", gain: 3.5 },
-        airLift: { enabled: true, frequency: "10", gain: 2.5 }
+        lowMidCut: { enabled: true, frequency: "150", gain: -5 },
+        presenceBoost: { enabled: true, frequency: "3", gain: 9.0 },
+        airLift: { enabled: true, frequency: "10", gain: 7.0 }
       },
       spatialEnhancement: {
         reverb: { enabled: false, type: "room_0.3", wetMix: 0 },
-        stereoEnhancer: { enabled: true, width: 1.1 }
+        stereoEnhancer: { enabled: true, width: 1.5 }
       },
       mastering: {
         normalization: { enabled: true, targetLUFS: "-18" },
-        peakLimiting: { enabled: true, maxPeak: -0.1 },
+        peakLimiting: { enabled: true, maxPeak: 0.0 },
         dithering: { enabled: true, bitDepth: "24" }
       }
     }
@@ -393,21 +393,21 @@ export const AUDIO_PRESETS: AudioPreset[] = [
         deClickDeEss: { enabled: true, intensity: "medium" }
       },
       dynamicControl: {
-        compression: { enabled: true, ratio: "2.5:1", threshold: -18 },
-        limiter: { enabled: true, ceiling: -1 }
+        compression: { enabled: true, ratio: "3:1", threshold: -14 },
+        limiter: { enabled: true, ceiling: -0.5 }
       },
       eqShaping: {
-        lowMidCut: { enabled: true, frequency: "150", gain: -0.5 },
-        presenceBoost: { enabled: true, frequency: "3", gain: 2.5 },
-        airLift: { enabled: true, frequency: "10", gain: 1.5 }
+        lowMidCut: { enabled: true, frequency: "150", gain: -4.0 },
+        presenceBoost: { enabled: true, frequency: "3", gain: 7.5 },
+        airLift: { enabled: true, frequency: "10", gain: 5.0 }
       },
       spatialEnhancement: {
         reverb: { enabled: false, type: "room_0.3", wetMix: 3 },
-        stereoEnhancer: { enabled: true, width: 1.2 }
+        stereoEnhancer: { enabled: true, width: 1.4 }
       },
       mastering: {
-        normalization: { enabled: true, targetLUFS: "-20" },
-        peakLimiting: { enabled: true, maxPeak: -1.0 },
+        normalization: { enabled: true, targetLUFS: "-18" },
+        peakLimiting: { enabled: true, maxPeak: 0.0 },
         dithering: { enabled: true, bitDepth: "24" }
       }
     }
@@ -423,21 +423,21 @@ export const AUDIO_PRESETS: AudioPreset[] = [
         deClickDeEss: { enabled: true, intensity: "heavy" }
       },
       dynamicControl: {
-        compression: { enabled: true, ratio: "3:1", threshold: -14 },
-        limiter: { enabled: true, ceiling: -0.1 }
+        compression: { enabled: true, ratio: "3:1", threshold: -10 },
+        limiter: { enabled: true, ceiling: 0.0 }
       },
       eqShaping: {
-        lowMidCut: { enabled: true, frequency: "200", gain: -1.5 },
-        presenceBoost: { enabled: true, frequency: "5", gain: 4.5 },
-        airLift: { enabled: true, frequency: "12", gain: 3.5 }
+        lowMidCut: { enabled: true, frequency: "200", gain: -8.0 },
+        presenceBoost: { enabled: true, frequency: "5", gain: 10.0 },
+        airLift: { enabled: true, frequency: "12", gain: 8.0 }
       },
       spatialEnhancement: {
         reverb: { enabled: false, type: "room_0.3", wetMix: 0 },
-        stereoEnhancer: { enabled: true, width: 1.5 }
+        stereoEnhancer: { enabled: true, width: 2.0 }
       },
       mastering: {
         normalization: { enabled: true, targetLUFS: "-18" },
-        peakLimiting: { enabled: true, maxPeak: -0.1 },
+        peakLimiting: { enabled: true, maxPeak: 0.0 },
         dithering: { enabled: true, bitDepth: "24" }
       }
     }
@@ -639,21 +639,21 @@ export const AUDIO_PRESETS: AudioPreset[] = [
         deClickDeEss: { enabled: false, intensity: "light" }
       },
       dynamicControl: {
-        compression: { enabled: true, ratio: "3:1", threshold: -12 },
-        limiter: { enabled: true, ceiling: -0.5 }
+        compression: { enabled: true, ratio: "3:1", threshold: -8 },
+        limiter: { enabled: true, ceiling: 0.0 }
       },
       eqShaping: {
-        lowMidCut: { enabled: true, frequency: "200", gain: -8 },
-        presenceBoost: { enabled: true, frequency: "5", gain: -1.5 },
-        airLift: { enabled: true, frequency: "12", gain: 4.0 }
+        lowMidCut: { enabled: true, frequency: "200", gain: -15 },
+        presenceBoost: { enabled: true, frequency: "5", gain: -6.0 },
+        airLift: { enabled: true, frequency: "12", gain: 10.0 }
       },
       spatialEnhancement: {
-        reverb: { enabled: true, type: "room_0.4", wetMix: 15 },
-        stereoEnhancer: { enabled: true, width: 1.3 }
+        reverb: { enabled: true, type: "room_0.4", wetMix: 40 },
+        stereoEnhancer: { enabled: true, width: 2.0 }
       },
       mastering: {
-        normalization: { enabled: true, targetLUFS: "-18" },
-        peakLimiting: { enabled: true, maxPeak: -0.1 },
+        normalization: { enabled: true, targetLUFS: "-20" },
+        peakLimiting: { enabled: true, maxPeak: 0.0 },
         dithering: { enabled: false, bitDepth: "24" }
       }
     }
@@ -669,21 +669,21 @@ export const AUDIO_PRESETS: AudioPreset[] = [
         deClickDeEss: { enabled: false, intensity: "light" }
       },
       dynamicControl: {
-        compression: { enabled: false, ratio: "2:1", threshold: -18 },
-        limiter: { enabled: true, ceiling: -2 }
+        compression: { enabled: true, ratio: "3:1", threshold: -12 },
+        limiter: { enabled: true, ceiling: -1.0 }
       },
       eqShaping: {
-        lowMidCut: { enabled: true, frequency: "300", gain: -10 },
-        presenceBoost: { enabled: true, frequency: "3", gain: -2.0 },
-        airLift: { enabled: true, frequency: "10", gain: 3.0 }
+        lowMidCut: { enabled: true, frequency: "300", gain: -18 },
+        presenceBoost: { enabled: true, frequency: "3", gain: -8.0 },
+        airLift: { enabled: true, frequency: "10", gain: -10.0 }
       },
       spatialEnhancement: {
-        reverb: { enabled: true, type: "room_0.5", wetMix: 30 },
-        stereoEnhancer: { enabled: true, width: 1.8 }
+        reverb: { enabled: true, type: "room_0.5", wetMix: 50 },
+        stereoEnhancer: { enabled: true, width: 2.2 }
       },
       mastering: {
-        normalization: { enabled: true, targetLUFS: "-21" },
-        peakLimiting: { enabled: true, maxPeak: -1.0 },
+        normalization: { enabled: true, targetLUFS: "-23" },
+        peakLimiting: { enabled: true, maxPeak: -2.0 },
         dithering: { enabled: true, bitDepth: "24" }
       }
     }
@@ -699,21 +699,21 @@ export const AUDIO_PRESETS: AudioPreset[] = [
         deClickDeEss: { enabled: false, intensity: "light" }
       },
       dynamicControl: {
-        compression: { enabled: true, ratio: "3:1", threshold: -10 },
-        limiter: { enabled: true, ceiling: -0.5 }
+        compression: { enabled: true, ratio: "3:1", threshold: -6 },
+        limiter: { enabled: true, ceiling: 0.0 }
       },
       eqShaping: {
-        lowMidCut: { enabled: true, frequency: "300", gain: -8 },
-        presenceBoost: { enabled: true, frequency: "2", gain: 3.0 },
-        airLift: { enabled: true, frequency: "8", gain: -6.0 }
+        lowMidCut: { enabled: true, frequency: "300", gain: -16 },
+        presenceBoost: { enabled: true, frequency: "2", gain: 8.0 },
+        airLift: { enabled: true, frequency: "8", gain: -12.0 }
       },
       spatialEnhancement: {
         reverb: { enabled: false, type: "room_0.3", wetMix: 0 },
-        stereoEnhancer: { enabled: false, width: 0.7 }
+        stereoEnhancer: { enabled: true, width: 0.4 }
       },
       mastering: {
         normalization: { enabled: true, targetLUFS: "-18" },
-        peakLimiting: { enabled: true, maxPeak: -0.1 },
+        peakLimiting: { enabled: true, maxPeak: 0.0 },
         dithering: { enabled: false, bitDepth: "16" }
       }
     }
@@ -731,21 +731,21 @@ export const AUDIO_PRESETS: AudioPreset[] = [
         deClickDeEss: { enabled: false, intensity: "light" }
       },
       dynamicControl: {
-        compression: { enabled: true, ratio: "3:1", threshold: -12 },
-        limiter: { enabled: true, ceiling: -1 }
+        compression: { enabled: true, ratio: "3:1", threshold: -8 },
+        limiter: { enabled: true, ceiling: 0.0 }
       },
       eqShaping: {
-        lowMidCut: { enabled: true, frequency: "300", gain: -12 },
-        presenceBoost: { enabled: true, frequency: "5", gain: -2.0 },
-        airLift: { enabled: false, frequency: "12", gain: -3.0 }
+        lowMidCut: { enabled: true, frequency: "300", gain: -20 },
+        presenceBoost: { enabled: true, frequency: "5", gain: -8.0 },
+        airLift: { enabled: true, frequency: "12", gain: -12.0 }
       },
       spatialEnhancement: {
         reverb: { enabled: false, type: "room_0.3", wetMix: 0 },
-        stereoEnhancer: { enabled: false, width: 1.0 }
+        stereoEnhancer: { enabled: true, width: 0.3 }
       },
       mastering: {
         normalization: { enabled: true, targetLUFS: "-18" },
-        peakLimiting: { enabled: true, maxPeak: -0.1 },
+        peakLimiting: { enabled: true, maxPeak: 0.0 },
         dithering: { enabled: false, bitDepth: "16" }
       }
     }
