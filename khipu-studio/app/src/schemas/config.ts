@@ -78,6 +78,44 @@ export const projectConfigSchema = z.object({
     production: z.string().default("production.settings.json"),
   }).partial().default({}),
   bookMeta: bookMetaSchema.optional(),
+  workflow: z.object({
+    project: z.object({
+      complete: z.boolean().optional(),
+      completedAt: z.string().optional()
+    }).optional(),
+    manuscript: z.object({
+      complete: z.boolean().optional(),
+      completedAt: z.string().optional()
+    }).optional(),
+    casting: z.object({
+      complete: z.boolean().optional(),
+      completedAt: z.string().optional()
+    }).optional(),
+    characters: z.object({
+      complete: z.boolean().optional(),
+      completedAt: z.string().optional()
+    }).optional(),
+    dossier: z.object({
+      complete: z.boolean().optional(),
+      completedAt: z.string().optional()
+    }).optional(),
+    planning: z.object({
+      complete: z.boolean().optional(),
+      completedAt: z.string().optional()
+    }).optional(),
+    ssml: z.object({
+      complete: z.boolean().optional(),
+      completedAt: z.string().optional()
+    }).optional(),
+    voice: z.object({
+      complete: z.boolean().optional(),
+      completedAt: z.string().optional()
+    }).optional(),
+    export: z.object({
+      complete: z.boolean().optional(),
+      completedAt: z.string().optional()
+    }).optional(),
+  }).optional(),
 });
 
 
