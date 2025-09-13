@@ -1069,6 +1069,17 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
     }
   });
 
+  ipcMain.handle("fs:readAudioFile", async (_e, filePath) => {
+    try {
+      // Read audio file as buffer for Web Audio API
+      const resolvedPath = path.resolve(filePath);
+      const buffer = await fsp.readFile(resolvedPath);
+      return buffer;
+    } catch (error) {
+      throw new Error(`Failed to read audio file: ${error.message}`);
+    }
+  });
+
 
   /* Plan build (scoped to project root) */
   ipcMain.handle("plan:build", async (_e, payload = {}) => {

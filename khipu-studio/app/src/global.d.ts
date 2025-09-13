@@ -136,6 +136,9 @@ export interface KhipuRequestMap {
   "audio:cache:path": { in: string; out: string | null };
   "audio:cancel": { in: string; out: boolean };
   "audio:available": { in: undefined; out: boolean };
+
+  // File system
+  "fs:readAudioFile": { in: string; out: ArrayBuffer };
 }
 
 export interface Khipu {

@@ -1,7 +1,10 @@
 import { useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useProject } from "../store/project";
+import { useAudioPreview } from "../hooks/useAudioPreview";
+import { createDefaultProcessingChain } from "../lib/audio-production-utils";
 import type { PlanChunk } from "../types/plan";
+import type { AudioProcessingChain } from "../types/audio-production";
 
 interface Chapter {
   id: string;
@@ -40,6 +43,10 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   const [audioSegments, setAudioSegments] = useState<AudioSegmentRow[]>([]);
   const [generatingAudio, setGeneratingAudio] = useState<Set<string>>(new Set());
   const [selectedRowIndex, setSelectedRowIndex] = useState(0);
+
+  // Audio preview functionality
+  const audioPreview = useAudioPreview();
+  const [processingChain, setProcessingChain] = useState<AudioProcessingChain>(() => createDefaultProcessingChain());
 
   // Helper function to get chapters that have plans
   const getChaptersWithPlans = useCallback(() => {
@@ -293,6 +300,49 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     
     setMessage("Chapter audio generation complete!");
   }, [selectedChapter, audioSegments, handleGenerateSegmentAudio]);
+
+  // Audio preview handlers
+  const handlePlaySegment = useCallback(async (segmentIndex?: number) => {
+    const index = segmentIndex ?? selectedRowIndex;
+    const segment = audioSegments[index];
+    
+    if (!segment || !segment.hasAudio) {
+      setMessage("No audio available for this segment");
+      return;
+    }
+
+    try {
+      if (audioPreview.isPlaying && audioPreview.playbackState.segmentId === segment.chunkId) {
+        // Pause if currently playing this segment
+        await audioPreview.pause();
+      } else {
+        // Start playing this segment with current processing chain
+        await audioPreview.preview(segment.chunkId, processingChain);
+      }
+    } catch (error) {
+      console.error("Playback failed:", error);
+      setMessage("Playback failed");
+    }
+  }, [selectedRowIndex, audioSegments, audioPreview, processingChain]);
+
+  const handlePlayAll = useCallback(async () => {
+    // For now, just play the first available segment
+    // TODO: Implement playlist functionality
+    const firstAvailableIndex = audioSegments.findIndex(seg => seg.hasAudio);
+    if (firstAvailableIndex >= 0) {
+      await handlePlaySegment(firstAvailableIndex);
+    } else {
+      setMessage("No audio segments available");
+    }
+  }, [audioSegments, handlePlaySegment]);
+
+  const handleStopAudio = useCallback(async () => {
+    try {
+      await audioPreview.stop();
+    } catch (error) {
+      console.error("Stop failed:", error);
+    }
+  }, [audioPreview]);
 
   useEffect(() => {
     loadChapters();
@@ -584,28 +634,34 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
                           {/* Play Single Segment */}
                           <button
-                            disabled={!currentSegment.hasAudio}
+                            onClick={() => handlePlaySegment(selectedRowIndex)}
+                            disabled={!currentSegment.hasAudio || audioPreview.isLoading}
                             style={{
                               padding: "10px 16px",
                               fontSize: "13px",
                               fontWeight: 500,
-                              backgroundColor: currentSegment.hasAudio ? "var(--accent)" : "var(--muted)",
+                              backgroundColor: currentSegment.hasAudio ? 
+                                (audioPreview.isPlaying && audioPreview.playbackState.segmentId === currentSegment.chunkId ? "var(--warning)" : "var(--accent)") 
+                                : "var(--muted)",
                               color: "white",
                               border: "none",
                               borderRadius: "4px",
-                              cursor: currentSegment.hasAudio ? "pointer" : "not-allowed",
-                              opacity: currentSegment.hasAudio ? 1 : 0.5,
+                              cursor: (currentSegment.hasAudio && !audioPreview.isLoading) ? "pointer" : "not-allowed",
+                              opacity: (currentSegment.hasAudio && !audioPreview.isLoading) ? 1 : 0.5,
                               display: "flex",
                               alignItems: "center",
                               gap: "6px"
                             }}
                           >
-                            ▶ Play
+                            {audioPreview.isLoading ? "⏳ Loading..." :
+                             audioPreview.isPlaying && audioPreview.playbackState.segmentId === currentSegment.chunkId ? "⏸ Pause" :
+                             "▶ Play"}
                           </button>
 
                           {/* Play All (Carousel) */}
                           <button
-                            disabled={!audioSegments.some(seg => seg.hasAudio)}
+                            onClick={handlePlayAll}
+                            disabled={!audioSegments.some(seg => seg.hasAudio) || audioPreview.isLoading}
                             style={{
                               padding: "10px 16px",
                               fontSize: "13px",
@@ -614,8 +670,8 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               color: "white",
                               border: "none",
                               borderRadius: "4px",
-                              cursor: audioSegments.some(seg => seg.hasAudio) ? "pointer" : "not-allowed",
-                              opacity: audioSegments.some(seg => seg.hasAudio) ? 1 : 0.5,
+                              cursor: (audioSegments.some(seg => seg.hasAudio) && !audioPreview.isLoading) ? "pointer" : "not-allowed",
+                              opacity: (audioSegments.some(seg => seg.hasAudio) && !audioPreview.isLoading) ? 1 : 0.5,
                               display: "flex",
                               alignItems: "center",
                               gap: "6px"
@@ -626,15 +682,18 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
                           {/* Stop/Pause Button */}
                           <button
+                            onClick={handleStopAudio}
+                            disabled={!audioPreview.isPlaying && !audioPreview.isLoading}
                             style={{
                               padding: "10px 16px",
                               fontSize: "13px",
                               fontWeight: 500,
-                              backgroundColor: "var(--muted)",
+                              backgroundColor: (audioPreview.isPlaying || audioPreview.isLoading) ? "var(--error)" : "var(--muted)",
                               color: "white",
                               border: "none",
                               borderRadius: "4px",
-                              cursor: "pointer",
+                              cursor: (audioPreview.isPlaying || audioPreview.isLoading) ? "pointer" : "not-allowed",
+                              opacity: (audioPreview.isPlaying || audioPreview.isLoading) ? 1 : 0.5,
                               display: "flex",
                               alignItems: "center",
                               gap: "6px"
@@ -653,18 +712,47 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                           backgroundColor: "var(--input)", 
                           borderRadius: "3px",
                           display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center"
+                          flexDirection: "column",
+                          gap: "4px"
                         }}>
-                          <span>
-                            Status: {currentSegment.hasAudio ? 
-                              <span style={{ color: "var(--success)" }}>✓ Audio ready</span> : 
-                              <span style={{ color: "var(--muted)" }}>No audio</span>
-                            }
-                          </span>
-                          <span>
-                            {audioSegments.filter(seg => seg.hasAudio).length}/{audioSegments.length} segments ready
-                          </span>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span>
+                              Status: {currentSegment.hasAudio ? 
+                                <span style={{ color: "var(--success)" }}>✓ Audio ready</span> : 
+                                <span style={{ color: "var(--muted)" }}>No audio</span>
+                              }
+                            </span>
+                            <span>
+                              {audioSegments.filter(seg => seg.hasAudio).length}/{audioSegments.length} segments ready
+                            </span>
+                          </div>
+                          
+                          {/* Playback Status */}
+                          {(audioPreview.isPlaying || audioPreview.error || audioPreview.isLoading) && (
+                            <div style={{ 
+                              display: "flex", 
+                              justifyContent: "space-between", 
+                              alignItems: "center",
+                              paddingTop: "4px",
+                              borderTop: "1px solid var(--border)"
+                            }}>
+                              <span>
+                                {audioPreview.isLoading ? (
+                                  <span style={{ color: "var(--warning)" }}>🔄 Processing audio...</span>
+                                ) : audioPreview.error ? (
+                                  <span style={{ color: "var(--error)" }}>❌ {audioPreview.error}</span>
+                                ) : audioPreview.isPlaying ? (
+                                  <span style={{ color: "var(--accent)" }}>🎵 Playing segment {audioPreview.playbackState.segmentId}</span>
+                                ) : null}
+                              </span>
+                              
+                              {audioPreview.isPlaying && audioPreview.duration > 0 && (
+                                <span>
+                                  {Math.floor(audioPreview.currentTime)}s / {Math.floor(audioPreview.duration)}s
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
 
