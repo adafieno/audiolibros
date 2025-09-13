@@ -2283,7 +2283,7 @@
     "comment": "Etiqueta para efecto de audio de realce estéreo sutil"
   },
   "audioProduction.consistencyMasteringTitle": {
-    "string": "5. Consistencia y Masterización",
+    "string": "Consistencia y Masterización",
     "comment": "Título para la sección de procesamiento de consistencia y masterización"
   },
   "audioProduction.normalizeAudiobook": {
@@ -2325,5 +2325,13 @@
   "audioPresets.cleanPolished.description": {
     "string": "Mejora ligera para narración profesional",
     "comment": "Descripción para el preset de audio Pulido Limpio"
+  },
+  "audioProduction.pageTitle": {
+    "string": "Producción de Audio",
+    "comment": "Título principal de la página de producción de audio"
+  },
+  "audioProduction.wetMix": {
+    "string": "Mezcla húmeda:",
+    "comment": "Etiqueta para control de mezcla húmeda en configuración de reverberación"
   }
 }

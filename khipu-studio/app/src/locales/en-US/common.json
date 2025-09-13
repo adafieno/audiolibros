@@ -1781,7 +1781,7 @@
     "comment": "Label for subtle stereo enhancement audio effect"
   },
   "audioProduction.consistencyMasteringTitle": {
-    "string": "5. Consistency & Mastering",
+    "string": "Consistency & Mastering",
     "comment": "Title for consistency and mastering processing section"
   },
   "audioProduction.normalizeAudiobook": {
@@ -1823,5 +1823,13 @@
   "audioPresets.cleanPolished.description": {
     "string": "Light enhancement for professional narration",
     "comment": "Description for Clean Polished audio preset"
+  },
+  "audioProduction.pageTitle": {
+    "string": "Audio Production",
+    "comment": "Main page title for the audio production page"
+  },
+  "audioProduction.wetMix": {
+    "string": "Wet mix:",
+    "comment": "Label for wet mix control in reverb settings"
   }
 }

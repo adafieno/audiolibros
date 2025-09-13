@@ -632,7 +632,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       {/* Header */}
       <div style={{ marginBottom: "8px" }}>
         <h2 style={{ margin: 0, fontSize: "32px", fontWeight: "bold", color: "var(--text)" }}>
-          Audio Production
+          {t("audioProduction.pageTitle")}
         </h2>
       </div>
       
@@ -1507,7 +1507,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               </select>
                             </label>
                             <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "10px", color: "var(--textSecondary)", paddingLeft: "24px" }}>
-                              <span>Wet mix:</span>
+                              <span>{t("audioProduction.wetMix")}</span>
                               <input 
                                 type="range" 
                                 min="0" 
