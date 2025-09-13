@@ -61,6 +61,16 @@ export class AudioPreviewService {
   }
 
   /**
+   * Check if audio preview is available
+   */
+  async isAvailable(): Promise<boolean> {
+    if (!this.audioContext) {
+      await this.initializeAudioContext();
+    }
+    return this.audioContext !== null;
+  }
+
+  /**
    * Subscribe to playback state changes
    */
   onPlaybackStateChange(callback: (state: PlaybackState) => void) {
