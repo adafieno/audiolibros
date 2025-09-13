@@ -144,6 +144,23 @@ export interface KhipuRequestMap {
 
   // File system
   "fs:readAudioFile": { in: string; out: ArrayBuffer };
+  
+  // SoX Audio Processing
+  "audioProcessor:processAudio": {
+    in: {
+      audioUrl: string;
+      processingChain: import("./types/audio-production").AudioProcessingChain;
+      cacheKey: string;
+    };
+    out: {
+      success: boolean;
+      outputPath?: string;
+      error?: string;
+      duration?: number;
+      fileSize?: number;
+    };
+  };
+  "audioProcessor:getCachedAudioPath": { in: string; out: string | null };
 }
 
 export interface Khipu {

@@ -4,7 +4,7 @@ const { spawn } = require("node:child_process");
 const path = require("path");
 const fs = require("node:fs");
 const fsp = fs.promises;
-const { FFmpegAudioProcessor } = require("./ffmpeg-audio-processor.cjs");
+const { SoxAudioProcessor } = require("./sox-audio-processor.cjs");
 
 app.disableHardwareAcceleration();
 
@@ -518,10 +518,9 @@ function resolveUnder(root, p) {
 let audioProcessor;
 function getAudioProcessor() {
   if (!audioProcessor) {
-    const ffmpegPath = path.join(repoRoot, "bin", "ffmpeg", "ffmpeg.exe");
     const tempDir = path.join(repoRoot, "temp");
     const cacheDir = path.join(repoRoot, "cache");
-    audioProcessor = new FFmpegAudioProcessor(ffmpegPath, tempDir, cacheDir);
+    audioProcessor = new SoxAudioProcessor(null, tempDir, cacheDir);
   }
   return audioProcessor;
 }
@@ -1091,6 +1090,65 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
       return await processor.isAvailable();
     } catch (error) {
       return false;
+    }
+  });
+
+  // SoX Audio Processor handlers for advanced audio preview
+  ipcMain.handle("audioProcessor:processAudio", async (_e, { audioUrl, processingChain, cacheKey }) => {
+    try {
+      const processor = getAudioProcessor();
+      
+      // Check cache first
+      const cachedPath = processor.getCachedPath(cacheKey);
+      if (cachedPath && fs.existsSync(cachedPath)) {
+        return {
+          success: true,
+          outputPath: cachedPath,
+          cached: true
+        };
+      }
+
+      // Convert blob URL to local file for processing
+      let tempInputPath;
+      if (audioUrl.startsWith('blob:')) {
+        // For blob URLs, we need to get the audio data from the renderer
+        // This is a simplified approach - in production you'd handle this differently
+        throw new Error('Blob URL processing not yet implemented - use cached audio file path instead');
+      } else {
+        // Assume it's already a file path
+        tempInputPath = audioUrl;
+      }
+
+      const result = await processor.processAudio({
+        id: `preview_${Date.now()}`,
+        inputPath: tempInputPath,
+        processingChain: processingChain,
+        cacheKey: cacheKey
+      });
+      
+      return result;
+    } catch (error) {
+      console.error('SoX audio processing failed:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  });
+
+  ipcMain.handle("audioProcessor:getCachedAudioPath", async (_e, cacheKey) => {
+    try {
+      const processor = getAudioProcessor();
+      const cachedPath = processor.getCachedPath(cacheKey);
+      
+      if (cachedPath && fs.existsSync(cachedPath)) {
+        return cachedPath;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Failed to get cached audio path:', error);
+      return null;
     }
   });
 

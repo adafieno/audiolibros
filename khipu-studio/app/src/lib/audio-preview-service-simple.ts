@@ -123,7 +123,7 @@ export class AudioPreviewService {
   }
 
   /**
-   * Preview audio using simple cached TTS approach (like working modules)
+   * Preview audio with SoX processing chain applied (now that we have reliable SoX)
    */
   async preview(options: PreviewOptions): Promise<void> {
     try {
@@ -139,55 +139,117 @@ export class AudioPreviewService {
 
       this.currentSegmentId = options.segmentId;
 
-      // Use the same pattern as working modules - direct TTS generation with caching
-      const { generateCachedAudition } = await import('./audio-cache');
-
-      // Create voice object matching the working pattern
-      const voiceAssignment = options.character.voiceAssignment;
-      if (!voiceAssignment) {
-        throw new Error(`Character ${options.character.name} has no voice assignment`);
-      }
-
-      const voice = {
-        id: voiceAssignment.voiceId,
-        engine: "azure" as const,
-        locale: voiceAssignment.voiceId.startsWith("es-") ? voiceAssignment.voiceId.substring(0, 5) : "es-ES",
-        gender: options.character.traits?.gender || "N" as const,
-        age_hint: options.character.traits?.age || "adult",
-        accent_tags: options.character.traits?.accent ? [options.character.traits.accent] : [],
-        styles: voiceAssignment.style ? [voiceAssignment.style] : [],
-        description: `Voice for ${options.character.name || options.segmentId}`
-      };
-
-      // Create audition options matching the working pattern
-      const auditionOptions = {
-        voice: voice,
-        config: options.projectConfig,
-        text: options.segment.text,
-        style: voiceAssignment.style,
-        styledegree: voiceAssignment.styledegree,
-        rate_pct: voiceAssignment.rate_pct,
-        pitch_pct: voiceAssignment.pitch_pct
-      };
-
-      console.log(`🎤 Generating segment TTS for: ${options.segmentId}`, { 
-        voice: auditionOptions.voice.id, 
-        engine: auditionOptions.voice.engine 
-      });
-
-      // Generate cached audition (same as working modules)
-      const result = await generateCachedAudition(auditionOptions, true);
+      // Generate cache key for processed audio (TTS + SoX processing) - use hash to avoid long filenames
+      const processingParams = JSON.stringify(options.processingChain);
+      const longCacheKey = `sox_segment_${options.segmentId}_${processingParams}`;
       
-      if (!result.success || !result.audioUrl) {
-        throw new Error(result.error || 'Failed to generate audio');
+      // Create a hash for shorter filename
+      let hash = 0;
+      for (let i = 0; i < longCacheKey.length; i++) {
+        const char = longCacheKey.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+      }
+      const cacheKey = `sox_${Math.abs(hash).toString(16)}`;
+      
+      // Check if we have cached processed audio
+      let processedAudioPath: string | null = null;
+      
+      try {
+        // Try to get cached processed audio path
+        processedAudioPath = await window.khipu!.call('audioProcessor:getCachedAudioPath', cacheKey);
+      } catch {
+        console.log('No cached processed audio found, will generate');
       }
 
-      console.log(`✅ Generated TTS audio for segment: ${options.segmentId}`);
+      if (!processedAudioPath) {
+        console.log(`🎤 No cached processed audio, generating TTS + applying SoX processing for segment ${options.segmentId}`);
+        
+        // Step 1: Generate TTS using existing reliable system
+        const { generateCachedAudition } = await import('./audio-cache');
 
-      // Convert blob URL to audio buffer for Web Audio API playback
-      const response = await fetch(result.audioUrl);
-      const arrayBuffer = await response.arrayBuffer();
-      this.currentBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+        // Create voice object matching the working pattern
+        const voiceAssignment = options.character.voiceAssignment;
+        if (!voiceAssignment) {
+          throw new Error(`Character ${options.character.name} has no voice assignment`);
+        }
+
+        const voice = {
+          id: voiceAssignment.voiceId,
+          engine: "azure" as const,
+          locale: voiceAssignment.voiceId.startsWith("es-") ? voiceAssignment.voiceId.substring(0, 5) : "es-ES",
+          gender: options.character.traits?.gender || "N" as const,
+          age_hint: options.character.traits?.age || "adult",
+          accent_tags: options.character.traits?.accent ? [options.character.traits.accent] : [],
+          styles: voiceAssignment.style ? [voiceAssignment.style] : [],
+          description: `Voice for ${options.character.name || options.segmentId}`
+        };
+
+        const auditionOptions = {
+          voice: voice,
+          config: options.projectConfig,
+          text: options.segment.text,
+          style: voiceAssignment.style,
+          styledegree: voiceAssignment.styledegree,
+          rate_pct: voiceAssignment.rate_pct,
+          pitch_pct: voiceAssignment.pitch_pct
+        };
+
+        // Generate TTS audio
+        const result = await generateCachedAudition(auditionOptions, true);
+        
+        if (!result.success || !result.audioUrl) {
+          throw new Error(result.error || 'Failed to generate TTS audio');
+        }
+
+        console.log(`✅ Generated TTS for segment: ${options.segmentId}, now applying SoX processing...`);
+
+        // Step 2: Apply SoX processing to the TTS audio
+        try {
+          // Get the cached file path for TTS audio using the same cache key generation as TTS
+          const { generateCacheKey } = await import('./audio-cache');
+          const ttsCacheKey = generateCacheKey(auditionOptions);
+          
+          let ttsAudioPath = await window.khipu!.call('audioCache:path', ttsCacheKey);
+          
+          if (!ttsAudioPath) {
+            // Fallback: create a temporary file from the blob URL
+            const response = await fetch(result.audioUrl);
+            const arrayBuffer = await response.arrayBuffer();
+            ttsAudioPath = await this.saveTempAudio(arrayBuffer, options.segmentId);
+          }
+
+          // At this point ttsAudioPath is guaranteed to be non-null
+          const processingResult = await window.khipu!.call('audioProcessor:processAudio', {
+            audioUrl: ttsAudioPath!,
+            processingChain: options.processingChain,
+            cacheKey: cacheKey
+          });
+
+          if (!processingResult.success) {
+            throw new Error('SoX processing failed: ' + (processingResult.error || 'Unknown error'));
+          }
+
+          processedAudioPath = processingResult.outputPath || null;
+          console.log(`✅ Applied SoX processing to segment ${options.segmentId}`);
+        } catch (processingError) {
+          console.warn('SoX processing failed, falling back to raw TTS:', processingError);
+          // Fallback to raw TTS audio without processing
+          const response = await fetch(result.audioUrl);
+          const arrayBuffer = await response.arrayBuffer();
+          this.currentBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+          await this.startPlayback(options.startTime, options.duration);
+          return;
+        }
+      } else {
+        console.log(`🎵 Found cached SoX-processed audio for segment ${options.segmentId}`);
+      }
+
+      // Step 3: Load and play the SoX-processed audio
+      if (processedAudioPath) {
+        const arrayBuffer = await window.khipu!.call('fs:readAudioFile', processedAudioPath);
+        this.currentBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+      }
       
       // Start playback
       await this.startPlayback(options.startTime, options.duration);
@@ -293,6 +355,30 @@ export class AudioPreviewService {
     this.currentBuffer = null;
     this.currentSegmentId = null;
     this.notifyStateChange();
+  }
+
+  /**
+   * Save audio data to a temporary file for SoX processing
+   */
+  private async saveTempAudio(arrayBuffer: ArrayBuffer, segmentId: string): Promise<string> {
+    // Create a temporary file path
+    const tempFileName = `temp_audio_${segmentId}_${Date.now()}.wav`;
+    
+    // Convert ArrayBuffer to Uint8Array for IPC
+    const uint8Array = new Uint8Array(arrayBuffer);
+    
+    // Get temp directory from the main process
+    const tempDir = 'C:\\code\\audiolibros\\khipu-studio\\temp';
+    
+    // Write to temp file using IPC
+    await window.khipu!.call('fs:writeBinary', {
+      projectRoot: tempDir,
+      relPath: tempFileName,
+      content: Array.from(uint8Array)
+    });
+    
+    // Return the full absolute path
+    return `${tempDir}\\${tempFileName}`;
   }
 }
 

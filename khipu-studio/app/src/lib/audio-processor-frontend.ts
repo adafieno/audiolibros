@@ -38,7 +38,7 @@ export interface AudioFileInfo {
 
 /**
  * Frontend audio processor that communicates with Electron main process
- * for desktop-native FFmpeg operations
+ * for desktop-native SoX operations (replacing FFmpeg)
  */
 export class AudioProcessorFrontend {
   private processingId = 0;
@@ -125,11 +125,11 @@ export class AudioProcessorFrontend {
   }
 
   /**
-   * Convert processing chain to FFmpeg filter complex string
+   * Convert processing chain to SoX effects description string
    * (This is mainly for debugging/logging purposes on frontend)
    */
   buildFilterComplex(chain: AudioProcessingChain): string {
-    // Since the real filter building happens in the main process,
+    // Since the real effects building happens in the main process,
     // this is just a simplified representation for debugging
     const stages: string[] = [];
     
