@@ -296,6 +296,60 @@ export class AudioProductionService {
     // Reload to get updated completion count
     return await this.loadChapterAudioMetadata(chapterId, planChunks);
   }
+
+  /**
+   * Save per-segment processing chain preferences
+   */
+  async saveProcessingChains(chapterId: string, processingChains: Record<string, AudioProcessingChain>): Promise<void> {
+    const configPath = `${this.projectPath}/audio/${chapterId}/processing-chains.json`;
+    
+    if (window.khipu) {
+      try {
+        // Directory will be created automatically by fs:write if needed
+        
+        // Save processing chains with timestamp
+        const dataToSave = {
+          chapterId,
+          processingChains,
+          lastModified: new Date().toISOString(),
+          version: "1.0"
+        };
+        
+        await window.khipu.call('fs:write', {
+          projectRoot: this.projectPath,
+          relPath: `audio/${chapterId}/processing-chains.json`,
+          content: JSON.stringify(dataToSave, null, 2)
+        });
+        
+        console.log('💾 Saved processing chains to:', configPath);
+      } catch (error) {
+        console.error('Failed to save processing chains:', error);
+        throw error;
+      }
+    }
+  }
+
+  /**
+   * Load per-segment processing chain preferences
+   */
+  async loadProcessingChains(chapterId: string): Promise<Record<string, AudioProcessingChain>> {
+    try {
+      const result = await window.khipu!.call('fs:read', {
+        projectRoot: this.projectPath,
+        relPath: `audio/${chapterId}/processing-chains.json`,
+        json: true
+      });
+      
+      if (result && typeof result === 'object' && 'processingChains' in result) {
+        console.log('💾 Loaded processing chains from storage');
+        return (result as { processingChains: Record<string, AudioProcessingChain> }).processingChains;
+      }
+    } catch {
+      console.log('💾 No saved processing chains found, using defaults');
+    }
+    
+    return {};
+  }
 }
 
 export default AudioProductionService;

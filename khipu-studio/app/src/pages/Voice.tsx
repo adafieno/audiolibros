@@ -262,6 +262,33 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
       setAudioSegments(segments);
       
+      // Load saved processing chains for this chapter
+      try {
+        const savedProcessingChains = await audioProductionService.loadProcessingChains(chapterId);
+        
+        if (Object.keys(savedProcessingChains).length > 0) {
+          console.log('💾 Loading saved processing chains for segments:', Object.keys(savedProcessingChains));
+          
+          // Apply saved processing chains to matching segments
+          setAudioSegments(prev => prev.map(segment => {
+            if (savedProcessingChains[segment.chunkId]) {
+              return {
+                ...segment,
+                processingChain: savedProcessingChains[segment.chunkId]
+              };
+            }
+            return segment;
+          }));
+          
+          setMessage(`Loaded ${segments.length} segments with ${Object.keys(savedProcessingChains).length} custom processing chains`);
+        } else {
+          setMessage(`Loaded ${segments.length} segments (${completionStatus.completedSegments} with audio)`);
+        }
+      } catch (error) {
+        console.warn('Failed to load processing chains:', error);
+        setMessage(`Loaded ${segments.length} segments (${completionStatus.completedSegments} with audio)`);
+      }
+      
       // Update processing chain from metadata - this would set a default for all segments
       // For now, we'll comment this out to let segments manage their own chains
       // setProcessingChain(audioMetadata.globalProcessingChain);
@@ -477,15 +504,124 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   }, [selectedRowIndex, audioSegments, audioPreview, currentProcessingChain, root, selectedChapter]);
 
   const handlePlayAll = useCallback(async () => {
-    // Start playing from the first segment or currently selected segment
-    // Preview system will generate audio on-demand for each segment
-    const startIndex = selectedRowIndex >= 0 ? selectedRowIndex : 0;
-    if (audioSegments.length > 0 && startIndex < audioSegments.length) {
-      await handlePlaySegment(startIndex);
-    } else {
+    // Play all segments sequentially starting from selected segment
+    if (audioSegments.length === 0) {
       setMessage("No segments available to play");
+      return;
     }
-  }, [selectedRowIndex, audioSegments, handlePlaySegment]);
+
+    if (!root) {
+      setMessage("Project not loaded");
+      return;
+    }
+
+    const startIndex = selectedRowIndex >= 0 ? selectedRowIndex : 0;
+    
+    try {
+      console.log(`🎬 Starting Play All from segment ${startIndex}`);
+      setMessage(`Playing all segments starting from ${startIndex + 1}...`);
+      
+      // Load shared data once
+      const [projectConfig, charactersData, planData] = await Promise.all([
+        // Load project config
+        window.khipu!.call("fs:read", {
+          projectRoot: root,
+          relPath: "project.khipu.json",
+          json: true,
+        }).catch(() => null),
+        
+        // Load characters data
+        window.khipu!.call("fs:read", {
+          projectRoot: root,
+          relPath: "dossier/characters.json",
+          json: true,
+        }).catch(() => null),
+        
+        // Load plan data to get segment details
+        selectedChapter ? window.khipu!.call("fs:read", {
+          projectRoot: root,
+          relPath: `ssml/plans/${selectedChapter}.plan.json`,
+          json: true,
+        }).catch(() => null) : null
+      ]);
+      
+      // Play segments sequentially using a for loop with proper await
+      for (let i = startIndex; i < audioSegments.length; i++) {
+        console.log(`🎵 Playing segment ${i + 1}/${audioSegments.length}`);
+        
+        // Update selected row to show which segment is currently playing
+        setSelectedRowIndex(i);
+        
+        const segment = audioSegments[i];
+        
+        // Find the full segment data from plan (not used for TTS but kept for future enhancements)
+        if (planData) {
+          const chunks = Array.isArray(planData) ? planData : (planData as { chunks?: unknown[] })?.chunks;
+          chunks?.find((chunk: unknown) => (chunk as { id?: string }).id === segment.chunkId);
+        }
+
+        // Find character data
+        let characterData = null;
+        if (charactersData && segment.voice && segment.voice !== "unassigned") {
+          const characters = Array.isArray(charactersData) ? charactersData : (charactersData as { characters?: unknown[] })?.characters;
+          characterData = characters?.find((char: unknown) => {
+            const character = char as { name?: string; id?: string };
+            return character.name === segment.voice || character.id === segment.voice;
+          });
+        }
+
+        // Create proper Segment structure for TTS generation
+        const segmentForTTS: Segment = {
+          segment_id: typeof segment.chunkId === 'string' ? parseInt(segment.chunkId) : segment.chunkId,
+          start_idx: segment.start_char || 0,
+          end_idx: segment.end_char || 0,
+          delimiter: "",
+          text: segment.text,
+          originalText: segment.text,
+          voice: segment.voice
+        };
+
+        // Get processing chain for this specific segment
+        const segmentProcessingChain = segment.processingChain || createDefaultProcessingChain();
+        
+        // Start playing this segment
+        await audioPreview.preview(segment.chunkId, segmentProcessingChain, undefined, undefined, {
+          segment: segmentForTTS,
+          character: characterData as Character,
+          projectConfig: projectConfig as ProjectConfig
+        });
+        
+        // Wait for this segment to finish playing before starting the next
+        await new Promise<void>((resolve) => {
+          const checkPlayback = () => {
+            if (!audioPreview.isPlaying) {
+              resolve();
+            } else {
+              setTimeout(checkPlayback, 100); // Check every 100ms
+            }
+          };
+          // Start checking after a brief delay to ensure playback has started
+          setTimeout(checkPlayback, 500);
+        });
+        
+        // Check if user stopped playback
+        if (!audioPreview.isPlaying) {
+          console.log('🛑 Play All stopped by user');
+          setMessage("Play All stopped");
+          break;
+        }
+        
+        console.log(`✅ Finished segment ${i + 1}, moving to next`);
+      }
+      
+      console.log('🎉 Play All completed');
+      setMessage("Play All completed");
+      
+    } catch (error) {
+      console.error("Play All failed:", error);
+      setMessage(`Play All failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }, [selectedRowIndex, audioSegments, audioPreview, root, selectedChapter]);
 
   const handleStopAudio = useCallback(async () => {
     try {
@@ -494,6 +630,43 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       console.error("Stop failed:", error);
     }
   }, [audioPreview]);
+
+  const handleSaveProcessingChains = useCallback(async () => {
+    if (!root || !selectedChapter || !audioProductionService) {
+      setMessage("Cannot save: missing project root or selected chapter");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setMessage("Saving processing chain preferences...");
+
+      // Create a map of segment processing chains
+      const processingChainMap: Record<string, AudioProcessingChain> = {};
+      
+      // Only save segments that have custom processing chains (not default)
+      audioSegments.forEach(segment => {
+        if (segment.processingChain) {
+          processingChainMap[segment.chunkId] = segment.processingChain;
+        }
+      });
+
+      console.log('💾 Saving processing chains for chapter:', selectedChapter);
+      console.log('💾 Processing chain data:', processingChainMap);
+
+      // Save to audioProductionService (which handles file persistence)
+      await audioProductionService.saveProcessingChains(selectedChapter, processingChainMap);
+      
+      setMessage(`Saved processing preferences for ${Object.keys(processingChainMap).length} segments`);
+      console.log(`✅ Successfully saved processing chains for ${Object.keys(processingChainMap).length} segments`);
+
+    } catch (error) {
+      console.error("Save processing chains failed:", error);
+      setMessage(`Save failed: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setLoading(false);
+    }
+  }, [root, selectedChapter, audioProductionService, audioSegments]);
 
   useEffect(() => {
     loadChapters();
@@ -731,6 +904,27 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             }}
           >
             ⏹ Stop
+          </button>
+
+          <button
+            onClick={handleSaveProcessingChains}
+            disabled={audioSegments.length === 0 || loading}
+            style={{
+              padding: "10px 16px",
+              fontSize: "13px",
+              fontWeight: 500,
+              backgroundColor: audioSegments.length > 0 ? "var(--success)" : "var(--muted)",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: (audioSegments.length > 0 && !loading) ? "pointer" : "not-allowed",
+              opacity: (audioSegments.length > 0 && !loading) ? 1 : 0.5,
+              display: "flex",
+              alignItems: "center",
+              gap: "6px"
+            }}
+          >
+            {loading ? "💾 Saving..." : "💾 Save"}
           </button>
 
           {/* Status indicator */}
