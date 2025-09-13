@@ -306,8 +306,8 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     const index = segmentIndex ?? selectedRowIndex;
     const segment = audioSegments[index];
     
-    if (!segment || !segment.hasAudio) {
-      setMessage("No audio available for this segment");
+    if (!segment) {
+      setMessage("No segment selected");
       return;
     }
 
@@ -317,24 +317,25 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         await audioPreview.pause();
       } else {
         // Start playing this segment with current processing chain
+        // Preview system will generate audio on-demand if needed
         await audioPreview.preview(segment.chunkId, processingChain);
       }
     } catch (error) {
       console.error("Playback failed:", error);
-      setMessage("Playback failed");
+      setMessage(`Preview failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }, [selectedRowIndex, audioSegments, audioPreview, processingChain]);
 
   const handlePlayAll = useCallback(async () => {
-    // For now, just play the first available segment
-    // TODO: Implement playlist functionality
-    const firstAvailableIndex = audioSegments.findIndex(seg => seg.hasAudio);
-    if (firstAvailableIndex >= 0) {
-      await handlePlaySegment(firstAvailableIndex);
+    // Start playing from the first segment or currently selected segment
+    // Preview system will generate audio on-demand for each segment
+    const startIndex = selectedRowIndex >= 0 ? selectedRowIndex : 0;
+    if (audioSegments.length > 0 && startIndex < audioSegments.length) {
+      await handlePlaySegment(startIndex);
     } else {
-      setMessage("No audio segments available");
+      setMessage("No segments available to play");
     }
-  }, [audioSegments, handlePlaySegment]);
+  }, [selectedRowIndex, audioSegments, handlePlaySegment]);
 
   const handleStopAudio = useCallback(async () => {
     try {
@@ -472,32 +473,142 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         </div>
       </div>
 
-      {/* Action Buttons Toolbar - Separate from chapter selection */}
+      {/* Action Buttons Toolbar - Unified audio production controls */}
       {selectedChapter && (
         <div style={{ 
           display: "flex", 
           alignItems: "center", 
           gap: "12px",
           marginBottom: "24px",
-          flexWrap: "wrap"
+          flexWrap: "wrap",
+          padding: "12px",
+          backgroundColor: "var(--panel)",
+          border: "1px solid var(--border)",
+          borderRadius: "4px"
         }}>
+          {/* Generation Controls */}
           <button
             onClick={handleGenerateChapterAudio}
             disabled={audioSegments.length === 0}
             style={{
-              padding: "8px 16px",
-              fontSize: "14px",
+              padding: "10px 16px",
+              fontSize: "13px",
               fontWeight: 500,
               backgroundColor: "var(--success)",
               color: "white",
               border: "none",
               borderRadius: "4px",
               cursor: audioSegments.length > 0 ? "pointer" : "not-allowed",
-              opacity: audioSegments.length > 0 ? 1 : 0.6
+              opacity: audioSegments.length > 0 ? 1 : 0.6,
+              display: "flex",
+              alignItems: "center",
+              gap: "6px"
             }}
           >
-            Generate Chapter Audio
+            🎵 Generate Chapter Audio
           </button>
+
+          {/* Separator */}
+          <div style={{ 
+            width: "1px", 
+            height: "24px", 
+            backgroundColor: "var(--border)" 
+          }}></div>
+
+          {/* Preview Controls */}
+          <button
+            onClick={() => handlePlaySegment(selectedRowIndex)}
+            disabled={audioSegments.length === 0 || audioPreview.isLoading}
+            style={{
+              padding: "10px 16px",
+              fontSize: "13px",
+              fontWeight: 500,
+              backgroundColor: audioSegments.length > 0 ? 
+                (audioPreview.isPlaying && audioPreview.playbackState.segmentId === audioSegments[selectedRowIndex]?.chunkId ? "var(--warning)" : "var(--accent)") 
+                : "var(--muted)",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: (audioSegments.length > 0 && !audioPreview.isLoading) ? "pointer" : "not-allowed",
+              opacity: (audioSegments.length > 0 && !audioPreview.isLoading) ? 1 : 0.5,
+              display: "flex",
+              alignItems: "center",
+              gap: "6px"
+            }}
+          >
+            {audioPreview.isLoading ? "⏳ Loading..." :
+             audioPreview.isPlaying && audioPreview.playbackState.segmentId === audioSegments[selectedRowIndex]?.chunkId ? "⏸ Pause" :
+             "▶ Preview Segment"}
+          </button>
+
+          <button
+            onClick={handlePlayAll}
+            disabled={audioSegments.length === 0 || audioPreview.isLoading}
+            style={{
+              padding: "10px 16px",
+              fontSize: "13px",
+              fontWeight: 500,
+              backgroundColor: audioSegments.length > 0 ? "var(--accent)" : "var(--muted)",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: (audioSegments.length > 0 && !audioPreview.isLoading) ? "pointer" : "not-allowed",
+              opacity: (audioSegments.length > 0 && !audioPreview.isLoading) ? 1 : 0.5,
+              display: "flex",
+              alignItems: "center",
+              gap: "6px"
+            }}
+          >
+            🎬 Preview All
+          </button>
+
+          <button
+            onClick={handleStopAudio}
+            disabled={!audioPreview.isPlaying && !audioPreview.isLoading}
+            style={{
+              padding: "10px 16px",
+              fontSize: "13px",
+              fontWeight: 500,
+              backgroundColor: (audioPreview.isPlaying || audioPreview.isLoading) ? "var(--error)" : "var(--muted)",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: (audioPreview.isPlaying || audioPreview.isLoading) ? "pointer" : "not-allowed",
+              opacity: (audioPreview.isPlaying || audioPreview.isLoading) ? 1 : 0.5,
+              display: "flex",
+              alignItems: "center",
+              gap: "6px"
+            }}
+          >
+            ⏹ Stop
+          </button>
+
+          {/* Status indicator */}
+          <div style={{
+            marginLeft: "auto",
+            fontSize: "11px",
+            color: "var(--textSecondary)",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px"
+          }}>
+            {audioPreview.error ? (
+              <span style={{ color: "var(--error)" }}>❌ {audioPreview.error}</span>
+            ) : audioPreview.isLoading ? (
+              <span style={{ color: "var(--warning)" }}>🔄 Processing...</span>
+            ) : audioPreview.isPlaying ? (
+              <span style={{ color: "var(--accent)" }}>
+                🎵 Playing: {audioPreview.playbackState.segmentId}
+                {audioPreview.duration > 0 && (
+                  <span style={{ marginLeft: "8px" }}>
+                    {Math.floor(audioPreview.currentTime)}s / {Math.floor(audioPreview.duration)}s
+                  </span>
+                )}
+              </span>
+            ) : (
+              <span>{audioSegments.length} segments loaded</span>
+            )}
+          </div>
         </div>
       )}
 
@@ -602,159 +713,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                         </div>
                       </div>
 
-                      {/* Audio Production Toolbar */}
-                      <div style={{ padding: "12px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "4px" }}>
-                        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                          {/* Generate Button */}
-                          <button
-                            onClick={() => handleGenerateSegmentAudio(selectedRowIndex)}
-                            disabled={generatingAudio.has(currentSegment.chunkId)}
-                            style={{
-                              padding: "10px 16px",
-                              fontSize: "13px",
-                              fontWeight: 500,
-                              backgroundColor: currentSegment.hasAudio ? "var(--success)" : "var(--accent)",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "4px",
-                              cursor: generatingAudio.has(currentSegment.chunkId) ? "not-allowed" : "pointer",
-                              opacity: generatingAudio.has(currentSegment.chunkId) ? 0.6 : 1,
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "6px"
-                            }}
-                          >
-                            {generatingAudio.has(currentSegment.chunkId) 
-                              ? "⏳ Generating..." 
-                              : currentSegment.hasAudio 
-                                ? "🔄 Regenerate" 
-                                : "🎵 Generate"
-                            }
-                          </button>
 
-                          {/* Play Single Segment */}
-                          <button
-                            onClick={() => handlePlaySegment(selectedRowIndex)}
-                            disabled={!currentSegment.hasAudio || audioPreview.isLoading}
-                            style={{
-                              padding: "10px 16px",
-                              fontSize: "13px",
-                              fontWeight: 500,
-                              backgroundColor: currentSegment.hasAudio ? 
-                                (audioPreview.isPlaying && audioPreview.playbackState.segmentId === currentSegment.chunkId ? "var(--warning)" : "var(--accent)") 
-                                : "var(--muted)",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "4px",
-                              cursor: (currentSegment.hasAudio && !audioPreview.isLoading) ? "pointer" : "not-allowed",
-                              opacity: (currentSegment.hasAudio && !audioPreview.isLoading) ? 1 : 0.5,
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "6px"
-                            }}
-                          >
-                            {audioPreview.isLoading ? "⏳ Loading..." :
-                             audioPreview.isPlaying && audioPreview.playbackState.segmentId === currentSegment.chunkId ? "⏸ Pause" :
-                             "▶ Play"}
-                          </button>
-
-                          {/* Play All (Carousel) */}
-                          <button
-                            onClick={handlePlayAll}
-                            disabled={!audioSegments.some(seg => seg.hasAudio) || audioPreview.isLoading}
-                            style={{
-                              padding: "10px 16px",
-                              fontSize: "13px",
-                              fontWeight: 500,
-                              backgroundColor: audioSegments.some(seg => seg.hasAudio) ? "var(--accent)" : "var(--muted)",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "4px",
-                              cursor: (audioSegments.some(seg => seg.hasAudio) && !audioPreview.isLoading) ? "pointer" : "not-allowed",
-                              opacity: (audioSegments.some(seg => seg.hasAudio) && !audioPreview.isLoading) ? 1 : 0.5,
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "6px"
-                            }}
-                          >
-                            🎬 Play All
-                          </button>
-
-                          {/* Stop/Pause Button */}
-                          <button
-                            onClick={handleStopAudio}
-                            disabled={!audioPreview.isPlaying && !audioPreview.isLoading}
-                            style={{
-                              padding: "10px 16px",
-                              fontSize: "13px",
-                              fontWeight: 500,
-                              backgroundColor: (audioPreview.isPlaying || audioPreview.isLoading) ? "var(--error)" : "var(--muted)",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "4px",
-                              cursor: (audioPreview.isPlaying || audioPreview.isLoading) ? "pointer" : "not-allowed",
-                              opacity: (audioPreview.isPlaying || audioPreview.isLoading) ? 1 : 0.5,
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "6px"
-                            }}
-                          >
-                            ⏹ Stop
-                          </button>
-                        </div>
-
-                        {/* Status Info */}
-                        <div style={{ 
-                          marginTop: "8px", 
-                          padding: "6px 8px", 
-                          fontSize: "11px", 
-                          color: "var(--textSecondary)", 
-                          backgroundColor: "var(--input)", 
-                          borderRadius: "3px",
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "4px"
-                        }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <span>
-                              Status: {currentSegment.hasAudio ? 
-                                <span style={{ color: "var(--success)" }}>✓ Audio ready</span> : 
-                                <span style={{ color: "var(--muted)" }}>No audio</span>
-                              }
-                            </span>
-                            <span>
-                              {audioSegments.filter(seg => seg.hasAudio).length}/{audioSegments.length} segments ready
-                            </span>
-                          </div>
-                          
-                          {/* Playback Status */}
-                          {(audioPreview.isPlaying || audioPreview.error || audioPreview.isLoading) && (
-                            <div style={{ 
-                              display: "flex", 
-                              justifyContent: "space-between", 
-                              alignItems: "center",
-                              paddingTop: "4px",
-                              borderTop: "1px solid var(--border)"
-                            }}>
-                              <span>
-                                {audioPreview.isLoading ? (
-                                  <span style={{ color: "var(--warning)" }}>🔄 Processing audio...</span>
-                                ) : audioPreview.error ? (
-                                  <span style={{ color: "var(--error)" }}>❌ {audioPreview.error}</span>
-                                ) : audioPreview.isPlaying ? (
-                                  <span style={{ color: "var(--accent)" }}>🎵 Playing segment {audioPreview.playbackState.segmentId}</span>
-                                ) : null}
-                              </span>
-                              
-                              {audioPreview.isPlaying && audioPreview.duration > 0 && (
-                                <span>
-                                  {Math.floor(audioPreview.currentTime)}s / {Math.floor(audioPreview.duration)}s
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
 
                       {/* Audio Processing Chain */}
                       <div style={{ padding: "12px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "4px" }}>
