@@ -848,6 +848,31 @@ function createWin() {
     }
   });
 
+  ipcMain.handle("audioCache:path", async (_e, cacheKey) => {
+    try {
+      const cacheDir = path.join(app.getPath("userData"), "cache", "tts");
+      
+      // The cache uses hashed keys for filenames, but we need to find the right file
+      // First, let's try if the cacheKey is already hashed
+      let audioFile = path.join(cacheDir, `${cacheKey}.wav`);
+      
+      // Check if file exists
+      const audioExists = await fsp.access(audioFile).then(() => true).catch(() => false);
+      
+      if (audioExists) {
+        console.log("🎵 CACHE PATH FOUND:", audioFile);
+        return audioFile;
+      }
+      
+      console.log("🎵 CACHE PATH NOT FOUND:", cacheKey);
+      return null;
+      
+    } catch (error) {
+      console.error("Error getting audio cache path:", error);
+      return null;
+    }
+  });
+
   ipcMain.handle("audioCache:list", async () => {
     try {
       const cacheDir = path.join(app.getPath("userData"), "cache", "tts");

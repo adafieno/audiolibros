@@ -3,10 +3,12 @@
 
 import { audioProcessor } from './audio-processor-frontend';
 import { generateSegmentAudio } from './segment-tts-generator';
+import { generateCacheKey, generateCacheHash } from './audio-cache';
 import type { AudioProcessingChain } from '../types/audio-production';
 import type { Segment } from '../types/plan';
 import type { Character } from '../types/character';
 import type { ProjectConfig } from '../types/config';
+import type { Voice } from '../types/voice';
 
 export interface PreviewOptions {
   segmentId: string;
@@ -149,20 +151,51 @@ export class AudioPreviewService {
 
       this.currentSegmentId = options.segmentId;
 
-      // First check if the base segment audio exists
-      // This is the TTS-generated audio that we'll apply processing to
-      const baseAudioPath = `audio/segments/${options.segmentId}.wav`;
-      
-      // Check if base audio file exists
-      let hasBaseAudio = false;
-      try {
-        hasBaseAudio = await window.khipu!.call('file:exists', baseAudioPath) as boolean;
-      } catch (error) {
-        console.warn('Could not check if base audio exists:', error);
+      // Generate cache key for the TTS audio (same as generateSegmentAudio would create)
+      let baseAudioPath: string | null = null;
+      let ttsCacheKey: string | null = null;
+
+      if (options.segment && options.character && options.projectConfig) {
+        // Create voice object from character voice assignment (same logic as segment-tts-generator)
+        const voiceId = options.character.voiceAssignment?.voiceId || 'default';
+        const voice: Voice = {
+          id: voiceId,
+          engine: "azure", // Default to Azure since that's what most voice IDs use
+          locale: voiceId.startsWith("es-") ? voiceId.substring(0, 5) : "es-ES", // Extract locale from voice ID
+          gender: options.character.traits?.gender || "N",
+          age_hint: options.character.traits?.age || "adult",
+          accent_tags: options.character.traits?.accent ? [options.character.traits.accent] : [],
+          styles: options.character.voiceAssignment?.style ? [options.character.voiceAssignment.style] : [],
+          description: `Voice for ${options.character.name}`
+        };
+
+        const auditionOptions = {
+          voice,
+          config: options.projectConfig,
+          text: options.segment.text || '',
+          style: options.character.voiceAssignment?.style,
+          styledegree: options.character.voiceAssignment?.styledegree,
+          rate_pct: options.character.voiceAssignment?.rate_pct,
+          pitch_pct: options.character.voiceAssignment?.pitch_pct
+        };
+
+        ttsCacheKey = generateCacheKey(auditionOptions);
+        
+        // Check if we have cached TTS audio
+        try {
+          const hasCachedTTS = await window.khipu!.call('audio:cache:has', ttsCacheKey);
+          if (hasCachedTTS) {
+            const hashedKey = generateCacheHash(ttsCacheKey);
+            baseAudioPath = await window.khipu!.call('audioCache:path', hashedKey);
+            console.log(`📁 Found cached TTS audio at: ${baseAudioPath}`);
+          }
+        } catch (error) {
+          console.warn('Could not check cached TTS audio:', error);
+        }
       }
 
-      if (!hasBaseAudio) {
-        console.log(`🎤 Base audio not found for segment ${options.segmentId}, generating TTS...`);
+      if (!baseAudioPath) {
+        console.log(`🎤 No cached TTS audio found for segment ${options.segmentId}, generating...`);
         
         // Try to generate TTS audio on-demand if we have the necessary data
         if (options.segment && options.character && options.projectConfig) {
@@ -176,7 +209,20 @@ export class AudioPreviewService {
             throw new Error(`Failed to generate TTS audio: ${ttsResult.error}`);
           }
 
-          console.log(`✅ Successfully generated TTS audio for segment ${options.segmentId}`);
+          // Now get the cached file path
+          if (ttsCacheKey) {
+            try {
+              const hashedKey = generateCacheHash(ttsCacheKey);
+              baseAudioPath = await window.khipu!.call('audioCache:path', hashedKey);
+              console.log(`✅ Generated TTS audio and got path: ${baseAudioPath}`);
+            } catch (error) {
+              console.warn('Could not get cached TTS file path:', error);
+            }
+          }
+
+          if (!baseAudioPath) {
+            throw new Error(`TTS generation succeeded but could not locate cached file for segment ${options.segmentId}`);
+          }
         } else {
           throw new Error(`No audio available for segment ${options.segmentId}. Please provide segment data and character information for TTS generation, or generate the audio first.`);
         }

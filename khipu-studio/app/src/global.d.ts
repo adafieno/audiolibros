@@ -88,6 +88,10 @@ export interface KhipuRequestMap {
     in: { key: string }; 
     out: { success: boolean; error?: string } 
   };
+  "audioCache:path": { 
+    in: string; 
+    out: string | null 
+  };
   "audioCache:clear": { 
     in: undefined; 
     out: { success: boolean; error?: string } 

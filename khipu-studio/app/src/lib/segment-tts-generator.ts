@@ -17,7 +17,7 @@ export interface SegmentTTSOptions {
 
 export interface SegmentTTSResult {
   success: boolean;
-  audioUrl?: string; // Return the cached audio URL instead of file path
+  audioUrl?: string; // Return the cached audio URL
   error?: string;
 }
 

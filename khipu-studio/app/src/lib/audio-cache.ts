@@ -29,7 +29,7 @@ export interface CacheKey {
 /**
  * Generate a hash for the cache key to avoid Windows path length limitations
  */
-function generateCacheHash(cacheKey: string): string {
+export function generateCacheHash(cacheKey: string): string {
   // Simple hash function for consistent, short filenames
   let hash = 0;
   for (let i = 0; i < cacheKey.length; i++) {
