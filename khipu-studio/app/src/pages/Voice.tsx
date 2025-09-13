@@ -184,6 +184,18 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       }
 
       console.log("Plan chunks found:", chunks.length);
+      
+      // Debug: Check the actual structure of the first few chunks
+      if (chunks.length > 0) {
+        console.log("🔍 First chunk keys:", Object.keys(chunks[0]));
+        console.log("🔍 First chunk sample:", {
+          ...chunks[0],
+          text: chunks[0].text?.substring(0, 50) + '...'
+        });
+        if (chunks.length > 1) {
+          console.log("🔍 Second chunk keys:", Object.keys(chunks[1]));
+        }
+      }
 
       // Initialize audio production metadata from plan data
       // This will create/load the audio production configuration and check existing files
@@ -192,18 +204,23 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
       // Convert plan chunks to audio segment rows with proper audio tracking
       const segments: AudioSegmentRow[] = chunks.map((chunk, index) => {
-        const segmentStatus = completionStatus.segmentStatuses.find(s => s.chunkId === chunk.id);
-        const audioPath = `audio/${chapterId}/${chunk.id}.wav`;
+        // Handle missing ID by generating one based on index
+        const chunkId = chunk.id || `segment_${index + 1}`;
+        const segmentStatus = completionStatus.segmentStatuses.find(s => s.chunkId === chunkId);
+        const audioPath = `audio/${chapterId}/${chunkId}.wav`;
         
         console.log(`🔍 Loading chunk ${index}:`, { 
-          chunkId: chunk.id, 
-          chunkIdType: typeof chunk.id,
-          text: chunk.text?.substring(0, 50) + '...'
+          originalChunkId: chunk.id,
+          finalChunkId: chunkId,
+          chunkIdType: typeof chunkId,
+          hasOriginalId: !!chunk.id,
+          text: chunk.text?.substring(0, 50) + '...',
+          allKeys: Object.keys(chunk)
         });
         
         return {
-          rowKey: `${chapterId}_${chunk.id}_${index}`,
-          chunkId: chunk.id,
+          rowKey: `${chapterId}_${chunkId}_${index}`,
+          chunkId: chunkId,
           text: chunk.text,
           voice: chunk.voice || "",
           locked: chunk.locked,
