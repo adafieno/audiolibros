@@ -1400,5 +1400,243 @@
   "project.outputFolderPlaceholder": {
     "string": "output",
     "comment": "Placeholder for output folder"
+  },
+
+  "audioProduction.loadingPlanData": {
+    "string": "Loading plan data...",
+    "comment": "Status message when loading plan data"
+  },
+  "audioProduction.noPlanDataFound": {
+    "string": "No plan data found",
+    "comment": "Error message when no plan data is available"
+  },
+  "audioProduction.invalidPlanData": {
+    "string": "Invalid plan data - no chunks found",
+    "comment": "Error message when plan data has no valid chunks"
+  },
+  "audioProduction.loadingChapters": {
+    "string": "Loading chapters...",
+    "comment": "Status message when loading chapter list"
+  },
+  "audioProduction.failedToLoadChapters": {
+    "string": "Failed to load chapters",
+    "comment": "Error message when chapter loading fails"
+  },
+  "audioProduction.generatingAudioForSegment": {
+    "string": "Generating audio for segment {{chunkId}}...",
+    "comment": "Status message when generating audio for specific segment"
+  },
+  "audioProduction.audioGeneratedForSegment": {
+    "string": "Audio generated for segment {{chunkId}}",
+    "comment": "Success message when segment audio is generated"
+  },
+  "audioProduction.failedToGenerateAudio": {
+    "string": "Failed to generate audio for segment {{chunkId}}",
+    "comment": "Error message when audio generation fails"
+  },
+  "audioProduction.generatingChapterAudio": {
+    "string": "Generating audio for entire chapter...",
+    "comment": "Status message when generating audio for entire chapter"
+  },
+  "audioProduction.chapterAudioComplete": {
+    "string": "Chapter audio generation complete!",
+    "comment": "Success message when chapter audio generation is complete"
+  },
+  "audioProduction.noSegmentSelected": {
+    "string": "No segment selected or project not loaded",
+    "comment": "Error message when trying to preview with no selection"
+  },
+  "audioProduction.previewFailed": {
+    "string": "Preview failed: {{error}}",
+    "comment": "Error message when audio preview fails"
+  },
+  "audioProduction.noSegmentsAvailable": {
+    "string": "No segments available to play",
+    "comment": "Error message when playlist has no segments"
+  },
+  "audioProduction.projectNotLoaded": {
+    "string": "Project not loaded",
+    "comment": "Error message when project is not loaded"
+  },
+  "audioProduction.loadedSegmentsWithChains": {
+    "string": "Loaded {{segments}} segments with {{chains}} custom processing chains",
+    "comment": "Status message showing loaded segments and custom chains"
+  },
+  "audioProduction.loadedSegmentsWithAudio": {
+    "string": "Loaded {{segments}} segments ({{completed}} with audio)",
+    "comment": "Status message showing loaded segments and completion status"
+  },
+  "audioProduction.failedToLoadPlanData": {
+    "string": "Failed to load plan data: {{error}}",
+    "comment": "Error message when plan data loading fails with specific error"
+  },
+  "audioProduction.selectChapter": {
+    "string": "Select Chapter",
+    "comment": "Default option text in chapter dropdown"
+  },
+  "audioProduction.audioProductionComplete": {
+    "string": "Audio Production Complete",
+    "comment": "Status text when all chapters have audio generated"
+  },
+  "audioProduction.chaptersLoaded": {
+    "string": "{{completed}}/{{total}} chapters loaded",
+    "comment": "Status showing how many chapters are loaded with plans"
+  },
+  "audioProduction.generateChapterAudio": {
+    "string": "Generate Chapter Audio",
+    "comment": "Button text to generate audio for entire chapter"
+  },
+  "audioProduction.play": {
+    "string": "Play",
+    "comment": "Button text to play audio segment"
+  },
+  "audioProduction.pause": {
+    "string": "Pause",
+    "comment": "Button text to pause audio playback"
+  },
+  "audioProduction.loading": {
+    "string": "Loading...",
+    "comment": "Button text when audio is loading"
+  },
+  "audioProduction.playAll": {
+    "string": "Play All",
+    "comment": "Button text to play all segments in sequence"
+  },
+  "audioProduction.stop": {
+    "string": "Stop",
+    "comment": "Button text to stop audio playback"
+  },
+  "audioProduction.error": {
+    "string": "Error",
+    "comment": "Status indicator for audio error state"
+  },
+  "audioProduction.processing": {
+    "string": "Processing...",
+    "comment": "Status indicator when processing audio"
+  },
+  "audioProduction.playing": {
+    "string": "Playing",
+    "comment": "Status indicator when audio is playing"
+  },
+  "audioProduction.segmentsLoaded": {
+    "string": "{{count}} segments loaded",
+    "comment": "Status showing number of loaded segments"
+  },
+  "audioProduction.noChaptersWithPlans": {
+    "string": "No chapters with plans available",
+    "comment": "Message when no chapters have orchestration plans"
+  },
+  "audioProduction.completeOrchestrationStep": {
+    "string": "Complete the orchestration step for at least one chapter to begin audio production.",
+    "comment": "Instructions to complete orchestration before audio production"
+  },
+  "audioProduction.segments": {
+    "string": "Audio Segments",
+    "comment": "Header for audio segments table"
+  },
+  "audioProduction.tableHeaderId": {
+    "string": "ID",
+    "comment": "Table header for segment ID column"
+  },
+  "audioProduction.tableHeaderTextPreview": {
+    "string": "Text Preview",
+    "comment": "Table header for text preview column"
+  },
+  "audioProduction.tableHeaderVoice": {
+    "string": "Voice",
+    "comment": "Table header for voice assignment column"
+  },
+  "audioProduction.customSettings": {
+    "string": "Custom Settings",
+    "comment": "Label for custom audio processing settings option"
+  },
+  "audioProduction.presetCleanNatural": {
+    "string": "Clean & Natural",
+    "comment": "Audio preset category for clean and natural sound"
+  },
+  "audioProduction.presetCharacterVoices": {
+    "string": "Character Voices",
+    "comment": "Audio preset category for character voices"
+  },
+  "audioProduction.presetBroadcastQuality": {
+    "string": "Broadcast Quality",
+    "comment": "Audio preset category for broadcast quality"
+  },
+  "audioProduction.presetVintageSpecialty": {
+    "string": "Vintage & Specialty",
+    "comment": "Audio preset category for vintage and specialty effects"
+  },
+  "audioProduction.presetEnvironmental": {
+    "string": "Environmental",
+    "comment": "Audio preset category for environmental effects"
+  },
+  "audioProduction.presetSpecialEffects": {
+    "string": "Special Effects",
+    "comment": "Audio preset category for special effects"
+  },
+  "audioProduction.processingStep1": {
+    "string": "1. Noise & Cleanup",
+    "comment": "Audio processing step 1 header"
+  },
+  "audioProduction.processingStep2": {
+    "string": "2. Voice Correction",
+    "comment": "Audio processing step 2 header"
+  },
+  "audioProduction.processingStep3": {
+    "string": "3. Audio Enhancement",
+    "comment": "Audio processing step 3 header"
+  },
+  "audioProduction.processingStep4": {
+    "string": "4. Spatial / Aesthetic Enhancements",
+    "comment": "Audio processing step 4 header"
+  },
+  "audioProduction.processingStep5": {
+    "string": "5. Mastering",
+    "comment": "Audio processing step 5 header"
+  },
+  "audioProduction.highPassFilter": {
+    "string": "High-pass filter (70-90 Hz)",
+    "comment": "Label for high-pass filter audio processing option"
+  },
+  "audioProduction.deClickDeEss": {
+    "string": "De-click / De-ess",
+    "comment": "Label for de-click and de-ess audio processing"
+  },
+  "audioProduction.finalDither": {
+    "string": "Final dither (16-bit export)",
+    "comment": "Label for final dither audio processing option"
+  },
+  "audioProduction.selectSegmentPrompt": {
+    "string": "Select a segment from the grid to begin audio production",
+    "comment": "Message prompting user to select a segment"
+  },
+  "audioProduction.noAudioSegments": {
+    "string": "No audio segments available for this chapter",
+    "comment": "Message when no audio segments are available"
+  },
+  "audioProduction.selectChapterPrompt": {
+    "string": "Select a chapter to begin audio production",
+    "comment": "Message prompting user to select a chapter"
+  },
+
+  "manuscript.loadingChapter": {
+    "string": "Loading chapter…",
+    "comment": "Status message when loading a chapter"
+  },
+  "manuscript.chapterLoaded": {
+    "string": "Chapter loaded",
+    "comment": "Status message when chapter is successfully loaded"
+  },
+  "manuscript.chapterNotFound": {
+    "string": "Chapter file not found.",
+    "comment": "Error message when chapter file is not found"
+  },
+  "manuscript.autoSaving": {
+    "string": "Auto-saving...",
+    "comment": "Status message when auto-saving changes"
+  },
+  "manuscript.characterCount": {
+    "string": "Characters: {{count}}",
+    "comment": "Character count display in editor"
   }
 }

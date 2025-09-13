@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   projectRoot: string;
@@ -7,13 +8,14 @@ type Props = {
 };
 
 export default function ChapterEditor({ projectRoot, chapterRelPath, onSaved }: Props) {
+  const { t } = useTranslation();
   const [text, setText] = useState<string>("");
   const [dirty, setDirty] = useState(false);
   const [msg, setMsg] = useState<string>("");
 
   useEffect(() => {
     (async () => {
-      setMsg("Cargando capítulo…");
+      setMsg(t("manuscript.loadingChapter"));
       const data = await window.khipu!.call("fs:read", {
         projectRoot,
         relPath: chapterRelPath,
@@ -21,13 +23,13 @@ export default function ChapterEditor({ projectRoot, chapterRelPath, onSaved }: 
       });
       if (typeof data === "string") {
         setText(data);
-        setMsg("Capítulo cargado");
+        setMsg(t("manuscript.chapterLoaded"));
         setDirty(false);
       } else {
-        setMsg("No se encontró el archivo del capítulo.");
+        setMsg(t("manuscript.chapterNotFound"));
       }
     })();
-  }, [projectRoot, chapterRelPath]);
+  }, [projectRoot, chapterRelPath, t]);
 
   // Auto-save chapter changes when text changes and is dirty
   useEffect(() => {
@@ -58,7 +60,7 @@ export default function ChapterEditor({ projectRoot, chapterRelPath, onSaved }: 
     <div style={{ marginTop: 16 }}>
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <span style={{ color: "#9ca3af" }}>{msg}</span>
-        {dirty && <span style={{ color: "var(--accent)", fontSize: 12 }}>Auto-guardando...</span>}
+        {dirty && <span style={{ color: "var(--accent)", fontSize: 12 }}>{t("manuscript.autoSaving")}</span>}
       </div>
       <div style={{ marginTop: 8 }}>
         <textarea
@@ -70,7 +72,7 @@ export default function ChapterEditor({ projectRoot, chapterRelPath, onSaved }: 
         />
       </div>
       <div style={{ marginTop: 6, color: "#9ca3af" }}>
-        Caracteres: {text.length}
+        {t("manuscript.characterCount", { count: text.length })}
       </div>
     </div>
   );

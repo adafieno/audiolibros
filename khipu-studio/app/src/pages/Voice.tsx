@@ -237,7 +237,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     }
 
     try {
-      setMessage("Loading plan data...");
+      setMessage(t("audioProduction.loadingPlanData"));
       const planPath = `ssml/plans/${chapterId}.plan.json`;
       console.log("Loading plan from:", planPath);
       
@@ -256,7 +256,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
       if (!planData) {
         console.warn("Plan file is null or undefined");
-        setMessage("No plan data found");
+        setMessage(t("audioProduction.noPlanDataFound"));
         return;
       }
 
@@ -270,7 +270,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         chunks = (planData as { chunks: PlanChunk[] }).chunks;
       } else {
         console.warn("Plan file has no valid chunks data:", planData);
-        setMessage("Invalid plan data - no chunks found");
+        setMessage(t("audioProduction.invalidPlanData"));
         return;
       }
 
@@ -343,33 +343,33 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             return segment;
           }));
           
-          setMessage(`Loaded ${segments.length} segments with ${Object.keys(savedProcessingChains).length} custom processing chains`);
+          setMessage(t("audioProduction.loadedSegmentsWithChains", { segments: segments.length, chains: Object.keys(savedProcessingChains).length }));
         } else {
-          setMessage(`Loaded ${segments.length} segments (${completionStatus.completedSegments} with audio)`);
+          setMessage(t("audioProduction.loadedSegmentsWithAudio", { segments: segments.length, completed: completionStatus.completedSegments }));
         }
       } catch (error) {
         console.warn('Failed to load processing chains:', error);
-        setMessage(`Loaded ${segments.length} segments (${completionStatus.completedSegments} with audio)`);
+        setMessage(t("audioProduction.loadedSegmentsWithAudio", { segments: segments.length, completed: completionStatus.completedSegments }));
       }
       
       // Update processing chain from metadata - this would set a default for all segments
       // For now, we'll comment this out to let segments manage their own chains
       // setProcessingChain(audioMetadata.globalProcessingChain);
       
-      setMessage(`Loaded ${segments.length} segments (${completionStatus.completedSegments} with audio)`);
+      setMessage(t("audioProduction.loadedSegmentsWithAudio", { segments: segments.length, completed: completionStatus.completedSegments }));
     } catch (error) {
       console.error("Failed to load plan data:", error);
-      setMessage(`Failed to load plan data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setMessage(t("audioProduction.failedToLoadPlanData", { error: error instanceof Error ? error.message : 'Unknown error' }));
     }
-  }, [root, audioProductionService]);
+  }, [root, audioProductionService, t]);
 
   const loadChapters = useCallback(async () => {
     if (!root) return;
     
     try {
       setLoading(true);
-      setMessage("Loading chapters...");
-      onStatus("Loading chapters...");
+      setMessage(t("audioProduction.loadingChapters"));
+      onStatus(t("audioProduction.loadingChapters"));
       
       const chapterList = await window.khipu!.call("chapters:list", { projectRoot: root });
       
@@ -389,12 +389,12 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       }
     } catch (error) {
       console.error("Failed to load chapters:", error);
-      setMessage("Failed to load chapters");
+      setMessage(t("audioProduction.failedToLoadChapters"));
       onStatus("");
     } finally {
       setLoading(false);
     }
-  }, [root, checkChapterStatus, onStatus]);
+  }, [root, checkChapterStatus, onStatus, t]);
 
   const handleChapterSelect = useCallback(async (chapterId: string) => {
     setSelectedChapter(chapterId);
@@ -415,7 +415,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     setGeneratingAudio(prev => new Set(prev).add(segment.chunkId));
     
     try {
-      setMessage(`Generating audio for segment ${segment.chunkId}...`);
+      setMessage(t("audioProduction.generatingAudioForSegment", { chunkId: segment.chunkId }));
       
       // TODO: Call audio generation API
       // await window.khipu!.call("audio:generate", {
@@ -450,10 +450,10 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         return updated;
       });
       
-      setMessage(`Audio generated for segment ${segment.chunkId}`);
+      setMessage(t("audioProduction.audioGeneratedForSegment", { chunkId: segment.chunkId }));
     } catch (error) {
       console.error("Failed to generate audio:", error);
-      setMessage(`Failed to generate audio for segment ${segment.chunkId}`);
+      setMessage(t("audioProduction.failedToGenerateAudio", { chunkId: segment.chunkId }));
     } finally {
       setGeneratingAudio(prev => {
         const next = new Set(prev);
@@ -461,12 +461,12 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         return next;
       });
     }
-  }, [audioSegments, selectedChapter, audioProductionService, generatingAudio]);
+  }, [audioSegments, selectedChapter, audioProductionService, generatingAudio, t]);
 
   const handleGenerateChapterAudio = useCallback(async () => {
     if (!selectedChapter || audioSegments.length === 0) return;
 
-    setMessage("Generating audio for entire chapter...");
+    setMessage(t("audioProduction.generatingChapterAudio"));
     
     for (let i = 0; i < audioSegments.length; i++) {
       if (!audioSegments[i].hasAudio) {
@@ -474,8 +474,8 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       }
     }
     
-    setMessage("Chapter audio generation complete!");
-  }, [selectedChapter, audioSegments, handleGenerateSegmentAudio]);
+    setMessage(t("audioProduction.chapterAudioComplete"));
+  }, [selectedChapter, audioSegments, handleGenerateSegmentAudio, t]);
 
   // Audio preview handlers
   const handlePlaySegment = useCallback(async (segmentIndex?: number) => {
@@ -483,7 +483,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     const segment = audioSegments[index];
     
     if (!segment || !root) {
-      setMessage("No segment selected or project not loaded");
+      setMessage(t("audioProduction.noSegmentSelected"));
       return;
     }
 
@@ -562,9 +562,9 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       }
     } catch (error) {
       console.error("Playback failed:", error);
-      setMessage(`Preview failed: ${error instanceof Error ? error.message : String(error)}`);
+      setMessage(t("audioProduction.previewFailed", { error: error instanceof Error ? error.message : String(error) }));
     }
-  }, [selectedRowIndex, audioSegments, audioPreview, currentProcessingChain, root, selectedChapter]);
+  }, [selectedRowIndex, audioSegments, audioPreview, currentProcessingChain, root, selectedChapter, t]);
 
   const handleStopAudio = useCallback(async () => {
     try {
@@ -656,7 +656,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               }}
             >
               <option value="" style={{ backgroundColor: "var(--panel)", color: "var(--text)" }}>
-                {t("audioProduction.selectChapter", "Select Chapter")}
+                                {t("audioProduction.selectChapter")}
               </option>
               {getChaptersWithPlans().map((chapter) => (
                 <option 
@@ -692,8 +692,8 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                   whiteSpace: "nowrap"
                 }}>
                   {allComplete 
-                    ? `✅ Audio Production Complete` 
-                    : `${audioCompleteCount}/${totalChapters} chapters loaded`
+                    ? t("audioProduction.audioProductionComplete") 
+                    : t("audioProduction.chaptersLoaded", { completed: audioCompleteCount, total: totalChapters })
                   }
                 </span>
               );
@@ -734,7 +734,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               gap: "6px"
             }}
           >
-            Generate Chapter Audio
+            {t("audioProduction.generateChapterAudio")}
           </button>
 
           {/* Separator */}
@@ -765,21 +765,21 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               gap: "6px"
             }}
           >
-            {audioPreview.isLoading ? "⏳ Loading..." :
-             audioPreview.isPlaying && audioPreview.playbackState.segmentId === audioSegments[selectedRowIndex]?.chunkId ? "⏸ Pause" :
-             "▶ Play"}
+            {audioPreview.isLoading ? `⏳ ${t("audioProduction.loading")}` :
+             audioPreview.isPlaying && audioPreview.playbackState.segmentId === audioSegments[selectedRowIndex]?.chunkId ? `⏸ ${t("audioProduction.pause")}` :
+             `▶ ${t("audioProduction.play")}`}
           </button>
 
           <button
             onClick={async () => {
               // Playlist approach - plays all segments continuously
               if (audioSegments.length === 0) {
-                setMessage("No segments available to play");
+                setMessage(t("audioProduction.noSegmentsAvailable"));
                 return;
               }
 
               if (!root) {
-                setMessage("Project not loaded");
+                setMessage(t("audioProduction.projectNotLoaded"));
                 return;
               }
 
@@ -895,7 +895,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               marginLeft: "12px"
             }}
           >
-            🎬 Play All
+            🎬 {t("audioProduction.playAll")}
           </button>
 
           <button
@@ -916,7 +916,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               gap: "6px"
             }}
           >
-            ⏹ Stop
+            ⏹ {t("audioProduction.stop")}
           </button>
 
           {/* Status indicator - minimal */}
@@ -929,12 +929,12 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             gap: "8px"
           }}>
             {audioPreview.error ? (
-              <span style={{ color: "var(--error)" }}>❌ Error</span>
+              <span style={{ color: "var(--error)" }}>❌ {t("audioProduction.error")}</span>
             ) : audioPreview.isLoading ? (
-              <span style={{ color: "var(--warning)" }}>🔄 Processing...</span>
+              <span style={{ color: "var(--warning)" }}>🔄 {t("audioProduction.processing")}</span>
             ) : audioPreview.isPlaying ? (
               <span style={{ color: "var(--success)" }}>
-                🎵 Playing
+                🎵 {t("audioProduction.playing")}
                 {audioPreview.duration > 0 && (
                   <span style={{ marginLeft: "8px" }}>
                     {Math.floor(audioPreview.currentTime)}s / {Math.floor(audioPreview.duration)}s
@@ -942,7 +942,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                 )}
               </span>
             ) : (
-              <span>{audioSegments.length} segments loaded</span>
+              <span>{t("audioProduction.segmentsLoaded", { count: audioSegments.length })}</span>
             )}
           </div>
         </div>
@@ -959,8 +959,8 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           border: "1px solid var(--border)",
           borderRadius: "6px"
         }}>
-          <p style={{ margin: "0 0 8px 0", fontWeight: 500 }}>No chapters with plans available</p>
-          <p style={{ margin: 0 }}>Complete the orchestration step for at least one chapter to begin audio production.</p>
+          <p style={{ margin: "0 0 8px 0", fontWeight: 500 }}>{t("audioProduction.noChaptersWithPlans")}</p>
+          <p style={{ margin: 0 }}>{t("audioProduction.completeOrchestrationStep")}</p>
         </div>
       ) : null}
 
@@ -970,7 +970,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           {/* Left: Audio Segments Grid */}
           <div style={{ border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
             <div style={{ padding: "8px 12px", backgroundColor: "var(--panelAccent)", borderBottom: "1px solid var(--border)", fontSize: "14px", fontWeight: 500 }}>
-              {t("audioProduction.segments", "Audio Segments")} - {selectedChapter}
+              {t("audioProduction.segments")} - {selectedChapter}
             </div>
             
             <div style={{ flex: 1, overflow: "auto" }}>
@@ -982,9 +982,9 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                 <thead>
                   <tr style={{ backgroundColor: "var(--panelAccent)" }}>
                     <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}></th>
-                    <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>ID</th>
-                    <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>Text Preview</th>
-                    <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>Voice</th>
+                    <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>{t("audioProduction.tableHeaderId")}</th>
+                    <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>{t("audioProduction.tableHeaderTextPreview")}</th>
+                    <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>{t("audioProduction.tableHeaderVoice")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1086,53 +1086,53 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 }
                               }}
                             >
-                              <optgroup label="Clean & Natural">
+                              <optgroup label={t("audioProduction.presetCleanNatural")}>
                                 {getPresetsByCategory('clean').map((preset: AudioPreset) => (
                                   <option key={preset.id} value={preset.id}>
                                     {preset.name} - {preset.description}
                                   </option>
                                 ))}
                               </optgroup>
-                              <optgroup label="Character Voices">
+                              <optgroup label={t("audioProduction.presetCharacterVoices")}>
                                 {getPresetsByCategory('character').map((preset: AudioPreset) => (
                                   <option key={preset.id} value={preset.id}>
                                     {preset.name} - {preset.description}
                                   </option>
                                 ))}
                               </optgroup>
-                              <optgroup label="Broadcast Quality">
+                              <optgroup label={t("audioProduction.presetBroadcastQuality")}>
                                 {getPresetsByCategory('broadcast').map((preset: AudioPreset) => (
                                   <option key={preset.id} value={preset.id}>
                                     {preset.name} - {preset.description}
                                   </option>
                                 ))}
                               </optgroup>
-                              <optgroup label="Vintage & Specialty">
+                              <optgroup label={t("audioProduction.presetVintageSpecialty")}>
                                 {getPresetsByCategory('vintage').map((preset: AudioPreset) => (
                                   <option key={preset.id} value={preset.id}>
                                     {preset.name} - {preset.description}
                                   </option>
                                 ))}
                               </optgroup>
-                              <optgroup label="Environmental">
+                              <optgroup label={t("audioProduction.presetEnvironmental")}>
                                 {getPresetsByCategory('environmental').map((preset: AudioPreset) => (
                                   <option key={preset.id} value={preset.id}>
                                     {preset.name} - {preset.description}
                                   </option>
                                 ))}
                               </optgroup>
-                              <optgroup label="Special Effects">
+                              <optgroup label={t("audioProduction.presetSpecialEffects")}>
                                 {getPresetsByCategory('effects').map((preset: AudioPreset) => (
                                   <option key={preset.id} value={preset.id}>
                                     {preset.name} - {preset.description}
                                   </option>
                                 ))}
                               </optgroup>
-                              <option value="custom">--- Custom Settings ---</option>
+                              <option value="custom">--- {t("audioProduction.customSettings")} ---</option>
                             </select>
                             <div style={{ fontSize: "10px", color: "var(--textSecondary)", fontStyle: "italic" }}>
                               Choose from 21 professional voice processing presets designed for audiobook production. 
-                              Select "Custom Settings" to manually configure individual effects below.
+                              Select "{t("audioProduction.customSettings")}" to manually configure individual effects below.
                             </div>
                           </div>
                         </div>
@@ -1158,7 +1158,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                         {/* 1. Noise & Cleanup */}
                         <div style={{ marginBottom: "16px", padding: "8px", backgroundColor: "var(--input)", borderRadius: "3px", border: "1px solid var(--border)" }}>
                           <h5 style={{ margin: "0 0 6px 0", fontSize: "12px", color: "var(--text)", fontWeight: 500 }}>
-                            1. Noise & Cleanup
+                            {t("audioProduction.processingStep1")}
                           </h5>
                           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
@@ -1178,7 +1178,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 })}
                                 style={{ accentColor: "var(--accent)" }} 
                               />
-                              <span>High-pass filter (70-90 Hz)</span>
+                              <span>{t("audioProduction.highPassFilter")}</span>
                               <select 
                                 value={currentProcessingChain.noiseCleanup.highPassFilter.frequency}
                                 disabled={!customSettingsEnabled}
@@ -1216,7 +1216,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 })}
                                 style={{ accentColor: "var(--accent)" }} 
                               />
-                              <span>De-click / De-ess</span>
+                              <span>{t("audioProduction.deClickDeEss")}</span>
                               <select 
                                 value={currentProcessingChain.noiseCleanup.deClickDeEss.intensity}
                                 disabled={!customSettingsEnabled}
@@ -1432,7 +1432,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                         {/* 4. Spatial / Aesthetic Enhancements */}
                         <div style={{ marginBottom: "16px", padding: "8px", backgroundColor: "var(--input)", borderRadius: "3px", border: "1px solid var(--border)" }}>
                           <h5 style={{ margin: "0 0 6px 0", fontSize: "12px", color: "var(--text)", fontWeight: 500 }}>
-                            4. Spatial / Aesthetic Enhancements
+                            {t("audioProduction.processingStep4")}
                           </h5>
                           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
@@ -1598,7 +1598,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 })}
                                 style={{ accentColor: "var(--accent)" }} 
                               />
-                              <span>Final dither (16-bit export)</span>
+                              <span>{t("audioProduction.finalDither")}</span>
                             </label>
                           </div>
                         </div>
@@ -1608,7 +1608,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                 })()
               ) : (
                 <div style={{ color: "var(--muted)", fontStyle: "italic", textAlign: "center", padding: "32px" }}>
-                  Select a segment from the grid to begin audio production
+                  {t("audioProduction.selectSegmentPrompt")}
                 </div>
               )}
             </div>
@@ -1621,7 +1621,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           color: "var(--textSecondary)",
           fontSize: "14px"
         }}>
-          {message || "No audio segments available for this chapter"}
+          {message || t("audioProduction.noAudioSegments")}
         </div>
       ) : (
         <div style={{
@@ -1630,7 +1630,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           color: "var(--textSecondary)",
           fontSize: "14px"
         }}>
-          {t("audioProduction.selectChapterPrompt", "Select a chapter to begin audio production")}
+                    {t("audioProduction.selectChapterPrompt")}
         </div>
       )}
     </div>

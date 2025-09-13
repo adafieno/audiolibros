@@ -1902,5 +1902,243 @@
   "project.outputFolderPlaceholder": {
     "string": "output",
     "comment": "Placeholder para la carpeta de salida"
+  },
+
+  "audioProduction.loadingPlanData": {
+    "string": "Cargando datos del plan...",
+    "comment": "Mensaje de estado al cargar datos del plan"
+  },
+  "audioProduction.noPlanDataFound": {
+    "string": "No se encontraron datos del plan",
+    "comment": "Mensaje de error cuando no hay datos del plan disponibles"
+  },
+  "audioProduction.invalidPlanData": {
+    "string": "Datos del plan inválidos - no se encontraron fragmentos",
+    "comment": "Mensaje de error cuando los datos del plan no tienen fragmentos válidos"
+  },
+  "audioProduction.loadingChapters": {
+    "string": "Cargando capítulos...",
+    "comment": "Mensaje de estado al cargar la lista de capítulos"
+  },
+  "audioProduction.failedToLoadChapters": {
+    "string": "Error al cargar capítulos",
+    "comment": "Mensaje de error cuando falla la carga de capítulos"
+  },
+  "audioProduction.generatingAudioForSegment": {
+    "string": "Generando audio para segmento {{chunkId}}...",
+    "comment": "Mensaje de estado al generar audio para un segmento específico"
+  },
+  "audioProduction.audioGeneratedForSegment": {
+    "string": "Audio generado para segmento {{chunkId}}",
+    "comment": "Mensaje de éxito cuando se genera el audio del segmento"
+  },
+  "audioProduction.failedToGenerateAudio": {
+    "string": "Error al generar audio para segmento {{chunkId}}",
+    "comment": "Mensaje de error cuando falla la generación de audio"
+  },
+  "audioProduction.generatingChapterAudio": {
+    "string": "Generando audio para todo el capítulo...",
+    "comment": "Mensaje de estado al generar audio para todo el capítulo"
+  },
+  "audioProduction.chapterAudioComplete": {
+    "string": "¡Generación de audio del capítulo completa!",
+    "comment": "Mensaje de éxito cuando se completa la generación de audio del capítulo"
+  },
+  "audioProduction.noSegmentSelected": {
+    "string": "No hay segmento seleccionado o proyecto no cargado",
+    "comment": "Mensaje de error al intentar reproducir sin selección"
+  },
+  "audioProduction.previewFailed": {
+    "string": "Error en vista previa: {{error}}",
+    "comment": "Mensaje de error cuando falla la vista previa de audio"
+  },
+  "audioProduction.noSegmentsAvailable": {
+    "string": "No hay segmentos disponibles para reproducir",
+    "comment": "Mensaje de error cuando la lista de reproducción no tiene segmentos"
+  },
+  "audioProduction.projectNotLoaded": {
+    "string": "Proyecto no cargado",
+    "comment": "Mensaje de error cuando el proyecto no está cargado"
+  },
+  "audioProduction.loadedSegmentsWithChains": {
+    "string": "Cargados {{segments}} segmentos con {{chains}} cadenas de procesamiento personalizadas",
+    "comment": "Mensaje de estado mostrando segmentos cargados y cadenas personalizadas"
+  },
+  "audioProduction.loadedSegmentsWithAudio": {
+    "string": "Cargados {{segments}} segmentos ({{completed}} con audio)",
+    "comment": "Mensaje de estado mostrando segmentos cargados y estado de finalización"
+  },
+  "audioProduction.failedToLoadPlanData": {
+    "string": "Error al cargar datos del plan: {{error}}",
+    "comment": "Mensaje de error cuando falla la carga de datos del plan con error específico"
+  },
+  "audioProduction.selectChapter": {
+    "string": "Seleccionar Capítulo",
+    "comment": "Texto de opción por defecto en el desplegable de capítulos"
+  },
+  "audioProduction.audioProductionComplete": {
+    "string": "Producción de Audio Completa",
+    "comment": "Texto de estado cuando todos los capítulos tienen audio generado"
+  },
+  "audioProduction.chaptersLoaded": {
+    "string": "{{completed}}/{{total}} capítulos cargados",
+    "comment": "Estado mostrando cuántos capítulos están cargados con planes"
+  },
+  "audioProduction.generateChapterAudio": {
+    "string": "Generar Audio del Capítulo",
+    "comment": "Texto del botón para generar audio de todo el capítulo"
+  },
+  "audioProduction.play": {
+    "string": "Reproducir",
+    "comment": "Texto del botón para reproducir segmento de audio"
+  },
+  "audioProduction.pause": {
+    "string": "Pausar",
+    "comment": "Texto del botón para pausar reproducción de audio"
+  },
+  "audioProduction.loading": {
+    "string": "Cargando...",
+    "comment": "Texto del botón cuando el audio está cargando"
+  },
+  "audioProduction.playAll": {
+    "string": "Reproducir Todo",
+    "comment": "Texto del botón para reproducir todos los segmentos en secuencia"
+  },
+  "audioProduction.stop": {
+    "string": "Detener",
+    "comment": "Texto del botón para detener reproducción de audio"
+  },
+  "audioProduction.error": {
+    "string": "Error",
+    "comment": "Indicador de estado para error de audio"
+  },
+  "audioProduction.processing": {
+    "string": "Procesando...",
+    "comment": "Indicador de estado cuando se procesa audio"
+  },
+  "audioProduction.playing": {
+    "string": "Reproduciendo",
+    "comment": "Indicador de estado cuando se reproduce audio"
+  },
+  "audioProduction.segmentsLoaded": {
+    "string": "{{count}} segmentos cargados",
+    "comment": "Estado mostrando número de segmentos cargados"
+  },
+  "audioProduction.noChaptersWithPlans": {
+    "string": "No hay capítulos con planes disponibles",
+    "comment": "Mensaje cuando ningún capítulo tiene planes de orquestación"
+  },
+  "audioProduction.completeOrchestrationStep": {
+    "string": "Complete el paso de orquestación para al menos un capítulo para comenzar la producción de audio.",
+    "comment": "Instrucciones para completar la orquestación antes de la producción de audio"
+  },
+  "audioProduction.segments": {
+    "string": "Segmentos de Audio",
+    "comment": "Encabezado para la tabla de segmentos de audio"
+  },
+  "audioProduction.tableHeaderId": {
+    "string": "ID",
+    "comment": "Encabezado de tabla para la columna de ID de segmento"
+  },
+  "audioProduction.tableHeaderTextPreview": {
+    "string": "Vista Previa del Texto",
+    "comment": "Encabezado de tabla para la columna de vista previa del texto"
+  },
+  "audioProduction.tableHeaderVoice": {
+    "string": "Voz",
+    "comment": "Encabezado de tabla para la columna de asignación de voz"
+  },
+  "audioProduction.customSettings": {
+    "string": "Configuración Personalizada",
+    "comment": "Etiqueta para la opción de configuración personalizada de procesamiento de audio"
+  },
+  "audioProduction.presetCleanNatural": {
+    "string": "Limpio y Natural",
+    "comment": "Categoría de preset de audio para sonido limpio y natural"
+  },
+  "audioProduction.presetCharacterVoices": {
+    "string": "Voces de Personajes",
+    "comment": "Categoría de preset de audio para voces de personajes"
+  },
+  "audioProduction.presetBroadcastQuality": {
+    "string": "Calidad de Transmisión",
+    "comment": "Categoría de preset de audio para calidad de transmisión"
+  },
+  "audioProduction.presetVintageSpecialty": {
+    "string": "Vintage y Especialidad",
+    "comment": "Categoría de preset de audio para efectos vintage y especialidad"
+  },
+  "audioProduction.presetEnvironmental": {
+    "string": "Ambiental",
+    "comment": "Categoría de preset de audio para efectos ambientales"
+  },
+  "audioProduction.presetSpecialEffects": {
+    "string": "Efectos Especiales",
+    "comment": "Categoría de preset de audio para efectos especiales"
+  },
+  "audioProduction.processingStep1": {
+    "string": "1. Ruido y Limpieza",
+    "comment": "Encabezado del paso 1 de procesamiento de audio"
+  },
+  "audioProduction.processingStep2": {
+    "string": "2. Corrección de Voz",
+    "comment": "Encabezado del paso 2 de procesamiento de audio"
+  },
+  "audioProduction.processingStep3": {
+    "string": "3. Mejora de Audio",
+    "comment": "Encabezado del paso 3 de procesamiento de audio"
+  },
+  "audioProduction.processingStep4": {
+    "string": "4. Mejoras Espaciales / Estéticas",
+    "comment": "Encabezado del paso 4 de procesamiento de audio"
+  },
+  "audioProduction.processingStep5": {
+    "string": "5. Masterización",
+    "comment": "Encabezado del paso 5 de procesamiento de audio"
+  },
+  "audioProduction.highPassFilter": {
+    "string": "Filtro paso alto (70-90 Hz)",
+    "comment": "Etiqueta para la opción de procesamiento de audio de filtro paso alto"
+  },
+  "audioProduction.deClickDeEss": {
+    "string": "Eliminar clic / Eliminar sibilancia",
+    "comment": "Etiqueta para el procesamiento de audio de eliminación de clic y sibilancia"
+  },
+  "audioProduction.finalDither": {
+    "string": "Dither final (exportación 16-bit)",
+    "comment": "Etiqueta para la opción de procesamiento de audio de dither final"
+  },
+  "audioProduction.selectSegmentPrompt": {
+    "string": "Seleccione un segmento de la tabla para comenzar la producción de audio",
+    "comment": "Mensaje pidiendo al usuario que seleccione un segmento"
+  },
+  "audioProduction.noAudioSegments": {
+    "string": "No hay segmentos de audio disponibles para este capítulo",
+    "comment": "Mensaje cuando no hay segmentos de audio disponibles"
+  },
+  "audioProduction.selectChapterPrompt": {
+    "string": "Seleccione un capítulo para comenzar la producción de audio",
+    "comment": "Mensaje pidiendo al usuario que seleccione un capítulo"
+  },
+
+  "manuscript.loadingChapter": {
+    "string": "Cargando capítulo…",
+    "comment": "Mensaje de estado al cargar un capítulo"
+  },
+  "manuscript.chapterLoaded": {
+    "string": "Capítulo cargado",
+    "comment": "Mensaje de estado cuando el capítulo se carga exitosamente"
+  },
+  "manuscript.chapterNotFound": {
+    "string": "No se encontró el archivo del capítulo.",
+    "comment": "Mensaje de error cuando no se encuentra el archivo del capítulo"
+  },
+  "manuscript.autoSaving": {
+    "string": "Auto-guardando...",
+    "comment": "Mensaje de estado al guardar automáticamente cambios"
+  },
+  "manuscript.characterCount": {
+    "string": "Caracteres: {{count}}",
+    "comment": "Mostrar conteo de caracteres en el editor"
   }
 }
