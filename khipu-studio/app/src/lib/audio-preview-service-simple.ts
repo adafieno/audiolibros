@@ -223,7 +223,13 @@ export class AudioPreviewService {
             console.warn('❌ Could not find cached TTS file, falling back to raw audio');
             // Fallback: play without SoX processing
             const response = await fetch(result.audioUrl);
+            if (!response.ok) {
+              throw new Error(`Failed to fetch audio: ${response.status} ${response.statusText}`);
+            }
             const arrayBuffer = await response.arrayBuffer();
+            if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+              throw new Error('Received empty audio data from TTS service');
+            }
             this.currentBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
             await this.startPlayback(options.startTime, options.duration);
             return;
@@ -247,7 +253,13 @@ export class AudioPreviewService {
           console.warn('SoX processing failed, falling back to raw TTS:', processingError);
           // Fallback to raw TTS audio without processing
           const response = await fetch(result.audioUrl);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch fallback audio: ${response.status} ${response.statusText}`);
+          }
           const arrayBuffer = await response.arrayBuffer();
+          if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+            throw new Error('Received empty fallback audio data from TTS service');
+          }
           this.currentBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
           await this.startPlayback(options.startTime, options.duration);
           return;
@@ -258,8 +270,22 @@ export class AudioPreviewService {
 
       // Step 3: Load and play the SoX-processed audio
       if (processedAudioPath) {
-        const arrayBuffer = await window.khipu!.call('fs:readAudioFile', processedAudioPath);
-        this.currentBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+        const audioData = await window.khipu!.call('fs:readAudioFile', processedAudioPath);
+        console.log(`🎵 Received audio data type: ${audioData?.constructor?.name}, length: ${audioData?.byteLength || 'unknown'}`);
+        
+        // Ensure we have a valid ArrayBuffer
+        if (!audioData || !(audioData instanceof ArrayBuffer)) {
+          const dataType = audioData ? Object.prototype.toString.call(audioData) : 'null/undefined';
+          throw new Error(`Invalid audio data received: expected ArrayBuffer, got ${dataType}`);
+        }
+        
+        if (audioData.byteLength === 0) {
+          throw new Error('Received empty audio buffer');
+        }
+        
+        this.currentBuffer = await this.audioContext.decodeAudioData(audioData);
+      } else {
+        throw new Error('No processed audio path available');
       }
       
       // Start playback

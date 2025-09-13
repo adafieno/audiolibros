@@ -1157,7 +1157,9 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
       // Read audio file as buffer for Web Audio API
       const resolvedPath = path.resolve(filePath);
       const buffer = await fsp.readFile(resolvedPath);
-      return buffer;
+      // Convert Node.js Buffer to ArrayBuffer for Web Audio API
+      const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
+      return arrayBuffer;
     } catch (error) {
       throw new Error(`Failed to read audio file: ${error.message}`);
     }
