@@ -1638,5 +1638,142 @@
   "manuscript.characterCount": {
     "string": "Characters: {{count}}",
     "comment": "Character count display in editor"
+  },
+
+  "audioProduction.moduleTitle": {
+    "string": "Audio Production Module",
+    "comment": "Title for the audio production module panel"
+  },
+  "audioProduction.dynamicControlTitle": {
+    "string": "2. Dynamic Control",
+    "comment": "Title for dynamic control processing section"
+  },
+  "audioProduction.eqShapingTitle": {
+    "string": "3. EQ Shaping",
+    "comment": "Title for EQ shaping processing section"
+  },
+  "audioProduction.gentleCompression": {
+    "string": "Gentle compression",
+    "comment": "Label for gentle compression audio effect"
+  },
+  "audioProduction.limiterSafeguard": {
+    "string": "Limiter safeguard (-1 dBFS)",
+    "comment": "Label for limiter safeguard audio effect"
+  },
+  "audioProduction.lowMidCut": {
+    "string": "Low-mid cut (150-300 Hz)",
+    "comment": "Label for low-mid frequency cut audio effect"
+  },
+  "audioProduction.presenceBoost": {
+    "string": "Presence boost (2-5 kHz)",
+    "comment": "Label for presence boost audio effect"
+  },
+  "audioProduction.airLift": {
+    "string": "Air lift (8-12 kHz)",
+    "comment": "Label for air lift audio effect"
+  },
+  "audioProduction.subtleReverb": {
+    "string": "Subtle reverb",
+    "comment": "Label for subtle reverb audio effect"
+  },
+  "audioProduction.lowMidCutDynamic": {
+    "string": "Low-Mid Cut ({{frequency}}Hz)",
+    "comment": "Dynamic label for low-mid cut with frequency parameter"
+  },
+  "audioProduction.airLiftDynamic": {
+    "string": "Air Lift ({{frequency}}kHz)",
+    "comment": "Dynamic label for air lift with frequency parameter"
+  },
+  "audioProduction.presenceBoostDynamic": {
+    "string": "Presence Boost ({{frequency}}kHz)",
+    "comment": "Dynamic label for presence boost with frequency parameter"
+  },
+  "audioProduction.hpFilterDynamic": {
+    "string": "HP Filter ({{frequency}}Hz)",
+    "comment": "Dynamic label for high-pass filter with frequency parameter"
+  },
+  "audioProduction.deEssDynamic": {
+    "string": "De-ess ({{intensity}})",
+    "comment": "Dynamic label for de-ess with intensity parameter"
+  },
+  "audioProduction.compressionDynamic": {
+    "string": "Compression ({{ratio}})",
+    "comment": "Dynamic label for compression with ratio parameter"
+  },
+  "audioProduction.limiterDynamic": {
+    "string": "Limiter",
+    "comment": "Label for limiter effect"
+  },
+  "audioProduction.reverbDynamic": {
+    "string": "Reverb ({{wetMix}}%)",
+    "comment": "Dynamic label for reverb with wet mix percentage"
+  },
+  "audioProduction.stereoEnhance": {
+    "string": "Stereo Enhance",
+    "comment": "Label for stereo enhancement effect"
+  },
+  "audioProduction.normalizeDynamic": {
+    "string": "Normalize ({{targetLUFS}}LUFS)",
+    "comment": "Dynamic label for normalization with LUFS target"
+  },
+  "audioProduction.peakLimit": {
+    "string": "Peak Limit",
+    "comment": "Label for peak limiting effect"
+  },
+  "audioProduction.dither": {
+    "string": "Dither",
+    "comment": "Label for dithering effect"
+  },
+  "audioProduction.activeEffects": {
+    "string": "Active Effects:",
+    "comment": "Label for active audio processing effects summary"
+  },
+  "audioProduction.activeEffectsNone": {
+    "string": "None",
+    "comment": "Text when no audio processing effects are active"
+  },
+  "audioProduction.presetsDescription": {
+    "string": "Choose from 21 professional voice processing presets designed for audiobook production.",
+    "comment": "Description text for voice processing presets"
+  },
+  "audioProduction.customSettingsInstruction": {
+    "string": "Select \"{{customSettings}}\" to manually configure individual effects below.",
+    "comment": "Instruction text for accessing custom audio settings"
+  },
+  "audioProduction.voiceLabel": {
+    "string": "Voice:",
+    "comment": "Label for voice assignment in audio production"
+  },
+  "audioProduction.notAssigned": {
+    "string": "Not assigned",
+    "comment": "Text when no voice is assigned to a segment"
+  },
+  "audioProduction.segmentTitle": {
+    "string": "Segment {{chunkId}}",
+    "comment": "Title for audio segment with chunk ID"
+  },
+  "audioProduction.compressionLight": {
+    "string": "Light",
+    "comment": "Light compression option"
+  },
+  "audioProduction.compressionMedium": {
+    "string": "Medium",
+    "comment": "Medium compression option"
+  },
+  "audioProduction.compressionHeavy": {
+    "string": "Heavy",
+    "comment": "Heavy compression option"
+  },
+  "audioProduction.room03": {
+    "string": "Room (0.3s)",
+    "comment": "Room reverb with 0.3 second decay"
+  },
+  "audioProduction.room04": {
+    "string": "Room (0.4s)",
+    "comment": "Room reverb with 0.4 second decay"
+  },
+  "audioProduction.room05": {
+    "string": "Room (0.5s)",
+    "comment": "Room reverb with 0.5 second decay"
   }
 }

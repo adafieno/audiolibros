@@ -2140,5 +2140,142 @@
   "manuscript.characterCount": {
     "string": "Caracteres: {{count}}",
     "comment": "Mostrar conteo de caracteres en el editor"
+  },
+
+  "audioProduction.moduleTitle": {
+    "string": "Módulo de Producción de Audio",
+    "comment": "Título para el panel del módulo de producción de audio"
+  },
+  "audioProduction.dynamicControlTitle": {
+    "string": "2. Control Dinámico",
+    "comment": "Título para la sección de control dinámico de procesamiento"
+  },
+  "audioProduction.eqShapingTitle": {
+    "string": "3. Moldeado de EQ",
+    "comment": "Título para la sección de moldeado de ecualización"
+  },
+  "audioProduction.gentleCompression": {
+    "string": "Compresión suave",
+    "comment": "Etiqueta para el efecto de audio de compresión suave"
+  },
+  "audioProduction.limiterSafeguard": {
+    "string": "Limitador de seguridad (-1 dBFS)",
+    "comment": "Etiqueta para el efecto de audio limitador de seguridad"
+  },
+  "audioProduction.lowMidCut": {
+    "string": "Corte de medios-bajos (150-300 Hz)",
+    "comment": "Etiqueta para el efecto de audio de corte de frecuencias medios-bajos"
+  },
+  "audioProduction.presenceBoost": {
+    "string": "Realce de presencia (2-5 kHz)",
+    "comment": "Etiqueta para el efecto de audio de realce de presencia"
+  },
+  "audioProduction.airLift": {
+    "string": "Elevación de agudos (8-12 kHz)",
+    "comment": "Etiqueta para el efecto de audio de elevación de agudos"
+  },
+  "audioProduction.subtleReverb": {
+    "string": "Reverberación sutil",
+    "comment": "Etiqueta para el efecto de audio de reverberación sutil"
+  },
+  "audioProduction.lowMidCutDynamic": {
+    "string": "Corte Medios-Bajos ({{frequency}}Hz)",
+    "comment": "Etiqueta dinámica para corte de medios-bajos con parámetro de frecuencia"
+  },
+  "audioProduction.airLiftDynamic": {
+    "string": "Elevación Agudos ({{frequency}}kHz)",
+    "comment": "Etiqueta dinámica para elevación de agudos con parámetro de frecuencia"
+  },
+  "audioProduction.presenceBoostDynamic": {
+    "string": "Realce Presencia ({{frequency}}kHz)",
+    "comment": "Etiqueta dinámica para realce de presencia con parámetro de frecuencia"
+  },
+  "audioProduction.hpFilterDynamic": {
+    "string": "Filtro PA ({{frequency}}Hz)",
+    "comment": "Etiqueta dinámica para filtro pasa-altos con parámetro de frecuencia"
+  },
+  "audioProduction.deEssDynamic": {
+    "string": "Des-esibilancia ({{intensity}})",
+    "comment": "Etiqueta dinámica para des-esibilancia con parámetro de intensidad"
+  },
+  "audioProduction.compressionDynamic": {
+    "string": "Compresión ({{ratio}})",
+    "comment": "Etiqueta dinámica para compresión con parámetro de ratio"
+  },
+  "audioProduction.limiterDynamic": {
+    "string": "Limitador",
+    "comment": "Etiqueta para efecto limitador"
+  },
+  "audioProduction.reverbDynamic": {
+    "string": "Reverb ({{wetMix}}%)",
+    "comment": "Etiqueta dinámica para reverb con porcentaje de mezcla húmeda"
+  },
+  "audioProduction.stereoEnhance": {
+    "string": "Realce Estéreo",
+    "comment": "Etiqueta para efecto de realce estéreo"
+  },
+  "audioProduction.normalizeDynamic": {
+    "string": "Normalizar ({{targetLUFS}}LUFS)",
+    "comment": "Etiqueta dinámica para normalización con objetivo LUFS"
+  },
+  "audioProduction.peakLimit": {
+    "string": "Límite de Picos",
+    "comment": "Etiqueta para efecto de limitación de picos"
+  },
+  "audioProduction.dither": {
+    "string": "Dither",
+    "comment": "Etiqueta para efecto de dithering"
+  },
+  "audioProduction.activeEffects": {
+    "string": "Efectos Activos:",
+    "comment": "Etiqueta para resumen de efectos de procesamiento de audio activos"
+  },
+  "audioProduction.activeEffectsNone": {
+    "string": "Ninguno",
+    "comment": "Texto cuando no hay efectos de procesamiento de audio activos"
+  },
+  "audioProduction.presetsDescription": {
+    "string": "Elige entre 21 presets profesionales de procesamiento de voz diseñados para producción de audiolibros.",
+    "comment": "Texto de descripción para los presets de procesamiento de voz"
+  },
+  "audioProduction.customSettingsInstruction": {
+    "string": "Selecciona \"{{customSettings}}\" para configurar manualmente los efectos individuales a continuación.",
+    "comment": "Texto de instrucción para acceder a configuración de audio personalizada"
+  },
+  "audioProduction.voiceLabel": {
+    "string": "Voz:",
+    "comment": "Etiqueta para asignación de voz en producción de audio"
+  },
+  "audioProduction.notAssigned": {
+    "string": "Sin asignar",
+    "comment": "Texto cuando no hay voz asignada a un segmento"
+  },
+  "audioProduction.segmentTitle": {
+    "string": "Segmento {{chunkId}}",
+    "comment": "Título para segmento de audio con ID de fragmento"
+  },
+  "audioProduction.compressionLight": {
+    "string": "Ligera",
+    "comment": "Opción de compresión ligera"
+  },
+  "audioProduction.compressionMedium": {
+    "string": "Media",
+    "comment": "Opción de compresión media"
+  },
+  "audioProduction.compressionHeavy": {
+    "string": "Fuerte",
+    "comment": "Opción de compresión fuerte"
+  },
+  "audioProduction.room03": {
+    "string": "Sala (0.3s)",
+    "comment": "Reverberación de sala con decaimiento de 0.3 segundos"
+  },
+  "audioProduction.room04": {
+    "string": "Sala (0.4s)",
+    "comment": "Reverberación de sala con decaimiento de 0.4 segundos"
+  },
+  "audioProduction.room05": {
+    "string": "Sala (0.5s)",
+    "comment": "Reverberación de sala con decaimiento de 0.5 segundos"
   }
 }

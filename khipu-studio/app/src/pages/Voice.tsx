@@ -1027,7 +1027,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           {/* Right: Audio Production Module */}
           <div style={{ border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
             <div style={{ padding: "8px 12px", backgroundColor: "var(--panelAccent)", borderBottom: "1px solid var(--border)", fontSize: "14px", fontWeight: 500 }}>
-              Audio Production Module
+              {t("audioProduction.moduleTitle")}
             </div>
             
             <div style={{ flex: 1, padding: "12px", overflow: "auto" }}>
@@ -1039,10 +1039,10 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                       {/* Segment Info */}
                       <div style={{ padding: "12px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "4px" }}>
                         <h4 style={{ margin: "0 0 8px 0", fontSize: "14px", color: "var(--text)" }}>
-                          Segment {currentSegment.chunkId}
+                          {t("audioProduction.segmentTitle", { chunkId: currentSegment.chunkId })}
                         </h4>
                         <p style={{ margin: "0 0 8px 0", fontSize: "12px", color: "var(--textSecondary)" }}>
-                          Voice: {currentSegment.voice || "Not assigned"}
+                          {t("audioProduction.voiceLabel")} {currentSegment.voice || t("audioProduction.notAssigned")}
                         </p>
                         <div style={{ fontSize: "13px", color: "var(--text)", lineHeight: "1.4", padding: "8px", backgroundColor: "var(--input)", borderRadius: "3px" }}>
                           {currentSegment.text}
@@ -1131,28 +1131,28 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               <option value="custom">--- {t("audioProduction.customSettings")} ---</option>
                             </select>
                             <div style={{ fontSize: "10px", color: "var(--textSecondary)", fontStyle: "italic" }}>
-                              Choose from 21 professional voice processing presets designed for audiobook production. 
-                              Select "{t("audioProduction.customSettings")}" to manually configure individual effects below.
+                              {t("audioProduction.presetsDescription")} {" "}
+                              {t("audioProduction.customSettingsInstruction", { customSettings: t("audioProduction.customSettings") })}
                             </div>
                           </div>
                         </div>
                         
                         {/* Processing Summary */}
                         <div style={{ marginBottom: "12px", padding: "6px", backgroundColor: "var(--accent)", color: "white", borderRadius: "3px", fontSize: "10px" }}>
-                          <strong>Active Effects:</strong> {[
-                            currentProcessingChain.noiseCleanup.highPassFilter.enabled && `HP Filter (${currentProcessingChain.noiseCleanup.highPassFilter.frequency}Hz)`,
-                            currentProcessingChain.noiseCleanup.deClickDeEss.enabled && `De-ess (${currentProcessingChain.noiseCleanup.deClickDeEss.intensity})`,
-                            currentProcessingChain.dynamicControl.compression.enabled && `Compression (${currentProcessingChain.dynamicControl.compression.ratio})`,
-                            currentProcessingChain.dynamicControl.limiter.enabled && 'Limiter',
-                            currentProcessingChain.eqShaping.lowMidCut.enabled && `Low-Mid Cut (${currentProcessingChain.eqShaping.lowMidCut.frequency}Hz)`,
-                            currentProcessingChain.eqShaping.presenceBoost.enabled && `Presence (${currentProcessingChain.eqShaping.presenceBoost.frequency}kHz)`,
-                            currentProcessingChain.eqShaping.airLift.enabled && `Air Lift (${currentProcessingChain.eqShaping.airLift.frequency}kHz)`,
-                            currentProcessingChain.spatialEnhancement.reverb.enabled && `Reverb (${currentProcessingChain.spatialEnhancement.reverb.wetMix}%)`,
-                            currentProcessingChain.spatialEnhancement.stereoEnhancer.enabled && 'Stereo Enhance',
-                            currentProcessingChain.mastering.normalization.enabled && `Normalize (${currentProcessingChain.mastering.normalization.targetLUFS}LUFS)`,
-                            currentProcessingChain.mastering.peakLimiting.enabled && 'Peak Limit',
-                            currentProcessingChain.mastering.dithering.enabled && 'Dither'
-                          ].filter(Boolean).join(', ') || 'None'}
+                          <strong>{t("audioProduction.activeEffects")}</strong> {[
+                            currentProcessingChain.noiseCleanup.highPassFilter.enabled && t("audioProduction.hpFilterDynamic", { frequency: currentProcessingChain.noiseCleanup.highPassFilter.frequency }),
+                            currentProcessingChain.noiseCleanup.deClickDeEss.enabled && t("audioProduction.deEssDynamic", { intensity: currentProcessingChain.noiseCleanup.deClickDeEss.intensity }),
+                            currentProcessingChain.dynamicControl.compression.enabled && t("audioProduction.compressionDynamic", { ratio: currentProcessingChain.dynamicControl.compression.ratio }),
+                            currentProcessingChain.dynamicControl.limiter.enabled && t("audioProduction.limiterDynamic"),
+                            currentProcessingChain.eqShaping.lowMidCut.enabled && t("audioProduction.lowMidCutDynamic", { frequency: currentProcessingChain.eqShaping.lowMidCut.frequency }),
+                            currentProcessingChain.eqShaping.presenceBoost.enabled && t("audioProduction.presenceBoostDynamic", { frequency: currentProcessingChain.eqShaping.presenceBoost.frequency }),
+                            currentProcessingChain.eqShaping.airLift.enabled && t("audioProduction.airLiftDynamic", { frequency: currentProcessingChain.eqShaping.airLift.frequency }),
+                            currentProcessingChain.spatialEnhancement.reverb.enabled && t("audioProduction.reverbDynamic", { wetMix: currentProcessingChain.spatialEnhancement.reverb.wetMix }),
+                            currentProcessingChain.spatialEnhancement.stereoEnhancer.enabled && t("audioProduction.stereoEnhance"),
+                            currentProcessingChain.mastering.normalization.enabled && t("audioProduction.normalizeDynamic", { targetLUFS: currentProcessingChain.mastering.normalization.targetLUFS }),
+                            currentProcessingChain.mastering.peakLimiting.enabled && t("audioProduction.peakLimit"),
+                            currentProcessingChain.mastering.dithering.enabled && t("audioProduction.dither")
+                          ].filter(Boolean).join(', ') || t("audioProduction.activeEffectsNone")}
                         </div>
                         
                         {/* 1. Noise & Cleanup */}
@@ -1232,9 +1232,9 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 })}
                                 style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}
                               >
-                                <option value="light">Light</option>
-                                <option value="medium">Medium</option>
-                                <option value="heavy">Heavy</option>
+                                <option value="light">{t("audioProduction.compressionLight")}</option>
+                                <option value="medium">{t("audioProduction.compressionMedium")}</option>
+                                <option value="heavy">{t("audioProduction.compressionHeavy")}</option>
                               </select>
                             </label>
                           </div>
@@ -1243,7 +1243,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                         {/* 2. Dynamic Control */}
                         <div style={{ marginBottom: "16px", padding: "8px", backgroundColor: "var(--input)", borderRadius: "3px", border: "1px solid var(--border)" }}>
                           <h5 style={{ margin: "0 0 6px 0", fontSize: "12px", color: "var(--text)", fontWeight: 500 }}>
-                            2. Dynamic Control
+                            {t("audioProduction.dynamicControlTitle")}
                           </h5>
                           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
@@ -1263,7 +1263,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 })}
                                 style={{ accentColor: "var(--accent)" }} 
                               />
-                              <span>Gentle compression</span>
+                              <span>{t("audioProduction.gentleCompression")}</span>
                               <select 
                                 value={currentProcessingChain.dynamicControl.compression.ratio}
                                 disabled={!customSettingsEnabled}
@@ -1301,7 +1301,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 })}
                                 style={{ accentColor: "var(--accent)" }} 
                               />
-                              <span>Limiter safeguard (-1 dBFS)</span>
+                              <span>{t("audioProduction.limiterSafeguard")}</span>
                             </label>
                           </div>
                         </div>
@@ -1309,7 +1309,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                         {/* 3. EQ Shaping */}
                         <div style={{ marginBottom: "16px", padding: "8px", backgroundColor: "var(--input)", borderRadius: "3px", border: "1px solid var(--border)" }}>
                           <h5 style={{ margin: "0 0 6px 0", fontSize: "12px", color: "var(--text)", fontWeight: 500 }}>
-                            3. EQ Shaping
+                            {t("audioProduction.eqShapingTitle")}
                           </h5>
                           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
@@ -1329,7 +1329,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 })}
                                 style={{ accentColor: "var(--accent)" }} 
                               />
-                              <span>Low-mid cut (150-300 Hz)</span>
+                              <span>{t("audioProduction.lowMidCut")}</span>
                               <select 
                                 value={currentProcessingChain.eqShaping.lowMidCut.frequency}
                                 disabled={!customSettingsEnabled}
@@ -1367,7 +1367,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 })}
                                 style={{ accentColor: "var(--accent)" }} 
                               />
-                              <span>Presence boost (2-5 kHz)</span>
+                              <span>{t("audioProduction.presenceBoost")}</span>
                               <select 
                                 value={currentProcessingChain.eqShaping.presenceBoost.frequency}
                                 disabled={!customSettingsEnabled}
@@ -1405,7 +1405,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 })}
                                 style={{ accentColor: "var(--accent)" }} 
                               />
-                              <span>Air lift (8-12 kHz)</span>
+                              <span>{t("audioProduction.airLift")}</span>
                               <select 
                                 value={currentProcessingChain.eqShaping.airLift.frequency}
                                 disabled={!customSettingsEnabled}
@@ -1452,7 +1452,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 })}
                                 style={{ accentColor: "var(--accent)" }} 
                               />
-                              <span>Subtle reverb</span>
+                              <span>{t("audioProduction.subtleReverb")}</span>
                               <select 
                                 value={currentProcessingChain.spatialEnhancement.reverb.type}
                                 disabled={!customSettingsEnabled}
@@ -1468,9 +1468,9 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 })}
                                 style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}
                               >
-                                <option value="room_0.3">Room (0.3s)</option>
-                                <option value="room_0.4">Room (0.4s)</option>
-                                <option value="room_0.5">Room (0.5s)</option>
+                                <option value="room_0.3">{t("audioProduction.room03")}</option>
+                                <option value="room_0.4">{t("audioProduction.room04")}</option>
+                                <option value="room_0.5">{t("audioProduction.room05")}</option>
                               </select>
                             </label>
                             <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "10px", color: "var(--textSecondary)", paddingLeft: "24px" }}>
