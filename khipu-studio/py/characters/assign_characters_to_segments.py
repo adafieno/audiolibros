@@ -160,9 +160,16 @@ def assign_characters_to_plan_lines(
         # Prepare segments data for LLM
         segments_for_llm = []
         for line_idx, line in enumerate(lines):
-            start_char = line.get("start_char", 0)
-            end_char = line.get("end_char", 0)
-            line_text = chapter_text[start_char:end_char] if end_char <= len(chapter_text) else ""
+            # Handle both old and new plan formats
+            start_char = line.get("start_char", line.get("start_idx", 0))
+            end_char = line.get("end_char", line.get("end_idx", 0))
+            
+            # Try to get text from the line object first (new format)
+            line_text = line.get("text", "")
+            
+            # If no text in line object, extract from chapter text using positions
+            if not line_text and start_char != end_char:
+                line_text = chapter_text[start_char:end_char] if end_char <= len(chapter_text) else ""
             
             segments_for_llm.append({
                 "segment_id": f"{chunk_id}_line_{line_idx}",
