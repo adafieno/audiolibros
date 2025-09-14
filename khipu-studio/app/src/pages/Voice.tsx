@@ -141,11 +141,13 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             // Add the newly updated segment
             const currentSegment = audioSegments[selectedRowIndex];
             if (currentSegment) {
+              // Use the current format (just segment_id as string)
               processingChainMap[currentSegment.chunkId] = newChain;
               
               // Also add other segments that have custom processing chains
               audioSegments.forEach(segment => {
                 if (segment.processingChain && segment.chunkId !== currentSegment.chunkId) {
+                  // Use consistent format for all segments
                   processingChainMap[segment.chunkId] = segment.processingChain;
                 }
               });
@@ -400,10 +402,18 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           
           // Apply saved processing chains to matching segments
           setAudioSegments(prev => prev.map(segment => {
-            if (savedProcessingChains[segment.chunkId]) {
+            // Try both old format ("segment_X") and new format ("X") for backward compatibility
+            let processingChain = savedProcessingChains[segment.chunkId];
+            if (!processingChain) {
+              // Try old format with "segment_" prefix
+              processingChain = savedProcessingChains[`segment_${segment.chunkId}`];
+            }
+            
+            if (processingChain) {
+              console.log(`💾 Found processing chain for segment ${segment.chunkId} (segmentId: ${segment.segmentId})`);
               return {
                 ...segment,
-                processingChain: savedProcessingChains[segment.chunkId]
+                processingChain: processingChain
               };
             }
             return segment;
