@@ -279,85 +279,107 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       }
 
       // Handle both formats: direct array or object with chunks property
-      let chunks: PlanChunk[];
+      let segments: Segment[];
       if (Array.isArray(planData)) {
-        console.log("Plan data is direct array format, length:", planData.length);
-        chunks = planData;
+        console.log("Plan data is direct array format (segments), length:", planData.length);
+        segments = planData;
       } else if (planData && typeof planData === 'object' && 'chunks' in planData && Array.isArray((planData as { chunks: unknown }).chunks)) {
         console.log("Plan data has chunks property, length:", ((planData as { chunks: unknown[] }).chunks).length);
-        chunks = (planData as { chunks: PlanChunk[] }).chunks;
+        // Convert PlanChunk format to Segment format if needed
+        const chunks = (planData as { chunks: PlanChunk[] }).chunks;
+        segments = chunks.map((chunk, index) => ({
+          segment_id: index + 1,
+          start_idx: chunk.start_char || 0,
+          end_idx: chunk.end_char || 0,
+          delimiter: "newline",
+          voice: chunk.voice || "",
+          text: chunk.text || "",
+          originalText: chunk.text || ""
+        }));
       } else {
-        console.warn("Plan file has no valid chunks data:", planData);
+        console.warn("Plan file has no valid segments or chunks data:", planData);
         setMessage(t("audioProduction.invalidPlanData"));
         return;
       }
 
-      console.log("Plan chunks found:", chunks.length);
+      console.log("Plan segments found:", segments.length);
       
-      // Debug: Check the actual structure of the first few chunks
-      if (chunks.length > 0) {
-        console.log("🔍 First chunk keys:", Object.keys(chunks[0]));
-        console.log("🔍 First chunk sample:", {
-          ...chunks[0],
-          text: chunks[0].text?.substring(0, 50) + '...'
+      // Debug: Check the actual structure of the first few segments
+      if (segments.length > 0) {
+        console.log("🔍 First segment keys:", Object.keys(segments[0]));
+        console.log("🔍 First segment sample:", {
+          ...segments[0],
+          text: segments[0].text?.substring(0, 50) + '...'
         });
-        if (chunks.length > 1) {
-          console.log("🔍 Second chunk keys:", Object.keys(chunks[1]));
+        if (segments.length > 1) {
+          console.log("🔍 Second segment keys:", Object.keys(segments[1]));
         }
       }
 
       // Initialize audio production metadata from plan data
+      // Convert segments to chunks for the audio service (which expects PlanChunk format)
+      const chunksForAudio: PlanChunk[] = segments.map((segment) => ({
+        id: segment.segment_id.toString(),
+        text: segment.text,
+        locked: false,
+        voice: segment.voice,
+        start_char: segment.start_idx,
+        end_char: segment.end_idx
+      }));
+
       // This will create/load the audio production configuration and check existing files
-      await audioProductionService.initializeFromPlan(chapterId, chunks);
+      await audioProductionService.initializeFromPlan(chapterId, chunksForAudio);
       const completionStatus = await audioProductionService.getChapterCompletionStatus(chapterId);
 
-      // Convert plan chunks to audio segment rows with proper audio tracking
-      const segments: AudioSegmentRow[] = chunks.map((chunk, index) => {
-        // Handle missing ID by generating one based on index
-        const chunkId = chunk.id || `segment_${index + 1}`;
+      // Convert plan segments to audio segment rows with proper audio tracking
+      const audioSegmentRows: AudioSegmentRow[] = segments.map((segment, index) => {
+        const chunkId = segment.segment_id.toString();
         const segmentStatus = completionStatus.segmentStatuses.find(s => s.chunkId === chunkId);
         const audioPath = `audio/${chapterId}/${chunkId}.wav`;
         
-        console.log(`🔍 Loading chunk ${index}:`, { 
-          originalChunkId: chunk.id,
-          finalChunkId: chunkId,
+        console.log(`🔍 Loading segment ${index}:`, { 
+          segment_id: segment.segment_id,
+          chunkId: chunkId,
           chunkIdType: typeof chunkId,
-          hasOriginalId: !!chunk.id,
-          text: chunk.text?.substring(0, 50) + '...',
-          allKeys: Object.keys(chunk)
+          text: segment.text?.substring(0, 50) + '...',
+          allKeys: Object.keys(segment)
         });
         
         return {
           rowKey: `${chapterId}_${chunkId}_${index}`,
           chunkId: chunkId,
-          text: chunk.text,
-          voice: chunk.voice || "",
-          locked: chunk.locked,
-          sfxAfter: null, // Will be loaded if available
-          hasAudio: segmentStatus?.hasAudio || false, // Actual file existence check
+          text: segment.text,
+          voice: segment.voice || "",
+          locked: false, // segments don't have locked property
+          sfxAfter: null,
+          hasAudio: segmentStatus?.hasAudio || false,
           audioPath,
-          start_char: chunk.start_char,
-          end_char: chunk.end_char
+          start_char: segment.start_idx,
+          end_char: segment.end_idx
         };
       });
 
-      setAudioSegments(segments);
+      setAudioSegments(audioSegmentRows);
       
       // Load revision marks from plan data
       const revisionMarkedChunks = new Set<string>();
       if (Array.isArray(planData)) {
-        planData.forEach((segment: Segment & { needsRevision?: boolean }) => {
+        console.log(`🚩 Loading revision marks from plan data...`);
+        segments.forEach((segment: Segment & { needsRevision?: boolean }) => {
+          console.log(`🚩 Segment ${segment.segment_id}: needsRevision = ${segment.needsRevision}`);
           if (segment.needsRevision) {
             revisionMarkedChunks.add(segment.segment_id.toString());
+            console.log(`🚩 Added segment ${segment.segment_id} to revision marks`);
           }
         });
       }
+      console.log(`🚩 Loaded ${revisionMarkedChunks.size} segments marked for revision:`, Array.from(revisionMarkedChunks));
       setRevisionMarks(revisionMarkedChunks);
       
       // Ensure a segment is selected when segments are loaded
-      if (segments.length > 0) {
+      if (audioSegmentRows.length > 0) {
         setSelectedRowIndex(prev => {
-          if (prev < 0 || prev >= segments.length) {
+          if (prev < 0 || prev >= audioSegmentRows.length) {
             return 0;
           }
           return prev;
@@ -382,20 +404,20 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             return segment;
           }));
           
-          setMessage(t("audioProduction.loadedSegmentsWithChains", { segments: segments.length, chains: Object.keys(savedProcessingChains).length }));
+          setMessage(t("audioProduction.loadedSegmentsWithChains", { segments: audioSegmentRows.length, chains: Object.keys(savedProcessingChains).length }));
         } else {
-          setMessage(t("audioProduction.loadedSegmentsWithAudio", { segments: segments.length, completed: completionStatus.completedSegments }));
+          setMessage(t("audioProduction.loadedSegmentsWithAudio", { segments: audioSegmentRows.length, completed: completionStatus.completedSegments }));
         }
       } catch (error) {
         console.warn('Failed to load processing chains:', error);
-        setMessage(t("audioProduction.loadedSegmentsWithAudio", { segments: segments.length, completed: completionStatus.completedSegments }));
+        setMessage(t("audioProduction.loadedSegmentsWithAudio", { segments: audioSegmentRows.length, completed: completionStatus.completedSegments }));
       }
       
       // Update processing chain from metadata - this would set a default for all segments
       // For now, we'll comment this out to let segments manage their own chains
       // setProcessingChain(audioMetadata.globalProcessingChain);
       
-      setMessage(t("audioProduction.loadedSegmentsWithAudio", { segments: segments.length, completed: completionStatus.completedSegments }));
+      setMessage(t("audioProduction.loadedSegmentsWithAudio", { segments: audioSegmentRows.length, completed: completionStatus.completedSegments }));
     } catch (error) {
       console.error("Failed to load plan data:", error);
       setMessage(t("audioProduction.failedToLoadPlanData", { error: error instanceof Error ? error.message : 'Unknown error' }));
@@ -620,27 +642,42 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     try {
       // Load current plan data
       const planPath = `ssml/plans/${selectedChapter}.plan.json`;
+      console.log(`🚩 Saving revision mark for chunkId: ${chunkId}, marked: ${marked} to ${planPath}`);
+      
       const planData = await window.khipu!.call("fs:read", {
         projectRoot: root,
         relPath: planPath,
         json: true,
       });
 
+      console.log(`🚩 Loaded plan data:`, Array.isArray(planData) ? planData.slice(0, 2) : 'Not an array');
+
       if (Array.isArray(planData)) {
         // Update the segment with revision mark
+        let found = false;
         const updatedPlan = planData.map((segment: Segment) => {
+          console.log(`🚩 Checking segment ${segment.segment_id} (${typeof segment.segment_id}) against chunkId ${chunkId} (${typeof chunkId})`);
           if (segment.segment_id.toString() === chunkId) {
+            found = true;
+            console.log(`🚩 Found matching segment, updating revision mark to: ${marked}`);
             return { ...segment, needsRevision: marked };
           }
           return segment;
         });
 
+        if (!found) {
+          console.warn(`🚩 No segment found with chunkId: ${chunkId}`);
+          console.log(`🚩 Available segment IDs:`, planData.map(s => s.segment_id));
+        }
+
         // Save back to plan file
+        console.log(`🚩 Saving updated plan with ${updatedPlan.filter((s: Segment & { needsRevision?: boolean }) => s.needsRevision).length} marked segments`);
         await window.khipu!.call("fs:write", {
           projectRoot: root,
           relPath: planPath,
           content: JSON.stringify(updatedPlan, null, 2),
         });
+        console.log(`🚩 Successfully saved revision marks to plan file`);
       }
     } catch (error) {
       console.error("Error saving revision mark to plan:", error);
