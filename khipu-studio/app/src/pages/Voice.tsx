@@ -7,6 +7,7 @@ import AudioProductionService from "../lib/audio-production-service";
 import { AUDIO_PRESETS, getPresetsByCategory, getPresetById, type AudioPreset } from "../data/audio-presets";
 import { validateWavFile, createSfxSegment, insertSegmentAtPosition } from "../lib/additional-segments";
 import { TextDisplay } from "../components/KaraokeTextDisplay";
+import { PageHeader } from "../components/PageHeader";
 import type { PlanChunk } from "../types/plan";
 import type { AudioProcessingChain } from "../types/audio-production";
 import type { AudioSegmentRow } from "../types/audio-production";
@@ -838,19 +839,10 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
   return (
     <div style={{ padding: "16px", height: "100%", display: "flex", flexDirection: "column" }}>
-      {/* Header */}
-      <div style={{ marginBottom: "8px" }}>
-        <h2 style={{ margin: 0, fontSize: "32px", fontWeight: "bold", color: "var(--text)" }}>
-          {t("audioProduction.pageTitle")}
-        </h2>
-      </div>
-      
-      {/* Subtitle */}
-      <div style={{ marginBottom: "24px" }}>
-        <p style={{ margin: 0, fontSize: "14px", color: "var(--textSecondary)" }}>
-          {t("audioProduction.pageDescription")}
-        </p>
-      </div>
+      <PageHeader 
+        title={t("audioProduction.pageTitle")}
+        description={t("audioProduction.pageDescription")}
+      />
 
       {/* Chapter selector with integrated audio production progress */}
       <div style={{ marginBottom: "16px", padding: "16px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "6px" }}>
@@ -1311,7 +1303,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                     <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}></th>
                     <th style={{ padding: "4px", textAlign: "center", color: "var(--text)", fontWeight: 500, width: "32px" }} title={t("audioProduction.revisionStatus")}>🏳</th>
                     <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>{t("audioProduction.tableHeaderId")}</th>
-                    <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>{t("audioProduction.tableHeaderTextPreview")}</th>
                     <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>{t("audioProduction.tableHeaderVoice")}</th>
                   </tr>
                 </thead>
@@ -1356,15 +1347,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
                           <span style={{ fontWeight: 500 }}>{segment.segmentId}</span>
                           <span style={{ fontSize: "10px", color: "var(--textSecondary)" }}>#{segment.displayOrder + 1}</span>
-                        </div>
-                      </td>
-                      <td style={{ padding: "8px", color: "inherit", maxWidth: "250px" }}>
-                        <div style={{ 
-                          overflow: "hidden", 
-                          textOverflow: "ellipsis", 
-                          whiteSpace: "nowrap" 
-                        }}>
-                          {segment.text}
                         </div>
                       </td>
                       <td style={{ padding: "8px", color: "inherit", fontSize: "12px" }}>

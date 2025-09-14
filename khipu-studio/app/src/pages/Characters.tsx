@@ -5,6 +5,8 @@ import { useProject } from "../store/project";
 import { useAudioCache } from "../hooks/useAudioCache";
 import { loadProjectConfig } from "../lib/config";
 import { WorkflowCompleteButton } from "../components/WorkflowCompleteButton";
+import { PageHeader } from "../components/PageHeader";
+import StandardButton from "../components/StandardButton";
 import type { ProjectConfig } from "../types/config";
 import type { Voice as VoiceType } from "../types/voice";
 
@@ -262,46 +264,50 @@ function CharactersPage() {
 
   return (
     <div style={{ padding: "2px", maxWidth: "90%" }}>
-      <h2>{t("characters.title")}</h2>
-      <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "24px" }}>{t("characters.description")}</p>
+      <PageHeader 
+        title={t("characters.title")}
+        description={t("characters.description")}
+      />
 
       {/* Action buttons */}
       <div style={{ display: "flex", gap: "8px", marginBottom: "24px", alignItems: "center" }}>
-        <button 
+        <StandardButton 
+          variant="primary"
           onClick={runDetection} 
-          disabled={loading} 
-          style={{ padding: "6px 12px", fontSize: "14px" }}
+          disabled={loading}
+          loading={loading}
         >
           {loading ? t("characters.detecting") : t("characters.detectRefresh")}
-        </button>
+        </StandardButton>
         
-        <button 
+        <StandardButton 
+          variant="secondary"
           onClick={add} 
-          disabled={loading} 
-          style={{ padding: "6px 12px", fontSize: "14px" }}
+          disabled={loading}
         >
           {t("characters.add")}
-        </button>
+        </StandardButton>
         
         {(hasCharacterList || characters.length > 0) && (
           <>
-            <button 
+            <StandardButton 
+              variant="secondary"
               onClick={sortByFrequency} 
-              disabled={loading || characters.length === 0} 
-              style={{ padding: "6px 12px", fontSize: "14px" }}
+              disabled={loading || characters.length === 0}
             >
               {t("characters.sortByFrequency")}
-            </button>
+            </StandardButton>
             
-            <button 
+            <StandardButton 
+              variant="success"
               onClick={assignVoices} 
-              disabled={loading || characters.length === 0} 
-              style={{ padding: "6px 12px", fontSize: "14px" }}
+              disabled={loading || characters.length === 0}
+              loading={assignmentProgress !== null}
             >
               {assignmentProgress 
                 ? t("characters.assigningProgress", { percent: assignmentProgress.current }) 
                 : t("characters.assignVoices")}
-            </button>
+            </StandardButton>
             
             <WorkflowCompleteButton 
               step="characters"

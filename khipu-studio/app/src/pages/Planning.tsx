@@ -10,6 +10,7 @@ import { deleteAudioCacheEntry } from "../lib/audio-cache";
 import type { Voice as VoiceType } from "../types/voice";
 import type { Character as CharacterData } from "../types/character";
 import { costTrackingService } from "../lib/cost-tracking-service";
+import { PageHeader } from "../components/PageHeader";
 
 
 // Character types are imported from the shared types module
@@ -1650,7 +1651,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       
       // Load chapter text for LLM analysis
       setCharacterAssignmentProgress({
-        current: 10,
+        current: 5,
         total: 100,
         stage: "Reading chapter content..."
       });
@@ -1682,7 +1683,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       
       // Prepare the payload for character assignment
       setCharacterAssignmentProgress({
-        current: 30,
+        current: 15,
         total: 100,
         stage: t("planning.analysingWithAI")
       });
@@ -1702,7 +1703,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       console.log(`📋 Available characters:`, availableCharacters);
       
       setCharacterAssignmentProgress({
-        current: 50,
+        current: 25,
         total: 100,
         stage: "Calling LLM for character analysis..."
       });
@@ -2030,8 +2031,10 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
 
   return (
     <div style={{ padding: "16px", maxWidth: "1400px", height: "calc(100vh - 32px)" }}>
-      <h1 style={{ fontSize: "32px", fontWeight: "bold", color: "var(--text)", marginBottom: "8px" }}>{t("planning.title")}</h1>
-      <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "16px" }}>{t("planning.description")}</p>
+      <PageHeader 
+        title={t("planning.title")}
+        description={t("planning.description")}
+      />
 
       {/* Status message */}
       {message && !running && (
@@ -2381,7 +2384,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
                     height: "10px", 
                     borderRadius: "6px", 
                     animation: "pulse 2s ease-in-out infinite",
-                    width: "20%",
+                    width: "5%",
                     minWidth: "20px"
                   }}
                 ></div>

@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { ReactNode } from "react";
 import { useProject, type WorkflowStep } from "../../store/project";
+import { useBookMeta } from "../../hooks/useBookMeta";
 
 const STRIP_W = 88;
 const ICON_SIZE = 28;
@@ -33,6 +34,7 @@ export function AppShell(props: { title?: string; pageName?: string; projectName
   const { title, pageName, projectName, status, children } = props;
   const { t } = useTranslation();
   const { root, isStepAvailable, isStepCompleted } = useProject();
+  const { bookMeta } = useBookMeta(root || undefined);
 
   // Dynamic menu based on workflow progression:
   // - No project: [Home, Settings]
@@ -45,10 +47,14 @@ export function AppShell(props: { title?: string; pageName?: string; projectName
     ? [homeRoute, ...availableProjectRoutes, settingsRoute]
     : [homeRoute, settingsRoute];
 
-  // Compose top bar: "Khipu Studio — Page Name — Project Name"
+  // Compose top bar: "Khipu Studio — Page Name — Book Title (or Project Name)"
   let barTitle = t("app.title");
   if (pageName) barTitle += ` — ${pageName}`;
-  if (projectName) barTitle += ` — ${projectName}`;
+  
+  // Use book title if available, otherwise fall back to project name
+  const displayName = bookMeta?.title || projectName;
+  if (displayName) barTitle += ` — ${displayName}`;
+  
   if (title) barTitle = title; // fallback for legacy usage
 
   // Compose workflow status for footer
