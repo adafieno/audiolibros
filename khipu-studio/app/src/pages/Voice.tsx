@@ -1292,7 +1292,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
       {/* Main content grid - Two pane layout */}
       {selectedChapter && audioSegments.length > 0 ? (
-        <div style={{ display: "grid", gridTemplateColumns: "0.6fr 1.4fr", gap: "16px", flex: 1, minHeight: 0 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", flex: 1, minHeight: 0 }}>
           {/* Left: Audio Segments Grid */}
           <div style={{ border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
             <div style={{ padding: "8px 12px", backgroundColor: "var(--panelAccent)", borderBottom: "1px solid var(--border)", fontSize: "14px", fontWeight: 500 }}>
@@ -2028,18 +2028,18 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                       const validationResult = await validateWavFile(file);
                       if (validationResult.valid) {
                         // Create and save the SFX segment to filesystem
-                        const sfxData = {
-                          path: `sfx/${file.name}`,
-                          filename: file.name,
-                          duration: validationResult.duration || 0,
-                          validated: true
-                        };
+                        // const sfxData = {
+                        //   path: `sfx/${file.name}`,
+                        //   filename: file.name,
+                        //   duration: validationResult.duration || 0,
+                        //   validated: true
+                        // };
                         
-                        const segmentId = await audioProductionService.addSfxSegment(
-                          selectedChapter,
-                          insertPosition,
-                          sfxData
-                        );
+                        // const segmentId = await audioProductionService.addSfxSegment(
+                        //   selectedChapter,
+                        //   insertPosition,
+                        //   sfxData
+                        // );
                         
                         // Create UI segment and update state
                         const sfxSegment = createSfxSegment(
