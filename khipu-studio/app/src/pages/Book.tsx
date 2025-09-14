@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useProject } from "../store/project";
 import { WorkflowCompleteButton } from "../components/WorkflowCompleteButton";
+import { PageHeader } from "../components/PageHeader";
+import { StandardButton } from "../components/StandardButton";
 import { ImageSelector } from "../components/ImageSelector";
 
 import {
@@ -130,7 +132,10 @@ export default function Book() {
 
   return (
     <div>
-      <h2>{t("book.title")}</h2>
+      <PageHeader 
+        title="book.title"
+        description="book.description"
+      />
       {/* Basic Information */}
       <section className="mt-6">
         <h3>{t("book.basicInfo")}</h3>

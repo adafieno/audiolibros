@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import type { ReactNode } from 'react';
 
 interface PageHeaderProps {
@@ -12,6 +13,8 @@ interface PageHeaderProps {
  * Standardized page header component following the Cost page design pattern
  */
 export function PageHeader({ title, description, actions, children }: PageHeaderProps) {
+  const { t } = useTranslation();
+  
   return (
     <div style={{
       display: 'flex',
@@ -33,7 +36,7 @@ export function PageHeader({ title, description, actions, children }: PageHeader
           alignItems: 'center',
           gap: '8px'
         }}>
-          {title}
+          {t(title)}
         </h1>
         {description && (
           <p style={{
@@ -41,7 +44,7 @@ export function PageHeader({ title, description, actions, children }: PageHeader
             margin: '0',
             fontSize: '14px'
           }}>
-            {description}
+            {t(description)}
           </p>
         )}
       </div>
