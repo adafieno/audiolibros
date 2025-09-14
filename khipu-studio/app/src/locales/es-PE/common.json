@@ -39,6 +39,10 @@
     "string": "Producción de audio",
     "comment": ""
   },
+  "nav.cost": {
+    "string": "Seguimiento de Costos",
+    "comment": "Elemento del menú de navegación para seguimiento de costos de servicios de IA"
+  },
   "nav.packaging": {
     "string": "Empaquetado",
     "comment": ""

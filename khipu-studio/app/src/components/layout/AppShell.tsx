@@ -16,6 +16,7 @@ type RouteItem = {
 
 const homeRoute: RouteItem = { to: "/", key: "nav.home", icon: "🏠", exact: true };
 const settingsRoute: RouteItem = { to: "/settings", key: "nav.settings", icon: "⚙️" };
+const costRoute: RouteItem = { to: "/cost", key: "nav.cost", icon: "💰" };
 
 const projectRoutes: RouteItem[] = [
   { to: "/book",       key: "nav.book",       icon: "📖", workflowStep: "project" },
@@ -41,8 +42,8 @@ export function AppShell(props: { title?: string; pageName?: string; projectName
   );
   
   const routes: RouteItem[] = root
-    ? [homeRoute, ...availableProjectRoutes, settingsRoute]
-    : [homeRoute, settingsRoute];
+    ? [homeRoute, ...availableProjectRoutes, costRoute, settingsRoute]
+    : [homeRoute, costRoute, settingsRoute];
 
   // Compose top bar: "Khipu Studio — Page Name — Project Name"
   let barTitle = t("app.title");

@@ -10,6 +10,7 @@ import ProjectPage from "./pages/Project";
 import BookPage from "./pages/Book";
 import CastingPage from "./pages/Casting";
 import CharactersPage from "./pages/Characters";
+import CostPage from "./pages/Cost";
 import { useState } from "react";
 import { t } from "i18next";
 import { useProject } from "./store/project";
@@ -42,6 +43,7 @@ export default function App() {
         <Route path="/dossier" element={<Placeholder name={t("nav.dossier")} />} />
         <Route path="/planning" element={<PlanningPage onStatus={setStatus} />} />
         <Route path="/voice" element={<VoicePage onStatus={setStatus} />} />
+        <Route path="/cost" element={<CostPage />} />
         <Route path="/packaging" element={<Placeholder name={t("nav.packaging")} />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Routes>
@@ -61,6 +63,7 @@ function routeTitle(path: string): string {
   if (path.startsWith("/dossier")) return t("nav.dossier");
   if (path.startsWith("/planning")) return t("nav.planning");
   if (path.startsWith("/voice")) return t("nav.voice");
+  if (path.startsWith("/cost")) return t("nav.cost");
   if (path.startsWith("/packaging")) return t("nav.packaging");
   if (path.startsWith("/settings")) return t("nav.settings");
   return "";

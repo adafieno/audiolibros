@@ -39,6 +39,10 @@
     "string": "Audio Production",
     "comment": "Navigation menu item for audio production"
   },
+  "nav.cost": {
+    "string": "Cost Tracking",
+    "comment": "Navigation menu item for AI service cost tracking"
+  },
   "nav.export": {
     "string": "Export",
     "comment": "Navigation menu item for export/packaging"

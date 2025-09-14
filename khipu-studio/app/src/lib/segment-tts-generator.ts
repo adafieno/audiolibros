@@ -8,6 +8,7 @@ import type { Character } from '../types/character';
 import type { ProjectConfig } from '../types/config';
 import type { Voice } from '../types/voice';
 import { generateCachedAudition } from './audio-cache';
+import { costTrackingService } from './cost-tracking-service';
 
 export interface SegmentTTSOptions {
   segment: Segment;
@@ -116,6 +117,22 @@ export async function generateSegmentAudio(options: SegmentTTSOptions): Promise<
     }
 
     console.log(`✅ Successfully generated and cached TTS audio for segment ${segment.segment_id}`);
+    
+    // Track cost for TTS usage
+    try {
+      costTrackingService.trackTtsUsage({
+        provider: 'azure-tts', // Assuming Azure TTS based on the credentials check
+        operation: 'segment_audio_generation',
+        charactersProcessed: segmentText.length,
+        wasCached: false, // This is a new generation
+        cacheHit: false,
+        projectId: projectConfig.bookMeta?.title || 'unknown',
+        segmentId: segment.segment_id?.toString()
+      });
+    } catch (costError) {
+      console.warn('Failed to track TTS cost:', costError);
+      // Don't fail the main operation if cost tracking fails
+    }
     
     return {
       success: true,
