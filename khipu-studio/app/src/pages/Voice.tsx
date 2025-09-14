@@ -705,13 +705,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     }
   }, [audioProductionService, selectedChapter]);
 
-  const isSegmentMarkedForRevision = useCallback((segmentIndex: number): boolean => {
-    if (segmentIndex < 0 || segmentIndex >= audioSegments.length) return false;
-    const segment = audioSegments[segmentIndex];
-    // Use segmentId (the planning ID) as the key for revision marks, not chunkId
-    return revisionMarks.has(segment.segmentId.toString());
-  }, [audioSegments, revisionMarks]);
-
   const handleToggleRevisionMark = useCallback(async (segmentIndex: number) => {
     if (segmentIndex < 0 || segmentIndex >= audioSegments.length || !root || !selectedChapter) {
       return;
@@ -1026,38 +1019,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             >
               ▶|
             </button>
-
-            {/* Revision Mark Button */}
-            <button
-              onClick={() => {
-                if (selectedRowIndex >= 0 && selectedRowIndex < audioSegments.length) {
-                  handleToggleRevisionMark(selectedRowIndex);
-                }
-              }}
-              disabled={audioSegments.length === 0 || selectedRowIndex < 0}
-              style={{
-                padding: "8px 12px",
-                fontSize: "13px",
-                fontWeight: 500,
-                backgroundColor: (audioSegments.length > 0 && selectedRowIndex >= 0) ? 
-                  (isSegmentMarkedForRevision(selectedRowIndex) ? "var(--warning)" : "var(--panel)") 
-                  : "var(--muted)",
-                color: isSegmentMarkedForRevision(selectedRowIndex) ? "black" : "var(--text)",
-                border: `1px solid ${isSegmentMarkedForRevision(selectedRowIndex) ? "var(--warning)" : "var(--border)"}`,
-                borderRadius: "4px",
-                cursor: (audioSegments.length > 0 && selectedRowIndex >= 0) ? "pointer" : "not-allowed",
-                opacity: (audioSegments.length > 0 && selectedRowIndex >= 0) ? 1 : 0.5,
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-                marginLeft: "8px"
-              }}
-              title={isSegmentMarkedForRevision(selectedRowIndex) ? 
-                t("audioProduction.removeRevisionMark") : 
-                t("audioProduction.markForRevision")}
-            >
-              {isSegmentMarkedForRevision(selectedRowIndex) ? "🚩" : "🏳"}
-            </button>
           </div>
 
           <button
@@ -1294,11 +1255,26 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                         {selectedRowIndex === index ? "▶" : ""}
                       </td>
                       <td style={{ padding: "4px", textAlign: "center" }}>
-                        {revisionMarks.has(segment.segmentId.toString()) ? (
-                          <span style={{ color: "var(--warning)", fontSize: "14px" }} title={t("audioProduction.markedForRevision")}>🚩</span>
-                        ) : (
-                          <span style={{ color: "var(--muted)", fontSize: "12px" }}>•</span>
-                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleRevisionMark(index);
+                          }}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            fontSize: "14px",
+                            padding: "2px",
+                            color: revisionMarks.has(segment.segmentId.toString()) ? "var(--warning)" : "var(--muted)",
+                            opacity: revisionMarks.has(segment.segmentId.toString()) ? 1 : 0.5,
+                          }}
+                          title={revisionMarks.has(segment.segmentId.toString()) ? 
+                            t("audioProduction.removeRevisionMark") : 
+                            t("audioProduction.markForRevision")}
+                        >
+                          {revisionMarks.has(segment.segmentId.toString()) ? "🚩" : "🏳"}
+                        </button>
                       </td>
                       <td style={{ padding: "8px", color: "inherit" }}>
                         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
