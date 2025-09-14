@@ -1228,7 +1228,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               </optgroup>
                               <option value="custom">--- {t("audioProduction.customSettings")} ---</option>
                             </select>
-                            <div style={{ fontSize: "10px", color: "var(--textSecondary)", fontStyle: "italic" }}>
+                            <div style={{ fontSize: "12px", color: "var(--textSecondary)", fontStyle: "italic" }}>
                               {t("audioProduction.presetsDescription")} {" "}
                               {t("audioProduction.customSettingsInstruction", { customSettings: t("audioProduction.customSettings") })}
                             </div>
