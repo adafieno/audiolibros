@@ -120,6 +120,7 @@ export interface AuditionOptions {
   styledegree?: number;
   rate_pct?: number;
   pitch_pct?: number;
+  page?: string; // Which page initiated this audition
 }
 
 export interface AuditionResult {

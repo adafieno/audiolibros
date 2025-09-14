@@ -103,6 +103,7 @@ export default function CastingPage() {
           voice,
           config,
           text: undefined, // Will use locale-appropriate default audition text
+          page: 'casting'
         }, useCache),
         timeoutPromise
       ]);

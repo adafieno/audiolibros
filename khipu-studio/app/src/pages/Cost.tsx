@@ -1069,6 +1069,90 @@ export default function Cost() {
           </div>
         </div>
 
+        {/* Cost by Page */}
+        <div style={{
+          background: 'var(--panel)',
+          border: '1px solid var(--border)',
+          borderRadius: '8px',
+          padding: '20px'
+        }}>
+          <h3 style={{
+            fontSize: '18px',
+            fontWeight: '600',
+            marginBottom: '16px',
+            color: 'var(--text)',
+            margin: '0 0 16px 0'
+          }}>
+            {t('cost.costByPage', 'Cost by Page')}
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {Object.entries(summary.costsByPage)
+              .sort(([,a], [,b]) => b - a) // Sort by cost descending
+              .slice(0, 6)
+              .map(([page, cost], index) => {
+              const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+              const color = colors[index % colors.length];
+              const percentage = summary.totalCost > 0 ? (cost / summary.totalCost) * 100 : 0;
+              
+              // Page icons mapping
+              const pageIcons: Record<string, string> = {
+                'manuscript': '📖',
+                'casting': '🎭',
+                'characters': '👥',  
+                'orchestration': '🎼',
+                'audio_production': '🎤',
+                'planning': '📋',
+                'unknown': '❓'
+              };
+              
+              return (
+                <div key={page} style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}>
+                    <span style={{ fontSize: '14px', color: 'var(--muted)' }}>
+                      {pageIcons[page] || '📄'} {page.charAt(0).toUpperCase() + page.slice(1).replace('_', ' ')}
+                    </span>
+                    <span style={{ fontWeight: '600', color: 'var(--text)', fontSize: '14px' }}>
+                      {CostCalculator.formatCost(cost, settings.currency)}
+                    </span>
+                  </div>
+                  <div style={{
+                    width: '100%',
+                    height: '6px',
+                    background: 'var(--border)',
+                    borderRadius: '3px',
+                    overflow: 'hidden'
+                  }}>
+                    <div style={{
+                      height: '100%',
+                      background: color,
+                      borderRadius: '3px',
+                      width: `${percentage}%`,
+                      transition: 'width 0.3s ease'
+                    }}></div>
+                  </div>
+                  <div style={{
+                    fontSize: '12px',
+                    color: 'var(--muted)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}>
+                    <span>{percentage.toFixed(1)}% of total cost</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Timeline Chart */}
         <div style={{
           background: 'var(--panel)',

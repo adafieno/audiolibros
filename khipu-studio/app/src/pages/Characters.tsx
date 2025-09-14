@@ -164,7 +164,8 @@ function CharactersPage() {
         style: character.voiceAssignment.style,
         styledegree: character.voiceAssignment.styledegree,
         rate_pct: character.voiceAssignment.rate_pct,
-        pitch_pct: character.voiceAssignment.pitch_pct
+        pitch_pct: character.voiceAssignment.pitch_pct,
+        page: 'characters'
       }, useCache);
       
       console.log("🔊 Playing voice audition for", character.name);

@@ -317,6 +317,7 @@ export class CostTrackingService {
     audioSeconds?: number;
     wasCached?: boolean;
     cacheHit?: boolean;
+    page?: string;
     projectId?: string;
     chapterId?: string;
     segmentId?: string;
@@ -337,6 +338,7 @@ export class CostTrackingService {
       totalCost: cost,
       wasCached: params.wasCached || false,
       cacheHit: params.cacheHit || false,
+      page: params.page,
       projectId: params.projectId,
       chapterId: params.chapterId,
       segmentId: params.segmentId
@@ -528,6 +530,16 @@ export class CostTrackingService {
         operations: data.operations
       }))
       .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    // Page breakdown
+    const costsByPage: Record<string, number> = {};
+    for (const entry of entries) {
+      const page = entry.page || 'unknown';
+      if (!costsByPage[page]) {
+        costsByPage[page] = 0;
+      }
+      costsByPage[page] += entry.totalCost;
+    }
     
     return {
       startDate: start,
@@ -538,6 +550,7 @@ export class CostTrackingService {
       llmCosts,
       ttsCosts,
       costsByProvider,
+      costsByPage,
       totalLlmTokens,
       totalTtsCharacters,
       totalAudioSeconds,

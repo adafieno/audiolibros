@@ -401,6 +401,7 @@ export class AudioPreviewService {
               charactersProcessed: segmentText.length,
               wasCached: wasCached,
               cacheHit: wasCached,
+              page: 'audio_production',
               projectId: options.projectConfig.bookMeta?.title || 'unknown',
               segmentId: options.segmentId
             });
@@ -882,6 +883,7 @@ export class AudioPreviewService {
             charactersProcessed: segmentText.length,
             wasCached: wasCached,
             cacheHit: wasCached,
+            page: 'audio_production',
             projectId: segmentData.projectConfig.bookMeta?.title || 'unknown',
             segmentId: segmentData.segmentId
           });

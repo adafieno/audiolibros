@@ -423,6 +423,7 @@ export async function generateCachedAudition(
             charactersProcessed: segmentText.length,
             wasCached: true,
             cacheHit: true,
+            page: options.page || 'unknown',
             projectId: options.config.bookMeta?.title || 'unknown',
             segmentId: `audition_${options.voice.id}`
           });
@@ -495,6 +496,7 @@ export async function generateCachedAudition(
           charactersProcessed: segmentText.length,
           wasCached: false,
           cacheHit: false,
+          page: options.page || 'unknown',
           projectId: options.config.bookMeta?.title || 'unknown',
           segmentId: `audition_${options.voice.id}`
         });

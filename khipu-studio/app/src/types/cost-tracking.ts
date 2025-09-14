@@ -7,6 +7,18 @@
 export type ServiceType = 'llm' | 'tts';
 
 /**
+ * Application pages/modules that can incur costs
+ */
+export type CostPage = 
+  | 'manuscript'
+  | 'casting' 
+  | 'characters'
+  | 'orchestration'
+  | 'audio_production'
+  | 'planning'
+  | 'unknown';
+
+/**
  * Specific AI provider/model
  */
 export type ServiceProvider = 
@@ -44,7 +56,8 @@ export interface CostEntry {
   cacheHit?: boolean; // If this was a cache hit (no cost incurred)
   originalCost?: number; // What it would have cost without cache
   
-  // Metadata
+  // Context information
+  page?: string; // Which page/module initiated this cost (e.g., 'manuscript', 'casting', 'characters', 'orchestration', 'audio_production')
   projectId?: string;
   chapterId?: string;
   segmentId?: string;
@@ -105,6 +118,9 @@ export interface CostSummary {
   
   // Breakdown by provider
   costsByProvider: Record<ServiceProvider, number>;
+  
+  // Breakdown by page/module
+  costsByPage: Record<string, number>;
   
   // Usage metrics
   totalLlmTokens: number;
