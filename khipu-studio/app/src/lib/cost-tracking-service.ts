@@ -254,8 +254,10 @@ export class CostTrackingService {
     
     // Handle cache savings
     if (costEntry.wasCached && costEntry.cacheHit) {
+      // For cache hits, store what the cost would have been as originalCost
       costEntry.originalCost = costEntry.totalCost;
-      costEntry.totalCost = 0; // No cost for cache hits
+      costEntry.totalCost = 0; // No actual cost for cache hits
+      console.log(`💾 Cache hit - saved ${CostCalculator.formatCost(costEntry.originalCost)}`);
     }
     
     this.costEntries.push(costEntry);
@@ -413,6 +415,14 @@ export class CostTrackingService {
     const totalCacheHits = cacheHits.length;
     const totalCacheMisses = cachedEntries.length - totalCacheHits;
     const cacheHitRate = cachedEntries.length > 0 ? (totalCacheHits / cachedEntries.length) * 100 : 0;
+    
+    console.log(`📊 Cache stats debug:`, {
+      totalEntries: entries.length,
+      cachedEntries: cachedEntries.length,
+      cacheHits: totalCacheHits,
+      cacheMisses: totalCacheMisses,
+      cacheHitRate: cacheHitRate.toFixed(1) + '%'
+    });
     
     // Top operations by cost
     const operationCosts: Record<string, { cost: number; count: number }> = {};

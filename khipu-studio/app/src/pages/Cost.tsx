@@ -277,32 +277,6 @@ export default function Cost() {
             🔄 {t('cost.refresh', 'Refresh')}
           </button>
           
-          {/* Test Button (for debugging) */}
-          <button
-            onClick={() => {
-              console.log('🧪 Test cost tracking triggered');
-              // Access the test method through the service instance
-              const service = costTrackingService as any;
-              service.trackTestCost();
-            }}
-            style={{
-              padding: '8px 16px',
-              background: 'var(--panel)',
-              color: 'var(--text)',
-              border: '1px solid var(--accent)',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              transition: 'all 0.2s ease'
-            }}
-            title="Add test cost entry for debugging"
-          >
-            🧪 Test
-          </button>
-          
           {/* Settings Button */}
           <button
             onClick={() => setShowSettings(!showSettings)}
@@ -321,6 +295,61 @@ export default function Cost() {
             }}
           >
             ⚙️ {t('cost.settings', 'Settings')}
+          </button>
+
+          {/* Export Button */}
+          <button
+            onClick={() => {
+              const data = costTrackingService.exportData();
+              const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `khipu-cost-data-${new Date().toISOString().split('T')[0]}.json`;
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            style={{
+              padding: '8px 16px',
+              background: 'var(--panel)',
+              color: 'var(--text)',
+              border: '1px solid var(--border)',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              transition: 'all 0.2s ease'
+            }}
+            title={t('cost.exportData', 'Export cost data as JSON')}
+          >
+            📄 {t('cost.exportData', 'Export')}
+          </button>
+          
+          {/* Clear Button */}
+          <button
+            onClick={() => {
+              if (confirm(t('cost.clearDataConfirm', 'Are you sure you want to clear all cost data? This action cannot be undone.'))) {
+                costTrackingService.clearAllEntries();
+              }
+            }}
+            style={{
+              padding: '8px 16px',
+              background: '#ef4444',
+              color: 'white',
+              border: '1px solid #ef4444',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              transition: 'all 0.2s ease'
+            }}
+            title={t('cost.clearData', 'Clear all cost data')}
+          >
+            🗑️ {t('cost.clearData', 'Clear')}
           </button>
         </div>
       </div>
@@ -943,77 +972,6 @@ export default function Cost() {
         )}
       </div>
 
-      {/* Actions */}
-      <div style={{
-        display: 'flex',
-        gap: '12px',
-        flexWrap: 'wrap'
-      }}>
-        <button
-          onClick={() => {
-            const data = costTrackingService.exportData();
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `khipu-cost-data-${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-          }}
-          style={{
-            padding: '10px 16px',
-            background: 'var(--panel)',
-            color: 'var(--text)',
-            border: '1px solid var(--border)',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            transition: 'all 0.2s ease'
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.background = 'var(--border)';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.background = 'var(--panel)';
-          }}
-        >
-          📄 {t('cost.exportData', 'Export Data')}
-        </button>
-        
-        <button
-          onClick={() => {
-            if (confirm(t('cost.clearDataConfirm', 'Are you sure you want to clear all cost data? This action cannot be undone.'))) {
-              costTrackingService.clearAllEntries();
-              // No need to call loadData() - the subscription will handle it automatically
-            }
-          }}
-          style={{
-            padding: '10px 16px',
-            background: '#ef4444',
-            color: 'white',
-            border: '1px solid #ef4444',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            transition: 'all 0.2s ease'
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.background = '#dc2626';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.background = '#ef4444';
-          }}
-        >
-          🗑️ {t('cost.clearData', 'Clear Data')}
-        </button>
-      </div>
-      
       </div>
     </>
   );
