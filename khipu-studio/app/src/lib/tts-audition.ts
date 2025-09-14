@@ -126,6 +126,7 @@ export interface AuditionResult {
   success: boolean;
   audioUrl?: string;
   error?: string;
+  wasCached?: boolean; // Indicates if result came from cache
 }
 
 /**

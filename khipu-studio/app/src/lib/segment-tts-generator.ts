@@ -120,12 +120,15 @@ export async function generateSegmentAudio(options: SegmentTTSOptions): Promise<
     
     // Track cost for TTS usage
     try {
+      const wasCached = auditionResult.wasCached === true;
+      console.log(`📊 Tracking TTS cost - wasCached: ${wasCached}, characters: ${segmentText.length}`);
+      
       costTrackingService.trackTtsUsage({
         provider: 'azure-tts', // Assuming Azure TTS based on the credentials check
         operation: 'segment_audio_generation',
         charactersProcessed: segmentText.length,
-        wasCached: false, // This is a new generation
-        cacheHit: false,
+        wasCached: wasCached,
+        cacheHit: wasCached,
         projectId: projectConfig.bookMeta?.title || 'unknown',
         segmentId: segment.segment_id?.toString()
       });

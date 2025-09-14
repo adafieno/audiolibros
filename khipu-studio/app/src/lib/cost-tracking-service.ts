@@ -75,6 +75,47 @@ export class CostTrackingService {
       await this.loadFromFileSystem();
     }
   }
+
+  /**
+   * Force reload data from file system (useful for refreshing after external changes)
+   */
+  async reloadFromFileSystem(): Promise<void> {
+    await this.loadFromFileSystem();
+  }
+
+  /**
+   * Test method for debugging - track a test cost entry
+   */
+  trackTestCost(): void {
+    console.log('🧪 Tracking test cost entry...');
+    console.log(`📂 Current project root: ${this.currentProjectRoot}`);
+    console.log(`📊 Current entries count: ${this.costEntries.length}`);
+    
+    if (!this.currentProjectRoot) {
+      console.error('❌ No project root set! Cannot track cost.');
+      // For debugging, let's try to set a temporary project root
+      console.log('🔧 Attempting to get project root from window...');
+      
+      // Try to get project root from any available source
+      const tempRoot = 'C:\\temp\\test-project'; // Fallback for testing
+      console.log(`🔧 Using temporary project root: ${tempRoot}`);
+      this.currentProjectRoot = tempRoot;
+    }
+
+    try {
+      this.trackTtsUsage({
+        provider: 'azure-tts',
+        operation: 'test_operation',
+        charactersProcessed: 100,
+        wasCached: false,
+        cacheHit: false,
+        projectId: 'test_project',
+        segmentId: 'test_segment'
+      });
+    } catch (error) {
+      console.error('❌ Test cost tracking failed:', error);
+    }
+  }
   
   /**
    * Load data from file system
@@ -218,6 +259,8 @@ export class CostTrackingService {
     }
     
     this.costEntries.push(costEntry);
+    console.log(`📊 Cost entry added - Total entries now: ${this.costEntries.length}`);
+    console.log(`💾 Saving to file system at: ${this.currentProjectRoot}/${this.COST_DATA_FILE}`);
     this.saveToFileSystem();
     
     console.log(`💰 Cost tracked: ${CostCalculator.formatCost(costEntry.totalCost)} for ${entry.operation}`);

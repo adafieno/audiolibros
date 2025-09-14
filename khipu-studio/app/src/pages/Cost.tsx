@@ -14,6 +14,10 @@ import { CostCalculator } from '../types/cost-tracking';
 export default function Cost() {
   const { t } = useTranslation();
   const { root } = useProject();
+  
+  // Debug project root
+  console.log('🔍 Cost component - project root from useProject():', root);
+  
   const [summary, setSummary] = useState<CostSummary | null>(null);
   const [settings, setSettings] = useState<CostSettings | null>(null);
   const [selectedTimeRange, setSelectedTimeRange] = useState<'7d' | '30d' | '90d' | 'all'>('30d');
@@ -65,8 +69,17 @@ export default function Cost() {
 
   // Load data on component mount and when time range changes
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    const loadDataWithRefresh = async () => {
+      if (root) {
+        // Force reload from file system to catch any external changes
+        console.log('🔄 Reloading cost data from file system...');
+        await costTrackingService.reloadFromFileSystem();
+      }
+      loadData();
+    };
+    
+    loadDataWithRefresh();
+  }, [loadData, root]);
 
   // Subscribe to cost data changes for real-time updates
   useEffect(() => {
@@ -107,6 +120,44 @@ export default function Cost() {
             margin: '0 auto 16px'
           }}></div>
           <p style={{ color: 'var(--muted)' }}>{t('cost.loading')}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!root) {
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '200px',
+        color: 'var(--text)'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ color: 'var(--text)', fontSize: '18px', marginBottom: '8px' }}>No project loaded</p>
+          <p style={{ color: 'var(--muted)', fontSize: '14px' }}>Please open a project first to view cost tracking.</p>
+          <button
+            onClick={() => {
+              console.log('🔧 Manual project root test');
+              const testRoot = 'C:\\projects\\audiobooks\\projects\\test_7';
+              console.log(`Setting test project root: ${testRoot}`);
+              costTrackingService.setProjectRoot(testRoot);
+              loadData();
+            }}
+            style={{
+              marginTop: '16px',
+              padding: '8px 16px',
+              background: 'var(--accent)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            🧪 Test with sample project
+          </button>
         </div>
       </div>
     );
@@ -197,6 +248,60 @@ export default function Cost() {
             <option value="90d">{t('cost.timeRange.90d', 'Last 90 days')}</option>
             <option value="all">{t('cost.timeRange.all', 'All time')}</option>
           </select>
+          
+          {/* Refresh Button */}
+          <button
+            onClick={async () => {
+              console.log('🔄 Manual refresh triggered');
+              if (root) {
+                setIsLoading(true);
+                await costTrackingService.reloadFromFileSystem();
+                loadData();
+              }
+            }}
+            style={{
+              padding: '8px 16px',
+              background: 'var(--panel)',
+              color: 'var(--text)',
+              border: '1px solid var(--border)',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              transition: 'all 0.2s ease'
+            }}
+            title={t('cost.refresh', 'Refresh data from files')}
+          >
+            🔄 {t('cost.refresh', 'Refresh')}
+          </button>
+          
+          {/* Test Button (for debugging) */}
+          <button
+            onClick={() => {
+              console.log('🧪 Test cost tracking triggered');
+              // Access the test method through the service instance
+              const service = costTrackingService as any;
+              service.trackTestCost();
+            }}
+            style={{
+              padding: '8px 16px',
+              background: 'var(--panel)',
+              color: 'var(--text)',
+              border: '1px solid var(--accent)',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              transition: 'all 0.2s ease'
+            }}
+            title="Add test cost entry for debugging"
+          >
+            🧪 Test
+          </button>
           
           {/* Settings Button */}
           <button

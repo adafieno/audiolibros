@@ -385,6 +385,7 @@ export async function generateCachedAudition(
       return {
         success: true,
         audioUrl: cachedUrl,
+        wasCached: true, // Mark as cache hit
       };
     }
   } catch (cacheError) {
@@ -421,6 +422,9 @@ export async function generateCachedAudition(
         console.warn("⚠️ Failed to cache result:", cacheError);
         // Continue execution even if caching fails
       }
+      
+      // Mark as new generation (not cached)
+      result.wasCached = false;
     } else {
       console.error("❌ TTS generation failed:", result.error);
     }
