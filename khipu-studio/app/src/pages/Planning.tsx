@@ -711,6 +711,9 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
   // Use the new audio cache hook
   const { isPlaying: isAudioPlaying, isLoading: isAudioLoading, playAudition, stopAudio } = useAudioCache();
 
+  // Revision marks tracking (segment_id -> marked)
+  const [revisionMarks, setRevisionMarks] = useState<Set<string>>(new Set());
+
   const gridRef = useRef<HTMLDivElement | null>(null);
 
   // Undo functionality
@@ -741,6 +744,134 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
   }, [historyIndex, segmentHistory, t]);
 
   const canUndo = historyIndex >= 0;
+
+  // Revision mark functions
+  const saveRevisionToPlanFile = useCallback(async (segmentIdStr: string, marked: boolean) => {
+    if (!root || !selectedChapter) return;
+
+    try {
+      const planPath = `ssml/plans/${selectedChapter}.plan.json`;
+      console.log(`🚩 [Planning] Saving revision mark for segmentId: ${segmentIdStr}, marked: ${marked} to ${planPath}`);
+      
+      const planData = await window.khipu!.call("fs:read", {
+        projectRoot: root,
+        relPath: planPath,
+        json: true,
+      });
+
+      if (Array.isArray(planData)) {
+        let found = false;
+        const updatedPlan = planData.map((segment: Segment & { needsRevision?: boolean }) => {
+          if (segment.segment_id.toString() === segmentIdStr) {
+            found = true;
+            console.log(`🚩 [Planning] Found matching segment, updating revision mark to: ${marked}`);
+            return { ...segment, needsRevision: marked };
+          }
+          return segment;
+        });
+
+        if (!found) {
+          console.warn(`🚩 [Planning] No segment found with segmentId: ${segmentIdStr}`);
+        }
+
+        // Save back to plan file
+        await window.khipu!.call("fs:write", {
+          projectRoot: root,
+          relPath: planPath,
+          content: JSON.stringify(updatedPlan, null, 2),
+        });
+        console.log(`🚩 [Planning] Successfully saved revision marks to plan file`);
+      }
+    } catch (error) {
+      console.error("Error saving revision mark to plan:", error);
+      throw error;
+    }
+  }, [root, selectedChapter]);
+
+  const isSegmentMarkedForRevision = useCallback((segmentId: number): boolean => {
+    return revisionMarks.has(segmentId.toString());
+  }, [revisionMarks]);
+
+  const handleToggleRevisionMark = useCallback(async (segmentId: number) => {
+    if (!root || !selectedChapter) return;
+
+    const segmentIdStr = segmentId.toString();
+    const isCurrentlyMarked = revisionMarks.has(segmentIdStr);
+    
+    console.log(`🚩 [Planning] Toggling revision mark for segmentId: ${segmentId}, currently marked: ${isCurrentlyMarked}`);
+
+    try {
+      // Update local state immediately for UI responsiveness  
+      setRevisionMarks(prev => {
+        const newMarks = new Set(prev);
+        if (isCurrentlyMarked) {
+          newMarks.delete(segmentIdStr);
+        } else {
+          newMarks.add(segmentIdStr);
+        }
+        return newMarks;
+      });
+
+      // Save revision mark to plan file
+      await saveRevisionToPlanFile(segmentIdStr, !isCurrentlyMarked);
+
+      setMessage(isCurrentlyMarked 
+        ? t("audioProduction.revisionMarkRemoved")
+        : t("audioProduction.revisionMarkAdded"));
+
+    } catch (error) {
+      console.error("Error updating revision mark:", error);
+      // Revert local state on error
+      setRevisionMarks(prev => {
+        const newMarks = new Set(prev);
+        if (isCurrentlyMarked) {
+          newMarks.add(segmentIdStr);
+        } else {
+          newMarks.delete(segmentIdStr);
+        }
+        return newMarks;
+      });
+      setMessage(t("audioProduction.revisionMarkError"));
+    }
+  }, [root, selectedChapter, revisionMarks, t, saveRevisionToPlanFile]);
+
+  const loadRevisionMarksFromPlan = useCallback(async () => {
+    if (!root || !selectedChapter) return;
+
+    try {
+      const planPath = `ssml/plans/${selectedChapter}.plan.json`;
+      const planData = await window.khipu!.call("fs:read", {
+        projectRoot: root,
+        relPath: planPath,
+        json: true,
+      });
+
+      const revisionMarkedSegments = new Set<string>();
+      if (Array.isArray(planData)) {
+        console.log(`🚩 [Planning] Loading revision marks from plan data...`);
+        planData.forEach((segment: Segment & { needsRevision?: boolean }) => {
+          if (segment.needsRevision) {
+            revisionMarkedSegments.add(segment.segment_id.toString());
+            console.log(`🚩 [Planning] Added segment ${segment.segment_id} to revision marks`);
+          }
+        });
+      }
+      console.log(`🚩 [Planning] Loaded ${revisionMarkedSegments.size} segments marked for revision:`, Array.from(revisionMarkedSegments));
+      setRevisionMarks(revisionMarkedSegments);
+    } catch (error) {
+      console.error("Error loading revision marks:", error);
+    }
+  }, [root, selectedChapter]);
+
+  // Clear revision marks when changing chapters
+  useEffect(() => {
+    if (selectedChapter) {
+      console.log(`🚩 [Planning] Chapter changed to ${selectedChapter}, clearing revision marks`);
+      setRevisionMarks(new Set());
+      // Load revision marks for the new chapter
+      loadRevisionMarksFromPlan();
+    }
+  }, [selectedChapter, loadRevisionMarksFromPlan]);
 
   // Check status of a specific chapter
   const checkChapterStatus = useCallback(async (chapterId: string): Promise<ChapterStatus> => {
@@ -1027,6 +1158,9 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
           await cleanupStaleCache(segmentsWithOriginal);
           
           setSegments(segmentsWithOriginal);
+          
+          // Load revision marks after segments are loaded
+          await loadRevisionMarksFromPlan();
         } else {
           console.log(`📋 UNKNOWN FORMAT - setting to null`);
           setSegments(null);
@@ -1044,7 +1178,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       console.warn(`Failed to load chapter ${chapterId} data:`, error);
       setMessage(`Failed to load chapter ${chapterId} data.`);
     }
-  }, [root, cleanupStaleCache]);
+  }, [root, cleanupStaleCache, loadRevisionMarksFromPlan]);
 
   // Job event handling for plan generation
   useEffect(() => {
@@ -2221,6 +2355,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
                   <thead style={{ position: "sticky", top: 0, backgroundColor: "var(--panel)", borderBottom: "1px solid var(--border)" }}>
                     <tr style={{ textAlign: "left" }}>
                       <th style={{ padding: "8px 6px" }}></th>
+                      <th style={{ padding: "4px", textAlign: "center", width: "32px" }} title={t("audioProduction.revisionStatus")}>🏳</th>
                       <th style={{ padding: "8px 6px" }}>id</th>
                       <th style={{ padding: "8px 6px" }}>{t("planning.table.delim")}</th>
                       <th style={{ padding: "8px 6px" }}>{t("planning.table.start")}</th>
@@ -2242,6 +2377,28 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
                         }}
                       >
                         <td style={{ padding: "4px 6px", color: i === selIndex ? "white" : "var(--muted)" }}>{i === selIndex ? "▶" : ""}</td>
+                        <td style={{ padding: "4px", textAlign: "center" }}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleRevisionMark(r.segmentId);
+                            }}
+                            style={{
+                              background: "none",
+                              border: "none",
+                              cursor: "pointer",
+                              fontSize: "14px",
+                              padding: "2px",
+                              color: isSegmentMarkedForRevision(r.segmentId) ? "var(--warning)" : "var(--muted)",
+                              opacity: isSegmentMarkedForRevision(r.segmentId) ? 1 : 0.5,
+                            }}
+                            title={isSegmentMarkedForRevision(r.segmentId) ? 
+                              t("audioProduction.removeRevisionMark") : 
+                              t("audioProduction.markForRevision")}
+                          >
+                            {isSegmentMarkedForRevision(r.segmentId) ? "🚩" : "🏳"}
+                          </button>
+                        </td>
                         <td style={{ padding: "4px 6px", whiteSpace: "nowrap" }}>{r.segmentId}</td>
                         <td style={{ padding: "4px 6px", textAlign: "center" }}>{r.delimiter}</td>
                         <td style={{ padding: "4px 6px", textAlign: "right" }}>{r.start}</td>
