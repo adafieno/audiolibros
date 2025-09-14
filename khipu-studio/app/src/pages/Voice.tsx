@@ -26,7 +26,9 @@ interface ChapterStatus {
 
 interface AudioSegmentRow {
   rowKey: string;
-  chunkId: string;
+  segmentId: number; // The actual segment ID from planning - this is the source of truth for correlation
+  displayOrder: number; // The display order in the voice interface (0-based index)
+  chunkId: string; // String representation of segmentId for compatibility with existing systems
   text: string;
   voice: string;
   locked: boolean;
@@ -339,6 +341,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         
         console.log(`🔍 Loading segment ${index}:`, { 
           segment_id: segment.segment_id,
+          displayOrder: index,
           chunkId: chunkId,
           chunkIdType: typeof chunkId,
           text: segment.text?.substring(0, 50) + '...',
@@ -347,7 +350,9 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         
         return {
           rowKey: `${chapterId}_${chunkId}_${index}`,
-          chunkId: chunkId,
+          segmentId: segment.segment_id, // The actual segment ID - source of truth for correlation
+          displayOrder: index, // Current display order (0-based)
+          chunkId: chunkId, // String representation for compatibility
           text: segment.text,
           voice: segment.voice || "",
           locked: false, // segments don't have locked property
@@ -636,13 +641,13 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   }, [audioPreview]);
 
   // Revision mark helper functions
-  const saveRevisionToPlan = useCallback(async (chunkId: string, marked: boolean) => {
+  const saveRevisionToPlan = useCallback(async (segmentIdStr: string, marked: boolean) => {
     if (!root || !selectedChapter) return;
 
     try {
       // Load current plan data
       const planPath = `ssml/plans/${selectedChapter}.plan.json`;
-      console.log(`🚩 Saving revision mark for chunkId: ${chunkId}, marked: ${marked} to ${planPath}`);
+      console.log(`🚩 Saving revision mark for segmentId: ${segmentIdStr}, marked: ${marked} to ${planPath}`);
       
       const planData = await window.khipu!.call("fs:read", {
         projectRoot: root,
@@ -653,20 +658,20 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       console.log(`🚩 Loaded plan data:`, Array.isArray(planData) ? planData.slice(0, 2) : 'Not an array');
 
       if (Array.isArray(planData)) {
-        // Update the segment with revision mark
+        // Update the segment with revision mark - match by segment_id
         let found = false;
         const updatedPlan = planData.map((segment: Segment) => {
-          console.log(`🚩 Checking segment ${segment.segment_id} (${typeof segment.segment_id}) against chunkId ${chunkId} (${typeof chunkId})`);
-          if (segment.segment_id.toString() === chunkId) {
+          console.log(`🚩 Checking segment ${segment.segment_id} (${typeof segment.segment_id}) against segmentId ${segmentIdStr} (${typeof segmentIdStr})`);
+          if (segment.segment_id.toString() === segmentIdStr) {
             found = true;
-            console.log(`🚩 Found matching segment, updating revision mark to: ${marked}`);
+            console.log(`🚩 Found matching segment by ID, updating revision mark to: ${marked}`);
             return { ...segment, needsRevision: marked };
           }
           return segment;
         });
 
         if (!found) {
-          console.warn(`🚩 No segment found with chunkId: ${chunkId}`);
+          console.warn(`🚩 No segment found with segmentId: ${segmentIdStr}`);
           console.log(`🚩 Available segment IDs:`, planData.map(s => s.segment_id));
         }
 
@@ -703,7 +708,8 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   const isSegmentMarkedForRevision = useCallback((segmentIndex: number): boolean => {
     if (segmentIndex < 0 || segmentIndex >= audioSegments.length) return false;
     const segment = audioSegments[segmentIndex];
-    return revisionMarks.has(segment.chunkId);
+    // Use segmentId (the planning ID) as the key for revision marks, not chunkId
+    return revisionMarks.has(segment.segmentId.toString());
   }, [audioSegments, revisionMarks]);
 
   const handleToggleRevisionMark = useCallback(async (segmentIndex: number) => {
@@ -712,24 +718,29 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     }
 
     const segment = audioSegments[segmentIndex];
-    const isCurrentlyMarked = revisionMarks.has(segment.chunkId);
+    // Use segmentId as the correlation key - this ensures proper mapping with planning data
+    const segmentIdStr = segment.segmentId.toString();
+    const isCurrentlyMarked = revisionMarks.has(segmentIdStr);
+    
+    console.log(`🚩 Toggling revision mark for segment at displayOrder ${segmentIndex}, segmentId: ${segment.segmentId}, currently marked: ${isCurrentlyMarked}`);
     
     try {
       // Update local state immediately for UI responsiveness
       setRevisionMarks(prev => {
         const newMarks = new Set(prev);
         if (isCurrentlyMarked) {
-          newMarks.delete(segment.chunkId);
+          newMarks.delete(segmentIdStr);
         } else {
-          newMarks.add(segment.chunkId);
+          newMarks.add(segmentIdStr);
         }
         return newMarks;
       });
 
       // Save revision mark to both planning data and audio metadata
+      // Pass the actual segmentId, not the chunkId
       await Promise.all([
-        saveRevisionToPlan(segment.chunkId, !isCurrentlyMarked),
-        saveRevisionToAudioMetadata(segment.chunkId, !isCurrentlyMarked)
+        saveRevisionToPlan(segmentIdStr, !isCurrentlyMarked),
+        saveRevisionToAudioMetadata(segment.chunkId, !isCurrentlyMarked) // Audio metadata still uses chunkId for file operations
       ]);
 
       setMessage(isCurrentlyMarked 
@@ -742,9 +753,9 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       setRevisionMarks(prev => {
         const newMarks = new Set(prev);
         if (isCurrentlyMarked) {
-          newMarks.add(segment.chunkId);
+          newMarks.add(segmentIdStr);
         } else {
-          newMarks.delete(segment.chunkId);
+          newMarks.delete(segmentIdStr);
         }
         return newMarks;
       });
@@ -1283,14 +1294,17 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                         {selectedRowIndex === index ? "▶" : ""}
                       </td>
                       <td style={{ padding: "4px", textAlign: "center" }}>
-                        {revisionMarks.has(segment.chunkId) ? (
+                        {revisionMarks.has(segment.segmentId.toString()) ? (
                           <span style={{ color: "var(--warning)", fontSize: "14px" }} title={t("audioProduction.markedForRevision")}>🚩</span>
                         ) : (
                           <span style={{ color: "var(--muted)", fontSize: "12px" }}>•</span>
                         )}
                       </td>
                       <td style={{ padding: "8px", color: "inherit" }}>
-                        {segment.chunkId || '(missing)'}
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+                          <span style={{ fontWeight: 500 }}>{segment.segmentId}</span>
+                          <span style={{ fontSize: "10px", color: "var(--textSecondary)" }}>#{segment.displayOrder + 1}</span>
+                        </div>
                       </td>
                       <td style={{ padding: "8px", color: "inherit", maxWidth: "250px" }}>
                         <div style={{ 
