@@ -267,57 +267,57 @@ function CharactersPage() {
       <PageHeader 
         title={t("characters.title")}
         description={t("characters.description")}
-      />
-
-      {/* Action buttons */}
-      <div style={{ display: "flex", gap: "8px", marginBottom: "24px", alignItems: "center" }}>
-        <StandardButton 
-          variant="primary"
-          onClick={runDetection} 
-          disabled={loading}
-          loading={loading}
-        >
-          {loading ? t("characters.detecting") : t("characters.detectRefresh")}
-        </StandardButton>
-        
-        <StandardButton 
-          variant="secondary"
-          onClick={add} 
-          disabled={loading}
-        >
-          {t("characters.add")}
-        </StandardButton>
-        
-        {(hasCharacterList || characters.length > 0) && (
-          <>
+        actions={
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <StandardButton 
+              variant="primary"
+              onClick={runDetection} 
+              disabled={loading}
+              loading={loading}
+            >
+              {loading ? t("characters.detecting") : t("characters.detectRefresh")}
+            </StandardButton>
+            
             <StandardButton 
               variant="secondary"
-              onClick={sortByFrequency} 
-              disabled={loading || characters.length === 0}
+              onClick={add} 
+              disabled={loading}
             >
-              {t("characters.sortByFrequency")}
+              {t("characters.add")}
             </StandardButton>
             
-            <StandardButton 
-              variant="success"
-              onClick={assignVoices} 
-              disabled={loading || characters.length === 0}
-              loading={assignmentProgress !== null}
-            >
-              {assignmentProgress 
-                ? t("characters.assigningProgress", { percent: assignmentProgress.current }) 
-                : t("characters.assignVoices")}
-            </StandardButton>
-            
-            <WorkflowCompleteButton 
-              step="characters"
-              disabled={loading || characters.length === 0}
-            >
-              {t("characters.markComplete")}
-            </WorkflowCompleteButton>
-          </>
-        )}
-      </div>
+            {(hasCharacterList || characters.length > 0) && (
+              <>
+                <StandardButton 
+                  variant="secondary"
+                  onClick={sortByFrequency} 
+                  disabled={loading || characters.length === 0}
+                >
+                  {t("characters.sortByFrequency")}
+                </StandardButton>
+                
+                <StandardButton 
+                  variant="success"
+                  onClick={assignVoices} 
+                  disabled={loading || characters.length === 0}
+                  loading={assignmentProgress !== null}
+                >
+                  {assignmentProgress 
+                    ? t("characters.assigningProgress", { percent: assignmentProgress.current }) 
+                    : t("characters.assignVoices")}
+                </StandardButton>
+                
+                <WorkflowCompleteButton 
+                  step="characters"
+                  disabled={loading || characters.length === 0}
+                >
+                  {t("characters.markComplete")}
+                </WorkflowCompleteButton>
+              </>
+            )}
+          </div>
+        }
+      />
 
       {assignmentProgress && (
         <div style={{ 
@@ -704,39 +704,42 @@ function CharactersPage() {
                   <div style={{ marginTop: "8px", display: "flex", gap: "8px" }}>
                     {/* Audition button - only show if voice is assigned */}
                     {c.voiceAssignment && (
-                      <button
-                        onClick={() => handleAudition(c.id)}
-                        disabled={auditioningVoices.has(c.voiceAssignment.voiceId)}
-                        style={{
-                          padding: "4px 8px",
-                          fontSize: "12px",
-                          backgroundColor: auditioningVoices.has(c.voiceAssignment.voiceId) ? "#6b7280" : "#3b82f6",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: auditioningVoices.has(c.voiceAssignment.voiceId) ? "not-allowed" : "pointer",
-                          opacity: auditioningVoices.has(c.voiceAssignment.voiceId) ? 0.6 : 1
+                      <StandardButton
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleAudition(c.id);
                         }}
+                        disabled={auditioningVoices.has(c.voiceAssignment.voiceId)}
+                        size="compact"
                       >
-                        {auditioningVoices.has(c.voiceAssignment.voiceId) ? t("common.playing") : t("common.audition")}
-                      </button>
+                        {auditioningVoices.has(c.voiceAssignment.voiceId) ? (
+                          <>
+                            <span style={{ 
+                              display: "inline-block", 
+                              width: "12px", 
+                              height: "12px", 
+                              border: "2px solid currentColor", 
+                              borderTop: "2px solid transparent", 
+                              borderRadius: "50%", 
+                              animation: "spin 1s linear infinite" 
+                            }}></span>
+                            {t("casting.audition.loading")}
+                          </>
+                        ) : (
+                          <>🎵 {t("casting.audition.button")}</>
+                        )}
+                      </StandardButton>
                     )}
                     
                     {/* Remove button */}
-                    <button
+                    <StandardButton
                       onClick={() => remove(c.id)}
-                      style={{
-                        padding: "4px 8px",
-                        fontSize: "12px",
-                        backgroundColor: "var(--error)",
-                        color: "var(--btn-fg)",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: "pointer"
-                      }}
+                      variant="danger"
+                      size="compact"
                     >
                       {t("characters.remove")}
-                    </button>
+                    </StandardButton>
                   </div>
                 </div>
               </div>

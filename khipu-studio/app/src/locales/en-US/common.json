@@ -1181,6 +1181,10 @@
     "string": "Save",
     "comment": "Button text to save character data"
   },
+  "characters.frequency": {
+    "string": "Frequency",
+    "comment": "Label for character frequency percentage"
+  },
   "characters.markComplete": {
     "string": "Mark Complete",
     "comment": "Button text to mark characters step complete"
