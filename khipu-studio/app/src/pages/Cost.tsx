@@ -32,6 +32,42 @@ export default function Cost() {
     return settings ? CostCalculator.formatCost(cost, settings.currency, currentLocale) : '$0.0000';
   };
 
+  // Helper function for locale-aware number formatting
+  const formatNumber = (num: number, options: Intl.NumberFormatOptions = {}) => {
+    return new Intl.NumberFormat(currentLocale, options).format(num);
+  };
+
+  // Helper function for pluralization support
+  const formatCount = (count: number, singularKey: string, pluralKey: string, singularFallback: string, pluralFallback: string) => {
+    // Use react-i18next's built-in pluralization
+    return count === 1 
+      ? t(singularKey, singularFallback)
+      : t(pluralKey, pluralFallback);
+  };
+
+  // Helper function for page name translation
+  const getPageDisplayName = (page: string): string => {
+    const pageKeys: Record<string, string> = {
+      'book': t('nav.book', 'Book'),
+      'project': t('nav.project', 'Project'),
+      'manuscript': t('nav.manuscript', 'Manuscript'),
+      'casting': t('nav.casting', 'Casting'),
+      'characters': t('nav.characters', 'Characters'),
+      'planning': t('nav.planning', 'Orchestration'),
+      'voice': t('nav.voice', 'Audio Production'),
+      'packaging': t('nav.packaging', 'Packaging'),
+      'cost': t('nav.cost', 'Cost Tracking'),
+      'settings': t('nav.settings', 'Settings'),
+      'home': t('nav.home', 'Home'),
+      // Legacy mappings for old page names
+      'orchestration': t('nav.planning', 'Orchestration'),
+      'audio_production': t('nav.voice', 'Audio Production'),
+      'chapter_planning': t('nav.planning', 'Orchestration'),
+      'unknown': t('cost.unknown', 'Unknown')
+    };
+    return pageKeys[page] || t('cost.unknown', 'Unknown');
+  };
+
   // Friendly names for operations
   const getOperationDisplayName = (operation: string): string => {
     const operationNames: Record<string, string> = {
@@ -865,14 +901,14 @@ export default function Cost() {
                 color: 'var(--text)',
                 margin: '0'
               }}>
-                {Math.round(summary.totalLlmTokens / 1000)}{t('cost.units.kTokens', 'K tokens')}
+                {formatNumber(Math.round(summary.totalLlmTokens / 1000))}{t('cost.units.kTokens', 'K tokens')}
               </p>
               <p style={{
                 fontSize: '14px',
                 color: 'var(--muted)',
                 margin: '4px 0 0 0'
               }}>
-                {Math.round(summary.totalTtsCharacters / 1000)}{t('cost.units.kCharacters', 'K characters')}
+                {formatNumber(Math.round(summary.totalTtsCharacters / 1000))}{t('cost.units.kCharacters', 'K characters')}
               </p>
             </div>
             <div style={{
@@ -924,7 +960,7 @@ export default function Cost() {
                 🤖 {t('cost.llmServices', 'LLM Services')}
               </span>
               <span style={{ fontWeight: '600', color: 'var(--text)' }}>
-                {CostCalculator.formatCost(summary.llmCosts, settings.currency)}
+                {formatCost(summary.llmCosts)}
               </span>
             </div>
             <div style={{
@@ -951,7 +987,7 @@ export default function Cost() {
                 🔊 {t('cost.ttsServices', 'TTS Services')}
               </span>
               <span style={{ fontWeight: '600', color: 'var(--text)' }}>
-                {CostCalculator.formatCost(summary.ttsCosts, settings.currency)}
+                {formatCost(summary.ttsCosts)}
               </span>
             </div>
             <div style={{
@@ -1013,7 +1049,7 @@ export default function Cost() {
                     color: 'var(--muted)',
                     margin: '2px 0 0 0'
                   }}>
-                    {operation.count} {t('cost.calls', 'calls')}
+                    {formatNumber(operation.count)} {formatCount(operation.count, 'cost.call', 'cost.call_plural', 'call', 'calls')}
                   </p>
                 </div>
                 <span style={{
@@ -1022,7 +1058,7 @@ export default function Cost() {
                   color: 'var(--text)',
                   marginLeft: '8px'
                 }}>
-                  {CostCalculator.formatCost(operation.cost, settings.currency)}
+                  {formatCost(operation.cost)}
                 </span>
               </div>
             ))}
@@ -1074,7 +1110,7 @@ export default function Cost() {
                       🧩 {module.module}
                     </span>
                     <span style={{ fontWeight: '600', color: 'var(--text)', fontSize: '14px' }}>
-                      {CostCalculator.formatCost(module.cost, settings.currency)}
+                      {formatCost(module.cost)}
                     </span>
                   </div>
                   <div style={{
@@ -1172,10 +1208,10 @@ export default function Cost() {
                     alignItems: 'center'
                   }}>
                     <span style={{ fontSize: '14px', color: 'var(--muted)' }}>
-                      {pageIcons[page] || '📄'} {page.charAt(0).toUpperCase() + page.slice(1).replace('_', ' ')}
+                      {pageIcons[page] || '📄'} {getPageDisplayName(page)}
                     </span>
                     <span style={{ fontWeight: '600', color: 'var(--text)', fontSize: '14px' }}>
-                      {CostCalculator.formatCost(cost, settings.currency)}
+                      {formatCost(cost)}
                     </span>
                   </div>
                   <div style={{
@@ -1315,9 +1351,9 @@ export default function Cost() {
                           }}
                         >
                           <div>{day.date.toLocaleDateString()}</div>
-                          <div>{t('cost.total', 'Total')}: {CostCalculator.formatCost(day.cost, settings.currency)}</div>
+                          <div>{t('cost.total', 'Total')}: {formatCost(day.cost)}</div>
                           <div>{t('cost.operations', 'Operations')}: {day.operations}</div>
-                          {day.savings > 0 && <div>{t('cost.saved', 'Saved')}: {CostCalculator.formatCost(day.savings, settings.currency)}</div>}
+                          {day.savings > 0 && <div>{t('cost.saved', 'Saved')}: {formatCost(day.savings)}</div>}
                         </div>
                       </div>
                     );
@@ -1358,13 +1394,13 @@ export default function Cost() {
                 </div>
                 <div>
                   <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)' }}>
-                    {Math.round(summary.dailyCosts.reduce((sum, day) => sum + day.operations, 0) / summary.dailyCosts.length)}
+                    {formatNumber(Math.round(summary.dailyCosts.reduce((sum, day) => sum + day.operations, 0) / summary.dailyCosts.length))}
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{t('cost.avgOpsPerDay', 'Avg Ops/Day')}</div>
                 </div>
                 <div>
                   <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)' }}>
-                    {CostCalculator.formatCost(summary.dailyCosts.reduce((sum, day) => sum + day.cost, 0) / summary.dailyCosts.length, settings.currency)}
+                    {formatCost(summary.dailyCosts.reduce((sum, day) => sum + day.cost, 0) / summary.dailyCosts.length)}
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{t('cost.avgCostPerDay', 'Avg Cost/Day')}</div>
                 </div>
@@ -1412,14 +1448,14 @@ export default function Cost() {
               color: '#10b981',
               margin: '0'
             }}>
-              {summary.totalCacheHits}
+              {formatNumber(summary.totalCacheHits)}
             </p>
             <p style={{
               fontSize: '14px',
               color: 'var(--muted)',
               margin: '4px 0 0 0'
             }}>
-              {t('cost.cacheHits', 'Cache Hits')}
+              {formatCount(summary.totalCacheHits, 'cost.cacheHit', 'cost.cacheHit_plural', 'Cache Hit', 'Cache Hits')}
             </p>
           </div>
           <div style={{ textAlign: 'center' }}>
@@ -1429,14 +1465,14 @@ export default function Cost() {
               color: '#ef4444',
               margin: '0'
             }}>
-              {summary.totalCacheMisses}
+              {formatNumber(summary.totalCacheMisses)}
             </p>
             <p style={{
               fontSize: '14px',
               color: 'var(--muted)',
               margin: '4px 0 0 0'
             }}>
-              {t('cost.cacheMisses', 'Cache Misses')}
+              {formatCount(summary.totalCacheMisses, 'cost.cacheMiss', 'cost.cacheMiss_plural', 'Cache Miss', 'Cache Misses')}
             </p>
           </div>
           <div style={{ textAlign: 'center' }}>
@@ -1473,8 +1509,8 @@ export default function Cost() {
               lineHeight: '1.5'
             }}>
               💡 <strong>{t('cost.smartCachingImpact', 'Smart Caching Impact')}:</strong> {t('cost.savingsMessage', `You've saved {{savings}} thanks to intelligent caching! Without caching, your total cost would have been {{totalWithSavings}}.`, {
-                savings: CostCalculator.formatCost(summary.estimatedSavingsFromCache, settings.currency),
-                totalWithSavings: CostCalculator.formatCost(summary.totalCost + summary.estimatedSavingsFromCache, settings.currency)
+                savings: formatCost(summary.estimatedSavingsFromCache),
+                totalWithSavings: formatCost(summary.totalCost + summary.estimatedSavingsFromCache)
               })}
             </p>
           </div>

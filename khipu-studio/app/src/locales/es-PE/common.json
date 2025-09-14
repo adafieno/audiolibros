@@ -2815,5 +2815,33 @@
   "cost.pricing.openaiTts": {
     "string": "OpenAI TTS (por 1K caracteres)",
     "comment": "Etiqueta para configuración de precios de caracteres de OpenAI TTS"
+  },
+  "cost.unknown": {
+    "string": "Desconocido",
+    "comment": "Etiqueta para página u operación desconocida"
+  },
+  "cost.cacheHit": {
+    "string": "Acierto de Caché",
+    "comment": "Forma singular para conteo de aciertos de caché"
+  },
+  "cost.cacheHit_plural": {
+    "string": "Aciertos de Caché",
+    "comment": "Forma plural para conteo de aciertos de caché"
+  },
+  "cost.cacheMiss": {
+    "string": "Fallo de Caché",
+    "comment": "Forma singular para conteo de fallos de caché"
+  },
+  "cost.cacheMiss_plural": {
+    "string": "Fallos de Caché",
+    "comment": "Forma plural para conteo de fallos de caché"
+  },
+  "cost.call": {
+    "string": "llamada",
+    "comment": "Forma singular para conteo de llamadas de API"
+  },
+  "cost.call_plural": {
+    "string": "llamadas",
+    "comment": "Forma plural para conteo de llamadas de API"
   }
 }
