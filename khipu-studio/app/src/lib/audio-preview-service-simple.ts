@@ -562,7 +562,7 @@ export class AudioPreviewService {
     
     console.log('🎵 [AudioService] Set isPlaying = true, calling notifyStateChange...');
     this.notifyStateChange();
-    // this.startTimeUpdates(); // Temporarily disabled to debug
+    this.startTimeUpdates(); // Start time updates for progress bar
   }
 
   /**
@@ -664,11 +664,18 @@ export class AudioPreviewService {
   private startTimeUpdates(): void {
     this.stopTimeUpdates(); // Ensure no duplicate intervals
     
+    let lastReportedTime = -1;
+    
     this.timeUpdateInterval = window.setInterval(() => {
       if (this.isPlaying) {
-        this.notifyStateChange();
+        const currentTime = this.getCurrentTime();
+        // Only update if time has changed by at least 0.1 seconds to reduce excessive notifications
+        if (Math.abs(currentTime - lastReportedTime) >= 0.1) {
+          lastReportedTime = currentTime;
+          this.notifyStateChange();
+        }
       }
-    }, 100); // Update every 100ms for smooth progress
+    }, 100); // Check every 100ms but only notify when time changes significantly
   }
 
   /**
