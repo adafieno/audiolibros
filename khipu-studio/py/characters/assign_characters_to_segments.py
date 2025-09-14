@@ -431,9 +431,23 @@ def main():
         
         print(f"📄 Loaded plan file: {plan_file_path}", file=sys.stderr)
         
-        # Validate plan format
-        if not isinstance(plan_data, dict) or "chunks" not in plan_data:
-            raise ValueError(f"Invalid plan file format. Expected chunks/lines structure, got: {type(plan_data)}")
+        # Validate plan format - handle both old (chunks) and new (flat array) formats
+        was_flat_format = False
+        if isinstance(plan_data, list):
+            # New format: flat array of segments
+            print(f"📊 Plan format: new flat array with {len(plan_data)} segments", file=sys.stderr)
+            was_flat_format = True
+            # Convert to old format for compatibility
+            plan_data = {
+                "chunks": [{
+                    "lines": [segment]
+                } for segment in plan_data]
+            }
+        elif isinstance(plan_data, dict) and "chunks" in plan_data:
+            # Old format: chunks structure
+            print(f"📊 Plan format: legacy chunks structure with {len(plan_data.get('chunks', []))} chunks", file=sys.stderr)
+        else:
+            raise ValueError(f"Invalid plan file format. Expected chunks structure or flat segment array, got: {type(plan_data)}")
         
         print(f"📊 Plan format validated: {len(plan_data.get('chunks', []))} chunks", file=sys.stderr)
         
@@ -445,6 +459,16 @@ def main():
             llm_model=llm_model,
             force_reassign=True
         )
+        
+        # Convert back to flat format if original was flat
+        if was_flat_format:
+            # Extract segments from chunks back to flat array
+            flat_segments = []
+            for chunk in updated_plan.get("chunks", []):
+                for line in chunk.get("lines", []):
+                    flat_segments.append(line)
+            updated_plan = flat_segments
+            print(f"📊 Converted back to flat format: {len(flat_segments)} segments", file=sys.stderr)
         
         # Save updated plan file
         with open(plan_file_path, 'w', encoding='utf-8') as f:
