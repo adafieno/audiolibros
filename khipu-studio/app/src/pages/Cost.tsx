@@ -378,7 +378,10 @@ export default function Cost() {
           <button
             onClick={() => {
               const csvData = costTrackingService.exportDataAsCsv(t);
-              const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+              // Add UTF-8 BOM to ensure proper encoding in spreadsheet applications
+              const bom = '\uFEFF';
+              const csvWithBom = bom + csvData;
+              const blob = new Blob([csvWithBom], { type: 'text/csv;charset=utf-8;' });
               const url = URL.createObjectURL(blob);
               const a = document.createElement('a');
               a.href = url;
