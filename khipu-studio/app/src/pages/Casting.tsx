@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useProject } from "../store/project";
 import { WorkflowCompleteButton } from "../components/WorkflowCompleteButton";
+import { PageHeader } from "../components/PageHeader";
 import { loadProjectConfig } from "../lib/config";
 import { loadVoiceInventory, saveVoiceInventory } from "../lib/voice";
 import { 
@@ -199,8 +200,10 @@ export default function CastingPage() {
 
   return (
     <div style={{ padding: "2px", maxWidth: "90%" }}>
-      <h2>{t("casting.title")}</h2>
-      <p>{t("casting.description")}</p>
+      <PageHeader 
+        title="casting.title"
+        description="casting.description"
+      />
 
       {/* Voice Selection */}
       <section>

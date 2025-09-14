@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { PageHeader } from "../components/PageHeader";
 import { loadAppConfig, saveAppConfig } from "../lib/config";
 import type { AppConfig, Theme } from "../types/config";
 import LangSelector from "../components/LangSelector";
@@ -37,8 +38,10 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <h2>{t("settings.title")}</h2>
-      <p>{t("settings.description")}</p>
+      <PageHeader 
+        title="settings.title"
+        description="settings.description"
+      />
 
       <section style={{ marginTop: 16 }}>
         <label style={{ display: "block", marginBottom: 8 }}>{t("settings.theme")}</label>

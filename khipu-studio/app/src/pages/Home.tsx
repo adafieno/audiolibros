@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useProject } from "../store/project";
 import { bootstrapVoiceInventory } from "../lib/voice";
 import { bootstrapProjectFiles } from "../lib/project-bootstrap";
+import { PageHeader } from "../components/PageHeader";
 import type { ProjectConfig, BookMeta } from "../types/config";
 
 type RecentItem = { 
@@ -246,15 +247,13 @@ export default function Home() {
 
   return (
     <div style={{ padding: "16px", maxWidth: "100%" }}>
+      <PageHeader 
+        title={t("home.existingProjects")}
+        description={t("home.instructions")}
+      />
+      
       {/* Open existing */}
       <section style={{ marginBottom: "32px" }}>
-        <h2 style={{ fontSize: "24px", fontWeight: "bold", color: "var(--text)", marginBottom: "8px" }}>
-          {t("home.existingProjects")}
-        </h2>
-        <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "16px" }}>
-          {t("home.instructions")}
-        </p>
-        
         {loading ? (
           <div style={{ 
             textAlign: "center", 

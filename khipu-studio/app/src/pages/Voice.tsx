@@ -8,6 +8,7 @@ import { AUDIO_PRESETS, getPresetsByCategory, getPresetById, type AudioPreset } 
 import { validateWavFile, createSfxSegment, insertSegmentAtPosition } from "../lib/additional-segments";
 import { TextDisplay } from "../components/KaraokeTextDisplay";
 import { PageHeader } from "../components/PageHeader";
+import { StandardButton } from "../components/StandardButton";
 import type { PlanChunk } from "../types/plan";
 import type { AudioProcessingChain } from "../types/audio-production";
 import type { AudioSegmentRow } from "../types/audio-production";
@@ -932,26 +933,18 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           borderRadius: "4px"
         }}>
           {/* Generation Controls */}
-          <button
+          <StandardButton
+            variant="primary"
             onClick={handleGenerateChapterAudio}
             disabled={audioSegments.length === 0}
             style={{
-              padding: "10px 16px",
-              fontSize: "13px",
-              fontWeight: 500,
-              backgroundColor: audioSegments.length > 0 ? "var(--accent)" : "var(--muted)",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: audioSegments.length > 0 ? "pointer" : "not-allowed",
-              opacity: audioSegments.length > 0 ? 1 : 0.6,
               display: "flex",
               alignItems: "center",
               gap: "6px"
             }}
           >
             {t("audioProduction.generateChapterAudio")}
-          </button>
+          </StandardButton>
 
           {/* Separator */}
           <div style={{ 
@@ -969,7 +962,8 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             borderRadius: "6px",
             padding: "2px"
           }}>
-            <button
+            <StandardButton
+              variant="primary"
               onClick={async () => {
                 if (selectedRowIndex > 0) {
                   const newIndex = selectedRowIndex - 1;
@@ -979,40 +973,21 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                 }
               }}
               disabled={audioSegments.length === 0 || selectedRowIndex <= 0 || audioPreview.isLoading}
+              title={t("audioProduction.previousSegment")}
               style={{
-                padding: "8px 10px",
-                fontSize: "13px",
-                fontWeight: 500,
-                backgroundColor: (audioSegments.length > 0 && selectedRowIndex > 0 && !audioPreview.isLoading) ? "var(--accent)" : "var(--muted)",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: (audioSegments.length > 0 && selectedRowIndex > 0 && !audioPreview.isLoading) ? "pointer" : "not-allowed",
-                opacity: (audioSegments.length > 0 && selectedRowIndex > 0 && !audioPreview.isLoading) ? 1 : 0.5,
                 display: "flex",
                 alignItems: "center",
                 gap: "4px"
               }}
-              title={t("audioProduction.previousSegment")}
             >
               |◀
-            </button>
+            </StandardButton>
 
-            <button
+            <StandardButton
+              variant={audioPreview.isPlaying && audioPreview.playbackState.segmentId === audioSegments[selectedRowIndex]?.chunkId ? "warning" : "primary"}
               onClick={() => handlePlaySegment(selectedRowIndex)}
               disabled={audioSegments.length === 0 || audioPreview.isLoading}
               style={{
-                padding: "8px 14px",
-                fontSize: "13px",
-                fontWeight: 500,
-                backgroundColor: audioSegments.length > 0 ? 
-                  (audioPreview.isPlaying && audioPreview.playbackState.segmentId === audioSegments[selectedRowIndex]?.chunkId ? "var(--warning)" : "var(--accent)") 
-                  : "var(--muted)",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: (audioSegments.length > 0 && !audioPreview.isLoading) ? "pointer" : "not-allowed",
-                opacity: (audioSegments.length > 0 && !audioPreview.isLoading) ? 1 : 0.5,
                 display: "flex",
                 alignItems: "center",
                 gap: "6px",
@@ -1023,9 +998,10 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               {audioPreview.isLoading ? `⏳ ${t("audioProduction.loading")}` :
                audioPreview.isPlaying && audioPreview.playbackState.segmentId === audioSegments[selectedRowIndex]?.chunkId ? `⏸ ${t("audioProduction.pause")}` :
                `▶ ${t("audioProduction.play")}`}
-            </button>
+            </StandardButton>
 
-            <button
+            <StandardButton
+              variant="primary"
               onClick={async () => {
                 if (selectedRowIndex < audioSegments.length - 1) {
                   const newIndex = selectedRowIndex + 1;
@@ -1035,24 +1011,15 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                 }
               }}
               disabled={audioSegments.length === 0 || selectedRowIndex >= audioSegments.length - 1 || audioPreview.isLoading}
+              title={t("audioProduction.nextSegment")}
               style={{
-                padding: "8px 10px",
-                fontSize: "13px",
-                fontWeight: 500,
-                backgroundColor: (audioSegments.length > 0 && selectedRowIndex < audioSegments.length - 1 && !audioPreview.isLoading) ? "var(--accent)" : "var(--muted)",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: (audioSegments.length > 0 && selectedRowIndex < audioSegments.length - 1 && !audioPreview.isLoading) ? "pointer" : "not-allowed",
-                opacity: (audioSegments.length > 0 && selectedRowIndex < audioSegments.length - 1 && !audioPreview.isLoading) ? 1 : 0.5,
                 display: "flex",
                 alignItems: "center",
                 gap: "4px"
               }}
-              title={t("audioProduction.nextSegment")}
             >
               ▶|
-            </button>
+            </StandardButton>
           </div>
 
           <button

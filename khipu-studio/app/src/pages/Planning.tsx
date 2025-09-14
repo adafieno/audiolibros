@@ -1650,12 +1650,6 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       }
       
       // Load chapter text for LLM analysis
-      setCharacterAssignmentProgress({
-        current: 5,
-        total: 100,
-        stage: "Reading chapter content..."
-      });
-      
       let chapterText = "";
       try {
         const textResult = await window.khipu!.call("fs:read", {
@@ -1682,12 +1676,6 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       }
       
       // Prepare the payload for character assignment
-      setCharacterAssignmentProgress({
-        current: 15,
-        total: 100,
-        stage: t("planning.analysingWithAI")
-      });
-      
       // TODO: This will be the payload for the IPC call when the backend service is implemented
       /*
       const payload = {
@@ -1701,12 +1689,6 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       
       console.log(`🤖 Starting LLM character assignment for chapter ${selectedChapter}${segments ? ` (${segments.length} existing segments)` : ' (no existing plans)'}`);
       console.log(`📋 Available characters:`, availableCharacters);
-      
-      setCharacterAssignmentProgress({
-        current: 25,
-        total: 100,
-        stage: "Calling LLM for character analysis..."
-      });
       
       // Call the Python script for LLM-based character assignment
       const assignmentPayload = {

@@ -4,6 +4,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useProject } from '../store/project';
+import { StandardButton } from '../components/StandardButton';
 import type { CostSummary, CostSettings } from '../types/cost-tracking';
 import { costTrackingService } from '../lib/cost-tracking-service';
 import { CostCalculator } from '../types/cost-tracking';
@@ -214,7 +215,8 @@ export default function Cost() {
         <div style={{ textAlign: 'center' }}>
           <p style={{ color: 'var(--text)', fontSize: '18px', marginBottom: '8px' }}>{t('cost.noProjectLoaded', 'No project loaded')}</p>
           <p style={{ color: 'var(--muted)', fontSize: '14px' }}>{t('cost.openProjectFirst', 'Please open a project first to view cost tracking.')}</p>
-          <button
+          <StandardButton
+            variant="primary"
             onClick={() => {
               console.log('🔧 Manual project root test');
               const testRoot = 'C:\\projects\\audiobooks\\projects\\test_7';
@@ -223,18 +225,11 @@ export default function Cost() {
               loadData();
             }}
             style={{
-              marginTop: '16px',
-              padding: '8px 16px',
-              background: 'var(--accent)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px'
+              marginTop: '16px'
             }}
           >
             🧪 Test with sample project
-          </button>
+          </StandardButton>
         </div>
       </div>
     );
@@ -327,7 +322,8 @@ export default function Cost() {
           </select>
           
           {/* Refresh Button */}
-          <button
+          <StandardButton
+            variant="secondary"
             onClick={async () => {
               console.log('🔄 Manual refresh triggered');
               if (root) {
@@ -336,46 +332,32 @@ export default function Cost() {
                 loadData();
               }
             }}
+            title={t('cost.refresh', 'Refresh data from files')}
             style={{
-              padding: '8px 16px',
-              background: 'var(--panel)',
-              color: 'var(--text)',
-              border: '1px solid var(--border)',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
-              transition: 'all 0.2s ease'
+              gap: '6px'
             }}
-            title={t('cost.refresh', 'Refresh data from files')}
           >
             🔄 {t('cost.refresh', 'Refresh')}
-          </button>
+          </StandardButton>
           
           {/* Settings Button */}
-          <button
+          <StandardButton
+            variant={showSettings ? 'primary' : 'secondary'}
             onClick={() => setShowSettings(!showSettings)}
             style={{
-              padding: '8px 16px',
-              background: showSettings ? 'var(--accent)' : 'var(--panel)',
-              color: showSettings ? 'white' : 'var(--text)',
-              border: '1px solid var(--border)',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
-              transition: 'all 0.2s ease'
+              gap: '6px'
             }}
           >
             ⚙️ {t('cost.settings', 'Settings')}
-          </button>
+          </StandardButton>
 
           {/* Export Button */}
-          <button
+          <StandardButton
+            variant="secondary"
             onClick={() => {
               const csvData = costTrackingService.exportDataAsCsv(t);
               // Add UTF-8 BOM to ensure proper encoding in spreadsheet applications
@@ -389,48 +371,33 @@ export default function Cost() {
               a.click();
               URL.revokeObjectURL(url);
             }}
+            title={t('cost.exportData', 'Export cost data as CSV')}
             style={{
-              padding: '8px 16px',
-              background: 'var(--panel)',
-              color: 'var(--text)',
-              border: '1px solid var(--border)',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
-              transition: 'all 0.2s ease'
+              gap: '6px'
             }}
-            title={t('cost.exportData', 'Export cost data as CSV')}
           >
             📄 {t('cost.exportData', 'Export')}
-          </button>
+          </StandardButton>
           
           {/* Clear Button */}
-          <button
+          <StandardButton
+            variant="danger"
             onClick={() => {
               if (confirm(t('cost.clearDataConfirm', 'Are you sure you want to clear all cost data? This action cannot be undone.'))) {
                 costTrackingService.clearAllEntries();
               }
             }}
+            title={t('cost.clearData', 'Clear all cost data')}
             style={{
-              padding: '8px 16px',
-              background: '#ef4444',
-              color: 'white',
-              border: '1px solid #ef4444',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
-              transition: 'all 0.2s ease'
+              gap: '6px'
             }}
-            title={t('cost.clearData', 'Clear all cost data')}
           >
             🗑️ {t('cost.clearData', 'Clear')}
-          </button>
+          </StandardButton>
         </div>
       </div>
 

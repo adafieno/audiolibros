@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useProject } from "../store/project";
 import { WorkflowCompleteButton } from "../components/WorkflowCompleteButton";
+import { PageHeader } from "../components/PageHeader";
 import { costTrackingService } from "../lib/cost-tracking-service";
 
 type ChapterItem = {
@@ -103,9 +104,10 @@ export default function ManuscriptPage() {
   return (
     <>
       <div>
-        <section style={{ marginTop: 16 }}>
-          <h2>{t("manu.title")}</h2>
-        </section>
+        <PageHeader 
+          title={t("manu.title")}
+          description={t("manu.description")}
+        />
         
         {/* Toolbar */}
         <section style={{ marginTop: 16, marginBottom: 16 }}>

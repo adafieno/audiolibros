@@ -3,6 +3,7 @@ import type { ChangeEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useProject } from "../store/project";
 import { WorkflowCompleteButton } from "../components/WorkflowCompleteButton";
+import { PageHeader } from "../components/PageHeader";
 import {
   loadProjectConfig, saveProjectConfig,
 } from "../lib/config";
@@ -143,14 +144,14 @@ export default function Project() {
 
   return (
     <div>
-      <h2>{t("project.title")}</h2>
+      <PageHeader 
+        title={t("project.title")}
+        description={t("project.pauseConfiguration")}
+      />
       
       {/* Planning - Remove max KB and add pauses */}
       <section style={{ marginTop: 24 }}>
         <h3>{t("project.planning")}</h3>
-        <p style={{ fontSize: "14px", color: "var(--muted)", marginBottom: "16px" }}>
-          {t("project.pauseConfiguration")}
-        </p>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
           <label>
             <div>{t("project.sentencePause")}</div>
