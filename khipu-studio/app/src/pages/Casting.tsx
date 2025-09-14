@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useProject } from "../store/project";
 import { WorkflowCompleteButton } from "../components/WorkflowCompleteButton";
 import { PageHeader } from "../components/PageHeader";
+import { StandardButton } from "../components/StandardButton";
 import { loadProjectConfig } from "../lib/config";
 import { loadVoiceInventory, saveVoiceInventory } from "../lib/voice";
 import { 
@@ -20,6 +21,8 @@ export default function CastingPage() {
   const [inventory, setInventory] = useState<VoiceInventory | null>(null);
   const [selectedVoices, setSelectedVoices] = useState<Set<string>>(new Set());
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
+  const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
+  const [selectedLocales, setSelectedLocales] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [auditioningVoices, setAuditioningVoices] = useState<Set<string>>(new Set());
@@ -183,15 +186,36 @@ export default function CastingPage() {
   // Get the project's TTS engine
   const projectEngine = config.tts.engine.name;
 
-  // Filter voices to show all voices from selected languages
+  // Filter voices to show all voices from selected languages, genders, and locales
   const availableVoices = inventory.voices.filter(voice => {
     if (voice.engine !== projectEngine) return false;
+    
+    // Language filter
     const voiceLanguage = getLanguageFromLocale(voice.locale);
-    return selectedLanguages.includes(voiceLanguage);
+    if (!selectedLanguages.includes(voiceLanguage)) return false;
+    
+    // Gender filter
+    if (selectedGenders.length > 0 && !selectedGenders.includes(voice.gender)) return false;
+    
+    // Locale filter
+    if (selectedLocales.length > 0 && !selectedLocales.includes(voice.locale)) return false;
+    
+    return true;
   });
 
   // Get available languages for the language selector (from all voices with this engine)
   const availableLanguageOptions = getAvailableLanguages(inventory.voices.filter(v => v.engine === projectEngine));
+  
+  // Get available genders and locales for filters
+  const availableGenders = [...new Set(inventory.voices.filter(v => v.engine === projectEngine).map(v => v.gender))];
+  
+  // Filter available locales to only include locales from currently selected languages
+  const availableLocales = [...new Set(
+    inventory.voices
+      .filter(v => v.engine === projectEngine)
+      .filter(v => selectedLanguages.length === 0 || selectedLanguages.includes(getLanguageFromLocale(v.locale)))
+      .map(v => v.locale)
+  )].sort();
 
   // Create language name mapping
   const getLanguageName = (langCode: string): string => {
@@ -203,13 +227,8 @@ export default function CastingPage() {
       <PageHeader 
         title="casting.title"
         description="casting.description"
-      />
-
-      {/* Voice Selection */}
-      <section>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-          <h3>{t("casting.voicesTitle")} ({availableVoices.length})</h3>
-          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+        actions={
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             {/* Language Selector */}
             <select
               value=""
@@ -220,10 +239,10 @@ export default function CastingPage() {
                 e.target.value = ""; // Reset dropdown
               }}
               style={{
-                padding: "6px 12px",
+                padding: "8px 12px",
                 border: "1px solid var(--border)",
                 borderRadius: "4px",
-                backgroundColor: "var(--input)",
+                backgroundColor: "var(--panel)",
                 color: "var(--text)",
                 fontSize: "14px"
               }}
@@ -237,19 +256,70 @@ export default function CastingPage() {
                   </option>
                 ))}
             </select>
+
+            {/* Gender Filter */}
+            <select
+              value=""
+              onChange={(e) => {
+                if (e.target.value && !selectedGenders.includes(e.target.value)) {
+                  setSelectedGenders([...selectedGenders, e.target.value]);
+                }
+                e.target.value = ""; // Reset dropdown
+              }}
+              style={{
+                padding: "8px 12px",
+                border: "1px solid var(--border)",
+                borderRadius: "4px",
+                backgroundColor: "var(--panel)",
+                color: "var(--text)",
+                fontSize: "14px"
+              }}
+            >
+              <option value="">{t("casting.addGender")}</option>
+              {availableGenders
+                .filter(gender => !selectedGenders.includes(gender))
+                .map(gender => (
+                  <option key={gender} value={gender}>
+                    {gender === "M" ? t("casting.male") : gender === "F" ? t("casting.female") : t("casting.neutral")}
+                  </option>
+                ))}
+            </select>
+
+            {/* Locale Filter */}
+            <select
+              value=""
+              onChange={(e) => {
+                if (e.target.value && !selectedLocales.includes(e.target.value)) {
+                  setSelectedLocales([...selectedLocales, e.target.value]);
+                }
+                e.target.value = ""; // Reset dropdown
+              }}
+              style={{
+                padding: "8px 12px",
+                border: "1px solid var(--border)",
+                borderRadius: "4px",
+                backgroundColor: "var(--panel)",
+                color: "var(--text)",
+                fontSize: "14px"
+              }}
+            >
+              <option value="">{t("casting.addLocale")}</option>
+              {availableLocales
+                .filter(locale => !selectedLocales.includes(locale))
+                .map(locale => (
+                  <option key={locale} value={locale}>
+                    {locale}
+                  </option>
+                ))}
+            </select>
             
-            <button
-              onClick={() => handleSelectAll(availableVoices)}
-              style={{ padding: "6px 12px", fontSize: "14px" }}
-            >
+            <StandardButton onClick={() => handleSelectAll(availableVoices)}>
               {t("casting.selectAll")}
-            </button>
-            <button
-              onClick={() => handleDeselectAll(availableVoices)}
-              style={{ padding: "6px 12px", fontSize: "14px" }}
-            >
+            </StandardButton>
+            <StandardButton onClick={() => handleDeselectAll(availableVoices)}>
               {t("casting.deselectAll")}
-            </button>
+            </StandardButton>
+            
             <WorkflowCompleteButton 
               step="casting"
               disabled={selectedVoices.size === 0}
@@ -257,66 +327,134 @@ export default function CastingPage() {
               {t("casting.complete")}
             </WorkflowCompleteButton>
           </div>
-        </div>
+        }
+      />
 
-        {/* Language Filter Tags */}
-        {selectedLanguages.length > 0 && (
-          <div style={{ marginBottom: "16px", display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
-            <span style={{ fontSize: "14px", color: "var(--muted)" }}>{t("casting.languagesLabel")}</span>
-            {selectedLanguages.map(lang => (
-              <span
-                key={lang}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "4px 8px",
-                  backgroundColor: "var(--accent)",
-                  color: "var(--accent-text)",
-                  borderRadius: "4px",
-                  fontSize: "12px"
-                }}
-              >
-                {getLanguageName(lang)}
-                {selectedLanguages.length > 1 && (
-                  <button
-                    onClick={() => setSelectedLanguages(selectedLanguages.filter(l => l !== lang))}
+      {/* Voice Selection */}
+      <section className="mt-6">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+            <h3 style={{ fontSize: '1.1rem' }}>{t("casting.voicesTitle")} ({availableVoices.length})</h3>
+            
+            {/* Filter Tags */}
+            {(selectedLanguages.length > 0 || selectedGenders.length > 0 || selectedLocales.length > 0) && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
+                {selectedLanguages.map(lang => (
+                  <span
+                    key={`lang-${lang}`}
                     style={{
-                      background: "none",
-                      border: "none",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      padding: "1px 4px",
+                      backgroundColor: "var(--accent)",
                       color: "var(--accent-text)",
-                      cursor: "pointer",
-                      fontSize: "14px",
-                      padding: "0"
+                      borderRadius: "4px",
+                      fontSize: "12px"
                     }}
                   >
-                    ×
-                  </button>
-                )}
-              </span>
-            ))}
+                    {getLanguageName(lang)}
+                    <button
+                      onClick={() => setSelectedLanguages(selectedLanguages.filter(l => l !== lang))}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "var(--accent-text)",
+                        cursor: "pointer",
+                        fontSize: "14px",
+                        padding: "0"
+                      }}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+                
+                {selectedGenders.map(gender => (
+                  <span
+                    key={`gender-${gender}`}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      padding: "1px 4px",
+                      backgroundColor: "var(--accent)",
+                      color: "var(--accent-text)",
+                      borderRadius: "4px",
+                      fontSize: "12px"
+                    }}
+                  >
+                    {gender === "M" ? t("casting.male") : gender === "F" ? t("casting.female") : t("casting.neutral")}
+                    <button
+                      onClick={() => setSelectedGenders(selectedGenders.filter(g => g !== gender))}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "var(--accent-text)",
+                        cursor: "pointer",
+                        fontSize: "14px",
+                        padding: "0"
+                      }}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+                
+                {selectedLocales.map(locale => (
+                  <span
+                    key={`locale-${locale}`}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      padding: "1px 4px",
+                      backgroundColor: "var(--accent)",
+                      color: "var(--accent-text)",
+                      borderRadius: "4px",
+                      fontSize: "12px"
+                    }}
+                  >
+                    {locale}
+                    <button
+                      onClick={() => setSelectedLocales(selectedLocales.filter(l => l !== locale))}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "var(--accent-text)",
+                        cursor: "pointer",
+                        fontSize: "14px",
+                        padding: "0"
+                      }}
+                    >
+                      a
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
         {availableVoices.length === 0 ? (
-          <p style={{ color: "#6b7280", fontStyle: "italic" }}>
+          <p style={{ color: "var(--muted)", fontStyle: "italic" }}>
             {t("casting.noVoicesForEngine")}
           </p>
         ) : (
           <div style={{ 
             display: "grid", 
             gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", 
-            gap: "12px",
+            gap: "16px",
             marginBottom: "24px"
           }}>
             {availableVoices.map((voice: Voice) => (
               <div
                 key={voice.id}
                 style={{
-                  border: "1px solid #374151",
+                  border: "1px solid var(--border)",
                   borderRadius: "8px",
-                  padding: "12px",
-                  backgroundColor: selectedVoices.has(voice.id) ? "#1e40af20" : "transparent"
+                  padding: "16px",
+                  backgroundColor: selectedVoices.has(voice.id) ? "var(--panelAccent)" : "var(--panel)"
                 }}
               >
                 <label style={{ display: "flex", alignItems: "flex-start", gap: "8px", cursor: "pointer" }}>
@@ -330,46 +468,35 @@ export default function CastingPage() {
                     <div style={{ fontWeight: "500", marginBottom: "4px" }}>
                       {voice.id}
                     </div>
-                    <div style={{ fontSize: "12px", color: "#9ca3af", marginBottom: "4px" }}>
+                    <div style={{ fontSize: "12px", color: "var(--muted)", marginBottom: "4px" }}>
                       {voice.locale} • {voice.gender === "M" ? t("casting.male") : voice.gender === "F" ? t("casting.female") : t("casting.neutral")} • {t(`casting.age.${voice.age_hint}`)}
                     </div>
                     {voice.description && (
-                      <div style={{ fontSize: "12px", color: "#6b7280", marginBottom: "4px" }}>
+                      <div style={{ fontSize: "12px", color: "var(--muted)", marginBottom: "4px" }}>
                         {voice.description}
                       </div>
                     )}
                     {voice.styles.length > 0 && (
-                      <div style={{ fontSize: "11px", color: "#9ca3af" }}>
+                      <div style={{ fontSize: "11px", color: "var(--muted)" }}>
                         {t("casting.styles")}: {voice.styles.join(", ")}
                       </div>
                     )}
                     {voice.accent_tags.length > 0 && (
-                      <div style={{ fontSize: "11px", color: "#9ca3af" }}>
+                      <div style={{ fontSize: "11px", color: "var(--muted)" }}>
                         {t("casting.accents")}: {voice.accent_tags.join(", ")}
                       </div>
                     )}
                     
                     {/* Audition Button */}
-                    <div style={{ marginTop: "8px", display: "flex", gap: "8px", alignItems: "center" }}>
-                      <button
+                    <div style={{ marginTop: "12px", display: "flex", gap: "8px", alignItems: "center" }}>
+                      <StandardButton
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
                           handleAudition(voice);
                         }}
                         disabled={auditioningVoices.has(voice.id)}
-                        style={{
-                          padding: "4px 8px",
-                          fontSize: "12px",
-                          backgroundColor: auditioningVoices.has(voice.id) ? "#6b7280" : "#3b82f6",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: auditioningVoices.has(voice.id) ? "not-allowed" : "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "4px"
-                        }}
+                        size="compact"
                       >
                         {auditioningVoices.has(voice.id) ? (
                           <>
@@ -377,7 +504,7 @@ export default function CastingPage() {
                               display: "inline-block", 
                               width: "12px", 
                               height: "12px", 
-                              border: "2px solid #ffffff", 
+                              border: "2px solid currentColor", 
                               borderTop: "2px solid transparent", 
                               borderRadius: "50%", 
                               animation: "spin 1s linear infinite" 
@@ -387,7 +514,7 @@ export default function CastingPage() {
                         ) : (
                           <>🎵 {t("casting.audition.button")}</>
                         )}
-                      </button>
+                      </StandardButton>
                     </div>
                   </div>
                 </label>
@@ -399,7 +526,7 @@ export default function CastingPage() {
 
       {/* Status Section */}
       <section style={{ 
-        borderTop: "1px solid #374151", 
+        borderTop: "1px solid var(--border)", 
         paddingTop: "16px",
         display: "flex",
         justifyContent: "space-between",
@@ -408,7 +535,7 @@ export default function CastingPage() {
         {message && (
           <span style={{ 
             fontSize: "14px", 
-            color: message.includes("Error") || message.includes("Error") ? "#ef4444" : "#10b981" 
+            color: message.includes("Error") || message.includes("failed") ? "var(--error)" : "var(--success)" 
           }}>
             {message}
           </span>

@@ -1495,6 +1495,14 @@
     "string": "+ Agregar Idioma",
     "comment": "Texto del botón para agregar un idioma a la selección de voces"
   },
+  "casting.addGender": {
+    "string": "🌪️ Filtrar Género",
+    "comment": "Texto del botón para filtrar por género de voz"
+  },
+  "casting.addLocale": {
+    "string": "🌪️ Filtrar Localidad",
+    "comment": "Texto del botón para filtrar por localidad de voz"
+  },
   "casting.languagesLabel": {
     "string": "Idiomas:",
     "comment": "Etiqueta para las etiquetas de idiomas seleccionados"

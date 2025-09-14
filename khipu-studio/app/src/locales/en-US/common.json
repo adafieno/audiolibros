@@ -261,6 +261,14 @@
     "string": "+ Add Language",
     "comment": "Button text to add a language to voice selection"
   },
+  "casting.addGender": {
+    "string": "🌪️ Filter Gender",
+    "comment": "Button text to filter by voice gender"
+  },
+  "casting.addLocale": {
+    "string": "🌪️ Filter Locale",
+    "comment": "Button text to filter by voice locale"
+  },
   "casting.languagesLabel": {
     "string": "Languages:",
     "comment": "Label for selected languages tags"
