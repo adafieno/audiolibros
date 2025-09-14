@@ -9,6 +9,7 @@ import { useAudioCache } from "../hooks/useAudioCache";
 import { deleteAudioCacheEntry } from "../lib/audio-cache";
 import type { Voice as VoiceType } from "../types/voice";
 import type { Character as CharacterData } from "../types/character";
+import { costTrackingService } from "../lib/cost-tracking-service";
 
 
 // Character types are imported from the shared types module
@@ -1460,7 +1461,38 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       console.log(`🔍 PYTHON SOURCE FILE: ${chapter.relPath}`);
       console.log(`🔍 UI TEXT SOURCE: analysis/chapters_txt/${chapter.id}.txt`);
       console.log(`🔍 FILE MISMATCH DETECTED: Python uses "${chapter.relPath}" but UI loads "analysis/chapters_txt/${chapter.id}.txt"`);
+      
+      // Initialize cost tracking for this project
+      try {
+        await costTrackingService.setProjectRoot(root);
+      } catch (costError) {
+        console.warn('Failed to initialize cost tracking for chapter planning:', costError);
+      }
+      
       const result = await window.khipu.call("plan:build", payload);
+      
+      // Track LLM cost for chapter planning
+      try {
+        // Estimate token usage for chapter planning
+        const estimatedInputTokens = 4000; // Typical input for chapter structure analysis
+        const estimatedOutputTokens = 3000; // Typical output with segment planning
+        
+        costTrackingService.trackLlmUsage({
+          provider: 'openai-gpt4o', // Default assumption
+          operation: 'chapter_planning',
+          inputTokens: estimatedInputTokens,
+          outputTokens: estimatedOutputTokens,
+          wasCached: false,
+          cacheHit: false,
+          page: 'orchestration',
+          projectId: root.split('/').pop() || 'unknown',
+          chapterId: chapter.id
+        });
+        
+        console.log(`📊 Tracked chapter planning LLM usage: ${estimatedInputTokens + estimatedOutputTokens} tokens`);
+      } catch (costError) {
+        console.warn('Failed to track chapter planning cost:', costError);
+      }
       
       if (result === 0) {
         console.log(`✅ Chapter ${chapter.id} completed successfully`);
@@ -1683,11 +1715,41 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
         // Note: segments no longer needed - script reads from plan file directly
       };
       
-      console.log(`� Sending payload to character assignment service:`, assignmentPayload);
+      console.log(`📝 Sending payload to character assignment service:`, assignmentPayload);
+      
+      // Initialize cost tracking for character assignment
+      try {
+        await costTrackingService.setProjectRoot(root);
+      } catch (costError) {
+        console.warn('Failed to initialize cost tracking for character assignment:', costError);
+      }
       
       let assignmentResult: { success: boolean; assignments?: Array<{ segment_id: string; assigned_character: string; confidence: number; reasoning: string }>; error?: string };
       try {
         assignmentResult = await window.khipu!.characters.assignToSegments(root, assignmentPayload) as typeof assignmentResult;
+        
+        // Track LLM cost for character assignment
+        try {
+          // Estimate token usage for character assignment
+          const estimatedInputTokens = 2500; // Typical input for character assignment analysis
+          const estimatedOutputTokens = 1500; // Typical output with assignment decisions
+          
+          costTrackingService.trackLlmUsage({
+            provider: 'openai-gpt4o', // Default assumption
+            operation: 'character_assignment',
+            inputTokens: estimatedInputTokens,
+            outputTokens: estimatedOutputTokens,
+            wasCached: false,
+            cacheHit: false,
+            page: 'orchestration',
+            projectId: root.split('/').pop() || 'unknown',
+            chapterId: chapter.id
+          });
+          
+          console.log(`📊 Tracked character assignment LLM usage: ${estimatedInputTokens + estimatedOutputTokens} tokens`);
+        } catch (costError) {
+          console.warn('Failed to track character assignment cost:', costError);
+        }
         
         console.log(`📥 Received assignment result:`, assignmentResult);
         

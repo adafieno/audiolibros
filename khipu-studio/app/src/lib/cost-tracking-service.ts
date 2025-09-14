@@ -280,6 +280,7 @@ export class CostTrackingService {
     outputTokens: number;
     wasCached?: boolean;
     cacheHit?: boolean;
+    page?: string;
     projectId?: string;
     chapterId?: string;
     segmentId?: string;
@@ -301,6 +302,7 @@ export class CostTrackingService {
       totalCost: cost,
       wasCached: params.wasCached || false,
       cacheHit: params.cacheHit || false,
+      page: params.page,
       projectId: params.projectId,
       chapterId: params.chapterId,
       segmentId: params.segmentId

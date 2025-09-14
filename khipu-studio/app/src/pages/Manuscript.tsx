@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useProject } from "../store/project";
 import { WorkflowCompleteButton } from "../components/WorkflowCompleteButton";
+import { costTrackingService } from "../lib/cost-tracking-service";
 
 type ChapterItem = {
   id: string;
@@ -38,10 +39,42 @@ export default function ManuscriptPage() {
     const picked = await window.khipu!.call("manuscript:chooseDocx", undefined);
     if (!picked) return;
     setMsg("Procesando manuscrito…");
+    
+    // Initialize cost tracking for this project
+    try {
+      await costTrackingService.setProjectRoot(root);
+    } catch (error) {
+      console.warn('Failed to initialize cost tracking for manuscript parsing:', error);
+    }
+    
     const res = await window.khipu!.call("manuscript:parse", {
       projectRoot: root,
       docxPath: picked,
     });
+    
+    // Track LLM cost for manuscript parsing
+    try {
+      // Estimate token usage based on typical manuscript parsing
+      // This is an estimate - ideally the backend should return actual token counts
+      const estimatedInputTokens = 2000; // Typical input for parsing instructions
+      const estimatedOutputTokens = 5000; // Typical output for chapter structure and metadata
+      
+      costTrackingService.trackLlmUsage({
+        provider: 'openai-gpt4o', // Default assumption - should ideally get from project config
+        operation: 'manuscript_parsing',
+        inputTokens: estimatedInputTokens,
+        outputTokens: estimatedOutputTokens,
+        wasCached: false,
+        cacheHit: false,
+        page: 'manuscript',
+        projectId: root.split('/').pop() || 'unknown'
+      });
+      
+      console.log(`📊 Tracked manuscript parsing LLM usage: ${estimatedInputTokens + estimatedOutputTokens} tokens`);
+    } catch (costError) {
+      console.warn('Failed to track manuscript parsing cost:', costError);
+    }
+    
     if (res.code === 0) {
       setMsg("Listo ✔");
       await refreshList();

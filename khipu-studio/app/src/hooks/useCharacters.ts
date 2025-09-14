@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Character, CharacterDetection, Voice, VoiceAssignment } from "../types/character";
 import { loadVoiceInventory } from "../lib/voice";
 import { loadProjectConfig } from "../lib/config";
+import { costTrackingService } from "../lib/cost-tracking-service";
 
 interface RawDetectedCharacter {
   id?: string;
@@ -350,6 +351,13 @@ export function useCharacters(): UseCharactersApi {
     try {
       console.log("🚀 Starting IPC character detection for:", safeProjectRoot);
       
+      // Initialize cost tracking for this project
+      try {
+        await costTrackingService.setProjectRoot(safeProjectRoot);
+      } catch (costError) {
+        console.warn('Failed to initialize cost tracking for character detection:', costError);
+      }
+      
       // Call the IPC method directly - this will run the Python script
       const api = (window as unknown as WindowKhipu).khipu;
       if (!api?.characters?.detect) {
@@ -357,6 +365,29 @@ export function useCharacters(): UseCharactersApi {
       }
       
       const res: DetectionIPCResult = await api.characters.detect(safeProjectRoot);
+      
+      // Track LLM cost for character detection
+      try {
+        // Estimate token usage for character detection
+        const estimatedInputTokens = 3000; // Typical input for character analysis prompts
+        const estimatedOutputTokens = 2000; // Typical output with character data
+        
+        costTrackingService.trackLlmUsage({
+          provider: 'openai-gpt4o', // Default assumption
+          operation: 'character_detection',
+          inputTokens: estimatedInputTokens,
+          outputTokens: estimatedOutputTokens,
+          wasCached: false,
+          cacheHit: false,
+          page: 'characters',
+          projectId: safeProjectRoot.split('/').pop() || 'unknown'
+        });
+        
+        console.log(`📊 Tracked character detection LLM usage: ${estimatedInputTokens + estimatedOutputTokens} tokens`);
+      } catch (costError) {
+        console.warn('Failed to track character detection cost:', costError);
+      }
+      
       console.log("📡 IPC detection result:", res);
       console.log("📡 Characters data:", res.characters);
       console.log("📡 Characters count:", res.characters?.length);
@@ -688,6 +719,15 @@ export function useCharacters(): UseCharactersApi {
       if (!api?.call) {
         throw new Error("IPC method not available");
       }
+
+      // Track LLM usage for voice assignment operation
+      costTrackingService.trackLlmUsage({
+        provider: 'openai-gpt4o', // Default assumption
+        operation: 'characters:assignVoices',
+        inputTokens: 1800, // estimated input tokens (character data + voice inventory)
+        outputTokens: 1200, // estimated output tokens (assignment decisions)
+        page: 'casting'
+      });
       
       // Call voice assignment through IPC
       const result = await api.call("characters:assignVoices", {
@@ -788,6 +828,15 @@ export function useCharacters(): UseCharactersApi {
       if (!api?.call) {
         throw new Error("IPC method not available");
       }
+
+      // Track TTS usage for voice audition (this is a TTS operation)
+      const auditionText = character.quotes?.[0] || character.description || `Hello, my name is ${character.name}.`;
+      costTrackingService.trackTtsUsage({
+        provider: 'azure-tts', // Default assumption - should be determined by voice config
+        operation: 'characters:auditionVoice',
+        charactersProcessed: auditionText.length,
+        page: 'casting'
+      });
       
       // Call voice audition through IPC
       await api.call("characters:auditionVoice", {
@@ -795,7 +844,7 @@ export function useCharacters(): UseCharactersApi {
         characterId: characterId,
         voiceId: character.voiceAssignment.voiceId,
         style: character.voiceAssignment.style,
-        sampleText: character.quotes?.[0] || character.description || `Hello, my name is ${character.name}.`
+        sampleText: auditionText
       });
       
       setMessage("Voice sample played");
