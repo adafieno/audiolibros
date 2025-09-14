@@ -146,11 +146,19 @@ def assign_characters_to_plan_lines(
     
     updated_plan = json.loads(json.dumps(plan_data))  # Deep copy
     total_lines_processed = 0
+    total_chunks = len(updated_plan.get("chunks", []))
+    processed_chunks = 0
+    
+    print(f"PROGRESS:0:Starting character assignment for {total_chunks} chunks", file=sys.stderr)
     
     # Process each chunk
     for chunk_idx, chunk in enumerate(updated_plan.get("chunks", [])):
         chunk_id = chunk.get("id", f"chunk_{chunk_idx}")
         print(f"\n🔍 Processing chunk: {chunk_id}", file=sys.stderr)
+        
+        # Calculate progress based on chunks processed
+        progress_pct = int((processed_chunks / total_chunks) * 100) if total_chunks > 0 else 0
+        print(f"PROGRESS:{progress_pct}:Processing chunk {chunk_idx + 1} of {total_chunks}", file=sys.stderr)
         
         lines = chunk.get("lines", [])
         if not lines:
@@ -382,7 +390,13 @@ Return a JSON array with exactly {len(missing_segments)} assignment objects for 
         
         # Update chunk voice based on line assignments
         update_chunk_voice()
+        
+        # Update progress after completing chunk
+        processed_chunks += 1
+        progress_pct = int((processed_chunks / total_chunks) * 100) if total_chunks > 0 else 100
+        print(f"PROGRESS:{progress_pct}:Completed chunk {processed_chunks} of {total_chunks}", file=sys.stderr)
     
+    print(f"PROGRESS:100:Character assignment completed!", file=sys.stderr)
     print(f"\n✅ LLM-based character assignment completed!", file=sys.stderr)
     print(f"📊 Processed {total_lines_processed} lines total", file=sys.stderr)
     
