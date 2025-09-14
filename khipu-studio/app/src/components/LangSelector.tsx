@@ -38,6 +38,7 @@ export default function LangSelector() {
       className="langSelect"
       value={value}
       onChange={(e) => change((e.target as HTMLSelectElement).value)}
+      style={{ width: "33%" }}
     >
       {options.map((l) => (
         <option key={l.code} value={l.code}>{l.label}</option>
