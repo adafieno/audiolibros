@@ -431,7 +431,7 @@ export default function Home() {
           border: "1px solid var(--border)",
           borderRadius: "8px",
           padding: "20px",
-          maxWidth: "600px"
+          maxWidth: "800px"
         }}>
           <div style={{ marginBottom: "16px" }}>
             <label style={{ 
@@ -536,7 +536,7 @@ export default function Home() {
           </div>
         </div>
         
-        <details style={{ marginTop: "16px", maxWidth: "600px" }}>
+        <details style={{ marginTop: "16px", maxWidth: "800px" }}>
           <summary style={{ 
             cursor: "pointer", 
             fontSize: "14px", 

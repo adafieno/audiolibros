@@ -2002,7 +2002,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
 
   if (!root) {
     return (
-      <div style={{ padding: "16px", maxWidth: "1800px" }}>
+      <div style={{ padding: "16px", maxWidth: "100%" }}>
         <div style={{ textAlign: "center", padding: "64px 0", backgroundColor: "var(--panel)", borderRadius: "8px", border: "1px dashed var(--border)" }}>
           <p style={{ color: "var(--text)", fontSize: "18px", marginBottom: "8px" }}>{t("status.noProjectLoaded")}</p>
           <p style={{ color: "var(--muted)", fontSize: "14px" }}>{t("status.loadProjectToManagePlanning")}</p>
@@ -2012,7 +2012,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
   }
 
   return (
-    <div style={{ padding: "16px", maxWidth: "1800px", height: "calc(100vh - 32px)" }}>
+    <div style={{ padding: "16px", maxWidth: "100%", height: "calc(100vh - 32px)" }}>
       <PageHeader 
         title={t("planning.title")}
         description={t("planning.description")}

@@ -1973,7 +1973,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             borderRadius: "8px",
             padding: "24px",
             minWidth: "400px",
-            maxWidth: "500px"
+            maxWidth: "700px"
           }}>
             <h3 style={{ margin: "0 0 16px 0", color: "var(--text)" }}>
               {t("audioProduction.insertSoundEffect")}
