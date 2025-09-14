@@ -1154,7 +1154,7 @@ export default function Cost() {
                 'settings': '⚙️',
                 'home': '🏠',
                 // Legacy mappings for old page names
-                'orchestration': '🎼',
+                'orchestration': '🪄',
                 'audio_production': '�️',
                 'chapter_planning': '🪄',
                 'unknown': '❓'
@@ -1200,7 +1200,7 @@ export default function Cost() {
                     justifyContent: 'space-between',
                     alignItems: 'center'
                   }}>
-                    <span>{percentage.toFixed(1)}% of total cost</span>
+                    <span>{percentage.toFixed(1)}% {t('cost.ofTotalCost', 'of total cost')}</span>
                   </div>
                 </div>
               );
@@ -1354,7 +1354,7 @@ export default function Cost() {
                   <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)' }}>
                     {summary.dailyCosts.length}
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Days</div>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{t('cost.days', 'Days')}</div>
                 </div>
                 <div>
                   <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)' }}>
@@ -1366,7 +1366,7 @@ export default function Cost() {
                   <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)' }}>
                     {CostCalculator.formatCost(summary.dailyCosts.reduce((sum, day) => sum + day.cost, 0) / summary.dailyCosts.length, settings.currency)}
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Avg Cost/Day</div>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{t('cost.avgCostPerDay', 'Avg Cost/Day')}</div>
                 </div>
               </div>
             </div>

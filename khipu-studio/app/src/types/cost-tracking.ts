@@ -273,16 +273,14 @@ export class CostCalculator {
   }
   
   /**
-   * Format cost for display with locale support
+   * Format cost for display with proper ICU locale support
    */
   static formatCost(cost: number, currency: string = 'USD', locale?: string): string {
     // Use provided locale, or detect from browser, or fallback to en-US
     const userLocale = locale || (typeof navigator !== 'undefined' ? navigator.language : 'en-US');
     
-    // For USD currency, prefer US formatting regardless of locale to avoid confusion
-    const formatLocale = currency === 'USD' ? 'en-US' : userLocale;
-    
-    const formatter = new Intl.NumberFormat(formatLocale, {
+    // Use the user's locale for all currencies - ICU handles currency formatting properly
+    const formatter = new Intl.NumberFormat(userLocale, {
       style: 'currency',
       currency: currency,
       minimumFractionDigits: 4,
