@@ -11,6 +11,7 @@ import type { Voice as VoiceType } from "../types/voice";
 import type { Character as CharacterData } from "../types/character";
 import { costTrackingService } from "../lib/cost-tracking-service";
 import { PageHeader } from "../components/PageHeader";
+import StandardButton from "../components/StandardButton";
 
 
 // Character types are imported from the shared types module
@@ -471,68 +472,69 @@ function EditablePreview({
         <div className="flex gap-2">
           {!isEditing ? (
             <>
-              <button
+              <StandardButton
                 onClick={handleStartEdit}
-                className="btn compact"
+                size="compact"
                 title={t("planning.tooltips.clickToEdit")}
               >
                 ✏️ {t("planning.edit")}
-              </button>
+              </StandardButton>
               {/* Merge operations when not editing */}
-              <button
+              <StandardButton
                 onClick={() => handleMergeSegment('backward')}
                 disabled={!canMergeBackward}
-                className="btn compact"
+                size="compact"
                 title={t("planning.mergeWithPrevious")}
               >
                 ◀ {t("planning.merge")}
-              </button>
-              <button
+              </StandardButton>
+              <StandardButton
                 onClick={() => handleMergeSegment('forward')}
                 disabled={!canMergeForward}
-                className="btn compact"
+                size="compact"
                 title={t("planning.mergeWithNext")}
               >
                 {t("planning.merge")} ▶
-              </button>
-              <button
+              </StandardButton>
+              <StandardButton
                 onClick={handleDeleteSegment}
                 disabled={!canDelete}
-                className="btn compact danger"
+                variant="danger"
+                size="compact"
                 title={t("planning.deleteThisSegment")}
               >
                 🗑️ {t("planning.delete")}
-              </button>
-              <button
+              </StandardButton>
+              <StandardButton
                 onClick={undoSegmentOperation}
                 disabled={!canUndo}
-                className="btn compact"
+                size="compact"
                 title={t("planning.undoLastOperation")}
               >
                 ↶ {t("planning.undo")}
-              </button>
+              </StandardButton>
             </>
           ) : (
             <>
-              <button
+              <StandardButton
                 onClick={handleSplitSegment}
                 disabled={!canSplit}
-                className="btn compact"
+                size="compact"
                 title={t("planning.splitAtCursor")}
               >
                 ✂️ {t("planning.splitAtCursor")}
-              </button>
-              <button
+              </StandardButton>
+              <StandardButton
                 onClick={handleCancelEdit}
-                className="btn compact"
+                size="compact"
                 title={t("planning.tooltips.cancelEdit")}
               >
                 ❌ {t("planning.cancel")}
-              </button>
+              </StandardButton>
             </>
           )}
           {current.voice && current.voice !== "unassigned" && (
-            <button
+            <StandardButton
               onClick={() => {
                 console.log(`🎵 AUDITION BUTTON CLICKED - Segment ${current.segmentId}:`);
                 console.log(`  - isDirty: ${isDirty}`);
@@ -544,22 +546,27 @@ function EditablePreview({
                 onAudition(current.segmentId, isDirty ? editedText : undefined, isDirty);
               }}
               disabled={isAudioLoading || auditioningSegments.has(current.segmentId)}
-              style={{
-                padding: "4px 8px",
-                fontSize: "12px",
-                border: "1px solid var(--border)",
-                borderRadius: "4px",
-                backgroundColor: (isAudioPlaying || auditioningSegments.has(current.segmentId)) ? "var(--panelAccent)" : "var(--background)",
-                color: "var(--text)",
-                cursor: (isAudioLoading || auditioningSegments.has(current.segmentId)) ? "not-allowed" : "pointer"
-              }}
+              size="compact"
             >
-              {(isAudioLoading || auditioningSegments.has(current.segmentId)) 
-                ? `🔊 ${t("common.loading")}` 
-                : isAudioPlaying 
-                  ? `🔊 ${t("common.playing")}` 
-                  : `🔊 ${t("common.audition")}`}
-            </button>
+              {(isAudioLoading || auditioningSegments.has(current.segmentId)) ? (
+                <>
+                  <span style={{ 
+                    display: "inline-block", 
+                    width: "12px", 
+                    height: "12px", 
+                    border: "2px solid currentColor", 
+                    borderTop: "2px solid transparent", 
+                    borderRadius: "50%", 
+                    animation: "spin 1s linear infinite" 
+                  }}></span>
+                  {t("casting.audition.loading")}
+                </>
+              ) : isAudioPlaying ? (
+                <>🔊 {t("common.playing")}</>
+              ) : (
+                <>🎵 {t("casting.audition.button")}</>
+              )}
+            </StandardButton>
           )}
         </div>
       </div>
@@ -699,8 +706,6 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
   
   // Filters and selection for the current chapter plan
   const [onlyUnknown, setOnlyUnknown] = useState(false);
-  const [chunkFilter, setChunkFilter] = useState<string>("");
-  const [search, setSearch] = useState("");
   const [selIndex, setSelIndex] = useState(0);
   
   // Caps settings
@@ -1317,11 +1322,9 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
     console.log(`🔍 FINAL UI ROWS:`, rows.map(r => `#${r.segmentId}[${r.start}:${r.end+1}]${r.delimiter}`).join(', '));
     return rows;
   }, [segments, segmentsToRows]);
-  // Remove chunk filter for flat segments
-  const chunkIds: string[] = [t("planning.chunkAll")];
-
+  // Filter rows based only on "Unknown" checkbox
   const filteredRows = useMemo(() => {
-    console.log(`🔍 Filtering rows: rowsAll=${rowsAll.length}, onlyUnknown=${onlyUnknown}, chunkFilter=${chunkFilter}, search="${search}"`);
+    console.log(`🔍 Filtering rows: rowsAll=${rowsAll.length}, onlyUnknown=${onlyUnknown}`);
     
     let rs = rowsAll;
     console.log(`🔍 Starting with ${rs.length} rows`);
@@ -1331,26 +1334,13 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       console.log(`🔍 After onlyUnknown filter: ${rs.length} rows`);
     }
     
-  // No chunk filter in flat segment model
-    
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      rs = rs.filter((r) => {
-        // Search in the original segment text
-        const originalSegment = segments?.find(seg => seg.segment_id === r.segmentId);
-        const segmentText = originalSegment?.text || "";
-        return segmentText.toLowerCase().includes(q);
-      });
-      console.log(`🔍 After search "${q}": ${rs.length} rows`);
-    }
-    
     console.log(`🔍 Final filtered rows: ${rs.length}`);
     if (rs.length > 0) {
       console.log(`🔍 Sample row:`, rs[0]);
     }
     
     return rs;
-  }, [rowsAll, onlyUnknown, chunkFilter, search, segments, t]);
+  }, [rowsAll, onlyUnknown, t]);
 
   // Adjust selection when filtered rows change
   useEffect(() => {
@@ -1364,15 +1354,6 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
     const rowEl = gridRef.current?.querySelector(`[data-row='${selIndex}']`) as HTMLElement | null;
     rowEl?.scrollIntoView({ block: "nearest" });
   }, [selIndex, filteredRows.length]);
-
-  // Initialize chunk filter with translation
-  useEffect(() => {
-    if (!chunkFilter) {
-      setChunkFilter(t("planning.chunkAll"));
-    }
-  }, [t, chunkFilter]);
-
-
 
   // Keyboard navigation
   useEffect(() => {
@@ -2016,6 +1997,96 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       <PageHeader 
         title={t("planning.title")}
         description={t("planning.description")}
+        actions={
+          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+            {/* Chapter Selector */}
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <label style={{ fontSize: "14px", fontWeight: "500", color: "var(--text)", whiteSpace: "nowrap" }}>
+                {t("planning.chapterLabel")}
+              </label>
+              <select
+                value={selectedChapter}
+                onChange={(e) => setSelectedChapter(e.target.value)}
+                style={{
+                  padding: "8px 12px",
+                  fontSize: "14px",
+                  border: "1px solid var(--border)",
+                  borderRadius: "6px",
+                  backgroundColor: "var(--input)",
+                  color: "var(--text)",
+                  minWidth: "200px",
+                  cursor: "pointer",
+                  appearance: "none",
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: "right 8px center",
+                  backgroundRepeat: "no-repeat",
+                  backgroundSize: "16px",
+                  paddingRight: "32px"
+                }}
+              >
+                <option value="" style={{ backgroundColor: "var(--panel)", color: "var(--text)" }}>
+                  {t("planning.selectChapterOption")}
+                </option>
+                {chapters.map((chapter) => {
+                  const status = chapterStatus.get(chapter.id);
+                  const statusIcon = status?.isComplete ? "✅" : status?.hasPlan ? "📝" : status?.hasText ? "📄" : "❌";
+                  return (
+                    <option 
+                      key={chapter.id} 
+                      value={chapter.id}
+                      style={{ 
+                        backgroundColor: "var(--panel)", 
+                        color: "var(--text)",
+                        padding: "4px 8px"
+                      }}
+                    >
+                      {statusIcon} {chapter.id} {chapter.title ? `- ${chapter.title}` : ""}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+            
+            {/* Unknown filter checkbox */}
+            {segments && (
+              <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "14px", color: "var(--text)", whiteSpace: "nowrap" }}>
+                <input 
+                  type="checkbox" 
+                  checked={onlyUnknown} 
+                  onChange={(e) => setOnlyUnknown(e.target.checked)} 
+                />
+                Unknown
+              </label>
+            )}
+            
+            {/* Action Buttons */}
+            <StandardButton 
+              onClick={generatePlan} 
+              disabled={loading || running || !selectedChapter}
+              variant="primary"
+            >
+              {running ? t("planning.generating") : selectedChapter ? t("planning.generatePlanFor") : t("planning.selectChapter")}
+            </StandardButton>
+            
+            <StandardButton 
+              onClick={assignCharacters} 
+              disabled={loading || assigningCharacters || !selectedChapter || !segments}
+              variant="secondary"
+            >
+              {assigningCharacters ? t("planning.assigning") : t("planning.assignCharacters")}
+            </StandardButton>
+            
+            {segments && selectedChapter && (
+              <StandardButton 
+                onClick={handleMarkChapterComplete}
+                disabled={loading || chapterStatus.get(selectedChapter)?.isComplete || !chapterStatus.get(selectedChapter)?.hasPlan}
+                variant={chapterStatus.get(selectedChapter)?.isComplete ? "success" : "secondary"}
+              >
+                {chapterStatus.get(selectedChapter)?.isComplete ? `✓ ${t("planning.chapterComplete")}` : t("planning.markChapterComplete")}
+              </StandardButton>
+            )}
+          </div>
+        }
       />
 
       {/* Status message */}
@@ -2032,188 +2103,6 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
           {message}
         </div>
       )}
-
-      {/* Chapter selector with integrated planning progress */}
-      <div style={{ marginBottom: "16px", padding: "16px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "6px" }}>
-        <div style={{ display: "flex", gap: "16px", alignItems: "center", flexWrap: "wrap" }}>
-          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-            <label style={{ fontSize: "14px", fontWeight: "500", color: "var(--text)" }}>
-              {t("planning.chapterLabel")}
-            </label>
-            <select
-              value={selectedChapter}
-              onChange={(e) => setSelectedChapter(e.target.value)}
-              style={{
-                padding: "8px 12px",
-                fontSize: "14px",
-                border: "1px solid var(--border)",
-                borderRadius: "6px",
-                backgroundColor: "var(--input)",
-                color: "var(--text)",
-                minWidth: "200px",
-                cursor: "pointer",
-                appearance: "none",
-                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                backgroundPosition: "right 8px center",
-                backgroundRepeat: "no-repeat",
-                backgroundSize: "16px",
-                paddingRight: "32px"
-              }}
-            >
-              <option value="" style={{ backgroundColor: "var(--panel)", color: "var(--text)" }}>
-                {t("planning.selectChapterOption")}
-              </option>
-              {chapters.map((chapter) => {
-                const status = chapterStatus.get(chapter.id);
-                const statusIcon = status?.isComplete ? "✅" : status?.hasPlan ? "📝" : status?.hasText ? "📄" : "❌";
-                return (
-                  <option 
-                    key={chapter.id} 
-                    value={chapter.id}
-                    style={{ 
-                      backgroundColor: "var(--panel)", 
-                      color: "var(--text)",
-                      padding: "4px 8px"
-                    }}
-                  >
-                    {statusIcon} {chapter.id} {chapter.title ? `- ${chapter.title}` : ""}
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-          
-          {/* Progress status message */}
-          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-            {(() => {
-              const completedChapters = Array.from(chapterStatus.values()).filter(status => status.isComplete).length;
-              const totalChapters = chapters.length;
-              const allComplete = totalChapters > 0 && completedChapters === totalChapters;
-              
-              return (
-                <span style={{ 
-                  fontSize: "12px", 
-                  fontWeight: "400",
-                  color: allComplete ? "var(--success)" : "var(--muted)",
-                  backgroundColor: allComplete ? "rgba(34, 197, 94, 0.1)" : "rgba(107, 114, 126, 0.1)",
-                  padding: "4px 8px",
-                  borderRadius: "4px",
-                  whiteSpace: "nowrap"
-                }}>
-                  {allComplete 
-                    ? `✅ ${t("planning.status.allChaptersCompleted")}` 
-                    : t("planning.progress.status", { completed: completedChapters, total: totalChapters })
-                  }
-                </span>
-              );
-            })()}
-          </div>
-          
-          {/* Ready for SSML indicator when all chapters complete */}
-          {(() => {
-            const completedChapters = Array.from(chapterStatus.values()).filter(status => status.isComplete).length;
-            const totalChapters = chapters.length;
-            const allComplete = totalChapters > 0 && completedChapters === totalChapters;
-            
-            if (!allComplete) return null;
-            
-            return (
-              <div style={{ 
-                padding: "6px 12px", 
-                backgroundColor: "var(--success)", 
-                color: "white", 
-                borderRadius: "6px", 
-                fontSize: "12px",
-                fontWeight: "500",
-                display: "flex",
-                alignItems: "center",
-                gap: "4px"
-              }}>
-                🚀 {t("planning.readyForSsml")}
-              </div>
-            );
-          })()}
-        </div>
-      </div>
-
-      {/* Action buttons and filters */}
-      <div style={{ display: "flex", gap: "8px", marginBottom: "16px", alignItems: "center", flexWrap: "wrap" }}>
-        <button 
-          onClick={generatePlan} 
-          disabled={loading || running || !selectedChapter} 
-          style={{ padding: "6px 12px", fontSize: "14px" }}
-        >
-          {running ? t("planning.generating") : selectedChapter ? t("planning.generatePlanFor", {chapter: selectedChapter}) : t("planning.selectChapter")}
-        </button>
-        
-        <button 
-          onClick={assignCharacters} 
-          disabled={loading || assigningCharacters || !selectedChapter || !segments} 
-          style={{ padding: "6px 12px", fontSize: "14px" }}
-        >
-          {assigningCharacters ? t("planning.assigning") : t("planning.assignCharacters")}
-        </button>
-        
-        {segments && selectedChapter && (
-          <>
-            <button 
-              onClick={handleMarkChapterComplete}
-              disabled={loading || chapterStatus.get(selectedChapter)?.isComplete || !chapterStatus.get(selectedChapter)?.hasPlan} 
-              style={{ 
-                padding: "6px 12px", 
-                fontSize: "14px",
-                backgroundColor: chapterStatus.get(selectedChapter)?.isComplete ? "var(--success)" : "var(--accent)",
-                color: "white",
-                border: `1px solid ${chapterStatus.get(selectedChapter)?.isComplete ? "var(--success)" : "var(--accent)"}`,
-                borderRadius: "4px",
-                opacity: chapterStatus.get(selectedChapter)?.isComplete ? 0.7 : 1
-              }}
-            >
-              {chapterStatus.get(selectedChapter)?.isComplete ? `✓ ${t("planning.chapterComplete")}` : t("planning.markChapterComplete")}
-            </button>
-          </>
-        )}
-
-        {/* Filters */}
-        {segments && (
-          <>
-            <div style={{ width: "1px", height: "24px", backgroundColor: "var(--border)", margin: "0 4px" }}></div>
-            
-            <label style={{ fontSize: "14px", color: "var(--text)" }}>{t("planning.chunkLabel")}:</label>
-            <select 
-              value={chunkFilter} 
-              onChange={(e) => setChunkFilter(e.target.value)}
-              style={{ padding: "4px 8px", fontSize: "14px", backgroundColor: "var(--panel)", color: "var(--text)", border: "1px solid var(--border)", borderRadius: "4px" }}
-            >
-              {chunkIds.map((id) => <option key={id} value={id}>{id}</option>)}
-            </select>
-            
-            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "14px", color: "var(--text)" }}>
-              <input 
-                type="checkbox" 
-                checked={onlyUnknown} 
-                onChange={(e) => setOnlyUnknown(e.target.checked)} 
-              />
-              {t("planning.onlyUnknowns")}
-            </label>
-            
-            <input 
-              placeholder={t("planning.searchText")} 
-              value={search} 
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ 
-                padding: "4px 8px", 
-                fontSize: "14px", 
-                width: "200px",
-                backgroundColor: "var(--panel)", 
-                color: "var(--text)", 
-                border: "1px solid var(--border)", 
-                borderRadius: "4px" 
-              }}
-            />
-          </>
-        )}
-      </div>
 
       {/* Loading section with progress */}
       {running && (

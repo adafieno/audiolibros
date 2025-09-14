@@ -1050,7 +1050,7 @@
     "comment": "Label for target platforms section"
   },
   "planning.generatePlanFor": {
-    "string": "Generate Plan for {{chapter}}",
+    "string": "Generate Plan",
     "comment": "Button text to generate plan for a specific chapter"
   },
   "planning.assignCharacters": {

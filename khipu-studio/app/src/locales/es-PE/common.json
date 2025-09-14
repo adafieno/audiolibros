@@ -1528,7 +1528,7 @@
     "comment": "Etiqueta para la sección de plataformas objetivo"
   },
   "planning.generatePlanFor": {
-    "string": "Generar plan para {{chapter}}",
+    "string": "Generar plan",
     "comment": "Texto del botón para generar plan para un capítulo específico"
   },
   "planning.assignCharacters": {
