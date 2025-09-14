@@ -35,14 +35,14 @@ function PasswordField({
           value={value}
           placeholder={placeholder}
           onChange={(e) => onChange(e.target.value)}
-          style={{ paddingRight: "32px" }}
+          style={{ paddingRight: "36px" }}
         />
         <button
           type="button"
           onClick={() => setShowPassword(!showPassword)}
           style={{
             position: "absolute",
-            right: "4px",
+            right: "8px",
             top: "50%",
             transform: "translateY(-50%)",
             background: "none",
@@ -143,15 +143,25 @@ export default function Project() {
     engine.name === "local";
 
   return (
-    <div>
+    <div style={{ maxWidth: "100%" }}>
       <PageHeader 
-        title={t("project.title")}
-        description={t("project.pauseConfiguration")}
+        title="project.title"
+        description="project.description"
+        actions={
+          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+            <WorkflowCompleteButton step="project">
+              {t("project.markComplete")}
+            </WorkflowCompleteButton>
+            <div style={{ fontSize: 12, color: "var(--muted)" }}>
+              {t("project.autoSave")}
+            </div>
+          </div>
+        }
       />
       
       {/* Planning - Remove max KB and add pauses */}
-      <section style={{ marginTop: 24 }}>
-        <h3>{t("project.planning")}</h3>
+      <section className="mt-6">
+        <h3 style={{ fontSize: '1.1rem' }}>{t("project.planning")}</h3>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
           <label>
             <div>{t("project.sentencePause")}</div>
@@ -224,212 +234,229 @@ export default function Project() {
         </div>
       </section>
 
-      {/* LLM Engine - Add Azure OpenAI option */}
-      <section style={{ marginTop: 24 }}>
-        <h3>{t("project.llm")}</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: 8, alignItems: "center" }}>
-          <select
-            value={llm.engine.name}
-            onChange={(e) => {
-              const name = e.target.value as LlmEngine["name"];
-              if (name === "openai") {
-                update("llm", { engine: { name: "openai", model: isOpenAI(llm.engine) ? llm.engine.model : "gpt-4o" } });
-              } else if (name === "azure-openai") {
-                update("llm", { engine: { name: "azure-openai", model: isAzureOpenAI(llm.engine) ? llm.engine.model : "gpt-4o", endpoint: isAzureOpenAI(llm.engine) ? llm.engine.endpoint : "" } });
-              } else {
-                update("llm", { engine: { name: "local", model: isLocalLLM(llm.engine) ? llm.engine.model : "llama3.1", endpoint: isLocalLLM(llm.engine) ? llm.engine.endpoint : "http://localhost:8000" } });
-              }
-            }}
-          >
-            <option value="openai">OpenAI</option>
-            <option value="azure-openai">Azure OpenAI</option>
-            <option value="local">Local</option>
-          </select>
-          {isOpenAI(llm.engine) ? (
-            <input
-              placeholder={t("project.llmModel")}
-              value={llm.engine.model}
-              onChange={(e) => update("llm", { engine: { name: "openai", model: e.target.value } })}
-            />
-          ) : isAzureOpenAI(llm.engine) ? (
-            <div style={{ display: "grid", gridTemplateColumns: "150px 1fr 200px", gap: 8 }}>
-              <input
-                placeholder={t("project.azureModelPlaceholder")}
-                value={llm.engine.model}
-                onChange={(e) => update("llm", { engine: { name: "azure-openai", model: e.target.value, endpoint: isAzureOpenAI(llm.engine) ? llm.engine.endpoint : "", apiVersion: isAzureOpenAI(llm.engine) ? llm.engine.apiVersion : "" } })}
-              />
-              <input
-                placeholder={t("project.azureEndpointPlaceholder")}
-                value={isAzureOpenAI(llm.engine) ? llm.engine.endpoint : ""}
-                onChange={(e) => update("llm", { engine: { name: "azure-openai", model: llm.engine.model, endpoint: e.target.value, apiVersion: isAzureOpenAI(llm.engine) ? llm.engine.apiVersion : "" } })}
-              />
-              <input
-                placeholder={t("project.azureApiVersionPlaceholder")}
-                value={isAzureOpenAI(llm.engine) ? (llm.engine.apiVersion ?? "") : ""}
-                onChange={(e) => update("llm", { engine: { name: "azure-openai", model: llm.engine.model, endpoint: isAzureOpenAI(llm.engine) ? llm.engine.endpoint : "", apiVersion: e.target.value } })}
-              />
-            </div>
-          ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 8 }}>
-              <input
-                placeholder={t("project.llmModelLocal")}
-                value={llm.engine.model}
-                onChange={(e) => update("llm", { engine: { name: "local", model: e.target.value, endpoint: isLocalLLM(llm.engine) ? llm.engine.endpoint : "http://localhost:8000" } })}
-              />
-              <input
-                placeholder={t("project.llmEndpoint")}
-                value={isLocalLLM(llm.engine) ? llm.engine.endpoint : ""}
-                onChange={(e) => update("llm", { engine: { name: "local", model: llm.engine.model, endpoint: e.target.value } })}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* OpenAI Credentials - Show only when OpenAI is selected */}
-        {isOpenAI(llm.engine) && (
-          <div style={{ marginTop: 16 }}>
-            <h4 style={{ fontSize: "16px", marginBottom: 12 }}>{t("project.openaiCredentials")}</h4>
-            <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 12, alignItems: "start" }}>
-              <PasswordField
-                label={t("project.openaiApiKey")}
-                value={cfg?.creds?.llm?.openai?.apiKey || ""}
-                onChange={(value) => update("creds", {
-                  ...cfg?.creds,
-                  llm: { 
-                    ...cfg?.creds?.llm, 
-                    openai: { ...cfg?.creds?.llm?.openai, apiKey: value }
-                  }
-                })}
-                placeholder={t("project.openaiApiKeyPlaceholder")}
-              />
-              <label>
-                <div>{t("project.openaiBaseUrl")}</div>
+      {/* LLM and TTS Engines - Side by side */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32, marginTop: 24 }}>
+        {/* LLM Engine - Add Azure OpenAI option */}
+        <section>
+          <h3 style={{ fontSize: '1.1rem' }}>{t("project.llm")}</h3>
+          <div style={{ display: "grid", gridTemplateColumns: "220px 200px 1fr", gap: 8, alignItems: "center" }}>
+            <select
+              value={llm.engine.name}
+              onChange={(e) => {
+                const name = e.target.value as LlmEngine["name"];
+                if (name === "openai") {
+                  update("llm", { engine: { name: "openai", model: isOpenAI(llm.engine) ? llm.engine.model : "gpt-4o" } });
+                } else if (name === "azure-openai") {
+                  update("llm", { engine: { name: "azure-openai", model: isAzureOpenAI(llm.engine) ? llm.engine.model : "gpt-4o", endpoint: isAzureOpenAI(llm.engine) ? llm.engine.endpoint : "" } });
+                } else {
+                  update("llm", { engine: { name: "local", model: isLocalLLM(llm.engine) ? llm.engine.model : "llama3.1", endpoint: isLocalLLM(llm.engine) ? llm.engine.endpoint : "http://localhost:8000" } });
+                }
+              }}
+            >
+              <option value="openai">OpenAI</option>
+              <option value="azure-openai">Azure OpenAI</option>
+              <option value="local">Local</option>
+            </select>
+            {isOpenAI(llm.engine) ? (
+              <>
                 <input
-                  type="text"
-                  value={cfg?.creds?.llm?.openai?.baseUrl || ""}
-                  placeholder={t("project.openaiBaseUrlPlaceholder")}
-                  onChange={(e) => update("creds", {
+                  placeholder={t("project.llmModel")}
+                  value={llm.engine.model}
+                  onChange={(e) => update("llm", { engine: { name: "openai", model: e.target.value } })}
+                />
+                <div></div>
+              </>
+            ) : isAzureOpenAI(llm.engine) ? (
+              <>
+                <input
+                  placeholder={t("project.azureModelPlaceholder")}
+                  value={llm.engine.model}
+                  onChange={(e) => update("llm", { engine: { name: "azure-openai", model: e.target.value, endpoint: isAzureOpenAI(llm.engine) ? llm.engine.endpoint : "", apiVersion: isAzureOpenAI(llm.engine) ? llm.engine.apiVersion : "" } })}
+                />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 120px", gap: 8 }}>
+                  <input
+                    placeholder={t("project.azureEndpointPlaceholder")}
+                    value={isAzureOpenAI(llm.engine) ? llm.engine.endpoint : ""}
+                    onChange={(e) => update("llm", { engine: { name: "azure-openai", model: llm.engine.model, endpoint: e.target.value, apiVersion: isAzureOpenAI(llm.engine) ? llm.engine.apiVersion : "" } })}
+                  />
+                  <input
+                    placeholder={t("project.azureApiVersionPlaceholder")}
+                    value={isAzureOpenAI(llm.engine) ? (llm.engine.apiVersion ?? "") : ""}
+                    onChange={(e) => update("llm", { engine: { name: "azure-openai", model: llm.engine.model, endpoint: isAzureOpenAI(llm.engine) ? llm.engine.endpoint : "", apiVersion: e.target.value } })}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <input
+                  placeholder={t("project.llmModelLocal")}
+                  value={llm.engine.model}
+                  onChange={(e) => update("llm", { engine: { name: "local", model: e.target.value, endpoint: isLocalLLM(llm.engine) ? llm.engine.endpoint : "http://localhost:8000" } })}
+                />
+                <input
+                  placeholder={t("project.llmEndpoint")}
+                  value={isLocalLLM(llm.engine) ? llm.engine.endpoint : ""}
+                  onChange={(e) => update("llm", { engine: { name: "local", model: llm.engine.model, endpoint: e.target.value } })}
+                />
+              </>
+            )}
+          </div>
+
+          {/* OpenAI Credentials - Show only when OpenAI is selected */}
+          {isOpenAI(llm.engine) && (
+            <div style={{ marginTop: 16 }}>
+              <h4 style={{ fontSize: '1.1rem', marginBottom: 12 }}>{t("project.openaiCredentials")}</h4>
+              <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 12, alignItems: "start" }}>
+                <PasswordField
+                  label={t("project.openaiApiKey")}
+                  value={cfg?.creds?.llm?.openai?.apiKey || ""}
+                  onChange={(value) => update("creds", {
                     ...cfg?.creds,
                     llm: { 
                       ...cfg?.creds?.llm, 
-                      openai: { ...cfg?.creds?.llm?.openai, baseUrl: e.target.value }
+                      openai: { ...cfg?.creds?.llm?.openai, apiKey: value }
                     }
                   })}
+                  placeholder={t("project.openaiApiKeyPlaceholder")}
                 />
-              </label>
+                <label>
+                  <div>{t("project.openaiBaseUrl")}</div>
+                  <input
+                    type="text"
+                    value={cfg?.creds?.llm?.openai?.baseUrl || ""}
+                    placeholder={t("project.openaiBaseUrlPlaceholder")}
+                    onChange={(e) => update("creds", {
+                      ...cfg?.creds,
+                      llm: { 
+                        ...cfg?.creds?.llm, 
+                        openai: { ...cfg?.creds?.llm?.openai, baseUrl: e.target.value }
+                      }
+                    })}
+                  />
+                </label>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Azure OpenAI Credentials - Show only when Azure OpenAI is selected */}
-        {isAzureOpenAI(llm.engine) && (
-          <div style={{ marginTop: 16 }}>
-            <h4 style={{ fontSize: "16px", marginBottom: 12 }}>{t("project.azureOpenaiCredentials")}</h4>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
-              <PasswordField
-                label={t("project.azureOpenaiApiKey")}
-                value={cfg?.creds?.llm?.azureOpenAI?.apiKey || ""}
-                onChange={(value) => update("creds", {
-                  ...cfg?.creds,
-                  llm: { 
-                    ...cfg?.creds?.llm, 
-                    azureOpenAI: { ...cfg?.creds?.llm?.azureOpenAI, apiKey: value }
-                  }
-                })}
-                placeholder={t("project.azureOpenaiApiKeyPlaceholder")}
-              />
+          {/* Azure OpenAI Credentials - Show only when Azure OpenAI is selected */}
+          {isAzureOpenAI(llm.engine) && (
+            <div style={{ marginTop: 16 }}>
+              <h4 style={{ fontSize: '1.1rem', marginBottom: 12 }}>{t("project.azureOpenaiCredentials")}</h4>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
+                <PasswordField
+                  label={t("project.azureOpenaiApiKey")}
+                  value={cfg?.creds?.llm?.azureOpenAI?.apiKey || ""}
+                  onChange={(value) => update("creds", {
+                    ...cfg?.creds,
+                    llm: { 
+                      ...cfg?.creds?.llm, 
+                      azureOpenAI: { ...cfg?.creds?.llm?.azureOpenAI, apiKey: value }
+                    }
+                  })}
+                  placeholder={t("project.azureOpenaiApiKeyPlaceholder")}
+                />
+              </div>
             </div>
-          </div>
-        )}
-      </section>
+          )}
+        </section>
 
-      {/* TTS Engine */}
-      <section style={{ marginTop: 24 }}>
-        <h3>{t("project.tts")}</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: 8, alignItems: "center" }}>
-          <select
-            value={tts.engine.name}
-            onChange={(e) => {
-              const name = e.target.value as TtsEngine["name"];
-              if (name === "azure") {
-                update("tts", { engine: { name: "azure", voice: isAzureTTS(tts.engine) ? tts.engine.voice : "es-PE-CamilaNeural" }, cache: tts.cache });
-              } else if (name === "elevenlabs") {
-                update("tts", { engine: { name: "elevenlabs", voiceId: is11LabsTTS(tts.engine) ? tts.engine.voiceId : "" }, cache: tts.cache });
-              } else {
-                update("tts", { engine: { name: "local", model: isLocalTTS(tts.engine) ? (tts.engine.model ?? "") : "" }, cache: tts.cache });
-              }
-            }}
-          >
-            <option value="azure">Azure</option>
-            <option value="elevenlabs">ElevenLabs</option>
-            <option value="local">Local</option>
-          </select>
-          {isAzureTTS(tts.engine) && (
-            <input
-              placeholder={t("project.ttsVoiceAzure")}
-              value={tts.engine.voice}
-              onChange={(e) => update("tts", { engine: { name: "azure", voice: e.target.value }, cache: tts.cache })}
-            />
-          )}
-          {is11LabsTTS(tts.engine) && (
-            <input
-              placeholder={t("project.ttsVoiceElevenlabs")}
-              value={tts.engine.voiceId}
-              onChange={(e) => update("tts", { engine: { name: "elevenlabs", voiceId: e.target.value }, cache: tts.cache })}
-            />
-          )}
-          {isLocalTTS(tts.engine) && (
-            <input
-              placeholder={t("project.ttsModelLocal")}
-              value={tts.engine.model ?? ""}
-              onChange={(e) => update("tts", { engine: { name: "local", model: e.target.value }, cache: true })}
-            />
-          )}
-          <div style={{ fontSize: "14px", color: "var(--muted)", gridColumn: "1 / -1" }}>
-            {t("project.ttsCachingInfo")}
-          </div>
-        </div>
-        
-        {/* Azure TTS Credentials - Show only when Azure is selected */}
-        {isAzureTTS(tts.engine) && (
-          <div style={{ marginTop: 16 }}>
-            <h4 style={{ fontSize: "16px", marginBottom: 12 }}>{t("project.azureTtsCredentials")}</h4>
-            <div style={{ display: "grid", gridTemplateColumns: "300px 200px", gap: 12, alignItems: "start" }}>
-              <PasswordField
-                label={t("project.azureTtsKey")}
-                value={cfg?.creds?.tts?.azure?.key || ""}
-                onChange={(value) => update("creds", {
-                  ...cfg?.creds,
-                  tts: { 
-                    ...cfg?.creds?.tts, 
-                    azure: { ...cfg?.creds?.tts?.azure, key: value }
-                  }
-                })}
-                placeholder={t("project.azureTtsApiKeyPlaceholder")}
-              />
-              <label>
-                <div>{t("project.azureRegion")}</div>
+        {/* TTS Engine */}
+        <section>
+          <h3 style={{ fontSize: '1.1rem' }}>{t("project.tts")}</h3>
+          <div style={{ display: "grid", gridTemplateColumns: "220px 200px 1fr", gap: 8, alignItems: "center" }}>
+            <select
+              value={tts.engine.name}
+              onChange={(e) => {
+                const name = e.target.value as TtsEngine["name"];
+                if (name === "azure") {
+                  update("tts", { engine: { name: "azure", voice: isAzureTTS(tts.engine) ? tts.engine.voice : "es-PE-CamilaNeural" }, cache: tts.cache });
+                } else if (name === "elevenlabs") {
+                  update("tts", { engine: { name: "elevenlabs", voiceId: is11LabsTTS(tts.engine) ? tts.engine.voiceId : "" }, cache: tts.cache });
+                } else {
+                  update("tts", { engine: { name: "local", model: isLocalTTS(tts.engine) ? (tts.engine.model ?? "") : "" }, cache: tts.cache });
+                }
+              }}
+            >
+              <option value="azure">Azure</option>
+              <option value="elevenlabs">ElevenLabs</option>
+              <option value="local">Local</option>
+            </select>
+            {isAzureTTS(tts.engine) && (
+              <>
                 <input
-                  type="text"
-                  value={cfg?.creds?.tts?.azure?.region || ""}
-                  placeholder={t("project.azureRegionPlaceholder")}
-                  onChange={(e) => update("creds", {
+                  placeholder={t("project.ttsVoiceAzure")}
+                  value={tts.engine.voice}
+                  onChange={(e) => update("tts", { engine: { name: "azure", voice: e.target.value }, cache: tts.cache })}
+                />
+                <div></div>
+              </>
+            )}
+            {is11LabsTTS(tts.engine) && (
+              <>
+                <input
+                  placeholder={t("project.ttsVoiceElevenlabs")}
+                  value={tts.engine.voiceId}
+                  onChange={(e) => update("tts", { engine: { name: "elevenlabs", voiceId: e.target.value }, cache: tts.cache })}
+                />
+                <div></div>
+              </>
+            )}
+            {isLocalTTS(tts.engine) && (
+              <>
+                <input
+                  placeholder={t("project.ttsModelLocal")}
+                  value={tts.engine.model ?? ""}
+                  onChange={(e) => update("tts", { engine: { name: "local", model: e.target.value }, cache: true })}
+                />
+                <div></div>
+              </>
+            )}
+            <div style={{ fontSize: "14px", color: "var(--muted)", gridColumn: "1 / -1" }}>
+              {t("project.ttsCachingInfo")}
+            </div>
+          </div>
+          
+          {/* Azure TTS Credentials - Show only when Azure is selected */}
+          {isAzureTTS(tts.engine) && (
+            <div style={{ marginTop: 16 }}>
+              <h4 style={{ fontSize: '1.1rem', marginBottom: 12 }}>{t("project.azureTtsCredentials")}</h4>
+              <div style={{ display: "grid", gridTemplateColumns: "300px 200px", gap: 12, alignItems: "start" }}>
+                <PasswordField
+                  label={t("project.azureTtsKey")}
+                  value={cfg?.creds?.tts?.azure?.key || ""}
+                  onChange={(value) => update("creds", {
                     ...cfg?.creds,
                     tts: { 
                       ...cfg?.creds?.tts, 
-                      azure: { ...cfg?.creds?.tts?.azure, region: e.target.value }
+                      azure: { ...cfg?.creds?.tts?.azure, key: value }
                     }
                   })}
+                  placeholder={t("project.azureTtsApiKeyPlaceholder")}
                 />
-              </label>
+                <label>
+                  <div>{t("project.azureRegion")}</div>
+                  <input
+                    type="text"
+                    value={cfg?.creds?.tts?.azure?.region || ""}
+                    placeholder={t("project.azureRegionPlaceholder")}
+                    onChange={(e) => update("creds", {
+                      ...cfg?.creds,
+                      tts: { 
+                        ...cfg?.creds?.tts, 
+                        azure: { ...cfg?.creds?.tts?.azure, region: e.target.value }
+                      }
+                    })}
+                  />
+                </label>
+              </div>
             </div>
-          </div>
-        )}
-      </section>
+          )}
+        </section>
+      </div>
 
       {/* Packaging Settings */}
-      <section style={{ marginTop: 24 }}>
-        <h3>{t("project.packaging")}</h3>
+      <section className="mt-6">
+        <h3 style={{ fontSize: '1.1rem' }}>{t("project.packaging")}</h3>
         <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
           <label>
             <div>{t("project.outputDirectory")}</div>
@@ -482,15 +509,6 @@ export default function Project() {
           </div>
         </div>
       </section>
-
-      <div style={{ marginTop: 24, display: "flex", gap: 12, alignItems: "center" }}>
-        <WorkflowCompleteButton step="project">
-          {t("project.markComplete")}
-        </WorkflowCompleteButton>
-        <div style={{ fontSize: 12, color: "#9ca3af" }}>
-          {t("project.autoSave")}
-        </div>
-      </div>
     </div>
   );
 }
