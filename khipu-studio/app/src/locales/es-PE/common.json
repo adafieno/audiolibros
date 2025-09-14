@@ -1999,6 +1999,42 @@
     "string": "{{count}} segmentos cargados",
     "comment": "Estado mostrando número de segmentos cargados"
   },
+  "audioProduction.insertSoundEffect": {
+    "string": "Insertar Efecto de Sonido",
+    "comment": "Botón y título de diálogo para insertar un segmento de efecto sonoro"
+  },
+  "audioProduction.addSfx": {
+    "string": "Agregar SFX",
+    "comment": "Etiqueta corta para botón agregar efecto sonoro"
+  },
+  "audioProduction.selectWavFile": {
+    "string": "Seleccionar Archivo WAV",
+    "comment": "Etiqueta para selección de archivo WAV en diálogo de efecto sonoro"
+  },
+  "audioProduction.wavFileRequirements": {
+    "string": "Requisitos: 16-48kHz, 16/24-bit, estéreo/mono, máx 300 segundos",
+    "comment": "Requisitos de formato para archivos WAV"
+  },
+  "audioProduction.invalidWavFile": {
+    "string": "Archivo WAV inválido: {{error}}",
+    "comment": "Mensaje de error para archivo WAV inválido con detalles del error"
+  },
+  "audioProduction.errorValidatingFile": {
+    "string": "Error validando archivo: {{error}}",
+    "comment": "Mensaje de error cuando falla la validación del archivo"
+  },
+  "audioProduction.sfxSegmentAdded": {
+    "string": "Segmento de efecto sonoro agregado exitosamente",
+    "comment": "Mensaje de éxito cuando se agrega segmento de efecto sonoro"
+  },
+  "audioProduction.addSegment": {
+    "string": "Agregar Segmento",
+    "comment": "Texto de botón para confirmar agregar un nuevo segmento"
+  },
+  "audioProduction.errorCreatingSegment": {
+    "string": "Error creando segmento: {{error}}",
+    "comment": "Mensaje de error cuando falla la creación del segmento"
+  },
   "audioProduction.noChaptersWithPlans": {
     "string": "No hay capítulos con planes disponibles",
     "comment": "Mensaje cuando ningún capítulo tiene planes de orquestación"

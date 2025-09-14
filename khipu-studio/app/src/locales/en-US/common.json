@@ -1538,6 +1538,42 @@
     "string": "{{count}} segments loaded",
     "comment": "Status showing number of loaded segments"
   },
+  "audioProduction.insertSoundEffect": {
+    "string": "Insert Sound Effect",
+    "comment": "Button and dialog title for inserting a sound effect segment"
+  },
+  "audioProduction.addSfx": {
+    "string": "Add SFX",
+    "comment": "Short label for add sound effect button"
+  },
+  "audioProduction.selectWavFile": {
+    "string": "Select WAV File",
+    "comment": "Label for WAV file selection in sound effect dialog"
+  },
+  "audioProduction.wavFileRequirements": {
+    "string": "Requirements: 16-48kHz, 16/24-bit, stereo/mono, max 300 seconds",
+    "comment": "File format requirements for WAV files"
+  },
+  "audioProduction.invalidWavFile": {
+    "string": "Invalid WAV file: {{error}}",
+    "comment": "Error message for invalid WAV file with error details"
+  },
+  "audioProduction.errorValidatingFile": {
+    "string": "Error validating file: {{error}}",
+    "comment": "Error message when file validation fails"
+  },
+  "audioProduction.sfxSegmentAdded": {
+    "string": "Sound effect segment added successfully",
+    "comment": "Success message when sound effect segment is added"
+  },
+  "audioProduction.addSegment": {
+    "string": "Add Segment",
+    "comment": "Button text to confirm adding a new segment"
+  },
+  "audioProduction.errorCreatingSegment": {
+    "string": "Error creating segment: {{error}}",
+    "comment": "Error message when segment creation fails"
+  },
   "audioProduction.noChaptersWithPlans": {
     "string": "No chapters with plans available",
     "comment": "Message when no chapters have orchestration plans"

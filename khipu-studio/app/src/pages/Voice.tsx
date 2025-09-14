@@ -5,8 +5,10 @@ import { useAudioPreview } from "../hooks/useAudioPreview";
 import { createDefaultProcessingChain } from "../lib/audio-production-utils";
 import AudioProductionService from "../lib/audio-production-service";
 import { AUDIO_PRESETS, getPresetsByCategory, getPresetById, type AudioPreset } from "../data/audio-presets";
+import { validateWavFile, createSfxSegment, insertSegmentAtPosition } from "../lib/additional-segments";
 import type { PlanChunk } from "../types/plan";
 import type { AudioProcessingChain } from "../types/audio-production";
+import type { AudioSegmentRow } from "../types/audio-production";
 import type { Segment } from "../types/plan";
 import type { Character } from "../types/character";
 import type { ProjectConfig } from "../types/config";
@@ -22,22 +24,6 @@ interface ChapterStatus {
   hasPlan: boolean;
   isComplete: boolean; // This tracks if orchestration is complete
   isAudioComplete: boolean; // This tracks if audio generation is complete
-}
-
-interface AudioSegmentRow {
-  rowKey: string;
-  segmentId: number; // The actual segment ID from planning - this is the source of truth for correlation
-  displayOrder: number; // The display order in the voice interface (0-based index)
-  chunkId: string; // String representation of segmentId for compatibility with existing systems
-  text: string;
-  voice: string;
-  locked: boolean;
-  sfxAfter: string | null;
-  hasAudio: boolean;
-  audioPath?: string;
-  start_char?: number;
-  end_char?: number;
-  processingChain?: AudioProcessingChain; // Per-segment processing preferences
 }
 
 export default function AudioProductionPage({ onStatus }: { onStatus: (s: string) => void }) {
@@ -70,6 +56,10 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   const [selectedRowIndex, setSelectedRowIndex] = useState(0);
   const [selectedPresetId, setSelectedPresetId] = useState<string>('clean_polished');
   const [revisionMarks, setRevisionMarks] = useState<Set<string>>(new Set()); // Track segments marked for revision
+  
+  // Additional segments state
+  const [showSfxDialog, setShowSfxDialog] = useState(false);
+  const [insertPosition, setInsertPosition] = useState<number>(-1); // Where to insert new segment
 
   // Audio preview functionality
   const audioPreview = useAudioPreview();
@@ -362,11 +352,52 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           hasAudio: segmentStatus?.hasAudio || false,
           audioPath,
           start_char: segment.start_idx,
-          end_char: segment.end_idx
+          end_char: segment.end_idx,
+          segmentType: 'plan' as const, // Original plan segments
+          isAdditional: false
         };
       });
 
       setAudioSegments(audioSegmentRows);
+      
+      // Load and merge additional segments (sound effects)
+      try {
+        const additionalSegments = await audioProductionService.loadAdditionalSegments(chapterId);
+        
+        if (additionalSegments.sfxSegments.length > 0) {
+          console.log(`🎵 Loading ${additionalSegments.sfxSegments.length} additional sound effect segments`);
+          
+          // Convert additional segments to AudioSegmentRow format
+          const additionalRows: AudioSegmentRow[] = additionalSegments.sfxSegments.map((sfxSegment, index) => ({
+            rowKey: `${chapterId}_${sfxSegment.id}_sfx`,
+            segmentId: -1 - index, // Use negative IDs for SFX segments to avoid conflicts
+            displayOrder: sfxSegment.displayOrder,
+            chunkId: sfxSegment.id,
+            text: `[SFX: ${sfxSegment.sfxFile.filename}]`,
+            voice: "",
+            locked: false,
+            sfxAfter: null,
+            hasAudio: sfxSegment.sfxFile.validated || false,
+            audioPath: sfxSegment.sfxFile.path,
+            start_char: 0,
+            end_char: 0,
+            segmentType: 'sfx' as const,
+            isAdditional: true,
+            sfxFile: sfxSegment.sfxFile,
+            processingChain: sfxSegment.processingChain
+          }));
+          
+          // Merge with plan segments and sort by display order
+          const allSegments = [...audioSegmentRows, ...additionalRows]
+            .sort((a, b) => a.displayOrder - b.displayOrder);
+          
+          setAudioSegments(allSegments);
+          console.log(`🎵 Merged ${audioSegmentRows.length} plan segments with ${additionalRows.length} SFX segments`);
+        }
+      } catch (error) {
+        console.warn('Failed to load additional segments:', error);
+        // Continue with just plan segments if additional segments fail to load
+      }
       
       // Load revision marks from plan data
       const revisionMarkedChunks = new Set<string>();
@@ -1180,6 +1211,40 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             ⏹ {t("audioProduction.stop")}
           </button>
 
+          {/* Separator for additional segments */}
+          <div style={{ 
+            width: "1px", 
+            height: "24px", 
+            backgroundColor: "var(--border)",
+            margin: "0 8px" 
+          }}></div>
+
+          {/* Additional Segments Controls */}
+          <button
+            onClick={() => {
+              setInsertPosition(selectedRowIndex + 1);
+              setShowSfxDialog(true);
+            }}
+            disabled={audioSegments.length === 0}
+            style={{
+              padding: "8px 12px",
+              fontSize: "12px",
+              fontWeight: 500,
+              backgroundColor: audioSegments.length > 0 ? "var(--accent)" : "var(--muted)",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: audioSegments.length > 0 ? "pointer" : "not-allowed",
+              opacity: audioSegments.length > 0 ? 1 : 0.6,
+              display: "flex",
+              alignItems: "center",
+              gap: "4px"
+            }}
+            title={t("audioProduction.insertSoundEffect")}
+          >
+            🎵 {t("audioProduction.addSfx")}
+          </button>
+
           {/* Status indicator - minimal */}
           <div style={{
             marginLeft: "auto",
@@ -1920,6 +1985,117 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           fontSize: "14px"
         }}>
                     {t("audioProduction.selectChapterPrompt")}
+        </div>
+      )}
+
+      {/* Sound Effect Dialog */}
+      {showSfxDialog && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: "var(--panel)",
+            border: "1px solid var(--border)",
+            borderRadius: "8px",
+            padding: "24px",
+            minWidth: "400px",
+            maxWidth: "500px"
+          }}>
+            <h3 style={{ margin: "0 0 16px 0", color: "var(--text)" }}>
+              {t("audioProduction.insertSoundEffect")}
+            </h3>
+            
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ display: "block", marginBottom: "8px", fontSize: "13px", fontWeight: 500 }}>
+                {t("audioProduction.selectWavFile")}
+              </label>
+              <input
+                type="file"
+                accept=".wav"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (file && selectedChapter && audioProductionService) {
+                    try {
+                      const validationResult = await validateWavFile(file);
+                      if (validationResult.valid) {
+                        // Create and save the SFX segment to filesystem
+                        const sfxData = {
+                          path: `sfx/${file.name}`,
+                          filename: file.name,
+                          duration: validationResult.duration || 0,
+                          validated: true
+                        };
+                        
+                        const segmentId = await audioProductionService.addSfxSegment(
+                          selectedChapter,
+                          insertPosition,
+                          sfxData
+                        );
+                        
+                        // Create UI segment and update state
+                        const sfxSegment = createSfxSegment(
+                          file.name,
+                          `sfx/${file.name}`,
+                          validationResult.duration || 0
+                        );
+                        
+                        const updatedSegments = insertSegmentAtPosition(
+                          audioSegments,
+                          sfxSegment,
+                          insertPosition
+                        );
+                        
+                        setAudioSegments(updatedSegments);
+                        setMessage(t("audioProduction.sfxSegmentAdded"));
+                        setShowSfxDialog(false);
+                      } else {
+                        setMessage(t("audioProduction.invalidWavFile", { error: validationResult.error }));
+                      }
+                    } catch (error) {
+                      setMessage(t("audioProduction.errorCreatingSegment", { error: String(error) }));
+                    }
+                  }
+                }}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  border: "1px solid var(--border)",
+                  borderRadius: "4px",
+                  backgroundColor: "var(--input)",
+                  color: "var(--text)"
+                }}
+              />
+              <div style={{ fontSize: "11px", color: "var(--textSecondary)", marginTop: "4px" }}>
+                {t("audioProduction.wavFileRequirements")}
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+              <button
+                onClick={() => setShowSfxDialog(false)}
+                style={{
+                  padding: "8px 16px",
+                  fontSize: "13px",
+                  backgroundColor: "var(--muted)",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer"
+                }}
+              >
+                {t("common.cancel")}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

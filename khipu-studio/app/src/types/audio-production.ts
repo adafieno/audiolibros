@@ -100,6 +100,35 @@ export interface AudioQualityMetrics {
   spectralBalance?: string; // analysis results
 }
 
+// Audio segment row interface for the Voice page
+export interface AudioSegmentRow {
+  rowKey: string;
+  segmentId: number; // The actual segment ID from planning - this is the source of truth for correlation
+  displayOrder: number; // The display order in the voice interface (0-based index)
+  chunkId: string; // String representation of segmentId for compatibility with existing systems
+  text: string;
+  voice: string;
+  locked: boolean;
+  sfxAfter: string | null;
+  hasAudio: boolean;
+  audioPath?: string;
+  start_char?: number;
+  end_char?: number;
+  processingChain?: AudioProcessingChain; // Per-segment processing preferences
+  
+  // Additional segment properties for audio-only content
+  segmentType: 'plan' | 'sfx'; // Type of segment - removed 'extra-tts'
+  isAdditional?: boolean; // True for segments added only to audio production (not in original plan)
+  
+  // Sound effect properties
+  sfxFile?: {
+    path: string;
+    filename: string;
+    duration?: number;
+    validated?: boolean; // True if WAV format is validated
+  };
+}
+
 export interface AudioProductionOverrides {
   voice?: string; // override assigned voice
   text?: string; // override segment text

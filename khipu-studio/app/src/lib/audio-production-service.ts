@@ -8,6 +8,28 @@ import type {
 } from '../types/audio-production';
 import type { PlanChunk } from '../types/plan';
 
+// Additional segment types for audio production - simplified to only sound effects
+export interface SfxSegmentData {
+  path: string;
+  filename: string;
+  duration?: number;
+  validated?: boolean;
+}
+
+export interface AdditionalSegmentRecord {
+  id: string;
+  displayOrder: number;
+  processingChain?: AudioProcessingChain;
+}
+
+export interface SfxSegmentRecord extends AdditionalSegmentRecord {
+  sfxFile: SfxSegmentData;
+}
+
+export interface AdditionalSegmentsData {
+  sfxSegments: SfxSegmentRecord[];
+}
+
 // Default processing chain factory function
 const createDefaultProcessingChain = (): AudioProcessingChain => ({
   noiseCleanup: {
@@ -349,6 +371,124 @@ export class AudioProductionService {
     }
     
     return {};
+  }
+
+  /**
+   * Load additional segments (SFX and extra TTS) for a chapter
+   */
+  async loadAdditionalSegments(chapterId: string): Promise<AdditionalSegmentsData> {
+    const configPath = `audio/${chapterId}/additional-segments.json`;
+    
+    try {
+      const result = await window.khipu!.call('fs:read', {
+        projectRoot: this.projectPath,
+        relPath: configPath,
+        json: true
+      });
+      
+      if (result && typeof result === 'object') {
+        return result as AdditionalSegmentsData;
+      }
+    } catch {
+      console.log(`No additional segments found for chapter ${chapterId}`);
+    }
+    
+    return {
+      sfxSegments: []
+    };
+  }
+
+  /**
+   * Save additional segments (SFX only) for a chapter
+   */
+  async saveAdditionalSegments(
+    chapterId: string, 
+    additionalSegments: AdditionalSegmentsData
+  ): Promise<void> {
+    const configPath = `audio/${chapterId}/additional-segments.json`;
+    
+    try {
+      const dataToSave = {
+        ...additionalSegments,
+        chapterId,
+        lastModified: new Date().toISOString(),
+        version: "1.0"
+      };
+      
+      await window.khipu!.call('fs:write', {
+        projectRoot: this.projectPath,
+        relPath: configPath,
+        content: JSON.stringify(dataToSave, null, 2)
+      });
+      
+      console.log(`💾 Saved additional segments for chapter ${chapterId}`);
+    } catch (error) {
+      console.error('Failed to save additional segments:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Add a new sound effect segment
+   */
+  async addSfxSegment(
+    chapterId: string,
+    displayOrder: number,
+    sfxFile: SfxSegmentData,
+    processingChain?: AudioProcessingChain
+  ): Promise<string> {
+    const segmentId = `sfx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    const additionalSegments = await this.loadAdditionalSegments(chapterId);
+    
+    additionalSegments.sfxSegments.push({
+      id: segmentId,
+      displayOrder,
+      sfxFile,
+      processingChain
+    });
+    
+    // Sort by display order
+    additionalSegments.sfxSegments.sort((a, b) => a.displayOrder - b.displayOrder);
+    
+    await this.saveAdditionalSegments(chapterId, additionalSegments);
+    
+    return segmentId;
+  }
+
+  /**
+   * Remove an additional segment
+   */
+  async removeAdditionalSegment(chapterId: string, segmentId: string): Promise<void> {
+    const additionalSegments = await this.loadAdditionalSegments(chapterId);
+    
+    // Remove from SFX segments only
+    additionalSegments.sfxSegments = additionalSegments.sfxSegments.filter(seg => seg.id !== segmentId);
+    
+    await this.saveAdditionalSegments(chapterId, additionalSegments);
+  }
+
+  /**
+   * Update display orders for additional segments (after reordering)
+   */
+  async updateAdditionalSegmentOrders(
+    chapterId: string,
+    segmentOrders: Array<{ id: string; displayOrder: number }>
+  ): Promise<void> {
+    const additionalSegments = await this.loadAdditionalSegments(chapterId);
+    
+    // Update display orders for SFX segments only
+    for (const order of segmentOrders) {
+      const sfxSegment = additionalSegments.sfxSegments.find(seg => seg.id === order.id);
+      if (sfxSegment) {
+        sfxSegment.displayOrder = order.displayOrder;
+      }
+    }
+    
+    // Sort by display order
+    additionalSegments.sfxSegments.sort((a, b) => a.displayOrder - b.displayOrder);
+    
+    await this.saveAdditionalSegments(chapterId, additionalSegments);
   }
 }
 
