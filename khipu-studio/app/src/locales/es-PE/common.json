@@ -203,6 +203,10 @@
     "string": "Manuscrito",
     "comment": ""
   },
+  "manu.description": {
+    "string": "Edita y formatea el contenido de tu manuscrito para la producción de audio",
+    "comment": ""
+  },
   "plan.regen": {
     "string": "Regenerar plan",
     "comment": ""
@@ -861,6 +865,10 @@
   },
   "book.title": {
     "string": "Metadatos del Libro",
+    "comment": ""
+  },
+  "book.description": {
+    "string": "Gestiona información del libro, metadatos y detalles de publicación",
     "comment": ""
   },
   "book.loading": {

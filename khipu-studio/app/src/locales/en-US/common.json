@@ -585,6 +585,10 @@
     "string": "Book Metadata",
     "comment": "Title for book metadata page"
   },
+  "book.description": {
+    "string": "Manage book information, metadata, and publishing details",
+    "comment": "Description for book metadata page"
+  },
   "book.loading": {
     "string": "Loading book metadata...",
     "comment": "Loading message for book metadata"
@@ -882,6 +886,10 @@
   "manu.title": {
     "string": "Manuscript",
     "comment": "Title for manuscript page"
+  },
+  "manu.description": {
+    "string": "Edit and format your manuscript content for audio production",
+    "comment": "Description for manuscript page"
   },
 
   "workflow.readyToStart": {

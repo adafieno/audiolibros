@@ -202,7 +202,7 @@ export function AppShell(props: { title?: string; pageName?: string; projectName
         })}
       </aside>
 
-      <main style={{ padding: 16, overflow: "auto", minWidth: 0, width: "100%" }}>{children}</main>
+      <main style={{ padding: "20px 32px", overflow: "auto", minWidth: 0, width: "100%" }}>{children}</main>
 
       <footer
         style={{

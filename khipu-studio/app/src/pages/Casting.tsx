@@ -199,7 +199,7 @@ export default function CastingPage() {
   };
 
   return (
-    <div style={{ padding: "2px", maxWidth: "90%" }}>
+    <div style={{ padding: "0", maxWidth: "100%" }}>
       <PageHeader 
         title="casting.title"
         description="casting.description"

@@ -214,7 +214,7 @@ function CharactersPage() {
   // Show loading while checking file existence
   if (checkingFile) {
     return (
-      <div style={{ padding: "16px", maxWidth: "1200px" }}>
+      <div style={{ padding: "16px", maxWidth: "1800px" }}>
         <div style={{ textAlign: "center", padding: "64px 0" }}>
           <p style={{ color: "var(--muted)" }}>{t("common.loading")}</p>
         </div>
@@ -225,7 +225,7 @@ function CharactersPage() {
   // Show message if no project is loaded
   if (!root) {
     return (
-      <div style={{ padding: "16px", maxWidth: "1200px" }}>
+      <div style={{ padding: "16px", maxWidth: "1800px" }}>
         <div style={{ textAlign: "center", padding: "64px 0", backgroundColor: "var(--panel)", borderRadius: "8px", border: "1px dashed var(--border)" }}>
           <p style={{ color: "var(--text)", fontSize: "18px", marginBottom: "8px" }}>{t("status.noProjectLoaded")}</p>
           <p style={{ color: "var(--muted)", fontSize: "14px" }}>{t("status.loadProjectToManageCharacters")}</p>
@@ -263,7 +263,7 @@ function CharactersPage() {
   };
 
   return (
-    <div style={{ padding: "2px", maxWidth: "90%" }}>
+    <div style={{ padding: "0", maxWidth: "100%" }}>
       <PageHeader 
         title={t("characters.title")}
         description={t("characters.description")}
