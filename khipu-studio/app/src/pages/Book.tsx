@@ -135,16 +135,26 @@ export default function Book() {
       <PageHeader 
         title="book.title"
         description="book.description"
+        actions={
+          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+            <WorkflowCompleteButton step="project">
+              {t("book.completeButton")}
+            </WorkflowCompleteButton>
+            {msg && (
+              <div style={{ fontSize: 12, color: "var(--muted)" }}>{msg}</div>
+            )}
+          </div>
+        }
       />
       {/* Basic Information */}
       <section className="mt-6">
-        <h3>{t("book.basicInfo")}</h3>
+        <h3 style={{ fontSize: '1.1rem', marginBottom: '12px' }}>{t("book.basicInfo")}</h3>
         <div className="grid-2 gap-4">
           <div className="grid-2 grid-gap-2">
             <label>
               <div>{t("book.title.label")}</div>
               <input
-                style={{ width: "80%" }}
+                style={{ width: "100%" }}
                 value={bookMeta?.title || ""}
                 onChange={(e) => updateBookMeta({ title: e.target.value })}
               />
@@ -152,7 +162,7 @@ export default function Book() {
             <label>
               <div>{t("book.subtitle.label")}</div>
               <input
-                style={{ width: "80%" }}
+                style={{ width: "100%" }}
                 value={bookMeta?.subtitle || ""}
                 onChange={(e) => updateBookMeta({ subtitle: e.target.value })}
               />
@@ -160,7 +170,7 @@ export default function Book() {
             <label>
               <div>{t("book.authors.label")}</div>
               <input
-                style={{ width: "80%" }}
+                style={{ width: "100%" }}
                 value={bookMeta?.authors?.join(", ") || ""}
                 placeholder={t("book.authors.placeholder")}
                 onChange={(e) => updateBookMeta({ 
@@ -171,7 +181,7 @@ export default function Book() {
             <label>
               <div>{t("book.narrators.label")}</div>
               <input
-                style={{ width: "80%" }}
+                style={{ width: "100%" }}
                 value={bookMeta?.narrators?.join(", ") || ""}
                 placeholder={t("book.narrators.placeholder")}
                 onChange={(e) => updateBookMeta({ 
@@ -376,12 +386,12 @@ export default function Book() {
 
       {/* Description and Content */}
       <section style={{ marginTop: 24 }}>
-        <h3>{t("book.content")}</h3>
+        <h3 style={{ fontSize: '1.1rem', marginBottom: '12px' }}>{t("book.content")}</h3>
         <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
           <label>
             <div>{t("book.description.label")}</div>
             <textarea
-              style={{ width: "80%" }}
+              style={{ width: "100%" }}
               rows={12}
               value={bookMeta?.description || ""}
               onChange={(e) => updateBookMeta({ description: e.target.value })}
@@ -414,12 +424,12 @@ export default function Book() {
 
       {/* Publishing Information */}
       <section style={{ marginTop: 24 }}>
-        <h3>{t("book.publishing")}</h3>
+        <h3 style={{ fontSize: '1.1rem', marginBottom: '12px' }}>{t("book.publishing")}</h3>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           <label>
             <div>{t("book.publisher.label")}</div>
             <input
-              style={{ width: "80%" }}
+              style={{ width: "100%" }}
               value={bookMeta?.publisher || ""}
               onChange={(e) => updateBookMeta({ publisher: e.target.value })}
             />
@@ -435,7 +445,7 @@ export default function Book() {
           <label>
             <div>{t("book.isbn.label")}</div>
             <input
-              style={{ width: "80%" }}
+              style={{ width: "100%" }}
               value={bookMeta?.isbn || ""}
               placeholder={t("book.isbnPlaceholder")}
               onChange={(e) => updateBookMeta({ isbn: e.target.value })}
@@ -444,7 +454,7 @@ export default function Book() {
           <label>
             <div>{t("book.sku.label")}</div>
             <input
-              style={{ width: "80%" }}
+              style={{ width: "100%" }}
               value={bookMeta?.sku || ""}
               onChange={(e) => updateBookMeta({ sku: e.target.value })}
             />
@@ -452,7 +462,7 @@ export default function Book() {
           <label>
             <div>{t("book.rights.label")}</div>
             <input
-              style={{ width: "80%" }}
+              style={{ width: "100%" }}
               value={bookMeta?.rights || ""}
               placeholder={t("book.copyrightPlaceholder")}
               onChange={(e) => updateBookMeta({ rights: e.target.value })}
@@ -463,12 +473,12 @@ export default function Book() {
 
       {/* Series Information */}
       <section style={{ marginTop: 24 }}>
-        <h3>{t("book.series")}</h3>
+        <h3 style={{ fontSize: '1.1rem', marginBottom: '12px' }}>{t("book.series")}</h3>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           <label>
             <div>{t("book.seriesName.label")}</div>
             <input
-              style={{ width: "80%" }}  
+              style={{ width: "100%" }}  
               value={bookMeta?.series?.name || ""}
               onChange={(e) => updateBookMeta({ 
                 series: { 
@@ -496,7 +506,7 @@ export default function Book() {
 
       {/* Digital Voice Disclosure */}
       <section style={{ marginTop: 24 }}>
-        <h3>{t("book.disclosure")}</h3>
+        <h3 style={{ fontSize: '1.1rem', marginBottom: '12px' }}>{t("book.disclosure")}</h3>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <input
@@ -510,13 +520,6 @@ export default function Book() {
           </label>
         </div>
       </section>
-
-      <div style={{ marginTop: 24, display: "flex", gap: 12, alignItems: "center" }}>
-        <WorkflowCompleteButton step="project">
-          {t("book.completeButton")}
-        </WorkflowCompleteButton>
-        <div style={{ fontSize: 12, color: "#9ca3af" }}>{msg}</div>
-      </div>
     </div>
   );
 }
