@@ -283,6 +283,10 @@
     "string": "Configuración del proyecto",
     "comment": ""
   },
+  "project.description": {
+    "string": "Configurar motores de IA, credenciales y opciones de empaquetado del proyecto.",
+    "comment": ""
+  },
   "project.loading": {
     "string": "Cargando configuración...",
     "comment": ""

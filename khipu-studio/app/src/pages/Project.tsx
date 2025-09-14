@@ -148,14 +148,9 @@ export default function Project() {
         title="project.title"
         description="project.description"
         actions={
-          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-            <WorkflowCompleteButton step="project">
-              {t("project.markComplete")}
-            </WorkflowCompleteButton>
-            <div style={{ fontSize: 12, color: "var(--muted)" }}>
-              {t("project.autoSave")}
-            </div>
-          </div>
+          <WorkflowCompleteButton step="project">
+            {t("project.markComplete")}
+          </WorkflowCompleteButton>
         }
       />
       

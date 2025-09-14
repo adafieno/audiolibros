@@ -698,6 +698,10 @@
     "string": "Project Configuration",
     "comment": "Title for project configuration page"
   },
+  "project.description": {
+    "string": "Configure AI engines, credentials, and project packaging options.",
+    "comment": "Description for project configuration page"
+  },
   "project.loading": {
     "string": "Loading configuration...",
     "comment": "Loading message for project configuration"
