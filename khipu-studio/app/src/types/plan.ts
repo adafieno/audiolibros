@@ -7,6 +7,7 @@ export interface Segment {
   text: string;
   originalText?: string; // Preserve original text for auditions/caching
   voice?: string; // for UI assignment only
+  needsRevision?: boolean; // Mark segments that need further work
 }
 
 export interface PlanRow {

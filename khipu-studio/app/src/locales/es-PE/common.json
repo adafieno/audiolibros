@@ -2095,6 +2095,34 @@
     "string": "Seleccione un capítulo para comenzar la producción de audio",
     "comment": "Mensaje pidiendo al usuario que seleccione un capítulo"
   },
+  "audioProduction.markForRevision": {
+    "string": "Marcar segmento para revisión",
+    "comment": "Información sobre herramienta para marcar un segmento que necesita más trabajo"
+  },
+  "audioProduction.removeRevisionMark": {
+    "string": "Quitar marca de revisión",
+    "comment": "Información sobre herramienta para desmarcar un segmento que fue marcado para revisión"
+  },
+  "audioProduction.revisionMarkAdded": {
+    "string": "Segmento marcado para revisión",
+    "comment": "Mensaje de confirmación cuando un segmento es marcado para revisión"
+  },
+  "audioProduction.revisionMarkRemoved": {
+    "string": "Marca de revisión eliminada",
+    "comment": "Mensaje de confirmación cuando se elimina la marca de revisión de un segmento"
+  },
+  "audioProduction.revisionMarkError": {
+    "string": "Error al actualizar marca de revisión",
+    "comment": "Mensaje de error cuando falla la actualización de marca de revisión"
+  },
+  "audioProduction.revisionStatus": {
+    "string": "Estado de revisión",
+    "comment": "Encabezado para columna de estado de revisión en tabla de segmentos"
+  },
+  "audioProduction.markedForRevision": {
+    "string": "Marcado para revisión",
+    "comment": "Información sobre herramienta indicando que el segmento está marcado para revisión"
+  },
   "manuscript.loadingChapter": {
     "string": "Cargando capítulo…",
     "comment": "Mensaje de estado al cargar un capítulo"

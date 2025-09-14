@@ -67,6 +67,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   const [generatingAudio, setGeneratingAudio] = useState<Set<string>>(new Set());
   const [selectedRowIndex, setSelectedRowIndex] = useState(0);
   const [selectedPresetId, setSelectedPresetId] = useState<string>('clean_polished');
+  const [revisionMarks, setRevisionMarks] = useState<Set<string>>(new Set()); // Track segments marked for revision
 
   // Audio preview functionality
   const audioPreview = useAudioPreview();
@@ -342,6 +343,17 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
       setAudioSegments(segments);
       
+      // Load revision marks from plan data
+      const revisionMarkedChunks = new Set<string>();
+      if (Array.isArray(planData)) {
+        planData.forEach((segment: Segment & { needsRevision?: boolean }) => {
+          if (segment.needsRevision) {
+            revisionMarkedChunks.add(segment.segment_id.toString());
+          }
+        });
+      }
+      setRevisionMarks(revisionMarkedChunks);
+      
       // Ensure a segment is selected when segments are loaded
       if (segments.length > 0) {
         setSelectedRowIndex(prev => {
@@ -600,6 +612,108 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       console.error("Stop failed:", error);
     }
   }, [audioPreview]);
+
+  // Revision mark helper functions
+  const saveRevisionToPlan = useCallback(async (chunkId: string, marked: boolean) => {
+    if (!root || !selectedChapter) return;
+
+    try {
+      // Load current plan data
+      const planPath = `ssml/plans/${selectedChapter}.plan.json`;
+      const planData = await window.khipu!.call("fs:read", {
+        projectRoot: root,
+        relPath: planPath,
+        json: true,
+      });
+
+      if (Array.isArray(planData)) {
+        // Update the segment with revision mark
+        const updatedPlan = planData.map((segment: Segment) => {
+          if (segment.segment_id.toString() === chunkId) {
+            return { ...segment, needsRevision: marked };
+          }
+          return segment;
+        });
+
+        // Save back to plan file
+        await window.khipu!.call("fs:write", {
+          projectRoot: root,
+          relPath: planPath,
+          content: JSON.stringify(updatedPlan, null, 2),
+        });
+      }
+    } catch (error) {
+      console.error("Error saving revision mark to plan:", error);
+      throw error;
+    }
+  }, [root, selectedChapter]);
+
+  const saveRevisionToAudioMetadata = useCallback(async (chunkId: string, marked: boolean) => {
+    if (!audioProductionService || !selectedChapter) return;
+
+    try {
+      await audioProductionService.updateSegmentMetadata(selectedChapter, chunkId, {
+        overrides: {
+          notes: marked ? "Marked for revision" : undefined
+        }
+      });
+    } catch (error) {
+      console.error("Error saving revision mark to audio metadata:", error);
+      throw error;
+    }
+  }, [audioProductionService, selectedChapter]);
+
+  const isSegmentMarkedForRevision = useCallback((segmentIndex: number): boolean => {
+    if (segmentIndex < 0 || segmentIndex >= audioSegments.length) return false;
+    const segment = audioSegments[segmentIndex];
+    return revisionMarks.has(segment.chunkId);
+  }, [audioSegments, revisionMarks]);
+
+  const handleToggleRevisionMark = useCallback(async (segmentIndex: number) => {
+    if (segmentIndex < 0 || segmentIndex >= audioSegments.length || !root || !selectedChapter) {
+      return;
+    }
+
+    const segment = audioSegments[segmentIndex];
+    const isCurrentlyMarked = revisionMarks.has(segment.chunkId);
+    
+    try {
+      // Update local state immediately for UI responsiveness
+      setRevisionMarks(prev => {
+        const newMarks = new Set(prev);
+        if (isCurrentlyMarked) {
+          newMarks.delete(segment.chunkId);
+        } else {
+          newMarks.add(segment.chunkId);
+        }
+        return newMarks;
+      });
+
+      // Save revision mark to both planning data and audio metadata
+      await Promise.all([
+        saveRevisionToPlan(segment.chunkId, !isCurrentlyMarked),
+        saveRevisionToAudioMetadata(segment.chunkId, !isCurrentlyMarked)
+      ]);
+
+      setMessage(isCurrentlyMarked 
+        ? t("audioProduction.revisionMarkRemoved")
+        : t("audioProduction.revisionMarkAdded"));
+
+    } catch (error) {
+      console.error("Error updating revision mark:", error);
+      // Revert local state on error
+      setRevisionMarks(prev => {
+        const newMarks = new Set(prev);
+        if (isCurrentlyMarked) {
+          newMarks.add(segment.chunkId);
+        } else {
+          newMarks.delete(segment.chunkId);
+        }
+        return newMarks;
+      });
+      setMessage(t("audioProduction.revisionMarkError"));
+    }
+  }, [audioSegments, revisionMarks, root, selectedChapter, t, saveRevisionToPlan, saveRevisionToAudioMetadata]);
 
   useEffect(() => {
     loadChapters();
@@ -864,6 +978,38 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             >
               ▶|
             </button>
+
+            {/* Revision Mark Button */}
+            <button
+              onClick={() => {
+                if (selectedRowIndex >= 0 && selectedRowIndex < audioSegments.length) {
+                  handleToggleRevisionMark(selectedRowIndex);
+                }
+              }}
+              disabled={audioSegments.length === 0 || selectedRowIndex < 0}
+              style={{
+                padding: "8px 12px",
+                fontSize: "13px",
+                fontWeight: 500,
+                backgroundColor: (audioSegments.length > 0 && selectedRowIndex >= 0) ? 
+                  (isSegmentMarkedForRevision(selectedRowIndex) ? "var(--warning)" : "var(--panel)") 
+                  : "var(--muted)",
+                color: isSegmentMarkedForRevision(selectedRowIndex) ? "black" : "var(--text)",
+                border: `1px solid ${isSegmentMarkedForRevision(selectedRowIndex) ? "var(--warning)" : "var(--border)"}`,
+                borderRadius: "4px",
+                cursor: (audioSegments.length > 0 && selectedRowIndex >= 0) ? "pointer" : "not-allowed",
+                opacity: (audioSegments.length > 0 && selectedRowIndex >= 0) ? 1 : 0.5,
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                marginLeft: "8px"
+              }}
+              title={isSegmentMarkedForRevision(selectedRowIndex) ? 
+                t("audioProduction.removeRevisionMark") : 
+                t("audioProduction.markForRevision")}
+            >
+              {isSegmentMarkedForRevision(selectedRowIndex) ? "🚩" : "🏳"}
+            </button>
           </div>
 
           <button
@@ -1078,6 +1224,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                 <thead>
                   <tr style={{ backgroundColor: "var(--panelAccent)" }}>
                     <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}></th>
+                    <th style={{ padding: "4px", textAlign: "center", color: "var(--text)", fontWeight: 500, width: "32px" }} title={t("audioProduction.revisionStatus")}>🏳</th>
                     <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>{t("audioProduction.tableHeaderId")}</th>
                     <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>{t("audioProduction.tableHeaderTextPreview")}</th>
                     <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>{t("audioProduction.tableHeaderVoice")}</th>
@@ -1097,6 +1244,13 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                     >
                       <td style={{ padding: "8px", color: selectedRowIndex === index ? "white" : "var(--muted)" }}>
                         {selectedRowIndex === index ? "▶" : ""}
+                      </td>
+                      <td style={{ padding: "4px", textAlign: "center" }}>
+                        {revisionMarks.has(segment.chunkId) ? (
+                          <span style={{ color: "var(--warning)", fontSize: "14px" }} title={t("audioProduction.markedForRevision")}>🚩</span>
+                        ) : (
+                          <span style={{ color: "var(--muted)", fontSize: "12px" }}>•</span>
+                        )}
                       </td>
                       <td style={{ padding: "8px", color: "inherit" }}>
                         {segment.chunkId || '(missing)'}

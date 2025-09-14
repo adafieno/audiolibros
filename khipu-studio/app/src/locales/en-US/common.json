@@ -1634,6 +1634,34 @@
     "string": "Select a chapter to begin audio production",
     "comment": "Message prompting user to select a chapter"
   },
+  "audioProduction.markForRevision": {
+    "string": "Mark segment for revision",
+    "comment": "Tooltip for marking a segment that needs further work"
+  },
+  "audioProduction.removeRevisionMark": {
+    "string": "Remove revision mark",
+    "comment": "Tooltip for unmarking a segment that was marked for revision"
+  },
+  "audioProduction.revisionMarkAdded": {
+    "string": "Segment marked for revision",
+    "comment": "Confirmation message when segment is marked for revision"
+  },
+  "audioProduction.revisionMarkRemoved": {
+    "string": "Revision mark removed",
+    "comment": "Confirmation message when revision mark is removed from segment"
+  },
+  "audioProduction.revisionMarkError": {
+    "string": "Error updating revision mark",
+    "comment": "Error message when revision mark update fails"
+  },
+  "audioProduction.revisionStatus": {
+    "string": "Revision Status",
+    "comment": "Header for revision status column in segments table"
+  },
+  "audioProduction.markedForRevision": {
+    "string": "Marked for revision",
+    "comment": "Tooltip indicating segment is marked for revision"
+  },
 
   "manuscript.loadingChapter": {
     "string": "Loading chapter…",
