@@ -16,13 +16,12 @@ type RouteItem = {
 
 const homeRoute: RouteItem = { to: "/", key: "nav.home", icon: "🏠", exact: true };
 const settingsRoute: RouteItem = { to: "/settings", key: "nav.settings", icon: "⚙️" };
-const costRoute: RouteItem = { to: "/cost", key: "nav.cost", icon: "💰" };
 
 const projectRoutes: RouteItem[] = [
   { to: "/book",       key: "nav.book",       icon: "📖", workflowStep: "project" },
   { to: "/project",    key: "nav.project",    icon: "📄", workflowStep: "project" },
+  { to: "/cost",       key: "nav.cost",       icon: "💰", workflowStep: "project" }, // Show as soon as project opens
   { to: "/manuscript", key: "nav.manuscript", icon: "✍️", workflowStep: "manuscript" },
-  { to: "/cost",       key: "nav.cost",       icon: "💰", workflowStep: "manuscript" }, // Show alongside manuscript
   { to: "/casting",    key: "nav.casting",    icon: "🗣️", workflowStep: "casting" },
   { to: "/characters", key: "nav.characters", icon: "🎭", workflowStep: "characters" },
   { to: "/planning",   key: "nav.planning",   icon: "🪄", workflowStep: "planning" },
@@ -44,7 +43,7 @@ export function AppShell(props: { title?: string; pageName?: string; projectName
   
   const routes: RouteItem[] = root
     ? [homeRoute, ...availableProjectRoutes, settingsRoute]
-    : [homeRoute, costRoute, settingsRoute];
+    : [homeRoute, settingsRoute];
 
   // Compose top bar: "Khipu Studio — Page Name — Project Name"
   let barTitle = t("app.title");
