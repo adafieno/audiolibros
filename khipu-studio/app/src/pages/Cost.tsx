@@ -244,17 +244,17 @@ export default function Cost() {
         justifyContent: 'space-between',
         alignItems: 'start',
         background: 'var(--panel)',
-        padding: '20px',
+        padding: '12px 16px',
         borderBottom: '1px solid var(--border)',
         borderRadius: '8px',
-        marginBottom: '16px'
+        marginBottom: '12px'
       }}>
         <div>
           <h1 style={{
-            fontSize: '24px',
+            fontSize: '20px',
             fontWeight: '700',
             color: 'var(--text)',
-            margin: '0 0 8px 0',
+            margin: '0 0 4px 0',
             display: 'flex',
             alignItems: 'center',
             gap: '8px'
@@ -272,7 +272,7 @@ export default function Cost() {
         
         <div style={{
           display: 'flex',
-          gap: '12px',
+          gap: '8px',
           alignItems: 'center'
         }}>
           {/* Time Range Selector */}
@@ -406,20 +406,20 @@ export default function Cost() {
           background: 'var(--panel)',
           border: '1px solid var(--border)',
           borderRadius: '8px',
-          padding: '20px',
-          marginBottom: '16px'
+          padding: '12px 16px',
+          marginBottom: '12px'
         }}>
           <h3 style={{
-            fontSize: '18px',
+            fontSize: '16px',
             fontWeight: '600',
-            marginBottom: '16px',
+            marginBottom: '12px',
             color: 'var(--text)'
           }}>{t('cost.settings', 'Cost Settings')}</h3>
           
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '16px'
+            gap: '12px'
           }}>
             {/* OpenAI GPT-4o */}
             <div>
@@ -686,15 +686,15 @@ export default function Cost() {
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-        gap: '16px',
-        marginBottom: '24px'
+        gap: '12px',
+        marginBottom: '16px'
       }}>
         {/* Total Cost */}
         <div style={{
           background: 'var(--panel)',
           border: '1px solid var(--border)',
           borderRadius: '8px',
-          padding: '20px'
+          padding: '14px 16px'
         }}>
           <div style={{
             display: 'flex',
@@ -738,7 +738,7 @@ export default function Cost() {
           background: 'var(--panel)',
           border: '1px solid var(--border)',
           borderRadius: '8px',
-          padding: '20px'
+          padding: '14px 16px'
         }}>
           <div style={{
             display: 'flex',
@@ -791,7 +791,7 @@ export default function Cost() {
           background: 'var(--panel)',
           border: '1px solid var(--border)',
           borderRadius: '8px',
-          padding: '20px'
+          padding: '14px 16px'
         }}>
           <div style={{
             display: 'flex',
@@ -844,7 +844,7 @@ export default function Cost() {
           background: 'var(--panel)',
           border: '1px solid var(--border)',
           borderRadius: '8px',
-          padding: '20px'
+          padding: '14px 16px'
         }}>
           <div style={{
             display: 'flex',
@@ -865,14 +865,14 @@ export default function Cost() {
                 color: 'var(--text)',
                 margin: '0'
               }}>
-                {Math.round(summary.totalLlmTokens / 1000)}K tokens
+                {Math.round(summary.totalLlmTokens / 1000)}{t('cost.units.kTokens', 'K tokens')}
               </p>
               <p style={{
                 fontSize: '14px',
                 color: 'var(--muted)',
                 margin: '4px 0 0 0'
               }}>
-                {Math.round(summary.totalTtsCharacters / 1000)}K characters
+                {Math.round(summary.totalTtsCharacters / 1000)}{t('cost.units.kCharacters', 'K characters')}
               </p>
             </div>
             <div style={{
@@ -895,26 +895,26 @@ export default function Cost() {
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-        gap: '16px',
-        marginBottom: '24px'
+        gap: '12px',
+        marginBottom: '16px'
       }}>
         {/* Cost by Service Type */}
         <div style={{
           background: 'var(--panel)',
           border: '1px solid var(--border)',
           borderRadius: '8px',
-          padding: '20px'
+          padding: '14px 16px'
         }}>
           <h3 style={{
-            fontSize: '18px',
+            fontSize: '16px',
             fontWeight: '600',
             marginBottom: '16px',
             color: 'var(--text)',
-            margin: '0 0 16px 0'
+            margin: '0 0 12px 0'
           }}>
             {t('cost.costByService', 'Cost by Service')}
           </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
@@ -1034,26 +1034,26 @@ export default function Cost() {
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-        gap: '16px',
-        marginBottom: '24px'
+        gap: '12px',
+        marginBottom: '16px'
       }}>
         {/* Cost by Module */}
         <div style={{
           background: 'var(--panel)',
           border: '1px solid var(--border)',
           borderRadius: '8px',
-          padding: '20px'
+          padding: '14px 16px'
         }}>
           <h3 style={{
-            fontSize: '18px',
+            fontSize: '16px',
             fontWeight: '600',
             marginBottom: '16px',
             color: 'var(--text)',
-            margin: '0 0 16px 0'
+            margin: '0 0 12px 0'
           }}>
             {t('cost.costByModule', 'Cost by Module')}
           </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {summary.costsByModule.slice(0, 6).map((module, index) => {
               const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
               const color = colors[index % colors.length];
@@ -1071,7 +1071,7 @@ export default function Cost() {
                     alignItems: 'center'
                   }}>
                     <span style={{ fontSize: '14px', color: 'var(--muted)' }}>
-                      📦 {module.module}
+                      🧩 {module.module}
                     </span>
                     <span style={{ fontWeight: '600', color: 'var(--text)', fontSize: '14px' }}>
                       {CostCalculator.formatCost(module.cost, settings.currency)}
@@ -1120,7 +1120,7 @@ export default function Cost() {
           background: 'var(--panel)',
           border: '1px solid var(--border)',
           borderRadius: '8px',
-          padding: '20px'
+          padding: '14px 16px'
         }}>
           <h3 style={{
             fontSize: '18px',
@@ -1140,14 +1140,23 @@ export default function Cost() {
               const color = colors[index % colors.length];
               const percentage = summary.totalCost > 0 ? (cost / summary.totalCost) * 100 : 0;
               
-              // Page icons mapping
+              // Page icons mapping - using exact same emojis as navigation
               const pageIcons: Record<string, string> = {
-                'manuscript': '📖',
-                'casting': '🎭',
-                'characters': '👥',  
+                'book': '📖',
+                'project': '📄', 
+                'manuscript': '✍️',
+                'casting': '🗣️',
+                'characters': '🎭',
+                'planning': '🪄',
+                'voice': '🎙️',
+                'packaging': '📦',
+                'cost': '�',
+                'settings': '⚙️',
+                'home': '🏠',
+                // Legacy mappings for old page names
                 'orchestration': '🎼',
-                'audio_production': '🎤',
-                'planning': '📋',
+                'audio_production': '�️',
+                'chapter_planning': '🪄',
                 'unknown': '❓'
               };
               
@@ -1204,7 +1213,7 @@ export default function Cost() {
           background: 'var(--panel)',
           border: '1px solid var(--border)',
           borderRadius: '8px',
-          padding: '20px'
+          padding: '14px 16px'
         }}>
           <h3 style={{
             fontSize: '18px',

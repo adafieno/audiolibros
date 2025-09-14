@@ -279,7 +279,10 @@ export class CostCalculator {
     // Use provided locale, or detect from browser, or fallback to en-US
     const userLocale = locale || (typeof navigator !== 'undefined' ? navigator.language : 'en-US');
     
-    const formatter = new Intl.NumberFormat(userLocale, {
+    // For USD currency, prefer US formatting regardless of locale to avoid confusion
+    const formatLocale = currency === 'USD' ? 'en-US' : userLocale;
+    
+    const formatter = new Intl.NumberFormat(formatLocale, {
       style: 'currency',
       currency: currency,
       minimumFractionDigits: 4,
