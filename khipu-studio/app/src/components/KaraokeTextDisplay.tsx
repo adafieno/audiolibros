@@ -37,6 +37,14 @@ export const TextDisplay: React.FC<TextDisplayProps> = ({
   // Calculate progress percentage
   const progressPercent = totalDuration > 0 ? (currentTime / totalDuration) * 100 : 0;
 
+  // Debug logging
+  console.log('TextDisplay Debug:', { 
+    isPlaying, 
+    currentTime, 
+    totalDuration, 
+    progressPercent 
+  });
+
   // If no text, show placeholder
   if (!text?.trim()) {
     return (
@@ -114,8 +122,8 @@ export const TextDisplay: React.FC<TextDisplayProps> = ({
         {text}
       </div>
 
-      {/* Progress bar */}
-      {(totalDuration > 0 || isPlaying) && (
+      {/* Progress bar - temporarily always shown for debugging */}
+      {(
         <div style={{
           padding: "12px 16px",
           borderTop: "1px solid var(--border)",

@@ -562,7 +562,7 @@ export class AudioPreviewService {
     
     console.log('🎵 [AudioService] Set isPlaying = true, calling notifyStateChange...');
     this.notifyStateChange();
-    this.startTimeUpdates(); // Start continuous time updates
+    // this.startTimeUpdates(); // Temporarily disabled to debug
   }
 
   /**
