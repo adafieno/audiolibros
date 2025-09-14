@@ -14,3 +14,6 @@ khipu-studio/app/src/locales/es-PE/fix-capitalization.ps1
 khipu-studio/app/src/locales/es-PE/fix-spanish-capitalization.ps1
 khipu-studio/app/src/locales/es-PE/common.json.backup
 khipu-studio/app/src/locales/es-PE/common.json.backup-before-caps
+khipu-studio/patch-processing-chains-simple.ps1
+khipu-studio/patch-processing-chains.ps1
+khipu-studio/scan-segment-references.ps1
