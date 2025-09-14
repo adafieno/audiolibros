@@ -124,11 +124,22 @@ export interface CostSummary {
     count: number;
   }>;
   
-  // Daily breakdown
+  // Breakdown by module
+  costsByModule: Array<{
+    module: string;
+    cost: number;
+    count: number;
+    operations: string[];
+  }>;
+  
+  // Timeline data (extended)
   dailyCosts: Array<{
     date: Date;
     cost: number;
     savings: number;
+    llmCost: number;
+    ttsCost: number;
+    operations: number;
   }>;
 }
 

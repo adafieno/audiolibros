@@ -984,6 +984,266 @@ export default function Cost() {
         </div>
       </div>
 
+      {/* Module Breakdown and Timeline Charts */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+        gap: '16px',
+        marginBottom: '24px'
+      }}>
+        {/* Cost by Module */}
+        <div style={{
+          background: 'var(--panel)',
+          border: '1px solid var(--border)',
+          borderRadius: '8px',
+          padding: '20px'
+        }}>
+          <h3 style={{
+            fontSize: '18px',
+            fontWeight: '600',
+            marginBottom: '16px',
+            color: 'var(--text)',
+            margin: '0 0 16px 0'
+          }}>
+            {t('cost.costByModule', 'Cost by Module')}
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {summary.costsByModule.slice(0, 6).map((module, index) => {
+              const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+              const color = colors[index % colors.length];
+              const percentage = summary.totalCost > 0 ? (module.cost / summary.totalCost) * 100 : 0;
+              
+              return (
+                <div key={module.module} style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}>
+                    <span style={{ fontSize: '14px', color: 'var(--muted)' }}>
+                      📦 {module.module}
+                    </span>
+                    <span style={{ fontWeight: '600', color: 'var(--text)', fontSize: '14px' }}>
+                      {CostCalculator.formatCost(module.cost, settings.currency)}
+                    </span>
+                  </div>
+                  <div style={{
+                    width: '100%',
+                    height: '6px',
+                    background: 'var(--border)',
+                    borderRadius: '3px',
+                    overflow: 'hidden'
+                  }}>
+                    <div style={{
+                      height: '100%',
+                      background: color,
+                      borderRadius: '3px',
+                      width: `${percentage}%`,
+                      transition: 'width 0.3s ease'
+                    }}></div>
+                  </div>
+                  <div style={{
+                    fontSize: '12px',
+                    color: 'var(--muted)',
+                    display: 'flex',
+                    justifyContent: 'space-between'
+                  }}>
+                    <span>{module.count} operations</span>
+                    <span>{percentage.toFixed(1)}%</span>
+                  </div>
+                  <div style={{
+                    fontSize: '11px',
+                    color: 'var(--muted)',
+                    fontStyle: 'italic',
+                    marginTop: '2px'
+                  }}>
+                    {module.operations.slice(0, 3).join(', ')}{module.operations.length > 3 ? `, +${module.operations.length - 3} more` : ''}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Timeline Chart */}
+        <div style={{
+          background: 'var(--panel)',
+          border: '1px solid var(--border)',
+          borderRadius: '8px',
+          padding: '20px'
+        }}>
+          <h3 style={{
+            fontSize: '18px',
+            fontWeight: '600',
+            marginBottom: '16px',
+            color: 'var(--text)',
+            margin: '0 0 16px 0'
+          }}>
+            {t('cost.costTimeline', 'Cost Timeline')}
+          </h3>
+          
+          {summary.dailyCosts.length > 0 ? (
+            <div style={{ position: 'relative' }}>
+              {/* Chart Area */}
+              <div style={{ 
+                height: '200px', 
+                position: 'relative',
+                marginBottom: '16px',
+                background: 'rgba(var(--text-rgb), 0.02)',
+                borderRadius: '4px',
+                padding: '12px'
+              }}>
+                {/* Y-axis labels */}
+                <div style={{
+                  position: 'absolute',
+                  left: '0',
+                  top: '0',
+                  height: '100%',
+                  width: '40px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  fontSize: '10px',
+                  color: 'var(--muted)'
+                }}>
+                  <span>{Math.max(...summary.dailyCosts.map(d => d.cost)).toFixed(3)}</span>
+                  <span>0</span>
+                </div>
+                
+                {/* Chart bars */}
+                <div style={{
+                  marginLeft: '45px',
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'end',
+                  gap: '2px',
+                  overflow: 'hidden'
+                }}>
+                  {summary.dailyCosts.slice(-30).map((day, index) => {
+                    const maxCost = Math.max(...summary.dailyCosts.map(d => d.cost));
+                    const llmHeight = maxCost > 0 ? (day.llmCost / maxCost) * 100 : 0;
+                    const ttsHeight = maxCost > 0 ? (day.ttsCost / maxCost) * 100 : 0;
+                    
+                    return (
+                      <div key={index} style={{
+                        flex: 1,
+                        height: '100%',
+                        position: 'relative',
+                        minWidth: '8px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'end'
+                      }}>
+                        {/* Stacked bars for LLM and TTS costs */}
+                        {day.llmCost > 0 && (
+                          <div style={{
+                            height: `${llmHeight}%`,
+                            background: '#3b82f6',
+                            borderRadius: '1px 1px 0 0',
+                            minHeight: day.llmCost > 0 ? '2px' : '0'
+                          }}></div>
+                        )}
+                        {day.ttsCost > 0 && (
+                          <div style={{
+                            height: `${ttsHeight}%`,
+                            background: '#10b981',
+                            borderRadius: day.llmCost > 0 ? '0' : '1px 1px 0 0',
+                            minHeight: day.ttsCost > 0 ? '2px' : '0'
+                          }}></div>
+                        )}
+                        
+                        {/* Tooltip on hover */}
+                        <div 
+                          style={{
+                            position: 'absolute',
+                            bottom: '100%',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            background: 'var(--tooltip-bg, rgba(0,0,0,0.8))',
+                            color: 'var(--tooltip-text, white)',
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            fontSize: '10px',
+                            whiteSpace: 'nowrap',
+                            opacity: 0,
+                            pointerEvents: 'none',
+                            zIndex: 10,
+                            transition: 'opacity 0.2s'
+                          }}
+                        >
+                          <div>{day.date.toLocaleDateString()}</div>
+                          <div>Total: {CostCalculator.formatCost(day.cost, settings.currency)}</div>
+                          <div>Operations: {day.operations}</div>
+                          {day.savings > 0 && <div>Saved: {CostCalculator.formatCost(day.savings, settings.currency)}</div>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              {/* Legend */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '16px',
+                fontSize: '12px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div style={{ width: '12px', height: '8px', background: '#3b82f6', borderRadius: '2px' }}></div>
+                  <span style={{ color: 'var(--muted)' }}>LLM</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div style={{ width: '12px', height: '8px', background: '#10b981', borderRadius: '2px' }}></div>
+                  <span style={{ color: 'var(--muted)' }}>TTS</span>
+                </div>
+              </div>
+              
+              {/* Summary stats */}
+              <div style={{
+                marginTop: '16px',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))',
+                gap: '8px',
+                textAlign: 'center'
+              }}>
+                <div>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)' }}>
+                    {summary.dailyCosts.length}
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Days</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)' }}>
+                    {Math.round(summary.dailyCosts.reduce((sum, day) => sum + day.operations, 0) / summary.dailyCosts.length)}
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Avg Ops/Day</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)' }}>
+                    {CostCalculator.formatCost(summary.dailyCosts.reduce((sum, day) => sum + day.cost, 0) / summary.dailyCosts.length, settings.currency)}
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Avg Cost/Day</div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div style={{
+              textAlign: 'center',
+              padding: '40px',
+              color: 'var(--muted)',
+              fontSize: '14px'
+            }}>
+              📊 No timeline data available for the selected period
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Cache Performance */}
       <div style={{
         background: 'var(--panel)',

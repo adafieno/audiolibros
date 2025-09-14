@@ -439,14 +439,80 @@ export class CostTrackingService {
       .sort((a, b) => b.cost - a.cost)
       .slice(0, 10);
     
-    // Daily breakdown
-    const dailyCostsMap: Record<string, { cost: number; savings: number }> = {};
+    // Module breakdown - group operations by module
+    const moduleMapping: Record<string, string> = {
+      // TTS Module
+      'voice_audition': 'TTS Module',
+      'voice_testing': 'TTS Module', 
+      'audio_synthesis': 'TTS Module',
+      'segment_generation': 'TTS Module',
+      'audio_preview': 'TTS Module',
+      
+      // LLM Module
+      'character_assignment': 'LLM Module',
+      'character_generation': 'LLM Module',
+      'character_analysis': 'LLM Module',
+      'manuscript_analysis': 'LLM Module',
+      'text_processing': 'LLM Module',
+      
+      // Audio Processing Module
+      'audio_processing': 'Audio Processing Module',
+      'sox_processing': 'Audio Processing Module',
+      'effect_chain': 'Audio Processing Module',
+      
+      // Text Processing Module  
+      'text_parsing': 'Text Processing Module',
+      'segment_parsing': 'Text Processing Module',
+      'ssml_generation': 'Text Processing Module',
+      
+      // Cache Module
+      'cache_operation': 'Cache Module',
+      'cache_management': 'Cache Module'
+    };
+    
+    const moduleCosts: Record<string, { cost: number; count: number; operations: Set<string> }> = {};
+    for (const entry of entries) {
+      const module = moduleMapping[entry.operation] || 'Other Module';
+      if (!moduleCosts[module]) {
+        moduleCosts[module] = { cost: 0, count: 0, operations: new Set() };
+      }
+      moduleCosts[module].cost += entry.totalCost;
+      moduleCosts[module].count += 1;
+      moduleCosts[module].operations.add(entry.operation);
+    }
+    
+    const costsByModule = Object.entries(moduleCosts)
+      .map(([module, data]) => ({
+        module,
+        cost: data.cost,
+        count: data.count,
+        operations: Array.from(data.operations)
+      }))
+      .sort((a, b) => b.cost - a.cost);
+    
+    // Enhanced daily breakdown with more metrics
+    const dailyCostsMap: Record<string, { 
+      cost: number; 
+      savings: number; 
+      llmCost: number; 
+      ttsCost: number; 
+      operations: number 
+    }> = {};
+    
     for (const entry of entries) {
       const dateKey = entry.timestamp.toDateString();
       if (!dailyCostsMap[dateKey]) {
-        dailyCostsMap[dateKey] = { cost: 0, savings: 0 };
+        dailyCostsMap[dateKey] = { cost: 0, savings: 0, llmCost: 0, ttsCost: 0, operations: 0 };
       }
       dailyCostsMap[dateKey].cost += entry.totalCost;
+      dailyCostsMap[dateKey].operations += 1;
+      
+      if (entry.serviceType === 'llm') {
+        dailyCostsMap[dateKey].llmCost += entry.totalCost;
+      } else if (entry.serviceType === 'tts') {
+        dailyCostsMap[dateKey].ttsCost += entry.totalCost;
+      }
+      
       if (entry.wasCached && entry.cacheHit && entry.originalCost) {
         dailyCostsMap[dateKey].savings += entry.originalCost;
       }
@@ -456,7 +522,10 @@ export class CostTrackingService {
       .map(([dateStr, data]) => ({
         date: new Date(dateStr),
         cost: data.cost,
-        savings: data.savings
+        savings: data.savings,
+        llmCost: data.llmCost,
+        ttsCost: data.ttsCost,
+        operations: data.operations
       }))
       .sort((a, b) => a.date.getTime() - b.date.getTime());
     
@@ -477,6 +546,7 @@ export class CostTrackingService {
       cacheHitRate,
       estimatedSavingsFromCache: totalSavings,
       topOperationsByCost,
+      costsByModule,
       dailyCosts
     };
   }
