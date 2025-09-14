@@ -427,7 +427,7 @@ export default function CastingPage() {
                         padding: "0"
                       }}
                     >
-                      a
+                      ×
                     </button>
                   </span>
                 ))}
