@@ -113,9 +113,6 @@ export default function ManuscriptPage() {
               <StandardButton onClick={chooseDocxAndParse}>
                 {t("manuscript.importDocx")}
               </StandardButton>
-              <StandardButton onClick={refreshList}>
-                {t("manuscript.refresh")}
-              </StandardButton>
               <WorkflowCompleteButton 
                 step="manuscript" 
                 disabled={chapters.length === 0}
