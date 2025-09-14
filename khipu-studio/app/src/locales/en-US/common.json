@@ -2169,8 +2169,8 @@
     "comment": "Message showing cache savings impact with cost values"
   },
   "cost.exportData": {
-    "string": "Export Data",
-    "comment": "Button text for exporting cost data"
+    "string": "Export Data as CSV",
+    "comment": "Button text for exporting cost data as CSV file"
   },
   "cost.clearData": {
     "string": "Clear Data",

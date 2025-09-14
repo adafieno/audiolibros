@@ -582,7 +582,102 @@ export class CostTrackingService {
   }
   
   /**
-   * Export cost data
+   * Export cost data as CSV string
+   */
+  exportDataAsCsv(): string {
+    const entries = this.getAllEntries();
+    
+    if (entries.length === 0) {
+      return 'No cost data to export';
+    }
+    
+    // Generate summary for metadata
+    const summary = this.generateSummary();
+    const exportDate = new Date().toISOString();
+    
+    // Create metadata header
+    const metadataLines = [
+      '# Khipu Studio - Cost Tracking Data Export',
+      `# Export Date: ${exportDate}`,
+      `# Total Entries: ${entries.length}`,
+      `# Total Cost: $${summary.totalCost.toFixed(6)}`,
+      `# Total Savings: $${summary.totalSavings.toFixed(6)}`,
+      `# Cache Hit Rate: ${summary.cacheHitRate.toFixed(1)}%`,
+      `# Date Range: ${summary.startDate.toISOString()} to ${summary.endDate.toISOString()}`,
+      '#',
+      '# Data Format:',
+    ];
+    
+    // CSV headers
+    const headers = [
+      'ID',
+      'Timestamp',
+      'Service Type',
+      'Provider',
+      'Operation',
+      'Total Cost (USD)',
+      'Unit Cost',
+      'Input Tokens',
+      'Output Tokens',
+      'Characters Processed',
+      'Audio Seconds',
+      'Was Cached',
+      'Cache Hit',
+      'Original Cost (USD)',
+      'Page',
+      'Project ID',
+      'Chapter ID',
+      'Segment ID'
+    ];
+    
+    // Helper function to escape CSV values
+    const escapeCsv = (value: string | number | boolean | null | undefined): string => {
+      if (value === null || value === undefined) {
+        return '';
+      }
+      
+      const str = String(value);
+      // If the value contains comma, quote, or newline, wrap in quotes and escape quotes
+      if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+        return '"' + str.replace(/"/g, '""') + '"';
+      }
+      return str;
+    };
+    
+    // Convert entries to CSV rows
+    const csvRows = entries.map(entry => [
+      escapeCsv(entry.id),
+      escapeCsv(entry.timestamp.toISOString()),
+      escapeCsv(entry.serviceType),
+      escapeCsv(entry.provider),
+      escapeCsv(entry.operation),
+      escapeCsv(entry.totalCost.toFixed(6)),
+      escapeCsv(entry.unitCost?.toFixed(8) || ''),
+      escapeCsv(entry.inputTokens || ''),
+      escapeCsv(entry.outputTokens || ''),
+      escapeCsv(entry.charactersProcessed || ''),
+      escapeCsv(entry.audioSeconds || ''),
+      escapeCsv(entry.wasCached ? 'Yes' : 'No'),
+      escapeCsv(entry.cacheHit ? 'Yes' : 'No'),
+      escapeCsv(entry.originalCost?.toFixed(6) || ''),
+      escapeCsv(entry.page || ''),
+      escapeCsv(entry.projectId || ''),
+      escapeCsv(entry.chapterId || ''),
+      escapeCsv(entry.segmentId || '')
+    ]);
+    
+    // Combine metadata, headers and data
+    const csvContent = [
+      ...metadataLines,
+      headers.join(','),
+      ...csvRows.map(row => row.join(','))
+    ].join('\n');
+    
+    return csvContent;
+  }
+
+  /**
+   * Export cost data (legacy JSON format)
    */
   exportData(): { entries: CostEntry[]; settings: CostSettings } {
     return {

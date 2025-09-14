@@ -2629,8 +2629,8 @@
     "comment": "Mensaje mostrando impacto de ahorros de caché con valores de costo"
   },
   "cost.exportData": {
-    "string": "Exportar Datos",
-    "comment": "Texto del botón para exportar datos de costos"
+    "string": "Exportar Datos como CSV",
+    "comment": "Texto del botón para exportar datos de costos como archivo CSV"
   },
   "cost.clearData": {
     "string": "Limpiar Datos",
