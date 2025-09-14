@@ -142,6 +142,16 @@ export default function Project() {
   const isLocalTTS = (engine: TtsEngine): engine is Extract<TtsEngine, { name: "local" }> => 
     engine.name === "local";
 
+  async function browseOutputFolder() {
+    const folder = await window.khipu!.call("project:browseForParent", undefined);
+    if (folder) {
+      update("export", { 
+        outputDir: folder,
+        platforms: cfg?.export?.platforms || {}
+      });
+    }
+  }
+
   return (
     <div style={{ maxWidth: "100%" }}>
       <PageHeader 
@@ -239,17 +249,6 @@ export default function Project() {
         <section>
           <h3 style={{ fontSize: '1.1rem' }}>{t("project.packaging")}</h3>
           <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
-            <label>
-              <div>{t("project.outputDirectory")}</div>
-              <input
-                value={cfg?.export?.outputDir || "output"}
-                placeholder={t("project.outputFolderPlaceholder")}
-                onChange={(e) => update("export", { 
-                  outputDir: e.target.value,
-                  platforms: cfg?.export?.platforms || {}
-                })}
-              />
-            </label>
             <div style={{ marginTop: 8 }}>
               <div style={{ marginBottom: 8 }}>{t("project.targetPlatforms")}</div>
               <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
@@ -288,6 +287,43 @@ export default function Project() {
                 </label>
               </div>
             </div>
+            <label>
+              <div>{t("project.outputDirectory")}</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <input
+                  value={cfg?.export?.outputDir || "output"}
+                  placeholder={t("project.outputFolderPlaceholder")}
+                  onChange={(e) => update("export", { 
+                    outputDir: e.target.value,
+                    platforms: cfg?.export?.platforms || {}
+                  })}
+                  style={{
+                    width: "50%",
+                    padding: "8px 12px",
+                    fontSize: "14px",
+                    backgroundColor: "var(--panel)",
+                    color: "var(--text)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "4px"
+                  }}
+                />
+                <button 
+                  className="btn" 
+                  onClick={browseOutputFolder}
+                  style={{
+                    padding: "8px 16px",
+                    fontSize: "14px",
+                    backgroundColor: "var(--panel)",
+                    color: "var(--text)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "4px",
+                    cursor: "pointer"
+                  }}
+                >
+                  {t("home.browse")}
+                </button>
+              </div>
+            </label>
           </div>
         </section>
         
