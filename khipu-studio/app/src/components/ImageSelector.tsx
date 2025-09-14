@@ -5,9 +5,11 @@ interface ImageSelectorProps {
   projectRoot: string;
   value?: string;
   onChange: (imagePath: string | undefined) => void;
+  hideButtons?: boolean;
+  imageStyle?: React.CSSProperties;
 }
 
-export function ImageSelector({ projectRoot, value, onChange }: ImageSelectorProps) {
+export function ImageSelector({ projectRoot, value, onChange, hideButtons = false, imageStyle }: ImageSelectorProps) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -155,7 +157,8 @@ export function ImageSelector({ projectRoot, value, onChange }: ImageSelectorPro
           height: 200, 
           border: "1px solid #ccc",
           borderRadius: 4,
-          overflow: "hidden"
+          overflow: "hidden",
+          ...imageStyle
         }}>
           <img 
             src={imageDataUrl} 
@@ -163,66 +166,71 @@ export function ImageSelector({ projectRoot, value, onChange }: ImageSelectorPro
             style={{ 
               width: "100%", 
               height: "100%", 
-              objectFit: "cover" 
+              objectFit: "contain",
+              backgroundColor: "var(--panel)"
             }}
           />
-          <button
-            onClick={handleRemove}
-            style={{
-              position: "absolute",
-              top: 4,
-              right: 4,
-              background: "rgba(0,0,0,0.7)",
-              color: "white",
-              border: "none",
-              borderRadius: 2,
-              padding: "2px 6px",
-              fontSize: 12,
-              cursor: "pointer"
-            }}
-          >
-            ×
-          </button>
+          {!hideButtons && (
+            <button
+              onClick={handleRemove}
+              style={{
+                position: "absolute",
+                top: 4,
+                right: 4,
+                background: "rgba(0,0,0,0.7)",
+                color: "white",
+                border: "none",
+                borderRadius: 2,
+                padding: "2px 6px",
+                fontSize: 12,
+                cursor: "pointer"
+              }}
+            >
+              ×
+            </button>
+          )}
         </div>
       )}
 
-      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <button 
-          onClick={handleFileSelect} 
-          disabled={loading}
-          style={{ 
-            padding: "8px 16px",
-            backgroundColor: "#007acc",
-            color: "white",
-            border: "none",
-            borderRadius: 4,
-            cursor: loading ? "not-allowed" : "pointer"
-          }}
-        >
-          {loading 
-            ? t("common.loading")
-            : value 
-              ? t("book.coverImage.change") 
-              : t("book.coverImage.select")
-          }
-        </button>
-        
-        {value && (
+      {!hideButtons && (
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <button 
-            onClick={handleRemove}
+            onClick={handleFileSelect} 
+            disabled={loading}
             style={{ 
               padding: "8px 16px",
-              backgroundColor: "#dc3545",
+              backgroundColor: "#007acc",
               color: "white",
               border: "none",
               borderRadius: 4,
-              cursor: "pointer"
+              cursor: loading ? "not-allowed" : "pointer"
             }}
           >
-            {t("book.coverImage.remove")}
+            {loading 
+              ? t("common.loading")
+              : value 
+                ? t("book.coverImage.change") 
+                : t("book.coverImage.select")
+            }
           </button>
-        )}
-      </div>
+          
+          {value && (
+            <button 
+              onClick={handleRemove}
+              style={{ 
+                padding: "8px 16px",
+                backgroundColor: "#dc3545",
+                color: "white",
+                border: "none",
+                borderRadius: 4,
+                cursor: "pointer"
+              }}
+            >
+              {t("book.coverImage.remove")}
+            </button>
+          )}
+        </div>
+      )}
 
       <div style={{ fontSize: 12, color: "#666" }}>
         {t("book.coverImage.requirements")}

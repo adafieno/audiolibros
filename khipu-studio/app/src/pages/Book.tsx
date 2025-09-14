@@ -130,6 +130,39 @@ export default function Book() {
     return <div>{t("book.loading")}</div>;
   }
 
+  // Image handling functions
+  const handleImageSelect = async () => {
+    try {
+      // Step 1: Choose image file
+      const filePath = await window.khipu!.call("file:chooseImage", undefined);
+      if (!filePath) {
+        return;
+      }
+
+      console.log("Selected file path:", filePath);
+
+      // Step 2: Copy image to project directory
+      const result = await window.khipu!.call("file:validateAndCopyImage", {
+        filePath,
+        projectRoot: root
+      });
+
+      if (!result.success) {
+        console.error("Failed to copy image:", result.error);
+        return;
+      }
+
+      console.log("Successfully copied image:", result.fileName);
+      updateBookMeta({ coverImage: result.fileName });
+    } catch (err) {
+      console.error("Error selecting image:", err);
+    }
+  };
+
+  const handleImageRemove = () => {
+    updateBookMeta({ coverImage: undefined });
+  };
+
   return (
     <div>
       <PageHeader 
@@ -137,6 +170,25 @@ export default function Book() {
         description="book.description"
         actions={
           <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+            <StandardButton 
+              variant="secondary"
+              size="normal"
+              onClick={handleImageSelect}
+            >
+              {bookMeta?.coverImage 
+                ? t("book.coverImage.change") 
+                : t("book.coverImage.select")
+              }
+            </StandardButton>
+            {bookMeta?.coverImage && (
+              <StandardButton 
+                variant="danger"
+                size="normal"
+                onClick={handleImageRemove}
+              >
+                {t("book.coverImage.remove")}
+              </StandardButton>
+            )}
             <WorkflowCompleteButton step="project">
               {t("book.completeButton")}
             </WorkflowCompleteButton>
@@ -150,7 +202,7 @@ export default function Book() {
       <section className="mt-6">
         <h3 style={{ fontSize: '1.1rem', marginBottom: '12px' }}>{t("book.basicInfo")}</h3>
         <div className="grid-2 gap-4">
-          <div className="grid-2 grid-gap-2">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
             <label>
               <div>{t("book.title.label")}</div>
               <input
@@ -379,6 +431,12 @@ export default function Book() {
               projectRoot={root}
               value={bookMeta?.coverImage}
               onChange={(coverImage) => updateBookMeta({ coverImage })}
+              hideButtons={true}
+              imageStyle={{
+                width: 'auto',
+                height: '400px',
+                maxWidth: '320px'
+              }}
             />
           </div>
         </div>
@@ -454,7 +512,7 @@ export default function Book() {
           <label>
             <div>{t("book.sku.label")}</div>
             <input
-              style={{ width: "100%" }}
+              style={{ width: "60%" }}
               value={bookMeta?.sku || ""}
               onChange={(e) => updateBookMeta({ sku: e.target.value })}
             />
