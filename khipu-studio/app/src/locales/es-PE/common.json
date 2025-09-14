@@ -2639,5 +2639,181 @@
   "cost.clearDataConfirm": {
     "string": "¿Estás seguro de que quieres limpiar todos los datos de costos? Esta acción no se puede deshacer.",
     "comment": "Texto del diálogo de confirmación para limpiar datos de costos"
+  },
+  "cost.operations": {
+    "string": "Operaciones",
+    "comment": "Etiqueta para operaciones en tooltips de timeline al pasar el mouse"
+  },
+  "cost.total": {
+    "string": "Total",
+    "comment": "Etiqueta para costo total en tooltips de timeline al pasar el mouse"
+  },
+  "cost.saved": {
+    "string": "Ahorrado",
+    "comment": "Etiqueta para costo ahorrado en tooltips de timeline al pasar el mouse"
+  },
+  "cost.avgOpsPerDay": {
+    "string": "Promedio Ops/Día",
+    "comment": "Etiqueta para estadística de operaciones promedio por día"
+  },
+  "cost.more": {
+    "string": "más",
+    "comment": "Texto para mostrar elementos adicionales en listas (ej., '+2 más')"
+  },
+  "cost.noProjectLoaded": {
+    "string": "No hay proyecto cargado",
+    "comment": "Mensaje mostrado cuando no hay proyecto cargado actualmente"
+  },
+  "cost.openProjectFirst": {
+    "string": "Por favor abre un proyecto para ver los datos de seguimiento de costos",
+    "comment": "Mensaje instruyendo al usuario que abra un proyecto primero"
+  },
+  "cost.noTimelineData": {
+    "string": "No hay datos de timeline disponibles para el período seleccionado",
+    "comment": "Mensaje mostrado cuando el timeline no tiene datos para el rango de tiempo seleccionado"
+  },
+  "cost.modules.LLM": {
+    "string": "LLM",
+    "comment": "Abreviatura para Modelo de Lenguaje Grande en leyenda de timeline"
+  },
+  "cost.modules.TTS": {
+    "string": "TTS",
+    "comment": "Abreviatura para Text-to-Speech en leyenda de timeline"
+  },
+  "cost.operations.manuscriptParse": {
+    "string": "Análisis de Documento",
+    "comment": "Nombre para mostrar operaciones de análisis de manuscrito"
+  },
+  "cost.operations.characterDetect": {
+    "string": "Detección de Personajes",
+    "comment": "Nombre para mostrar operaciones de detección de personajes"
+  },
+  "cost.operations.planBuild": {
+    "string": "Planificación de Capítulos",
+    "comment": "Nombre para mostrar operaciones de planificación de capítulos"
+  },
+  "cost.operations.characterAssignment": {
+    "string": "Asignación de Personajes",
+    "comment": "Nombre para mostrar operaciones de asignación de personajes"
+  },
+  "cost.operations.voiceAssignment": {
+    "string": "Asignación de Voces",
+    "comment": "Nombre para mostrar operaciones de asignación de voces"
+  },
+  "cost.operations.chapterPlanning": {
+    "string": "Planificación de Capítulos",
+    "comment": "Nombre para mostrar operaciones de planificación de capítulos"
+  },
+  "cost.operations.voiceAudition": {
+    "string": "Audición de Voz",
+    "comment": "Nombre para mostrar operaciones de audición de voz"
+  },
+  "cost.operations.audioPreview": {
+    "string": "Vista Previa de Audio",
+    "comment": "Nombre para mostrar operaciones de vista previa de audio"
+  },
+  "cost.operations.audioSynthesis": {
+    "string": "Generación de Audio",
+    "comment": "Nombre para mostrar operaciones de síntesis de audio"
+  },
+  "cost.operations.segmentGeneration": {
+    "string": "Audio de Segmento",
+    "comment": "Nombre para mostrar operaciones de generación de audio de segmento"
+  },
+  "cost.operations.voiceTesting": {
+    "string": "Prueba de Voz",
+    "comment": "Nombre para mostrar operaciones de prueba de voz"
+  },
+  "cost.operations.audioProcessing": {
+    "string": "Procesamiento de Audio",
+    "comment": "Nombre para mostrar operaciones de procesamiento de audio"
+  },
+  "cost.operations.soxProcessing": {
+    "string": "Efectos de Audio",
+    "comment": "Nombre para mostrar operaciones de procesamiento de audio SoX"
+  },
+  "cost.operations.effectChain": {
+    "string": "Procesamiento de Efectos",
+    "comment": "Nombre para mostrar operaciones de cadena de efectos de audio"
+  },
+  "cost.operations.textParsing": {
+    "string": "Análisis de Texto",
+    "comment": "Nombre para mostrar operaciones de análisis de texto"
+  },
+  "cost.operations.segmentParsing": {
+    "string": "Procesamiento de Segmentos",
+    "comment": "Nombre para mostrar operaciones de análisis de segmentos"
+  },
+  "cost.operations.ssmlGeneration": {
+    "string": "Generación de SSML",
+    "comment": "Nombre para mostrar operaciones de generación de SSML"
+  },
+  "cost.operations.cacheOperation": {
+    "string": "Acceso a Caché",
+    "comment": "Nombre para mostrar operaciones de operación de caché"
+  },
+  "cost.operations.cacheManagement": {
+    "string": "Gestión de Caché",
+    "comment": "Nombre para mostrar operaciones de gestión de caché"
+  },
+  "cost.refresh": {
+    "string": "Actualizar",
+    "comment": "Texto del botón para actualizar datos de costos"
+  },
+  "cost.costByModule": {
+    "string": "Costo por Módulo",
+    "comment": "Título para sección de desglose de costos basado en módulos"
+  },
+  "cost.costByPage": {
+    "string": "Costo por Página",
+    "comment": "Título para sección de desglose de costos basado en páginas"
+  },
+  "cost.costTimeline": {
+    "string": "Timeline de Costos",
+    "comment": "Título para sección de visualización de timeline de costos"
+  },
+  "cost.avgCostPerDay": {
+    "string": "Costo Prom/Día",
+    "comment": "Etiqueta para estadística de costo promedio por día"
+  },
+  "cost.days": {
+    "string": "días",
+    "comment": "Etiqueta de unidad para días en estadísticas"
+  },
+  "cost.calls": {
+    "string": "llamadas",
+    "comment": "Etiqueta de unidad para llamadas de API en estadísticas"
+  },
+  "cost.ofTotalCost": {
+    "string": "del costo total",
+    "comment": "Sufijo para mostrar porcentaje del costo total"
+  },
+  "cost.units.kTokens": {
+    "string": "K tokens",
+    "comment": "Abreviatura de unidad para miles de tokens"
+  },
+  "cost.units.kCharacters": {
+    "string": "K caracteres",
+    "comment": "Abreviatura de unidad para miles de caracteres"
+  },
+  "cost.pricing.openaiGpt4oInput": {
+    "string": "OpenAI GPT-4o Entrada (por 1K tokens)",
+    "comment": "Etiqueta para configuración de precios de tokens de entrada de OpenAI GPT-4o"
+  },
+  "cost.pricing.openaiGpt4oOutput": {
+    "string": "OpenAI GPT-4o Salida (por 1K tokens)",
+    "comment": "Etiqueta para configuración de precios de tokens de salida de OpenAI GPT-4o"
+  },
+  "cost.pricing.openaiGpt4oMiniInput": {
+    "string": "OpenAI GPT-4o Mini Entrada (por 1K tokens)",
+    "comment": "Etiqueta para configuración de precios de tokens de entrada de OpenAI GPT-4o Mini"
+  },
+  "cost.pricing.openaiGpt4oMiniOutput": {
+    "string": "OpenAI GPT-4o Mini Salida (por 1K tokens)",
+    "comment": "Etiqueta para configuración de precios de tokens de salida de OpenAI GPT-4o Mini"
+  },
+  "cost.pricing.openaiTts": {
+    "string": "OpenAI TTS (por 1K caracteres)",
+    "comment": "Etiqueta para configuración de precios de caracteres de OpenAI TTS"
   }
 }

@@ -2179,5 +2179,181 @@
   "cost.clearDataConfirm": {
     "string": "Are you sure you want to clear all cost data? This action cannot be undone.",
     "comment": "Confirmation dialog text for clearing cost data"
+  },
+  "cost.operations": {
+    "string": "Operations",
+    "comment": "Label for operations in timeline hover tooltips"
+  },
+  "cost.total": {
+    "string": "Total",
+    "comment": "Label for total cost in timeline hover tooltips"
+  },
+  "cost.saved": {
+    "string": "Saved",
+    "comment": "Label for saved cost in timeline hover tooltips"
+  },
+  "cost.avgOpsPerDay": {
+    "string": "Avg Ops/Day",
+    "comment": "Label for average operations per day statistic"
+  },
+  "cost.more": {
+    "string": "more",
+    "comment": "Text for showing additional items in lists (e.g., '+2 more')"
+  },
+  "cost.noProjectLoaded": {
+    "string": "No project loaded",
+    "comment": "Message displayed when no project is currently loaded"
+  },
+  "cost.openProjectFirst": {
+    "string": "Please open a project to view cost tracking data",
+    "comment": "Message instructing user to open a project first"
+  },
+  "cost.noTimelineData": {
+    "string": "No timeline data available for the selected period",
+    "comment": "Message displayed when timeline has no data for selected time range"
+  },
+  "cost.modules.LLM": {
+    "string": "LLM",
+    "comment": "Abbreviation for Large Language Model in timeline legend"
+  },
+  "cost.modules.TTS": {
+    "string": "TTS",
+    "comment": "Abbreviation for Text-to-Speech in timeline legend"
+  },
+  "cost.operations.manuscriptParse": {
+    "string": "Document Parsing",
+    "comment": "Display name for manuscript parsing operations"
+  },
+  "cost.operations.characterDetect": {
+    "string": "Character Detection",
+    "comment": "Display name for character detection operations"
+  },
+  "cost.operations.planBuild": {
+    "string": "Chapter Planning",
+    "comment": "Display name for chapter planning operations"
+  },
+  "cost.operations.characterAssignment": {
+    "string": "Character Assignment",
+    "comment": "Display name for character assignment operations"
+  },
+  "cost.operations.voiceAssignment": {
+    "string": "Voice Assignment",
+    "comment": "Display name for voice assignment operations"
+  },
+  "cost.operations.chapterPlanning": {
+    "string": "Chapter Planning",
+    "comment": "Display name for chapter planning operations"
+  },
+  "cost.operations.voiceAudition": {
+    "string": "Voice Audition",
+    "comment": "Display name for voice audition operations"
+  },
+  "cost.operations.audioPreview": {
+    "string": "Audio Preview",
+    "comment": "Display name for audio preview operations"
+  },
+  "cost.operations.audioSynthesis": {
+    "string": "Audio Generation",
+    "comment": "Display name for audio synthesis operations"
+  },
+  "cost.operations.segmentGeneration": {
+    "string": "Segment Audio",
+    "comment": "Display name for segment audio generation operations"
+  },
+  "cost.operations.voiceTesting": {
+    "string": "Voice Testing",
+    "comment": "Display name for voice testing operations"
+  },
+  "cost.operations.audioProcessing": {
+    "string": "Audio Processing",
+    "comment": "Display name for audio processing operations"
+  },
+  "cost.operations.soxProcessing": {
+    "string": "Audio Effects",
+    "comment": "Display name for SoX audio processing operations"
+  },
+  "cost.operations.effectChain": {
+    "string": "Effect Processing",
+    "comment": "Display name for audio effect chain operations"
+  },
+  "cost.operations.textParsing": {
+    "string": "Text Analysis",
+    "comment": "Display name for text parsing operations"
+  },
+  "cost.operations.segmentParsing": {
+    "string": "Segment Processing",
+    "comment": "Display name for segment parsing operations"
+  },
+  "cost.operations.ssmlGeneration": {
+    "string": "SSML Generation",
+    "comment": "Display name for SSML generation operations"
+  },
+  "cost.operations.cacheOperation": {
+    "string": "Cache Access",
+    "comment": "Display name for cache operation operations"
+  },
+  "cost.operations.cacheManagement": {
+    "string": "Cache Management",
+    "comment": "Display name for cache management operations"
+  },
+  "cost.refresh": {
+    "string": "Refresh",
+    "comment": "Button text for refreshing cost data"
+  },
+  "cost.costByModule": {
+    "string": "Cost by Module",
+    "comment": "Title for module-based cost breakdown section"
+  },
+  "cost.costByPage": {
+    "string": "Cost by Page",
+    "comment": "Title for page-based cost breakdown section"
+  },
+  "cost.costTimeline": {
+    "string": "Cost Timeline",
+    "comment": "Title for cost timeline visualization section"
+  },
+  "cost.avgCostPerDay": {
+    "string": "Avg Cost/Day",
+    "comment": "Label for average cost per day statistic"
+  },
+  "cost.days": {
+    "string": "days",
+    "comment": "Unit label for days in statistics"
+  },
+  "cost.calls": {
+    "string": "calls",
+    "comment": "Unit label for API calls in statistics"
+  },
+  "cost.ofTotalCost": {
+    "string": "of total cost",
+    "comment": "Suffix for percentage of total cost displays"
+  },
+  "cost.units.kTokens": {
+    "string": "K tokens",
+    "comment": "Unit abbreviation for thousands of tokens"
+  },
+  "cost.units.kCharacters": {
+    "string": "K characters",
+    "comment": "Unit abbreviation for thousands of characters"
+  },
+  "cost.pricing.openaiGpt4oInput": {
+    "string": "OpenAI GPT-4o Input (per 1K tokens)",
+    "comment": "Label for OpenAI GPT-4o input token pricing setting"
+  },
+  "cost.pricing.openaiGpt4oOutput": {
+    "string": "OpenAI GPT-4o Output (per 1K tokens)",
+    "comment": "Label for OpenAI GPT-4o output token pricing setting"
+  },
+  "cost.pricing.openaiGpt4oMiniInput": {
+    "string": "OpenAI GPT-4o Mini Input (per 1K tokens)",
+    "comment": "Label for OpenAI GPT-4o Mini input token pricing setting"
+  },
+  "cost.pricing.openaiGpt4oMiniOutput": {
+    "string": "OpenAI GPT-4o Mini Output (per 1K tokens)",
+    "comment": "Label for OpenAI GPT-4o Mini output token pricing setting"
+  },
+  "cost.pricing.openaiTts": {
+    "string": "OpenAI TTS (per 1K chars)",
+    "comment": "Label for OpenAI TTS character pricing setting"
   }
 }
