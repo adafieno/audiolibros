@@ -750,6 +750,10 @@
     "string": "Orchestration",
     "comment": "Section header for orchestration settings"
   },
+  "project.pauseUnitsInfo": {
+    "string": "Pause values are in milliseconds.",
+    "comment": "Information note about pause units being in milliseconds"
+  },
   "project.maxKb": {
     "string": "Maximum KB per query",
     "comment": "Label for maximum KB per query setting"

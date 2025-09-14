@@ -335,6 +335,10 @@
     "string": "Orquestación",
     "comment": ""
   },
+  "project.pauseUnitsInfo": {
+    "string": "Los valores de pausa están en milisegundos.",
+    "comment": "Information note about pause units being in milliseconds"
+  },
   "project.maxKb": {
     "string": "KB máximos por consulta",
     "comment": ""

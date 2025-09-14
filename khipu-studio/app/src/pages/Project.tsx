@@ -154,86 +154,151 @@ export default function Project() {
         }
       />
       
-      {/* Planning - Remove max KB and add pauses */}
-      <section className="mt-6">
-        <h3 style={{ fontSize: '1.1rem' }}>{t("project.planning")}</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
-          <label>
-            <div>{t("project.sentencePause")}</div>
-            <input
-              type="number"
-              value={cfg?.pauses?.sentenceMs || 500}
-              onChange={onNumber((n) => update("pauses", { 
-                ...cfg?.pauses, 
-                sentenceMs: n 
-              }))}
-            />
-          </label>
-          <label>
-            <div>{t("project.paragraphPause")}</div>
-            <input
-              type="number"
-              value={cfg?.pauses?.paragraphMs || 1000}
-              onChange={onNumber((n) => update("pauses", { 
-                ...cfg?.pauses, 
-                paragraphMs: n 
-              }))}
-            />
-          </label>
-          <label>
-            <div>{t("project.chapterPause")}</div>
-            <input
-              type="number"
-              value={cfg?.pauses?.chapterMs || 3000}
-              onChange={onNumber((n) => update("pauses", { 
-                ...cfg?.pauses, 
-                chapterMs: n 
-              }))}
-            />
-          </label>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-          <label>
-            <div>{t("project.commaPause")}</div>
-            <input
-              type="number"
-              value={cfg?.pauses?.commaMs || 300}
-              onChange={onNumber((n) => update("pauses", { 
-                ...cfg?.pauses, 
-                commaMs: n 
-              }))}
-            />
-          </label>
-          <label>
-            <div>{t("project.colonPause")}</div>
-            <input
-              type="number"
-              value={cfg?.pauses?.colonMs || 400}
-              onChange={onNumber((n) => update("pauses", { 
-                ...cfg?.pauses, 
-                colonMs: n 
-              }))}
-            />
-          </label>
-          <label>
-            <div>{t("project.semicolonPause")}</div>
-            <input
-              type="number"
-              value={cfg?.pauses?.semicolonMs || 350}
-              onChange={onNumber((n) => update("pauses", { 
-                ...cfg?.pauses, 
-                semicolonMs: n 
-              }))}
-            />
-          </label>
-        </div>
-      </section>
-
-      {/* LLM and TTS Engines - Side by side */}
+      {/* Main layout: Pause configuration (50%) and AI Engines (50%) side by side */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32, marginTop: 24 }}>
-        {/* LLM Engine - Add Azure OpenAI option */}
+        
+        {/* Left column: Pause configuration and Packaging */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          {/* Planning - Pause configuration in 2x3 grid */}
+          <section>
+            <h3 style={{ fontSize: '1.1rem' }}>{t("project.planning")}</h3>
+            <div style={{ fontSize: "14px", color: "var(--muted)", marginBottom: "12px" }}>
+              {t("project.pauseUnitsInfo")}
+            </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, gridTemplateRows: "1fr 1fr 1fr" }}>
+            <label>
+              <div>{t("project.sentencePause")}</div>
+              <input
+                type="number"
+                value={cfg?.pauses?.sentenceMs || 500}
+                onChange={onNumber((n) => update("pauses", { 
+                  ...cfg?.pauses, 
+                  sentenceMs: n 
+                }))}
+              />
+            </label>
+            <label>
+              <div>{t("project.paragraphPause")}</div>
+              <input
+                type="number"
+                value={cfg?.pauses?.paragraphMs || 1000}
+                onChange={onNumber((n) => update("pauses", { 
+                  ...cfg?.pauses, 
+                  paragraphMs: n 
+                }))}
+              />
+            </label>
+            <label>
+              <div>{t("project.chapterPause")}</div>
+              <input
+                type="number"
+                value={cfg?.pauses?.chapterMs || 3000}
+                onChange={onNumber((n) => update("pauses", { 
+                  ...cfg?.pauses, 
+                  chapterMs: n 
+                }))}
+              />
+            </label>
+            <label>
+              <div>{t("project.commaPause")}</div>
+              <input
+                type="number"
+                value={cfg?.pauses?.commaMs || 300}
+                onChange={onNumber((n) => update("pauses", { 
+                  ...cfg?.pauses, 
+                  commaMs: n 
+                }))}
+              />
+            </label>
+            <label>
+              <div>{t("project.colonPause")}</div>
+              <input
+                type="number"
+                value={cfg?.pauses?.colonMs || 400}
+                onChange={onNumber((n) => update("pauses", { 
+                  ...cfg?.pauses, 
+                  colonMs: n 
+                }))}
+              />
+            </label>
+            <label>
+              <div>{t("project.semicolonPause")}</div>
+              <input
+                type="number"
+                value={cfg?.pauses?.semicolonMs || 350}
+                onChange={onNumber((n) => update("pauses", { 
+                  ...cfg?.pauses, 
+                  semicolonMs: n 
+                }))}
+              />
+            </label>
+          </div>
+        </section>
+
+        {/* Packaging Settings */}
         <section>
-          <h3 style={{ fontSize: '1.1rem' }}>{t("project.llm")}</h3>
+          <h3 style={{ fontSize: '1.1rem' }}>{t("project.packaging")}</h3>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
+            <label>
+              <div>{t("project.outputDirectory")}</div>
+              <input
+                value={cfg?.export?.outputDir || "output"}
+                placeholder={t("project.outputFolderPlaceholder")}
+                onChange={(e) => update("export", { 
+                  outputDir: e.target.value,
+                  platforms: cfg?.export?.platforms || {}
+                })}
+              />
+            </label>
+            <div style={{ marginTop: 8 }}>
+              <div style={{ marginBottom: 8 }}>{t("project.targetPlatforms")}</div>
+              <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <input
+                    type="checkbox"
+                    checked={cfg?.export?.platforms?.apple || false}
+                    onChange={(e) => update("export", {
+                      outputDir: cfg?.export?.outputDir || "output",
+                      platforms: { ...cfg?.export?.platforms, apple: e.target.checked }
+                    })}
+                  />
+                  <span>Apple Books</span>
+                </label>
+                <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <input
+                    type="checkbox"
+                    checked={cfg?.export?.platforms?.google || false}
+                    onChange={(e) => update("export", {
+                      outputDir: cfg?.export?.outputDir || "output",
+                      platforms: { ...cfg?.export?.platforms, google: e.target.checked }
+                    })}
+                  />
+                  <span>Google Play</span>
+                </label>
+                <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <input
+                    type="checkbox"
+                    checked={cfg?.export?.platforms?.spotify || false}
+                    onChange={(e) => update("export", {
+                      outputDir: cfg?.export?.outputDir || "output",
+                      platforms: { ...cfg?.export?.platforms, spotify: e.target.checked }
+                    })}
+                  />
+                  <span>Spotify</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+      </div>
+
+      {/* Right: AI Engines - LLM and TTS stacked vertically */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          
+          {/* LLM Engine - Add Azure OpenAI option */}
+          <section>
+            <h3 style={{ fontSize: '1.1rem' }}>{t("project.llm")}</h3>
           <div style={{ display: "grid", gridTemplateColumns: "220px 200px 1fr", gap: 8, alignItems: "center" }}>
             <select
               value={llm.engine.name}
@@ -447,63 +512,9 @@ export default function Project() {
             </div>
           )}
         </section>
-      </div>
-
-      {/* Packaging Settings */}
-      <section className="mt-6">
-        <h3 style={{ fontSize: '1.1rem' }}>{t("project.packaging")}</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
-          <label>
-            <div>{t("project.outputDirectory")}</div>
-            <input
-              value={cfg?.export?.outputDir || "output"}
-              placeholder={t("project.outputFolderPlaceholder")}
-              onChange={(e) => update("export", { 
-                outputDir: e.target.value,
-                platforms: cfg?.export?.platforms || {}
-              })}
-            />
-          </label>
-          <div style={{ marginTop: 8 }}>
-            <div style={{ marginBottom: 8 }}>{t("project.targetPlatforms")}</div>
-            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-              <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <input
-                  type="checkbox"
-                  checked={cfg?.export?.platforms?.apple || false}
-                  onChange={(e) => update("export", {
-                    outputDir: cfg?.export?.outputDir || "output",
-                    platforms: { ...cfg?.export?.platforms, apple: e.target.checked }
-                  })}
-                />
-                <span>Apple Books</span>
-              </label>
-              <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <input
-                  type="checkbox"
-                  checked={cfg?.export?.platforms?.google || false}
-                  onChange={(e) => update("export", {
-                    outputDir: cfg?.export?.outputDir || "output",
-                    platforms: { ...cfg?.export?.platforms, google: e.target.checked }
-                  })}
-                />
-                <span>Google Play</span>
-              </label>
-              <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <input
-                  type="checkbox"
-                  checked={cfg?.export?.platforms?.spotify || false}
-                  onChange={(e) => update("export", {
-                    outputDir: cfg?.export?.outputDir || "output",
-                    platforms: { ...cfg?.export?.platforms, spotify: e.target.checked }
-                  })}
-                />
-                <span>Spotify</span>
-              </label>
-            </div>
-          </div>
+        
         </div>
-      </section>
+      </div>
     </div>
   );
 }
