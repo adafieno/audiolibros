@@ -25,7 +25,8 @@ export interface UseAudioPreviewResult {
       segment?: Segment;
       character?: Character;
       projectConfig?: ProjectConfig;
-    }
+    },
+    forceRegenerate?: boolean
   ) => Promise<void>;
   previewWithExaggeratedEffects: (
     segmentId: string, 
@@ -104,7 +105,6 @@ export function useAudioPreview(): UseAudioPreviewResult {
   }, []);
 
   // Preview a segment with processing chain
-  // Preview a segment with processing chain
   const preview = useCallback(async (
     segmentId: string, 
     processingChain: AudioProcessingChain, 
@@ -114,7 +114,8 @@ export function useAudioPreview(): UseAudioPreviewResult {
       segment?: Segment;
       character?: Character;
       projectConfig?: ProjectConfig;
-    }
+    },
+    forceRegenerate?: boolean
   ) => {
     if (!isAvailable) {
       setError('Audio preview not available');
@@ -137,7 +138,8 @@ export function useAudioPreview(): UseAudioPreviewResult {
         duration,
         segment: ttsData.segment,
         character: ttsData.character,
-        projectConfig: ttsData.projectConfig
+        projectConfig: ttsData.projectConfig,
+        forceRegenerate
       };
 
       await audioPreviewService.preview(options);
