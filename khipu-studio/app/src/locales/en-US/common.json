@@ -2360,35 +2360,35 @@
     "string": "Unknown",
     "comment": "Label for unknown page or operation"
   },
-  "cost.cacheHit": {
+  "cost.cacheHit_one": {
     "string": "Cache Hit",
     "comment": "Singular form for cache hit count"
   },
-  "cost.cacheHit_plural": {
+  "cost.cacheHit_other": {
     "string": "Cache Hits",
     "comment": "Plural form for cache hit count"
   },
-  "cost.cacheMiss": {
+  "cost.cacheMiss_one": {
     "string": "Cache Miss",
     "comment": "Singular form for cache miss count"
   },
-  "cost.cacheMiss_plural": {
+  "cost.cacheMiss_other": {
     "string": "Cache Misses",
     "comment": "Plural form for cache miss count"
   },
-  "cost.call": {
+  "cost.call_one": {
     "string": "call",
     "comment": "Singular form for API call count"
   },
-  "cost.call_plural": {
+  "cost.call_other": {
     "string": "calls",
     "comment": "Plural form for API call count"
   },
-  "cost.day": {
+  "cost.day_one": {
     "string": "Day",
     "comment": "Singular form for day count"
   },
-  "cost.day_plural": {
+  "cost.day_other": {
     "string": "Days",
     "comment": "Plural form for day count"
   }

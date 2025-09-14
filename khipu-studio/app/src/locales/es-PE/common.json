@@ -2820,35 +2820,35 @@
     "string": "Desconocido",
     "comment": "Etiqueta para página u operación desconocida"
   },
-  "cost.cacheHit": {
+  "cost.cacheHit_one": {
     "string": "Acierto de Caché",
     "comment": "Forma singular para conteo de aciertos de caché"
   },
-  "cost.cacheHit_plural": {
+  "cost.cacheHit_other": {
     "string": "Aciertos de Caché",
     "comment": "Forma plural para conteo de aciertos de caché"
   },
-  "cost.cacheMiss": {
+  "cost.cacheMiss_one": {
     "string": "Fallo de Caché",
     "comment": "Forma singular para conteo de fallos de caché"
   },
-  "cost.cacheMiss_plural": {
+  "cost.cacheMiss_other": {
     "string": "Fallos de Caché",
     "comment": "Forma plural para conteo de fallos de caché"
   },
-  "cost.call": {
+  "cost.call_one": {
     "string": "llamada",
     "comment": "Forma singular para conteo de llamadas de API"
   },
-  "cost.call_plural": {
+  "cost.call_other": {
     "string": "llamadas",
     "comment": "Forma plural para conteo de llamadas de API"
   },
-  "cost.day": {
+  "cost.day_one": {
     "string": "día",
     "comment": "Forma singular para conteo de días"
   },
-  "cost.day_plural": {
+  "cost.day_other": {
     "string": "días",
     "comment": "Forma plural para conteo de días"
   }

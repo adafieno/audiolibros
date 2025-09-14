@@ -37,13 +37,8 @@ export default function Cost() {
     return new Intl.NumberFormat(currentLocale, options).format(num);
   };
 
-  // Helper function for pluralization support
-  const formatCount = (count: number, singularKey: string, pluralKey: string, singularFallback: string, pluralFallback: string) => {
-    // Use react-i18next's built-in pluralization
-    return count === 1 
-      ? t(singularKey, singularFallback)
-      : t(pluralKey, pluralFallback);
-  };
+  // React-i18next provides built-in pluralization support using the count parameter
+  // No custom formatCount function needed!
 
   // Helper function for page name translation
   const getPageDisplayName = (page: string): string => {
@@ -1049,7 +1044,7 @@ export default function Cost() {
                     color: 'var(--muted)',
                     margin: '2px 0 0 0'
                   }}>
-                    {formatNumber(operation.count)} {formatCount(operation.count, 'cost.call', 'cost.call_plural', 'call', 'calls')}
+                    {formatNumber(operation.count)} {t('cost.call', { count: operation.count, defaultValue_one: 'call', defaultValue_other: 'calls' })}
                   </p>
                 </div>
                 <span style={{
@@ -1391,7 +1386,7 @@ export default function Cost() {
                     {summary.dailyCosts.length}
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--muted)' }}>
-                    {formatCount(summary.dailyCosts.length, 'cost.day', 'cost.day_plural', 'Day', 'Days')}
+                    {t('cost.day', { count: summary.dailyCosts.length, defaultValue_one: 'Day', defaultValue_other: 'Days' })}
                   </div>
                 </div>
                 <div>
@@ -1457,7 +1452,7 @@ export default function Cost() {
               color: 'var(--muted)',
               margin: '4px 0 0 0'
             }}>
-              {formatCount(summary.totalCacheHits, 'cost.cacheHit', 'cost.cacheHit_plural', 'Cache Hit', 'Cache Hits')}
+              {t('cost.cacheHit', { count: summary.totalCacheHits, defaultValue_one: 'Cache Hit', defaultValue_other: 'Cache Hits' })}
             </p>
           </div>
           <div style={{ textAlign: 'center' }}>
@@ -1474,7 +1469,7 @@ export default function Cost() {
               color: 'var(--muted)',
               margin: '4px 0 0 0'
             }}>
-              {formatCount(summary.totalCacheMisses, 'cost.cacheMiss', 'cost.cacheMiss_plural', 'Cache Miss', 'Cache Misses')}
+              {t('cost.cacheMiss', { count: summary.totalCacheMisses, defaultValue_one: 'Cache Miss', defaultValue_other: 'Cache Misses' })}
             </p>
           </div>
           <div style={{ textAlign: 'center' }}>
