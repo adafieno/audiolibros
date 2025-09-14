@@ -375,7 +375,117 @@ export default function Cost() {
             gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
             gap: '16px'
           }}>
-            {/* OpenAI GPT-4 */}
+            {/* OpenAI GPT-4o */}
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '500',
+                marginBottom: '6px',
+                color: 'var(--text)'
+              }}>
+                {t('cost.pricing.openaiGpt4oInput', 'OpenAI GPT-4o Input (per 1K tokens)')}
+              </label>
+              <input
+                type="number"
+                step="0.0001"
+                value={settings.openaiGpt4oInputTokens}
+                onChange={(e) => handleSettingsUpdate({ openaiGpt4oInputTokens: parseFloat(e.target.value) })}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  border: '1px solid var(--border)',
+                  borderRadius: '6px',
+                  background: 'var(--bg)',
+                  color: 'var(--text)',
+                  fontSize: '14px'
+                }}
+              />
+            </div>
+            
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '500',
+                marginBottom: '6px',
+                color: 'var(--text)'
+              }}>
+                {t('cost.pricing.openaiGpt4oOutput', 'OpenAI GPT-4o Output (per 1K tokens)')}
+              </label>
+              <input
+                type="number"
+                step="0.0001"
+                value={settings.openaiGpt4oOutputTokens}
+                onChange={(e) => handleSettingsUpdate({ openaiGpt4oOutputTokens: parseFloat(e.target.value) })}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  border: '1px solid var(--border)',
+                  borderRadius: '6px',
+                  background: 'var(--bg)',
+                  color: 'var(--text)',
+                  fontSize: '14px'
+                }}
+              />
+            </div>
+
+            {/* OpenAI GPT-4o-mini */}
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '500',
+                marginBottom: '6px',
+                color: 'var(--text)'
+              }}>
+                {t('cost.pricing.openaiGpt4oMiniInput', 'OpenAI GPT-4o-mini Input (per 1K tokens)')}
+              </label>
+              <input
+                type="number"
+                step="0.00001"
+                value={settings.openaiGpt4oMiniInputTokens}
+                onChange={(e) => handleSettingsUpdate({ openaiGpt4oMiniInputTokens: parseFloat(e.target.value) })}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  border: '1px solid var(--border)',
+                  borderRadius: '6px',
+                  background: 'var(--bg)',
+                  color: 'var(--text)',
+                  fontSize: '14px'
+                }}
+              />
+            </div>
+            
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '500',
+                marginBottom: '6px',
+                color: 'var(--text)'
+              }}>
+                {t('cost.pricing.openaiGpt4oMiniOutput', 'OpenAI GPT-4o-mini Output (per 1K tokens)')}
+              </label>
+              <input
+                type="number"
+                step="0.00001"
+                value={settings.openaiGpt4oMiniOutputTokens}
+                onChange={(e) => handleSettingsUpdate({ openaiGpt4oMiniOutputTokens: parseFloat(e.target.value) })}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  border: '1px solid var(--border)',
+                  borderRadius: '6px',
+                  background: 'var(--bg)',
+                  color: 'var(--text)',
+                  fontSize: '14px'
+                }}
+              />
+            </div>
+
+            {/* OpenAI GPT-4 Legacy */}
             <div>
               <label style={{
                 display: 'block',
@@ -430,7 +540,7 @@ export default function Cost() {
               />
             </div>
             
-            {/* ElevenLabs TTS */}
+            {/* OpenAI TTS */}
             <div>
               <label style={{
                 display: 'block',
@@ -439,13 +549,13 @@ export default function Cost() {
                 marginBottom: '6px',
                 color: 'var(--text)'
               }}>
-                {t('cost.pricing.elevenlabsTts', 'ElevenLabs TTS (per 1K chars)')}
+                {t('cost.pricing.openaiTts', 'OpenAI TTS (per 1K chars)')}
               </label>
               <input
                 type="number"
                 step="0.001"
-                value={settings.elevenlabsTtsPerCharacter}
-                onChange={(e) => handleSettingsUpdate({ elevenlabsTtsPerCharacter: parseFloat(e.target.value) })}
+                value={settings.openaiTtsPerCharacter}
+                onChange={(e) => handleSettingsUpdate({ openaiTtsPerCharacter: parseFloat(e.target.value) })}
                 style={{
                   width: '100%',
                   padding: '8px 12px',

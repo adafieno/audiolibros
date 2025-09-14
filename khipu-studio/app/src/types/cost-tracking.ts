@@ -10,12 +10,13 @@ export type ServiceType = 'llm' | 'tts';
  * Specific AI provider/model
  */
 export type ServiceProvider = 
+  | 'openai-gpt4o' 
+  | 'openai-gpt4o-mini'
   | 'openai-gpt4' 
   | 'openai-gpt3.5' 
   | 'anthropic-claude'
-  | 'elevenlabs-tts'
   | 'azure-tts'
-  | 'google-tts'
+  | 'openai-tts'
   | 'custom';
 
 /**
@@ -55,6 +56,10 @@ export interface CostEntry {
  */
 export interface CostSettings {
   // OpenAI Pricing (per 1K tokens)
+  openaiGpt4oInputTokens: number;
+  openaiGpt4oOutputTokens: number;
+  openaiGpt4oMiniInputTokens: number;
+  openaiGpt4oMiniOutputTokens: number;
   openaiGpt4InputTokens: number;
   openaiGpt4OutputTokens: number;
   openaiGpt35InputTokens: number;
@@ -64,10 +69,9 @@ export interface CostSettings {
   anthropicClaudeInputTokens: number;
   anthropicClaudeOutputTokens: number;
   
-  // TTS Pricing (per 1K characters or per second)
-  elevenlabsTtsPerCharacter: number;
+  // TTS Pricing (per 1K characters)
   azureTtsPerCharacter: number;
-  googleTtsPerCharacter: number;
+  openaiTtsPerCharacter: number;
   
   // Custom pricing
   customLlmInputTokens: number;
@@ -129,25 +133,32 @@ export interface CostSummary {
 }
 
 /**
- * Default cost settings based on current market rates
+ * Default cost settings based on current market rates (Sep 2024)
  */
 export const DEFAULT_COST_SETTINGS: CostSettings = {
-  // OpenAI GPT-4 (as of 2024)
-  openaiGpt4InputTokens: 0.01, // $0.01 per 1K input tokens
-  openaiGpt4OutputTokens: 0.03, // $0.03 per 1K output tokens
+  // OpenAI GPT-4o (most common model)
+  openaiGpt4oInputTokens: 0.0025, // $0.0025 per 1K input tokens
+  openaiGpt4oOutputTokens: 0.01, // $0.01 per 1K output tokens
   
-  // OpenAI GPT-3.5 Turbo
-  openaiGpt35InputTokens: 0.001, // $0.001 per 1K input tokens  
-  openaiGpt35OutputTokens: 0.002, // $0.002 per 1K output tokens
+  // OpenAI GPT-4o-mini (cheaper alternative)
+  openaiGpt4oMiniInputTokens: 0.00015, // $0.00015 per 1K input tokens  
+  openaiGpt4oMiniOutputTokens: 0.0006, // $0.0006 per 1K output tokens
+  
+  // OpenAI GPT-4 (legacy)
+  openaiGpt4InputTokens: 0.03, // $0.03 per 1K input tokens
+  openaiGpt4OutputTokens: 0.06, // $0.06 per 1K output tokens
+  
+  // OpenAI GPT-3.5 Turbo (legacy)
+  openaiGpt35InputTokens: 0.0005, // $0.0005 per 1K input tokens  
+  openaiGpt35OutputTokens: 0.0015, // $0.0015 per 1K output tokens
   
   // Anthropic Claude
   anthropicClaudeInputTokens: 0.008, // $0.008 per 1K input tokens
   anthropicClaudeOutputTokens: 0.024, // $0.024 per 1K output tokens
   
   // TTS Services (per 1K characters)
-  elevenlabsTtsPerCharacter: 0.30, // $0.30 per 1K characters
   azureTtsPerCharacter: 0.016, // $0.016 per 1K characters
-  googleTtsPerCharacter: 0.016, // $0.016 per 1K characters
+  openaiTtsPerCharacter: 0.015, // $0.015 per 1K characters
   
   // Custom defaults
   customLlmInputTokens: 0.005,
@@ -176,6 +187,14 @@ export class CostCalculator {
     let outputCost = 0;
     
     switch (provider) {
+      case 'openai-gpt4o':
+        inputCost = (inputTokens / 1000) * settings.openaiGpt4oInputTokens;
+        outputCost = (outputTokens / 1000) * settings.openaiGpt4oOutputTokens;
+        break;
+      case 'openai-gpt4o-mini':
+        inputCost = (inputTokens / 1000) * settings.openaiGpt4oMiniInputTokens;
+        outputCost = (outputTokens / 1000) * settings.openaiGpt4oMiniOutputTokens;
+        break;
       case 'openai-gpt4':
         inputCost = (inputTokens / 1000) * settings.openaiGpt4InputTokens;
         outputCost = (outputTokens / 1000) * settings.openaiGpt4OutputTokens;
@@ -210,14 +229,11 @@ export class CostCalculator {
     let costPerThousand = 0;
     
     switch (provider) {
-      case 'elevenlabs-tts':
-        costPerThousand = settings.elevenlabsTtsPerCharacter;
-        break;
       case 'azure-tts':
         costPerThousand = settings.azureTtsPerCharacter;
         break;
-      case 'google-tts':
-        costPerThousand = settings.googleTtsPerCharacter;
+      case 'openai-tts':
+        costPerThousand = settings.openaiTtsPerCharacter;
         break;
       case 'custom':
         costPerThousand = settings.customTtsPerCharacter;
