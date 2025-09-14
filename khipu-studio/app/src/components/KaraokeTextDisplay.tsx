@@ -37,15 +37,6 @@ export const TextDisplay: React.FC<TextDisplayProps> = ({
   // Calculate progress percentage
   const progressPercent = totalDuration > 0 ? (currentTime / totalDuration) * 100 : 0;
 
-  // Debug logging
-  console.log('TextDisplay props:', { 
-    isPlaying, 
-    currentTime, 
-    totalDuration, 
-    progressPercent,
-    segmentId 
-  });
-
   // If no text, show placeholder
   if (!text?.trim()) {
     return (
@@ -105,7 +96,7 @@ export const TextDisplay: React.FC<TextDisplayProps> = ({
             alignItems: "center",
             gap: "4px"
           }}>
-            🔊 Playing
+            🔊 {t('audioProduction.playing')}
           </span>
         )}
       </div>

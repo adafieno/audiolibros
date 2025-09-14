@@ -62,6 +62,7 @@ export class AudioPreviewService {
   private progressTrackingInterval: number | null = null;
   private segmentDurations: number[] = [];
   private progressCallback: ((currentSegmentIndex: number, segmentDurations: number[]) => void) | null = null;
+  private timeUpdateInterval: number | null = null;
 
   /**
    * Generate a consistent cache key for audio processing
@@ -561,6 +562,7 @@ export class AudioPreviewService {
     
     console.log('🎵 [AudioService] Set isPlaying = true, calling notifyStateChange...');
     this.notifyStateChange();
+    this.startTimeUpdates(); // Start continuous time updates
   }
 
   /**
@@ -582,6 +584,7 @@ export class AudioPreviewService {
     this.pauseTime = this.getCurrentTime();
     this.currentSource.stop();
     this.isPlaying = false;
+    this.stopTimeUpdates(); // Stop time updates when paused
     this.notifyStateChange();
   }
 
@@ -597,6 +600,7 @@ export class AudioPreviewService {
     
     // Clear progress tracking
     this.stopProgressTracking();
+    this.stopTimeUpdates(); // Stop time updates when stopped
     
     this.isPlaying = false;
     this.pauseTime = 0;
@@ -652,6 +656,29 @@ export class AudioPreviewService {
     }
     this.segmentDurations = [];
     this.progressCallback = null;
+  }
+
+  /**
+   * Start continuous time updates during playback
+   */
+  private startTimeUpdates(): void {
+    this.stopTimeUpdates(); // Ensure no duplicate intervals
+    
+    this.timeUpdateInterval = window.setInterval(() => {
+      if (this.isPlaying) {
+        this.notifyStateChange();
+      }
+    }, 100); // Update every 100ms for smooth progress
+  }
+
+  /**
+   * Stop time updates
+   */
+  private stopTimeUpdates(): void {
+    if (this.timeUpdateInterval !== null) {
+      window.clearInterval(this.timeUpdateInterval);
+      this.timeUpdateInterval = null;
+    }
   }
 
   /**
