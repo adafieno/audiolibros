@@ -273,10 +273,13 @@ export class CostCalculator {
   }
   
   /**
-   * Format cost for display
+   * Format cost for display with locale support
    */
-  static formatCost(cost: number, currency: string = 'USD'): string {
-    const formatter = new Intl.NumberFormat('en-US', {
+  static formatCost(cost: number, currency: string = 'USD', locale?: string): string {
+    // Use provided locale, or detect from browser, or fallback to en-US
+    const userLocale = locale || (typeof navigator !== 'undefined' ? navigator.language : 'en-US');
+    
+    const formatter = new Intl.NumberFormat(userLocale, {
       style: 'currency',
       currency: currency,
       minimumFractionDigits: 4,

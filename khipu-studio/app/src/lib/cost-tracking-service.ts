@@ -447,6 +447,7 @@ export class CostTrackingService {
     const moduleMapping: Record<string, string> = {
       // TTS Module
       'voice_audition': 'TTS Module',
+      'characters:auditionVoice': 'TTS Module',
       'voice_testing': 'TTS Module', 
       'audio_synthesis': 'TTS Module',
       'segment_generation': 'TTS Module',
@@ -454,10 +455,16 @@ export class CostTrackingService {
       
       // LLM Module
       'character_assignment': 'LLM Module',
+      'characters.assignToSegments': 'LLM Module',
+      'characters:assignVoices': 'LLM Module',
       'character_generation': 'LLM Module',
       'character_analysis': 'LLM Module',
+      'api.characters.detect': 'LLM Module',
       'manuscript_analysis': 'LLM Module',
+      'manuscript:parse': 'LLM Module',
       'text_processing': 'LLM Module',
+      'plan:build': 'LLM Module',
+      'chapter_planning': 'LLM Module',
       
       // Audio Processing Module
       'audio_processing': 'Audio Processing Module',

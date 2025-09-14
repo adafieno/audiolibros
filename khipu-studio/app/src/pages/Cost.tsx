@@ -12,7 +12,7 @@ import { CostCalculator } from '../types/cost-tracking';
  * Cost tracking and analysis dashboard
  */
 export default function Cost() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { root } = useProject();
   
   // Debug project root
@@ -23,6 +23,52 @@ export default function Cost() {
   const [selectedTimeRange, setSelectedTimeRange] = useState<'7d' | '30d' | '90d' | 'all'>('30d');
   const [showSettings, setShowSettings] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Get current locale for currency formatting
+  const currentLocale = i18n.language;
+
+  // Helper function for locale-aware currency formatting
+  const formatCost = (cost: number) => {
+    return settings ? CostCalculator.formatCost(cost, settings.currency, currentLocale) : '$0.0000';
+  };
+
+  // Friendly names for operations
+  const getOperationDisplayName = (operation: string): string => {
+    const operationNames: Record<string, string> = {
+      // LLM Operations
+      'manuscript:parse': t('cost.operations.manuscriptParse', 'Document Parsing'),
+      'api.characters.detect': t('cost.operations.characterDetect', 'Character Detection'), 
+      'plan:build': t('cost.operations.planBuild', 'Chapter Planning'),
+      'characters.assignToSegments': t('cost.operations.characterAssignment', 'Character Assignment'),
+      'characters:assignVoices': t('cost.operations.voiceAssignment', 'Voice Assignment'),
+      'chapter_planning': t('cost.operations.chapterPlanning', 'Chapter Planning'),
+      'character_assignment': t('cost.operations.characterAssignment', 'Character Assignment'),
+      
+      // TTS Operations
+      'characters:auditionVoice': t('cost.operations.voiceAudition', 'Voice Audition'),
+      'voice_audition': t('cost.operations.voiceAudition', 'Voice Audition'),
+      'audio_preview': t('cost.operations.audioPreview', 'Audio Preview'),
+      'audio_synthesis': t('cost.operations.audioSynthesis', 'Audio Generation'),
+      'segment_generation': t('cost.operations.segmentGeneration', 'Segment Audio'),
+      'voice_testing': t('cost.operations.voiceTesting', 'Voice Testing'),
+      
+      // Audio Processing
+      'audio_processing': t('cost.operations.audioProcessing', 'Audio Processing'),
+      'sox_processing': t('cost.operations.soxProcessing', 'Audio Effects'),
+      'effect_chain': t('cost.operations.effectChain', 'Effect Processing'),
+      
+      // Text Processing  
+      'text_parsing': t('cost.operations.textParsing', 'Text Analysis'),
+      'segment_parsing': t('cost.operations.segmentParsing', 'Segment Processing'),
+      'ssml_generation': t('cost.operations.ssmlGeneration', 'SSML Generation'),
+      
+      // Cache Operations
+      'cache_operation': t('cost.operations.cacheOperation', 'Cache Access'),
+      'cache_management': t('cost.operations.cacheManagement', 'Cache Management')
+    };
+    
+    return operationNames[operation] || operation.replace(/[_:]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
 
   const loadData = useCallback(() => {
     setIsLoading(true);
@@ -669,7 +715,7 @@ export default function Cost() {
                 color: 'var(--text)',
                 margin: '0'
               }}>
-                {CostCalculator.formatCost(summary.totalCost, settings.currency)}
+                {formatCost(summary.totalCost)}
               </p>
             </div>
             <div style={{
@@ -713,7 +759,7 @@ export default function Cost() {
                 color: '#10b981',
                 margin: '0'
               }}>
-                {CostCalculator.formatCost(summary.estimatedSavingsFromCache, settings.currency)}
+                {formatCost(summary.estimatedSavingsFromCache)}
               </p>
             </div>
             <div style={{
@@ -766,7 +812,7 @@ export default function Cost() {
                 color: '#3b82f6',
                 margin: '0'
               }}>
-                {CostCalculator.formatCost(summary.netCost, settings.currency)}
+                {formatCost(summary.netCost)}
               </p>
             </div>
             <div style={{
@@ -960,14 +1006,14 @@ export default function Cost() {
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap'
                   }}>
-                    {operation.operation}
+                    {getOperationDisplayName(operation.operation)}
                   </p>
                   <p style={{
                     fontSize: '12px',
                     color: 'var(--muted)',
                     margin: '2px 0 0 0'
                   }}>
-                    {operation.count} calls
+                    {operation.count} {t('cost.calls', 'calls')}
                   </p>
                 </div>
                 <span style={{
@@ -1052,7 +1098,7 @@ export default function Cost() {
                     display: 'flex',
                     justifyContent: 'space-between'
                   }}>
-                    <span>{module.count} operations</span>
+                    <span>{module.count} {t('cost.operations', 'operations')}</span>
                     <span>{percentage.toFixed(1)}%</span>
                   </div>
                   <div style={{
@@ -1061,7 +1107,7 @@ export default function Cost() {
                     fontStyle: 'italic',
                     marginTop: '2px'
                   }}>
-                    {module.operations.slice(0, 3).join(', ')}{module.operations.length > 3 ? `, +${module.operations.length - 3} more` : ''}
+                    {module.operations.slice(0, 3).map(op => getOperationDisplayName(op)).join(', ')}{module.operations.length > 3 ? `, +${module.operations.length - 3} more` : ''}
                   </div>
                 </div>
               );
