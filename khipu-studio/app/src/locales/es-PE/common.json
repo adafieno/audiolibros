@@ -1976,11 +1976,11 @@
     "comment": "Texto del botón para navegar al siguiente segmento"
   },
   "audioProduction.previousSegment": {
-    "string": "Segmento anterior",
+    "string": "Reproducir segmento anterior",
     "comment": "Tooltip para el botón de navegación anterior"
   },
   "audioProduction.nextSegment": {
-    "string": "Siguiente segmento",
+    "string": "Reproducir siguiente segmento",
     "comment": "Tooltip para el botón de navegación siguiente"
   },
   "audioProduction.error": {

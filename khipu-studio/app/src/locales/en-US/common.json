@@ -1515,11 +1515,11 @@
     "comment": "Button text to navigate to next segment"
   },
   "audioProduction.previousSegment": {
-    "string": "Previous segment",
+    "string": "Play previous segment",
     "comment": "Tooltip for previous navigation button"
   },
   "audioProduction.nextSegment": {
-    "string": "Next segment",
+    "string": "Play next segment",
     "comment": "Tooltip for next navigation button"
   },
   "audioProduction.error": {
