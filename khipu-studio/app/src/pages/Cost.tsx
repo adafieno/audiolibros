@@ -58,12 +58,22 @@ export default function Cost() {
     loadData();
   }, [loadData]);
 
+  // Subscribe to cost data changes for real-time updates
+  useEffect(() => {
+    const unsubscribe = costTrackingService.onDataChange(() => {
+      console.log('🔄 Cost data changed, refreshing dashboard...');
+      loadData();
+    });
+
+    return unsubscribe; // Cleanup subscription on unmount
+  }, [loadData]);
+
   const handleSettingsUpdate = (newSettings: Partial<CostSettings>) => {
     if (settings) {
       const updated = { ...settings, ...newSettings };
       setSettings(updated);
       costTrackingService.updateSettings(updated);
-      loadData(); // Refresh data with new settings
+      // No need to call loadData() - the subscription will handle it automatically
     }
   };
 
@@ -862,7 +872,7 @@ export default function Cost() {
           onClick={() => {
             if (confirm(t('cost.clearDataConfirm', 'Are you sure you want to clear all cost data? This action cannot be undone.'))) {
               costTrackingService.clearAllEntries();
-              loadData();
+              // No need to call loadData() - the subscription will handle it automatically
             }
           }}
           style={{

@@ -21,6 +21,7 @@ export class CostTrackingService {
   private settings: CostSettings = { ...DEFAULT_COST_SETTINGS };
   private readonly STORAGE_KEY_ENTRIES = 'khipu.cost.entries';
   private readonly STORAGE_KEY_SETTINGS = 'khipu.cost.settings';
+  private changeCallbacks: (() => void)[] = [];
   
   constructor() {
     this.loadFromStorage();
@@ -34,6 +35,34 @@ export class CostTrackingService {
       CostTrackingService.instance = new CostTrackingService();
     }
     return CostTrackingService.instance;
+  }
+  
+  /**
+   * Subscribe to cost data changes
+   */
+  onDataChange(callback: () => void): () => void {
+    this.changeCallbacks.push(callback);
+    
+    // Return unsubscribe function
+    return () => {
+      const index = this.changeCallbacks.indexOf(callback);
+      if (index > -1) {
+        this.changeCallbacks.splice(index, 1);
+      }
+    };
+  }
+  
+  /**
+   * Notify all listeners of data changes
+   */
+  private notifyDataChange(): void {
+    this.changeCallbacks.forEach(callback => {
+      try {
+        callback();
+      } catch (error) {
+        console.error('Error in cost tracking change callback:', error);
+      }
+    });
   }
   
   /**
@@ -68,6 +97,9 @@ export class CostTrackingService {
     try {
       localStorage.setItem(this.STORAGE_KEY_ENTRIES, JSON.stringify(this.costEntries));
       localStorage.setItem(this.STORAGE_KEY_SETTINGS, JSON.stringify(this.settings));
+      
+      // Notify listeners that data has changed
+      this.notifyDataChange();
     } catch (error) {
       console.error('Error saving cost tracking data:', error);
     }

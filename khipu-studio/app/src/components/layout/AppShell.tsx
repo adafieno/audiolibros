@@ -20,13 +20,13 @@ const settingsRoute: RouteItem = { to: "/settings", key: "nav.settings", icon: "
 const projectRoutes: RouteItem[] = [
   { to: "/book",       key: "nav.book",       icon: "📖", workflowStep: "project" },
   { to: "/project",    key: "nav.project",    icon: "📄", workflowStep: "project" },
-  { to: "/cost",       key: "nav.cost",       icon: "💰", workflowStep: "project" }, // Show as soon as project opens
   { to: "/manuscript", key: "nav.manuscript", icon: "✍️", workflowStep: "manuscript" },
   { to: "/casting",    key: "nav.casting",    icon: "🗣️", workflowStep: "casting" },
   { to: "/characters", key: "nav.characters", icon: "🎭", workflowStep: "characters" },
   { to: "/planning",   key: "nav.planning",   icon: "🪄", workflowStep: "planning" },
   { to: "/voice",      key: "nav.voice",      icon: "🎙️", workflowStep: "voice" },
   { to: "/packaging",  key: "nav.packaging",  icon: "📦", workflowStep: "export" },
+  { to: "/cost",       key: "nav.cost",       icon: "💰", workflowStep: "project" }, // Always at end, right before Settings
 ];
 
 export function AppShell(props: { title?: string; pageName?: string; projectName?: string; status?: string; children: ReactNode }) {
