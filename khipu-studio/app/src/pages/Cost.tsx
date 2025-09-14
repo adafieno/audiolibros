@@ -377,7 +377,7 @@ export default function Cost() {
           {/* Export Button */}
           <button
             onClick={() => {
-              const csvData = costTrackingService.exportDataAsCsv();
+              const csvData = costTrackingService.exportDataAsCsv(t);
               const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
               const url = URL.createObjectURL(blob);
               const a = document.createElement('a');

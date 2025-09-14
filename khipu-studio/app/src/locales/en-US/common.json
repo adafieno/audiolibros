@@ -2391,5 +2391,105 @@
   "cost.day_other": {
     "string": "Days",
     "comment": "Plural form for day count"
+  },
+  "cost.csv.id": {
+    "string": "ID",
+    "comment": "CSV column header for entry ID"
+  },
+  "cost.csv.timestamp": {
+    "string": "Timestamp",
+    "comment": "CSV column header for timestamp"
+  },
+  "cost.csv.serviceType": {
+    "string": "Service Type",
+    "comment": "CSV column header for service type (LLM/TTS)"
+  },
+  "cost.csv.provider": {
+    "string": "Provider",
+    "comment": "CSV column header for AI service provider"
+  },
+  "cost.csv.operation": {
+    "string": "Operation",
+    "comment": "CSV column header for operation name"
+  },
+  "cost.csv.totalCost": {
+    "string": "Total Cost (USD)",
+    "comment": "CSV column header for total cost in USD"
+  },
+  "cost.csv.unitCost": {
+    "string": "Unit Cost",
+    "comment": "CSV column header for unit cost"
+  },
+  "cost.csv.inputTokens": {
+    "string": "Input Tokens",
+    "comment": "CSV column header for input tokens"
+  },
+  "cost.csv.outputTokens": {
+    "string": "Output Tokens",
+    "comment": "CSV column header for output tokens"
+  },
+  "cost.csv.charactersProcessed": {
+    "string": "Characters Processed",
+    "comment": "CSV column header for characters processed"
+  },
+  "cost.csv.audioSeconds": {
+    "string": "Audio Seconds",
+    "comment": "CSV column header for audio duration in seconds"
+  },
+  "cost.csv.wasCached": {
+    "string": "Was Cached",
+    "comment": "CSV column header for cache enabled status"
+  },
+  "cost.csv.cacheHit": {
+    "string": "Cache Hit",
+    "comment": "CSV column header for cache hit status"
+  },
+  "cost.csv.originalCost": {
+    "string": "Original Cost (USD)",
+    "comment": "CSV column header for original cost before cache savings"
+  },
+  "cost.csv.page": {
+    "string": "Page",
+    "comment": "CSV column header for page name"
+  },
+  "cost.csv.projectId": {
+    "string": "Project ID",
+    "comment": "CSV column header for project ID"
+  },
+  "cost.csv.chapterId": {
+    "string": "Chapter ID",
+    "comment": "CSV column header for chapter ID"
+  },
+  "cost.csv.segmentId": {
+    "string": "Segment ID",
+    "comment": "CSV column header for segment ID"
+  },
+  "cost.csv.exportTitle": {
+    "string": "Khipu Studio - Cost Tracking Data Export",
+    "comment": "Title in CSV file header"
+  },
+  "cost.csv.exportDate": {
+    "string": "Export Date",
+    "comment": "Export date label in CSV file header"
+  },
+  "cost.csv.totalEntries": {
+    "string": "Total Entries",
+    "comment": "Total entries label in CSV file header"
+  },
+  "cost.csv.dateRange": {
+    "string": "Date Range",
+    "comment": "Date range label in CSV file header"
+  },
+  "cost.csv.dataFormat": {
+    "string": "Data Format",
+    "comment": "Data format label in CSV file header"
+  },
+  "cost.csv.yes": {
+    "string": "Yes",
+    "comment": "Yes value for boolean fields in CSV"
+  },
+  "cost.csv.no": {
+    "string": "No",
+    "comment": "No value for boolean fields in CSV"
   }
 }

@@ -584,7 +584,7 @@ export class CostTrackingService {
   /**
    * Export cost data as CSV string
    */
-  exportDataAsCsv(): string {
+  exportDataAsCsv(t: (key: string, options?: Record<string, unknown>) => string): string {
     const entries = this.getAllEntries();
     
     if (entries.length === 0) {
@@ -597,37 +597,37 @@ export class CostTrackingService {
     
     // Create metadata header
     const metadataLines = [
-      '# Khipu Studio - Cost Tracking Data Export',
-      `# Export Date: ${exportDate}`,
-      `# Total Entries: ${entries.length}`,
-      `# Total Cost: $${summary.totalCost.toFixed(6)}`,
-      `# Total Savings: $${summary.totalSavings.toFixed(6)}`,
-      `# Cache Hit Rate: ${summary.cacheHitRate.toFixed(1)}%`,
-      `# Date Range: ${summary.startDate.toISOString()} to ${summary.endDate.toISOString()}`,
+      `# ${t('cost.csv.exportTitle')}`,
+      `# ${t('cost.csv.exportDate')}: ${exportDate}`,
+      `# ${t('cost.csv.totalEntries')}: ${entries.length}`,
+      `# ${t('cost.totalCost')}: $${summary.totalCost.toFixed(6)}`,
+      `# ${t('cost.cacheSavings')}: $${summary.totalSavings.toFixed(6)}`,
+      `# ${t('cost.cacheHitRate')}: ${summary.cacheHitRate.toFixed(1)}%`,
+      `# ${t('cost.csv.dateRange')}: ${summary.startDate.toISOString()} to ${summary.endDate.toISOString()}`,
       '#',
-      '# Data Format:',
+      `# ${t('cost.csv.dataFormat')}:`,
     ];
     
     // CSV headers
     const headers = [
-      'ID',
-      'Timestamp',
-      'Service Type',
-      'Provider',
-      'Operation',
-      'Total Cost (USD)',
-      'Unit Cost',
-      'Input Tokens',
-      'Output Tokens',
-      'Characters Processed',
-      'Audio Seconds',
-      'Was Cached',
-      'Cache Hit',
-      'Original Cost (USD)',
-      'Page',
-      'Project ID',
-      'Chapter ID',
-      'Segment ID'
+      t('cost.csv.id'),
+      t('cost.csv.timestamp'),
+      t('cost.csv.serviceType'),
+      t('cost.csv.provider'),
+      t('cost.csv.operation'),
+      t('cost.csv.totalCost'),
+      t('cost.csv.unitCost'),
+      t('cost.csv.inputTokens'),
+      t('cost.csv.outputTokens'),
+      t('cost.csv.charactersProcessed'),
+      t('cost.csv.audioSeconds'),
+      t('cost.csv.wasCached'),
+      t('cost.csv.cacheHit'),
+      t('cost.csv.originalCost'),
+      t('cost.csv.page'),
+      t('cost.csv.projectId'),
+      t('cost.csv.chapterId'),
+      t('cost.csv.segmentId')
     ];
     
     // Helper function to escape CSV values
@@ -657,8 +657,8 @@ export class CostTrackingService {
       escapeCsv(entry.outputTokens || ''),
       escapeCsv(entry.charactersProcessed || ''),
       escapeCsv(entry.audioSeconds || ''),
-      escapeCsv(entry.wasCached ? 'Yes' : 'No'),
-      escapeCsv(entry.cacheHit ? 'Yes' : 'No'),
+      escapeCsv(entry.wasCached ? t('cost.csv.yes') : t('cost.csv.no')),
+      escapeCsv(entry.cacheHit ? t('cost.csv.yes') : t('cost.csv.no')),
       escapeCsv(entry.originalCost?.toFixed(6) || ''),
       escapeCsv(entry.page || ''),
       escapeCsv(entry.projectId || ''),
