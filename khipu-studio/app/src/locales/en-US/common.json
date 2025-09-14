@@ -2305,8 +2305,8 @@
     "comment": "Title for application module-based cost breakdown section"
   },
   "cost.costByPage": {
-    "string": "Cost by Page",
-    "comment": "Title for page-based cost breakdown section"
+    "string": "Cost by Phase",
+    "comment": "Title for phase-based cost breakdown section"
   },
   "cost.costTimeline": {
     "string": "Cost Timeline",
@@ -2449,8 +2449,8 @@
     "comment": "CSV column header for original cost before cache savings"
   },
   "cost.csv.page": {
-    "string": "Page",
-    "comment": "CSV column header for page name"
+    "string": "Phase",
+    "comment": "CSV column header for phase name"
   },
   "cost.csv.projectId": {
     "string": "Project ID",

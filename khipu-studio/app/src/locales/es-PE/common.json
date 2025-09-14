@@ -2765,8 +2765,8 @@
     "comment": "Título para sección de desglose de costos por módulos funcionales de la aplicación"
   },
   "cost.costByPage": {
-    "string": "Costo por Página",
-    "comment": "Título para sección de desglose de costos basado en páginas"
+    "string": "Costo por fase",
+    "comment": "Título para sección de desglose de costos basado en fases"
   },
   "cost.costTimeline": {
     "string": "Timeline de Costos",
@@ -2909,7 +2909,7 @@
     "comment": "CSV column header for original cost before cache savings"
   },
   "cost.csv.page": {
-    "string": "Página",
+    "string": "Fase",
     "comment": "CSV column header for page name"
   },
   "cost.csv.projectId": {

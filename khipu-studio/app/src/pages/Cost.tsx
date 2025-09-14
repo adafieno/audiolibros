@@ -1184,12 +1184,12 @@ export default function Cost() {
                 'planning': '🪄',
                 'voice': '🎙️',
                 'packaging': '📦',
-                'cost': '�',
+                'cost': '💰',
                 'settings': '⚙️',
                 'home': '🏠',
                 // Legacy mappings for old page names
                 'orchestration': '🪄',
-                'audio_production': '�️',
+                'audio_production': '🎙️',
                 'chapter_planning': '🪄',
                 'unknown': '❓'
               };
