@@ -402,6 +402,10 @@
     "string": "Refresh",
     "comment": "Button text for refreshing manuscript list"
   },
+  "manuscript.completeButton": {
+    "string": "Mark manuscript as complete",
+    "comment": "Button text for marking manuscript workflow step as complete"
+  },
 
   "plan.noPlanToShow": {
     "string": "No plan to show",
@@ -896,7 +900,7 @@
     "comment": "Title for manuscript page"
   },
   "manu.description": {
-    "string": "Edit and format your manuscript content for audio production",
+    "string": "Import and parse the book manuscript and check for proper chapter detection",
     "comment": "Description for manuscript page"
   },
 

@@ -204,7 +204,7 @@
     "comment": ""
   },
   "manu.description": {
-    "string": "Edita y formatea el contenido de tu manuscrito para la producción de audio",
+    "string": "Importa y procesa el manuscrito del libro y verifica la detección correcta de capítulos",
     "comment": ""
   },
   "plan.regen": {

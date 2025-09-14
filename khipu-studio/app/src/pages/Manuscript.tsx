@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useProject } from "../store/project";
 import { WorkflowCompleteButton } from "../components/WorkflowCompleteButton";
 import { PageHeader } from "../components/PageHeader";
+import { StandardButton } from "../components/StandardButton";
 import { costTrackingService } from "../lib/cost-tracking-service";
 
 type ChapterItem = {
@@ -107,72 +108,96 @@ export default function ManuscriptPage() {
         <PageHeader 
           title={t("manu.title")}
           description={t("manu.description")}
+          actions={
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <StandardButton onClick={chooseDocxAndParse}>
+                {t("manuscript.importDocx")}
+              </StandardButton>
+              <StandardButton onClick={refreshList}>
+                {t("manuscript.refresh")}
+              </StandardButton>
+              <WorkflowCompleteButton 
+                step="manuscript" 
+                disabled={chapters.length === 0}
+              >
+                {t("manuscript.completeButton")}
+              </WorkflowCompleteButton>
+              {msg && (
+                <span style={{ color: "var(--muted)", fontSize: "14px", marginLeft: "12px" }}>
+                  {msg}
+                </span>
+              )}
+            </div>
+          }
         />
         
-        {/* Toolbar */}
-        <section style={{ marginTop: 16, marginBottom: 16 }}>
+      </div>
+      <div style={{ 
+        display: "grid", 
+        gridTemplateColumns: "320px 1fr", 
+        gap: 24, 
+        height: "100%",
+        overflow: "hidden"
+      }}>
+        {/* Left: chapters */}
+        <aside style={{ 
+          borderRight: "1px solid var(--border)", 
+          paddingRight: "20px",
+          paddingLeft: "4px",
+          display: "flex",
+          flexDirection: "column",
+          minHeight: 0
+        }}>
           <div style={{ 
-            display: "flex", 
-            gap: 8, 
-            alignItems: "center",
-            padding: "8px 12px",
-            backgroundColor: "var(--panel)",
-            border: "1px solid var(--border)",
-            borderRadius: "6px"
+            overflow: "auto", 
+            paddingTop: "4px",
+            paddingLeft: "2px",
+            paddingRight: "4px",
+            flex: 1
           }}>
-            <button className="btn" onClick={chooseDocxAndParse}>{t("manuscript.importDocx")}</button>
-            <button className="btn" onClick={refreshList}>{t("manuscript.refresh")}</button>
-            <div style={{ width: "1px", height: "20px", backgroundColor: "var(--border)", margin: "0 4px" }}></div>
-            <WorkflowCompleteButton 
-              step="manuscript" 
-              disabled={chapters.length === 0}
-              className="btn"
-            >
-              Marcar manuscrito como completo
-            </WorkflowCompleteButton>
-            {msg && (
-              <span style={{ color: "var(--muted)", fontSize: 12, marginLeft: "auto" }}>{msg}</span>
+            {chapters.length === 0 ? (
+              <div style={{ color: "var(--muted)", padding: "20px 0", textAlign: "center" }}>
+                No hay capítulos. Importa un .docx para generar la estructura.
+              </div>
+            ) : (
+              <ul style={{ 
+                listStyle: "none", 
+                padding: 0, 
+                margin: 0, 
+                display: "grid", 
+                gap: 8
+              }}>
+                {chapters.map((c) => {
+                  const active = selected?.id === c.id;
+                  return (
+                    <li key={c.id}>
+                      <button
+                        onClick={() => handleSelect(c)}
+                        style={{
+                          width: "calc(100% - 4px)",
+                          textAlign: "left",
+                          padding: "12px 14px",
+                          borderRadius: "6px",
+                          border: "1px solid var(--border)",
+                          background: active ? "var(--panelAccent)" : "var(--panel)",
+                          color: "inherit",
+                          cursor: "pointer",
+                          transition: "all 0.2s ease",
+                          boxSizing: "border-box",
+                          margin: "0 2px"
+                        }}
+                      >
+                        <div style={{ fontWeight: 600, marginBottom: 4 }}>{c.title}</div>
+                        <div style={{ fontSize: "12px", color: "var(--muted)" }}>
+                          {c.id} · {c.words} palabras
+                        </div>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
             )}
           </div>
-        </section>
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: 12, height: "100%" }}>
-        {/* Left: chapters */}
-        <aside style={{ borderRight: "1px solid var(--border)", padding: "0 16px 0 0", overflow: "auto" }}>
-
-          {chapters.length === 0 ? (
-            <div style={{ color: "var(--muted)" }}>
-              No hay capítulos. Importa un .docx para generar la estructura.
-            </div>
-          ) : (
-            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 6 }}>
-              {chapters.map((c) => {
-                const active = selected?.id === c.id;
-                return (
-                  <li key={c.id}>
-                    <button
-                      onClick={() => handleSelect(c)}
-                      style={{
-                        width: "100%",
-                        textAlign: "left",
-                        padding: "8px 10px",
-                        borderRadius: 10,
-                        border: "1px solid var(--border)",
-                        background: active ? "var(--panelAccent)" : "var(--panel)",
-                        color: "inherit",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <div style={{ fontWeight: 600, marginBottom: 2 }}>{c.title}</div>
-                      <div style={{ fontSize: 12, color: "var(--muted)" }}>
-                        {c.id} · {c.words} palabras
-                      </div>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
         </aside>
 
         {/* Right: preview */}
