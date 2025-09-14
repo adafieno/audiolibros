@@ -2129,8 +2129,8 @@
     "comment": "Label for cache hit rate percentage"
   },
   "cost.costByService": {
-    "string": "Cost by Service",
-    "comment": "Title for service cost breakdown section"
+    "string": "Cost by AI Service Type",
+    "comment": "Title for service type cost breakdown section (LLM vs TTS)"
   },
   "cost.llmServices": {
     "string": "LLM Services",
@@ -2301,8 +2301,8 @@
     "comment": "Button text for refreshing cost data"
   },
   "cost.costByModule": {
-    "string": "Cost by Module",
-    "comment": "Title for module-based cost breakdown section"
+    "string": "Cost by Application Module",
+    "comment": "Title for application module-based cost breakdown section"
   },
   "cost.costByPage": {
     "string": "Cost by Page",
@@ -2383,5 +2383,13 @@
   "cost.call_plural": {
     "string": "calls",
     "comment": "Plural form for API call count"
+  },
+  "cost.day": {
+    "string": "Day",
+    "comment": "Singular form for day count"
+  },
+  "cost.day_plural": {
+    "string": "Days",
+    "comment": "Plural form for day count"
   }
 }

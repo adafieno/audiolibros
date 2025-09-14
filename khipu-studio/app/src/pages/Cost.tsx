@@ -1390,7 +1390,9 @@ export default function Cost() {
                   <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)' }}>
                     {summary.dailyCosts.length}
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{t('cost.days', 'Days')}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)' }}>
+                    {formatCount(summary.dailyCosts.length, 'cost.day', 'cost.day_plural', 'Day', 'Days')}
+                  </div>
                 </div>
                 <div>
                   <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)' }}>

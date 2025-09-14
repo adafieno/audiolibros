@@ -2589,8 +2589,8 @@
     "comment": "Etiqueta para porcentaje de tasa de aciertos de caché"
   },
   "cost.costByService": {
-    "string": "Costo por Servicio",
-    "comment": "Título para sección de desglose de costos por servicio"
+    "string": "Costo por Tipo de Servicio IA",
+    "comment": "Título para sección de desglose de costos por tipo de servicio de IA (LLM vs TTS)"
   },
   "cost.llmServices": {
     "string": "Servicios LLM",
@@ -2761,8 +2761,8 @@
     "comment": "Texto del botón para actualizar datos de costos"
   },
   "cost.costByModule": {
-    "string": "Costo por Módulo",
-    "comment": "Título para sección de desglose de costos basado en módulos"
+    "string": "Costo por Módulo de Aplicación",
+    "comment": "Título para sección de desglose de costos por módulos funcionales de la aplicación"
   },
   "cost.costByPage": {
     "string": "Costo por Página",
@@ -2843,5 +2843,13 @@
   "cost.call_plural": {
     "string": "llamadas",
     "comment": "Forma plural para conteo de llamadas de API"
+  },
+  "cost.day": {
+    "string": "día",
+    "comment": "Forma singular para conteo de días"
+  },
+  "cost.day_plural": {
+    "string": "días",
+    "comment": "Forma plural para conteo de días"
   }
 }
