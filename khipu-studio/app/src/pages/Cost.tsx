@@ -181,8 +181,8 @@ export default function Cost() {
         color: 'var(--text)'
       }}>
         <div style={{ textAlign: 'center' }}>
-          <p style={{ color: 'var(--text)', fontSize: '18px', marginBottom: '8px' }}>No project loaded</p>
-          <p style={{ color: 'var(--muted)', fontSize: '14px' }}>Please open a project first to view cost tracking.</p>
+          <p style={{ color: 'var(--text)', fontSize: '18px', marginBottom: '8px' }}>{t('cost.noProjectLoaded', 'No project loaded')}</p>
+          <p style={{ color: 'var(--muted)', fontSize: '14px' }}>{t('cost.openProjectFirst', 'Please open a project first to view cost tracking.')}</p>
           <button
             onClick={() => {
               console.log('🔧 Manual project root test');
@@ -1107,7 +1107,7 @@ export default function Cost() {
                     fontStyle: 'italic',
                     marginTop: '2px'
                   }}>
-                    {module.operations.slice(0, 3).map(op => getOperationDisplayName(op)).join(', ')}{module.operations.length > 3 ? `, +${module.operations.length - 3} more` : ''}
+                    {module.operations.slice(0, 3).map(op => getOperationDisplayName(op)).join(', ')}{module.operations.length > 3 ? `, +${module.operations.length - 3} ${t('cost.more', 'more')}` : ''}
                   </div>
                 </div>
               );
@@ -1315,9 +1315,9 @@ export default function Cost() {
                           }}
                         >
                           <div>{day.date.toLocaleDateString()}</div>
-                          <div>Total: {CostCalculator.formatCost(day.cost, settings.currency)}</div>
-                          <div>Operations: {day.operations}</div>
-                          {day.savings > 0 && <div>Saved: {CostCalculator.formatCost(day.savings, settings.currency)}</div>}
+                          <div>{t('cost.total', 'Total')}: {CostCalculator.formatCost(day.cost, settings.currency)}</div>
+                          <div>{t('cost.operations', 'Operations')}: {day.operations}</div>
+                          {day.savings > 0 && <div>{t('cost.saved', 'Saved')}: {CostCalculator.formatCost(day.savings, settings.currency)}</div>}
                         </div>
                       </div>
                     );
@@ -1334,11 +1334,11 @@ export default function Cost() {
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <div style={{ width: '12px', height: '8px', background: '#3b82f6', borderRadius: '2px' }}></div>
-                  <span style={{ color: 'var(--muted)' }}>LLM</span>
+                  <span style={{ color: 'var(--muted)' }}>{t('cost.modules.LLM', 'LLM')}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <div style={{ width: '12px', height: '8px', background: '#10b981', borderRadius: '2px' }}></div>
-                  <span style={{ color: 'var(--muted)' }}>TTS</span>
+                  <span style={{ color: 'var(--muted)' }}>{t('cost.modules.TTS', 'TTS')}</span>
                 </div>
               </div>
               
@@ -1360,7 +1360,7 @@ export default function Cost() {
                   <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)' }}>
                     {Math.round(summary.dailyCosts.reduce((sum, day) => sum + day.operations, 0) / summary.dailyCosts.length)}
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Avg Ops/Day</div>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{t('cost.avgOpsPerDay', 'Avg Ops/Day')}</div>
                 </div>
                 <div>
                   <div style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text)' }}>
@@ -1377,7 +1377,7 @@ export default function Cost() {
               color: 'var(--muted)',
               fontSize: '14px'
             }}>
-              📊 No timeline data available for the selected period
+              📊 {t('cost.noTimelineData', 'No timeline data available for the selected period')}
             </div>
           )}
         </div>
