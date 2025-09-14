@@ -2505,7 +2505,7 @@
     "comment": "Etiqueta para control de mezcla húmeda en configuración de reverberación"
   },
   "cost.title": {
-    "string": "Seguimiento de Costos",
+    "string": "Seguimiento de costos",
     "comment": "Título principal para la página del panel de seguimiento de costos"
   },
   "cost.description": {
@@ -2537,7 +2537,7 @@
     "comment": "Opción de rango de tiempo para los últimos 90 días"
   },
   "cost.timeRange.all": {
-    "string": "Todo el tiempo",
+    "string": "Rango completo",
     "comment": "Opción de rango de tiempo para todos los datos históricos"
   },
   "cost.pricing.openaiGpt4Input": {
@@ -2557,27 +2557,27 @@
     "comment": "Etiqueta para configuración de precio de caracteres de Azure TTS"
   },
   "cost.enableTracking": {
-    "string": "Habilitar Seguimiento de Costos",
+    "string": "Habilitar seguimiento de costos",
     "comment": "Etiqueta de checkbox para habilitar/deshabilitar seguimiento de costos"
   },
   "cost.trackCacheSavings": {
-    "string": "Seguir Ahorros de Caché",
+    "string": "Seguir ahorros de caché",
     "comment": "Etiqueta de checkbox para habilitar/deshabilitar seguimiento de ahorros de caché"
   },
   "cost.totalCost": {
-    "string": "Costo Total",
+    "string": "Costo total",
     "comment": "Etiqueta para tarjeta de costo total acumulado"
   },
   "cost.cacheSavings": {
-    "string": "Ahorros de Caché",
+    "string": "Ahorros de caché",
     "comment": "Etiqueta para tarjeta de ahorros de caché"
   },
   "cost.netCost": {
-    "string": "Costo Neto",
+    "string": "Costo neto",
     "comment": "Etiqueta para tarjeta de costo neto (total menos ahorros)"
   },
   "cost.totalUsage": {
-    "string": "Uso Total",
+    "string": "Uso total",
     "comment": "Etiqueta para tarjeta de estadísticas de uso"
   },
   "cost.afterCacheSavings": {
@@ -2585,11 +2585,11 @@
     "comment": "Subtítulo para tarjeta de costo neto"
   },
   "cost.cacheHitRate": {
-    "string": "Tasa de Aciertos de Caché",
+    "string": "Tasa de aciertos de caché",
     "comment": "Etiqueta para porcentaje de tasa de aciertos de caché"
   },
   "cost.costByService": {
-    "string": "Costo por Tipo de Servicio IA",
+    "string": "Costo por tipo de servicio IA",
     "comment": "Título para sección de desglose de costos por tipo de servicio de IA (LLM vs TTS)"
   },
   "cost.llmServices": {
@@ -2601,27 +2601,27 @@
     "comment": "Etiqueta para servicios de Texto a Voz en desglose de costos"
   },
   "cost.topOperations": {
-    "string": "Operaciones Principales por Costo",
+    "string": "Costo por operaciones principales",
     "comment": "Título para sección de operaciones más costosas"
   },
   "cost.cachePerformance": {
-    "string": "Rendimiento de Caché",
+    "string": "Rendimiento de caché",
     "comment": "Título para sección de estadísticas de rendimiento de caché"
   },
   "cost.cacheHits": {
-    "string": "Aciertos de Caché",
+    "string": "Aciertos de caché",
     "comment": "Etiqueta para estadísticas de aciertos de caché"
   },
   "cost.cacheMisses": {
-    "string": "Fallos de Caché",
+    "string": "Fallos de caché",
     "comment": "Etiqueta para estadísticas de fallos de caché"
   },
   "cost.hitRate": {
-    "string": "Tasa de Aciertos",
+    "string": "Tasa de aciertos",
     "comment": "Etiqueta para porcentaje de tasa de aciertos de caché"
   },
   "cost.smartCachingImpact": {
-    "string": "Impacto del Caché Inteligente",
+    "string": "Impacto del caché inteligente",
     "comment": "Título para mensaje de impacto de ahorros de caché"
   },
   "cost.savingsMessage": {
@@ -2629,11 +2629,11 @@
     "comment": "Mensaje mostrando impacto de ahorros de caché con valores de costo"
   },
   "cost.exportData": {
-    "string": "Exportar Datos como CSV",
+    "string": "Exportar datos como CSV",
     "comment": "Texto del botón para exportar datos de costos como archivo CSV"
   },
   "cost.clearData": {
-    "string": "Limpiar Datos",
+    "string": "Limpiar datos",
     "comment": "Texto del botón para limpiar todos los datos de costos"
   },
   "cost.clearDataConfirm": {
@@ -2653,7 +2653,7 @@
     "comment": "Etiqueta para costo ahorrado en tooltips de timeline al pasar el mouse"
   },
   "cost.avgOpsPerDay": {
-    "string": "Promedio Ops/Día",
+    "string": "Promedio ops/día",
     "comment": "Etiqueta para estadística de operaciones promedio por día"
   },
   "cost.more": {
@@ -2681,67 +2681,67 @@
     "comment": "Abreviatura para Text-to-Speech en leyenda de timeline"
   },
   "cost.operations.manuscriptParse": {
-    "string": "Análisis de Documento",
+    "string": "Análisis de documento",
     "comment": "Nombre para mostrar operaciones de análisis de manuscrito"
   },
   "cost.operations.characterDetect": {
-    "string": "Detección de Personajes",
+    "string": "Detección de personajes",
     "comment": "Nombre para mostrar operaciones de detección de personajes"
   },
   "cost.operations.planBuild": {
-    "string": "Planificación de Capítulos",
+    "string": "Planificación de capítulos",
     "comment": "Nombre para mostrar operaciones de planificación de capítulos"
   },
   "cost.operations.characterAssignment": {
-    "string": "Asignación de Personajes",
+    "string": "Asignación de personajes",
     "comment": "Nombre para mostrar operaciones de asignación de personajes"
   },
   "cost.operations.voiceAssignment": {
-    "string": "Asignación de Voces",
+    "string": "Asignación de voces",
     "comment": "Nombre para mostrar operaciones de asignación de voces"
   },
   "cost.operations.chapterPlanning": {
-    "string": "Planificación de Capítulos",
+    "string": "Planificación de capítulos",
     "comment": "Nombre para mostrar operaciones de planificación de capítulos"
   },
   "cost.operations.voiceAudition": {
-    "string": "Audición de Voz",
+    "string": "Audición de voz",
     "comment": "Nombre para mostrar operaciones de audición de voz"
   },
   "cost.operations.audioPreview": {
-    "string": "Vista Previa de Audio",
+    "string": "Vista Previa de audio",
     "comment": "Nombre para mostrar operaciones de vista previa de audio"
   },
   "cost.operations.audioSynthesis": {
-    "string": "Generación de Audio",
+    "string": "Generación de audio",
     "comment": "Nombre para mostrar operaciones de síntesis de audio"
   },
   "cost.operations.segmentGeneration": {
-    "string": "Audio de Segmento",
+    "string": "Audio de segmento",
     "comment": "Nombre para mostrar operaciones de generación de audio de segmento"
   },
   "cost.operations.voiceTesting": {
-    "string": "Prueba de Voz",
+    "string": "Prueba de voz",
     "comment": "Nombre para mostrar operaciones de prueba de voz"
   },
   "cost.operations.audioProcessing": {
-    "string": "Procesamiento de Audio",
+    "string": "Procesamiento de audio",
     "comment": "Nombre para mostrar operaciones de procesamiento de audio"
   },
   "cost.operations.soxProcessing": {
-    "string": "Efectos de Audio",
+    "string": "Efectos de audio",
     "comment": "Nombre para mostrar operaciones de procesamiento de audio SoX"
   },
   "cost.operations.effectChain": {
-    "string": "Procesamiento de Efectos",
+    "string": "Procesamiento de efectos",
     "comment": "Nombre para mostrar operaciones de cadena de efectos de audio"
   },
   "cost.operations.textParsing": {
-    "string": "Análisis de Texto",
+    "string": "Análisis de texto",
     "comment": "Nombre para mostrar operaciones de análisis de texto"
   },
   "cost.operations.segmentParsing": {
-    "string": "Procesamiento de Segmentos",
+    "string": "Procesamiento de segmentos",
     "comment": "Nombre para mostrar operaciones de análisis de segmentos"
   },
   "cost.operations.ssmlGeneration": {
@@ -2749,11 +2749,11 @@
     "comment": "Nombre para mostrar operaciones de generación de SSML"
   },
   "cost.operations.cacheOperation": {
-    "string": "Acceso a Caché",
+    "string": "Acceso a caché",
     "comment": "Nombre para mostrar operaciones de operación de caché"
   },
   "cost.operations.cacheManagement": {
-    "string": "Gestión de Caché",
+    "string": "Gestión de caché",
     "comment": "Nombre para mostrar operaciones de gestión de caché"
   },
   "cost.refresh": {
@@ -2761,7 +2761,7 @@
     "comment": "Texto del botón para actualizar datos de costos"
   },
   "cost.costByModule": {
-    "string": "Costo por Módulo de Aplicación",
+    "string": "Costo por módulo de aplicación",
     "comment": "Título para sección de desglose de costos por módulos funcionales de la aplicación"
   },
   "cost.costByPage": {
@@ -2769,11 +2769,11 @@
     "comment": "Título para sección de desglose de costos basado en fases"
   },
   "cost.costTimeline": {
-    "string": "Timeline de Costos",
+    "string": "Timeline de costos",
     "comment": "Título para sección de visualización de timeline de costos"
   },
   "cost.avgCostPerDay": {
-    "string": "Costo Prom/Día",
+    "string": "Costo prom/día",
     "comment": "Etiqueta para estadística de costo promedio por día"
   },
   "cost.days": {
@@ -2797,19 +2797,19 @@
     "comment": "Abreviatura de unidad para miles de caracteres"
   },
   "cost.pricing.openaiGpt4oInput": {
-    "string": "OpenAI GPT-4o Entrada (por 1K tokens)",
+    "string": "OpenAI GPT-4o entrada (por 1K tokens)",
     "comment": "Etiqueta para configuración de precios de tokens de entrada de OpenAI GPT-4o"
   },
   "cost.pricing.openaiGpt4oOutput": {
-    "string": "OpenAI GPT-4o Salida (por 1K tokens)",
+    "string": "OpenAI GPT-4o salida (por 1K tokens)",
     "comment": "Etiqueta para configuración de precios de tokens de salida de OpenAI GPT-4o"
   },
   "cost.pricing.openaiGpt4oMiniInput": {
-    "string": "OpenAI GPT-4o Mini Entrada (por 1K tokens)",
+    "string": "OpenAI GPT-4o Mini entrada (por 1K tokens)",
     "comment": "Etiqueta para configuración de precios de tokens de entrada de OpenAI GPT-4o Mini"
   },
   "cost.pricing.openaiGpt4oMiniOutput": {
-    "string": "OpenAI GPT-4o Mini Salida (por 1K tokens)",
+    "string": "OpenAI GPT-4o Mini salida (por 1K tokens)",
     "comment": "Etiqueta para configuración de precios de tokens de salida de OpenAI GPT-4o Mini"
   },
   "cost.pricing.openaiTts": {
@@ -2821,19 +2821,19 @@
     "comment": "Etiqueta para página u operación desconocida"
   },
   "cost.cacheHit_one": {
-    "string": "Acierto de Caché",
+    "string": "Acierto de caché",
     "comment": "Forma singular para conteo de aciertos de caché"
   },
   "cost.cacheHit_other": {
-    "string": "Aciertos de Caché",
+    "string": "Aciertos de caché",
     "comment": "Forma plural para conteo de aciertos de caché"
   },
   "cost.cacheMiss_one": {
-    "string": "Fallo de Caché",
+    "string": "Fallo de caché",
     "comment": "Forma singular para conteo de fallos de caché"
   },
   "cost.cacheMiss_other": {
-    "string": "Fallos de Caché",
+    "string": "Fallos de caché",
     "comment": "Forma plural para conteo de fallos de caché"
   },
   "cost.call_one": {
@@ -2857,11 +2857,11 @@
     "comment": "CSV column header for entry ID"
   },
   "cost.csv.timestamp": {
-    "string": "Marca de Tiempo",
+    "string": "Marca de tiempo",
     "comment": "CSV column header for timestamp"
   },
   "cost.csv.serviceType": {
-    "string": "Tipo de Servicio",
+    "string": "Tipo de servicio",
     "comment": "CSV column header for service type (LLM/TTS)"
   },
   "cost.csv.provider": {
@@ -2873,39 +2873,39 @@
     "comment": "CSV column header for operation name"
   },
   "cost.csv.totalCost": {
-    "string": "Costo Total (USD)",
+    "string": "Costo total (USD)",
     "comment": "CSV column header for total cost in USD"
   },
   "cost.csv.unitCost": {
-    "string": "Costo Unitario",
+    "string": "Costo unitario",
     "comment": "CSV column header for unit cost"
   },
   "cost.csv.inputTokens": {
-    "string": "Tokens de Entrada",
+    "string": "Tokens de entrada",
     "comment": "CSV column header for input tokens"
   },
   "cost.csv.outputTokens": {
-    "string": "Tokens de Salida",
+    "string": "Tokens de salida",
     "comment": "CSV column header for output tokens"
   },
   "cost.csv.charactersProcessed": {
-    "string": "Caracteres Procesados",
+    "string": "Caracteres procesados",
     "comment": "CSV column header for characters processed"
   },
   "cost.csv.audioSeconds": {
-    "string": "Segundos de Audio",
+    "string": "Segundos de audio",
     "comment": "CSV column header for audio duration in seconds"
   },
   "cost.csv.wasCached": {
-    "string": "Con Caché",
+    "string": "Con caché",
     "comment": "CSV column header for cache enabled status"
   },
   "cost.csv.cacheHit": {
-    "string": "Acierto de Caché",
+    "string": "Acierto de caché",
     "comment": "CSV column header for cache hit status"
   },
   "cost.csv.originalCost": {
-    "string": "Costo Original (USD)",
+    "string": "Costo original (USD)",
     "comment": "CSV column header for original cost before cache savings"
   },
   "cost.csv.page": {
@@ -2913,15 +2913,15 @@
     "comment": "CSV column header for page name"
   },
   "cost.csv.projectId": {
-    "string": "ID del Proyecto",
+    "string": "ID del proyecto",
     "comment": "CSV column header for project ID"
   },
   "cost.csv.chapterId": {
-    "string": "ID del Capítulo",
+    "string": "ID del capítulo",
     "comment": "CSV column header for chapter ID"
   },
   "cost.csv.segmentId": {
-    "string": "ID del Segmento",
+    "string": "ID del segmento",
     "comment": "CSV column header for segment ID"
   },
   "cost.csv.exportTitle": {
@@ -2929,19 +2929,19 @@
     "comment": "Title in CSV file header"
   },
   "cost.csv.exportDate": {
-    "string": "Fecha de Exportación",
+    "string": "Fecha de exportación",
     "comment": "Export date label in CSV file header"
   },
   "cost.csv.totalEntries": {
-    "string": "Total de Entradas",
+    "string": "Total de entradas",
     "comment": "Total entries label in CSV file header"
   },
   "cost.csv.dateRange": {
-    "string": "Rango de Fechas",
+    "string": "Rango de fechas",
     "comment": "Date range label in CSV file header"
   },
   "cost.csv.dataFormat": {
-    "string": "Formato de Datos",
+    "string": "Formato de datos",
     "comment": "Data format label in CSV file header"
   },
   "cost.csv.yes": {
