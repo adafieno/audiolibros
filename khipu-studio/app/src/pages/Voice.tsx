@@ -1293,7 +1293,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
       {/* Main content grid - Two pane layout */}
       {selectedChapter && audioSegments.length > 0 ? (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", flex: 1, minHeight: 0 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "0.4fr 1.6fr", gap: "16px", flex: 1, minHeight: 0 }}>
           {/* Left: Audio Segments Grid */}
           <div style={{ border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
             <div style={{ padding: "8px 12px", backgroundColor: "var(--panelAccent)", borderBottom: "1px solid var(--border)", fontSize: "14px", fontWeight: 500 }}>

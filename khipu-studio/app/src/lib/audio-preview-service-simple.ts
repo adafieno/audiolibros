@@ -378,6 +378,38 @@ export class AudioPreviewService {
 
         console.log(`✅ Generated TTS for segment: ${options.segmentId}, now applying SoX processing...`);
 
+        // Track TTS cost
+        try {
+          const { costTrackingService } = await import('./cost-tracking-service');
+          
+          // Get project root from the global project store
+          const { useProject } = await import('../store/project');
+          const projectRoot = useProject.getState().root;
+          
+          if (projectRoot) {
+            await costTrackingService.setProjectRoot(projectRoot);
+            
+            const wasCached = result.wasCached === true;
+            const segmentText = options.segment.text || '';
+            
+            console.log(`📊 Tracking TTS cost for preview - wasCached: ${wasCached}, characters: ${segmentText.length}`);
+            
+            costTrackingService.trackTtsUsage({
+              provider: 'azure-tts',
+              operation: 'audio_preview',
+              charactersProcessed: segmentText.length,
+              wasCached: wasCached,
+              cacheHit: wasCached,
+              projectId: options.projectConfig.bookMeta?.title || 'unknown',
+              segmentId: options.segmentId
+            });
+          } else {
+            console.warn('No project root available for cost tracking');
+          }
+        } catch (costError) {
+          console.warn('Failed to track TTS cost for preview:', costError);
+        }
+
         // Step 2: Apply SoX processing to the TTS audio
         try {
           // Get the cached file path for TTS audio using the same cache key generation as TTS
@@ -825,6 +857,38 @@ export class AudioPreviewService {
       
       if (!result.success || !result.audioUrl) {
         throw new Error(result.error || 'Failed to generate TTS audio');
+      }
+
+      // Track TTS cost for playlist generation
+      try {
+        const { costTrackingService } = await import('./cost-tracking-service');
+        
+        // Get project root from the global project store
+        const { useProject } = await import('../store/project');
+        const projectRoot = useProject.getState().root;
+        
+        if (projectRoot) {
+          await costTrackingService.setProjectRoot(projectRoot);
+          
+          const wasCached = result.wasCached === true;
+          const segmentText = segmentData.segment.text || '';
+          
+          console.log(`📊 [Playlist] Tracking TTS cost - wasCached: ${wasCached}, characters: ${segmentText.length}`);
+          
+          costTrackingService.trackTtsUsage({
+            provider: 'azure-tts',
+            operation: 'playlist_generation',
+            charactersProcessed: segmentText.length,
+            wasCached: wasCached,
+            cacheHit: wasCached,
+            projectId: segmentData.projectConfig.bookMeta?.title || 'unknown',
+            segmentId: segmentData.segmentId
+          });
+        } else {
+          console.warn('[Playlist] No project root available for cost tracking');
+        }
+      } catch (costError) {
+        console.warn('[Playlist] Failed to track TTS cost:', costError);
       }
 
       // Apply SoX processing
