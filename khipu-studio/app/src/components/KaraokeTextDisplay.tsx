@@ -37,6 +37,15 @@ export const TextDisplay: React.FC<TextDisplayProps> = ({
   // Calculate progress percentage
   const progressPercent = totalDuration > 0 ? (currentTime / totalDuration) * 100 : 0;
 
+  // Debug logging
+  console.log('TextDisplay props:', { 
+    isPlaying, 
+    currentTime, 
+    totalDuration, 
+    progressPercent,
+    segmentId 
+  });
+
   // If no text, show placeholder
   if (!text?.trim()) {
     return (
@@ -115,7 +124,7 @@ export const TextDisplay: React.FC<TextDisplayProps> = ({
       </div>
 
       {/* Progress bar */}
-      {totalDuration > 0 && (
+      {(totalDuration > 0 || isPlaying) && (
         <div style={{
           padding: "12px 16px",
           borderTop: "1px solid var(--border)",
@@ -132,6 +141,7 @@ export const TextDisplay: React.FC<TextDisplayProps> = ({
             <span>{t('audioProduction.progress')}</span>
             <span>
               {Math.round(currentTime)}s / {Math.round(totalDuration)}s
+              {totalDuration === 0 && " (duration unknown)"}
             </span>
           </div>
           <div style={{
@@ -144,7 +154,7 @@ export const TextDisplay: React.FC<TextDisplayProps> = ({
             <div
               style={{
                 height: "100%",
-                backgroundColor: "var(--accent)",
+                backgroundColor: totalDuration > 0 ? "var(--accent)" : "var(--textSecondary)",
                 borderRadius: "2px",
                 width: `${progressPercent}%`,
                 transition: "width 0.2s ease-out"
