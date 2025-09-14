@@ -19,12 +19,13 @@ export class CostTrackingService {
   private static instance: CostTrackingService | null = null;
   private costEntries: CostEntry[] = [];
   private settings: CostSettings = { ...DEFAULT_COST_SETTINGS };
-  private readonly STORAGE_KEY_ENTRIES = 'khipu.cost.entries';
-  private readonly STORAGE_KEY_SETTINGS = 'khipu.cost.settings';
+  private readonly COST_DATA_FILE = 'cost-tracking.json';
+  private readonly COST_SETTINGS_FILE = 'cost-settings.json';
   private changeCallbacks: (() => void)[] = [];
+  private currentProjectRoot: string | null = null;
   
   constructor() {
-    this.loadFromStorage();
+    // We'll load data when setProjectRoot is called
   }
   
   /**
@@ -66,42 +67,99 @@ export class CostTrackingService {
   }
   
   /**
-   * Load data from localStorage
+   * Set current project root and load data
    */
-  private loadFromStorage(): void {
-    try {
-      // Load cost entries
-      const entriesJson = localStorage.getItem(this.STORAGE_KEY_ENTRIES);
-      if (entriesJson) {
-        const entries = JSON.parse(entriesJson);
-        this.costEntries = entries.map((entry: Partial<CostEntry>) => ({
-          ...entry,
-          timestamp: new Date(entry.timestamp || Date.now())
-        })) as CostEntry[];
-      }
-      
-      // Load settings
-      const settingsJson = localStorage.getItem(this.STORAGE_KEY_SETTINGS);
-      if (settingsJson) {
-        this.settings = { ...DEFAULT_COST_SETTINGS, ...JSON.parse(settingsJson) };
-      }
-    } catch (error) {
-      console.error('Error loading cost tracking data:', error);
+  async setProjectRoot(projectRoot: string): Promise<void> {
+    if (this.currentProjectRoot !== projectRoot) {
+      this.currentProjectRoot = projectRoot;
+      await this.loadFromFileSystem();
     }
   }
   
   /**
-   * Save data to localStorage
+   * Load data from file system
    */
-  private saveToStorage(): void {
+  private async loadFromFileSystem(): Promise<void> {
+    if (!this.currentProjectRoot) {
+      console.log('No project root set, skipping file system load');
+      return;
+    }
+
     try {
-      localStorage.setItem(this.STORAGE_KEY_ENTRIES, JSON.stringify(this.costEntries));
-      localStorage.setItem(this.STORAGE_KEY_SETTINGS, JSON.stringify(this.settings));
+      // Load cost entries
+      try {
+        const entriesResult = await window.khipu!.call('fs:read', {
+          projectRoot: this.currentProjectRoot,
+          relPath: this.COST_DATA_FILE,
+          json: false
+        });
+        
+        if (entriesResult && typeof entriesResult === 'string') {
+          const entries = JSON.parse(entriesResult);
+          this.costEntries = entries.map((entry: Partial<CostEntry>) => ({
+            ...entry,
+            timestamp: new Date(entry.timestamp || Date.now())
+          })) as CostEntry[];
+          console.log(`Loaded ${this.costEntries.length} cost entries from file system`);
+        }
+      } catch (_error) {
+        // File doesn't exist yet, that's okay
+        console.log('Cost entries file not found, starting fresh');
+        this.costEntries = [];
+      }
+      
+      // Load settings
+      try {
+        const settingsResult = await window.khipu!.call('fs:read', {
+          projectRoot: this.currentProjectRoot,
+          relPath: this.COST_SETTINGS_FILE,
+          json: false
+        });
+        
+        if (settingsResult && typeof settingsResult === 'string') {
+          this.settings = { ...DEFAULT_COST_SETTINGS, ...JSON.parse(settingsResult) };
+          console.log('Loaded cost settings from file system');
+        }
+      } catch (_error) {
+        // File doesn't exist yet, that's okay
+        console.log('Cost settings file not found, using defaults');
+        this.settings = { ...DEFAULT_COST_SETTINGS };
+      }
+    } catch (error) {
+      console.error('Error loading cost tracking data from file system:', error);
+    }
+  }
+  
+  /**
+   * Save data to file system
+   */
+  private async saveToFileSystem(): Promise<void> {
+    if (!this.currentProjectRoot) {
+      console.log('No project root set, skipping file system save');
+      return;
+    }
+
+    try {
+      // Save cost entries
+      await window.khipu!.call('fs:write', {
+        projectRoot: this.currentProjectRoot,
+        relPath: this.COST_DATA_FILE,
+        content: JSON.stringify(this.costEntries, null, 2)
+      });
+      
+      // Save settings
+      await window.khipu!.call('fs:write', {
+        projectRoot: this.currentProjectRoot,
+        relPath: this.COST_SETTINGS_FILE,
+        content: JSON.stringify(this.settings, null, 2)
+      });
+      
+      console.log('Saved cost tracking data to file system');
       
       // Notify listeners that data has changed
       this.notifyDataChange();
     } catch (error) {
-      console.error('Error saving cost tracking data:', error);
+      console.error('Error saving cost tracking data to file system:', error);
     }
   }
   
@@ -117,7 +175,7 @@ export class CostTrackingService {
    */
   updateSettings(newSettings: Partial<CostSettings>): void {
     this.settings = { ...this.settings, ...newSettings };
-    this.saveToStorage();
+    this.saveToFileSystem();
   }
   
   /**
@@ -160,7 +218,7 @@ export class CostTrackingService {
     }
     
     this.costEntries.push(costEntry);
-    this.saveToStorage();
+    this.saveToFileSystem();
     
     console.log(`💰 Cost tracked: ${CostCalculator.formatCost(costEntry.totalCost)} for ${entry.operation}`);
     
@@ -375,7 +433,7 @@ export class CostTrackingService {
    */
   clearAllEntries(): void {
     this.costEntries = [];
-    this.saveToStorage();
+    this.saveToFileSystem();
   }
   
   /**
@@ -397,7 +455,7 @@ export class CostTrackingService {
       timestamp: new Date(entry.timestamp)
     }));
     this.settings = { ...DEFAULT_COST_SETTINGS, ...data.settings };
-    this.saveToStorage();
+    this.saveToFileSystem();
   }
   
   /**

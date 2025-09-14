@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useProject } from '../store/project';
 import type { CostSummary, CostSettings } from '../types/cost-tracking';
 import { costTrackingService } from '../lib/cost-tracking-service';
 import { CostCalculator } from '../types/cost-tracking';
@@ -12,6 +13,7 @@ import { CostCalculator } from '../types/cost-tracking';
  */
 export default function Cost() {
   const { t } = useTranslation();
+  const { root } = useProject();
   const [summary, setSummary] = useState<CostSummary | null>(null);
   const [settings, setSettings] = useState<CostSettings | null>(null);
   const [selectedTimeRange, setSelectedTimeRange] = useState<'7d' | '30d' | '90d' | 'all'>('30d');
@@ -52,6 +54,14 @@ export default function Cost() {
       setIsLoading(false);
     }
   }, [selectedTimeRange]);
+
+  // Set project root when it changes
+  useEffect(() => {
+    if (root) {
+      console.log('🔧 Setting cost tracking project root:', root);
+      costTrackingService.setProjectRoot(root);
+    }
+  }, [root]);
 
   // Load data on component mount and when time range changes
   useEffect(() => {
@@ -152,7 +162,7 @@ export default function Cost() {
             alignItems: 'center',
             gap: '8px'
           }}>
-            💰 {t('cost.title')}
+            {t('cost.title')}
           </h1>
           <p style={{
             color: 'var(--muted)',
