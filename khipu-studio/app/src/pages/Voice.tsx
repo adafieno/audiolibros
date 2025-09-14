@@ -6,6 +6,7 @@ import { createDefaultProcessingChain } from "../lib/audio-production-utils";
 import AudioProductionService from "../lib/audio-production-service";
 import { AUDIO_PRESETS, getPresetsByCategory, getPresetById, type AudioPreset } from "../data/audio-presets";
 import { validateWavFile, createSfxSegment, insertSegmentAtPosition } from "../lib/additional-segments";
+import { KaraokeTextDisplay } from "../components/KaraokeTextDisplay";
 import type { PlanChunk } from "../types/plan";
 import type { AudioProcessingChain } from "../types/audio-production";
 import type { AudioSegmentRow } from "../types/audio-production";
@@ -1376,7 +1377,21 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             </div>
           </div>
 
-          {/* Right: Audio Production Module */}
+          {/* Right: Text Display + Audio Production Module */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {/* Karaoke Text Display */}
+            {selectedRowIndex >= 0 && selectedRowIndex < audioSegments.length && (
+              <KaraokeTextDisplay
+                text={audioSegments[selectedRowIndex].text}
+                isPlaying={audioPreview.isPlaying}
+                currentTime={audioPreview.playbackState.currentTime}
+                totalDuration={audioPreview.playbackState.duration}
+                voiceName={audioSegments[selectedRowIndex].voice}
+                segmentId={audioSegments[selectedRowIndex].segmentId.toString()}
+              />
+            )}
+            
+            {/* Audio Production Module */}
           <div style={{ border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
             <div style={{ padding: "8px 12px", backgroundColor: "var(--panelAccent)", borderBottom: "1px solid var(--border)", fontSize: "14px", fontWeight: 500 }}>
               {t("audioProduction.moduleTitle")}
@@ -1967,6 +1982,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               )}
             </div>
           </div>
+          </div> {/* Close Right: Text Display + Audio Production Module container */}
         </div>
       ) : selectedChapter ? (
         <div style={{
