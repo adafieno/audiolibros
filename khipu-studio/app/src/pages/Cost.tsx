@@ -2,6 +2,7 @@
 // Dashboard for monitoring AI service costs and cache savings
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { CostSummary, CostSettings } from '../types/cost-tracking';
 import { costTrackingService } from '../lib/cost-tracking-service';
 import { CostCalculator } from '../types/cost-tracking';
@@ -10,6 +11,7 @@ import { CostCalculator } from '../types/cost-tracking';
  * Cost tracking and analysis dashboard
  */
 export default function Cost() {
+  const { t } = useTranslation();
   const [summary, setSummary] = useState<CostSummary | null>(null);
   const [settings, setSettings] = useState<CostSettings | null>(null);
   const [selectedTimeRange, setSelectedTimeRange] = useState<'7d' | '30d' | '90d' | 'all'>('30d');
@@ -67,10 +69,24 @@ export default function Cost() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading cost data...</p>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '200px',
+        color: 'var(--text)'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: '32px',
+            height: '32px',
+            border: '3px solid var(--border)',
+            borderTop: '3px solid var(--accent)',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 16px'
+          }}></div>
+          <p style={{ color: 'var(--muted)' }}>{t('cost.loading')}</p>
         </div>
       </div>
     );
@@ -78,125 +94,278 @@ export default function Cost() {
 
   if (!summary || !settings) {
     return (
-      <div className="text-center py-8">
-        <p className="text-gray-600">No cost data available</p>
+      <div style={{
+        textAlign: 'center',
+        padding: '32px',
+        color: 'var(--muted)'
+      }}>
+        <p>{t('cost.noData')}</p>
       </div>
     );
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <>
+      {/* CSS for spinner animation */}
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+      
+      <div style={{
+        padding: '0',
+        height: '100%',
+        overflow: 'auto',
+        background: 'var(--bg)',
+        color: 'var(--text)'
+      }}>
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              💰 Cost Tracking
-            </h1>
-            <p className="text-gray-600">
-              Monitor AI service costs and analyze cache savings
-            </p>
-          </div>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'start',
+        background: 'var(--panel)',
+        padding: '20px',
+        borderBottom: '1px solid var(--border)',
+        borderRadius: '8px',
+        marginBottom: '16px'
+      }}>
+        <div>
+          <h1 style={{
+            fontSize: '24px',
+            fontWeight: '700',
+            color: 'var(--text)',
+            margin: '0 0 8px 0',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            💰 {t('cost.title')}
+          </h1>
+          <p style={{
+            color: 'var(--muted)',
+            margin: '0',
+            fontSize: '14px'
+          }}>
+            {t('cost.description')}
+          </p>
+        </div>
+        
+        <div style={{
+          display: 'flex',
+          gap: '12px',
+          alignItems: 'center'
+        }}>
+          {/* Time Range Selector */}
+          <select
+            value={selectedTimeRange}
+            onChange={(e) => setSelectedTimeRange(e.target.value as '7d' | '30d' | '90d' | 'all')}
+            style={{
+              padding: '8px 12px',
+              border: '1px solid var(--border)',
+              borderRadius: '6px',
+              background: 'var(--panel)',
+              color: 'var(--text)',
+              fontSize: '14px',
+              cursor: 'pointer'
+            }}
+          >
+            <option value="7d">{t('cost.timeRange.7d', 'Last 7 days')}</option>
+            <option value="30d">{t('cost.timeRange.30d', 'Last 30 days')}</option>
+            <option value="90d">{t('cost.timeRange.90d', 'Last 90 days')}</option>
+            <option value="all">{t('cost.timeRange.all', 'All time')}</option>
+          </select>
           
-          <div className="flex gap-3">
-            {/* Time Range Selector */}
-            <select
-              value={selectedTimeRange}
-              onChange={(e) => setSelectedTimeRange(e.target.value as '7d' | '30d' | '90d' | 'all')}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-            >
-              <option value="7d">Last 7 days</option>
-              <option value="30d">Last 30 days</option>
-              <option value="90d">Last 90 days</option>
-              <option value="all">All time</option>
-            </select>
-            
-            {/* Settings Button */}
-            <button
-              onClick={() => setShowSettings(!showSettings)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
-            >
-              ⚙️ Settings
-            </button>
-          </div>
+          {/* Settings Button */}
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            style={{
+              padding: '8px 16px',
+              background: showSettings ? 'var(--accent)' : 'var(--panel)',
+              color: showSettings ? 'white' : 'var(--text)',
+              border: '1px solid var(--border)',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            ⚙️ {t('cost.settings', 'Settings')}
+          </button>
         </div>
       </div>
 
       {/* Settings Panel */}
       {showSettings && (
-        <div className="mb-8 bg-gray-50 border border-gray-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold mb-4">Cost Settings</h3>
+        <div style={{
+          background: 'var(--panel)',
+          border: '1px solid var(--border)',
+          borderRadius: '8px',
+          padding: '20px',
+          marginBottom: '16px'
+        }}>
+          <h3 style={{
+            fontSize: '18px',
+            fontWeight: '600',
+            marginBottom: '16px',
+            color: 'var(--text)'
+          }}>{t('cost.settings', 'Cost Settings')}</h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: '16px'
+          }}>
             {/* OpenAI GPT-4 */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium">OpenAI GPT-4 Input (per 1K tokens)</label>
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '500',
+                marginBottom: '6px',
+                color: 'var(--text)'
+              }}>
+                {t('cost.pricing.openaiGpt4Input', 'OpenAI GPT-4 Input (per 1K tokens)')}
+              </label>
               <input
                 type="number"
                 step="0.001"
                 value={settings.openaiGpt4InputTokens}
                 onChange={(e) => handleSettingsUpdate({ openaiGpt4InputTokens: parseFloat(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  border: '1px solid var(--border)',
+                  borderRadius: '6px',
+                  background: 'var(--bg)',
+                  color: 'var(--text)',
+                  fontSize: '14px'
+                }}
               />
             </div>
             
-            <div className="space-y-2">
-              <label className="block text-sm font-medium">OpenAI GPT-4 Output (per 1K tokens)</label>
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '500',
+                marginBottom: '6px',
+                color: 'var(--text)'
+              }}>
+                {t('cost.pricing.openaiGpt4Output', 'OpenAI GPT-4 Output (per 1K tokens)')}
+              </label>
               <input
                 type="number"
                 step="0.001"
                 value={settings.openaiGpt4OutputTokens}
                 onChange={(e) => handleSettingsUpdate({ openaiGpt4OutputTokens: parseFloat(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  border: '1px solid var(--border)',
+                  borderRadius: '6px',
+                  background: 'var(--bg)',
+                  color: 'var(--text)',
+                  fontSize: '14px'
+                }}
               />
             </div>
             
             {/* ElevenLabs TTS */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium">ElevenLabs TTS (per 1K chars)</label>
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '500',
+                marginBottom: '6px',
+                color: 'var(--text)'
+              }}>
+                {t('cost.pricing.elevenlabsTts', 'ElevenLabs TTS (per 1K chars)')}
+              </label>
               <input
                 type="number"
                 step="0.001"
                 value={settings.elevenlabsTtsPerCharacter}
                 onChange={(e) => handleSettingsUpdate({ elevenlabsTtsPerCharacter: parseFloat(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  border: '1px solid var(--border)',
+                  borderRadius: '6px',
+                  background: 'var(--bg)',
+                  color: 'var(--text)',
+                  fontSize: '14px'
+                }}
               />
             </div>
             
             {/* Azure TTS */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium">Azure TTS (per 1K chars)</label>
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '500',
+                marginBottom: '6px',
+                color: 'var(--text)'
+              }}>
+                {t('cost.pricing.azureTts', 'Azure TTS (per 1K chars)')}
+              </label>
               <input
                 type="number"
                 step="0.001"
                 value={settings.azureTtsPerCharacter}
                 onChange={(e) => handleSettingsUpdate({ azureTtsPerCharacter: parseFloat(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  border: '1px solid var(--border)',
+                  borderRadius: '6px',
+                  background: 'var(--bg)',
+                  color: 'var(--text)',
+                  fontSize: '14px'
+                }}
               />
             </div>
             
             {/* Enable/Disable Tracking */}
-            <div className="space-y-2">
-              <label className="flex items-center">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <label style={{
+                display: 'flex',
+                alignItems: 'center',
+                cursor: 'pointer',
+                gap: '8px'
+              }}>
                 <input
                   type="checkbox"
                   checked={settings.enableCostTracking}
                   onChange={(e) => handleSettingsUpdate({ enableCostTracking: e.target.checked })}
-                  className="mr-2"
+                  style={{ cursor: 'pointer' }}
                 />
-                <span className="text-sm font-medium">Enable Cost Tracking</span>
+                <span style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)' }}>
+                  {t('cost.enableTracking', 'Enable Cost Tracking')}
+                </span>
               </label>
-            </div>
             
-            <div className="space-y-2">
-              <label className="flex items-center">
+              <label style={{
+                display: 'flex',
+                alignItems: 'center',
+                cursor: 'pointer',
+                gap: '8px'
+              }}>
                 <input
                   type="checkbox"
                   checked={settings.trackCacheSavings}
                   onChange={(e) => handleSettingsUpdate({ trackCacheSavings: e.target.checked })}
-                  className="mr-2"
+                  style={{ cursor: 'pointer' }}
                 />
-                <span className="text-sm font-medium">Track Cache Savings</span>
+                <span style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text)' }}>
+                  {t('cost.trackCacheSavings', 'Track Cache Savings')}
+                </span>
               </label>
             </div>
           </div>
@@ -204,75 +373,208 @@ export default function Cost() {
       )}
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+        gap: '16px',
+        marginBottom: '24px'
+      }}>
         {/* Total Cost */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <div className="flex items-center justify-between">
+        <div style={{
+          background: 'var(--panel)',
+          border: '1px solid var(--border)',
+          borderRadius: '8px',
+          padding: '20px'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
             <div>
-              <p className="text-sm text-gray-600">Total Cost</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p style={{
+                fontSize: '14px',
+                color: 'var(--muted)',
+                margin: '0 0 8px 0'
+              }}>
+                {t('cost.totalCost', 'Total Cost')}
+              </p>
+              <p style={{
+                fontSize: '28px',
+                fontWeight: '700',
+                color: 'var(--text)',
+                margin: '0'
+              }}>
                 {CostCalculator.formatCost(summary.totalCost, settings.currency)}
               </p>
             </div>
-            <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+            <div style={{
+              width: '48px',
+              height: '48px',
+              background: 'rgba(239, 68, 68, 0.1)',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px'
+            }}>
               💸
             </div>
           </div>
         </div>
 
         {/* Cache Savings */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <div className="flex items-center justify-between">
+        <div style={{
+          background: 'var(--panel)',
+          border: '1px solid var(--border)',
+          borderRadius: '8px',
+          padding: '20px'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
             <div>
-              <p className="text-sm text-gray-600">Cache Savings</p>
-              <p className="text-2xl font-bold text-green-600">
+              <p style={{
+                fontSize: '14px',
+                color: 'var(--muted)',
+                margin: '0 0 8px 0'
+              }}>
+                {t('cost.cacheSavings', 'Cache Savings')}
+              </p>
+              <p style={{
+                fontSize: '28px',
+                fontWeight: '700',
+                color: '#10b981',
+                margin: '0'
+              }}>
                 {CostCalculator.formatCost(summary.estimatedSavingsFromCache, settings.currency)}
               </p>
             </div>
-            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+            <div style={{
+              width: '48px',
+              height: '48px',
+              background: 'rgba(16, 185, 129, 0.1)',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px'
+            }}>
               💰
             </div>
           </div>
-          <div className="mt-2">
-            <p className="text-xs text-gray-500">
-              Cache Hit Rate: {summary.cacheHitRate.toFixed(1)}%
+          <div style={{ marginTop: '12px' }}>
+            <p style={{
+              fontSize: '12px',
+              color: 'var(--muted)',
+              margin: '0'
+            }}>
+              {t('cost.cacheHitRate', 'Cache Hit Rate')}: {summary.cacheHitRate.toFixed(1)}%
             </p>
           </div>
         </div>
 
         {/* Net Cost */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <div className="flex items-center justify-between">
+        <div style={{
+          background: 'var(--panel)',
+          border: '1px solid var(--border)',
+          borderRadius: '8px',
+          padding: '20px'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
             <div>
-              <p className="text-sm text-gray-600">Net Cost</p>
-              <p className="text-2xl font-bold text-blue-600">
+              <p style={{
+                fontSize: '14px',
+                color: 'var(--muted)',
+                margin: '0 0 8px 0'
+              }}>
+                {t('cost.netCost', 'Net Cost')}
+              </p>
+              <p style={{
+                fontSize: '28px',
+                fontWeight: '700',
+                color: '#3b82f6',
+                margin: '0'
+              }}>
                 {CostCalculator.formatCost(summary.netCost, settings.currency)}
               </p>
             </div>
-            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+            <div style={{
+              width: '48px',
+              height: '48px',
+              background: 'rgba(59, 130, 246, 0.1)',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px'
+            }}>
               📊
             </div>
           </div>
-          <div className="mt-2">
-            <p className="text-xs text-gray-500">
-              After cache savings
+          <div style={{ marginTop: '12px' }}>
+            <p style={{
+              fontSize: '12px',
+              color: 'var(--muted)',
+              margin: '0'
+            }}>
+              {t('cost.afterCacheSavings', 'After cache savings')}
             </p>
           </div>
         </div>
 
         {/* Total Usage */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <div className="flex items-center justify-between">
+        <div style={{
+          background: 'var(--panel)',
+          border: '1px solid var(--border)',
+          borderRadius: '8px',
+          padding: '20px'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
             <div>
-              <p className="text-sm text-gray-600">Total Usage</p>
-              <p className="text-lg font-semibold text-gray-900">
+              <p style={{
+                fontSize: '14px',
+                color: 'var(--muted)',
+                margin: '0 0 8px 0'
+              }}>
+                {t('cost.totalUsage', 'Total Usage')}
+              </p>
+              <p style={{
+                fontSize: '20px',
+                fontWeight: '600',
+                color: 'var(--text)',
+                margin: '0'
+              }}>
                 {Math.round(summary.totalLlmTokens / 1000)}K tokens
               </p>
-              <p className="text-sm text-gray-500">
+              <p style={{
+                fontSize: '14px',
+                color: 'var(--muted)',
+                margin: '4px 0 0 0'
+              }}>
                 {Math.round(summary.totalTtsCharacters / 1000)}K characters
               </p>
             </div>
-            <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+            <div style={{
+              width: '48px',
+              height: '48px',
+              background: 'rgba(147, 51, 234, 0.1)',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px'
+            }}>
               📈
             </div>
           </div>
@@ -280,46 +582,136 @@ export default function Cost() {
       </div>
 
       {/* Service Breakdown */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+        gap: '16px',
+        marginBottom: '24px'
+      }}>
         {/* Cost by Service Type */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold mb-4">Cost by Service</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">🤖 LLM Services</span>
-              <span className="font-medium">{CostCalculator.formatCost(summary.llmCosts, settings.currency)}</span>
+        <div style={{
+          background: 'var(--panel)',
+          border: '1px solid var(--border)',
+          borderRadius: '8px',
+          padding: '20px'
+        }}>
+          <h3 style={{
+            fontSize: '18px',
+            fontWeight: '600',
+            marginBottom: '16px',
+            color: 'var(--text)',
+            margin: '0 0 16px 0'
+          }}>
+            {t('cost.costByService', 'Cost by Service')}
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <span style={{ fontSize: '14px', color: 'var(--muted)' }}>
+                🤖 {t('cost.llmServices', 'LLM Services')}
+              </span>
+              <span style={{ fontWeight: '600', color: 'var(--text)' }}>
+                {CostCalculator.formatCost(summary.llmCosts, settings.currency)}
+              </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-blue-600 h-2 rounded-full" 
-                style={{ width: `${summary.totalCost > 0 ? (summary.llmCosts / summary.totalCost) * 100 : 0}%` }}
-              ></div>
+            <div style={{
+              width: '100%',
+              height: '8px',
+              background: 'var(--border)',
+              borderRadius: '4px',
+              overflow: 'hidden'
+            }}>
+              <div style={{
+                height: '100%',
+                background: '#3b82f6',
+                borderRadius: '4px',
+                width: `${summary.totalCost > 0 ? (summary.llmCosts / summary.totalCost) * 100 : 0}%`
+              }}></div>
             </div>
             
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">🔊 TTS Services</span>
-              <span className="font-medium">{CostCalculator.formatCost(summary.ttsCosts, settings.currency)}</span>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <span style={{ fontSize: '14px', color: 'var(--muted)' }}>
+                🔊 {t('cost.ttsServices', 'TTS Services')}
+              </span>
+              <span style={{ fontWeight: '600', color: 'var(--text)' }}>
+                {CostCalculator.formatCost(summary.ttsCosts, settings.currency)}
+              </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-green-600 h-2 rounded-full" 
-                style={{ width: `${summary.totalCost > 0 ? (summary.ttsCosts / summary.totalCost) * 100 : 0}%` }}
-              ></div>
+            <div style={{
+              width: '100%',
+              height: '8px',
+              background: 'var(--border)',
+              borderRadius: '4px',
+              overflow: 'hidden'
+            }}>
+              <div style={{
+                height: '100%',
+                background: '#10b981',
+                borderRadius: '4px',
+                width: `${summary.totalCost > 0 ? (summary.ttsCosts / summary.totalCost) * 100 : 0}%`
+              }}></div>
             </div>
           </div>
         </div>
 
         {/* Top Operations */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold mb-4">Top Operations by Cost</h3>
-          <div className="space-y-2">
+        <div style={{
+          background: 'var(--panel)',
+          border: '1px solid var(--border)',
+          borderRadius: '8px',
+          padding: '20px'
+        }}>
+          <h3 style={{
+            fontSize: '18px',
+            fontWeight: '600',
+            marginBottom: '16px',
+            color: 'var(--text)',
+            margin: '0 0 16px 0'
+          }}>
+            {t('cost.topOperations', 'Top Operations by Cost')}
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {summary.topOperationsByCost.slice(0, 5).map((operation) => (
-              <div key={operation.operation} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
-                <div className="flex-1">
-                  <p className="text-sm font-medium truncate">{operation.operation}</p>
-                  <p className="text-xs text-gray-500">{operation.count} calls</p>
+              <div key={operation.operation} style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '8px 0',
+                borderBottom: '1px solid var(--border)'
+              }}>
+                <div style={{ flex: 1 }}>
+                  <p style={{
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    margin: '0',
+                    color: 'var(--text)',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {operation.operation}
+                  </p>
+                  <p style={{
+                    fontSize: '12px',
+                    color: 'var(--muted)',
+                    margin: '2px 0 0 0'
+                  }}>
+                    {operation.count} calls
+                  </p>
                 </div>
-                <span className="text-sm font-medium ml-2">
+                <span style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: 'var(--text)',
+                  marginLeft: '8px'
+                }}>
                   {CostCalculator.formatCost(operation.cost, settings.currency)}
                 </span>
               </div>
@@ -329,37 +721,109 @@ export default function Cost() {
       </div>
 
       {/* Cache Performance */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8">
-        <h3 className="text-lg font-semibold mb-4">Cache Performance</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="text-center">
-            <p className="text-2xl font-bold text-green-600">{summary.totalCacheHits}</p>
-            <p className="text-sm text-gray-600">Cache Hits</p>
+      <div style={{
+        background: 'var(--panel)',
+        border: '1px solid var(--border)',
+        borderRadius: '8px',
+        padding: '20px',
+        marginBottom: '24px'
+      }}>
+        <h3 style={{
+          fontSize: '18px',
+          fontWeight: '600',
+          marginBottom: '16px',
+          color: 'var(--text)',
+          margin: '0 0 16px 0'
+        }}>
+          {t('cost.cachePerformance', 'Cache Performance')}
+        </h3>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+          gap: '16px'
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <p style={{
+              fontSize: '32px',
+              fontWeight: '700',
+              color: '#10b981',
+              margin: '0'
+            }}>
+              {summary.totalCacheHits}
+            </p>
+            <p style={{
+              fontSize: '14px',
+              color: 'var(--muted)',
+              margin: '4px 0 0 0'
+            }}>
+              {t('cost.cacheHits', 'Cache Hits')}
+            </p>
           </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-red-600">{summary.totalCacheMisses}</p>
-            <p className="text-sm text-gray-600">Cache Misses</p>
+          <div style={{ textAlign: 'center' }}>
+            <p style={{
+              fontSize: '32px',
+              fontWeight: '700',
+              color: '#ef4444',
+              margin: '0'
+            }}>
+              {summary.totalCacheMisses}
+            </p>
+            <p style={{
+              fontSize: '14px',
+              color: 'var(--muted)',
+              margin: '4px 0 0 0'
+            }}>
+              {t('cost.cacheMisses', 'Cache Misses')}
+            </p>
           </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-blue-600">{summary.cacheHitRate.toFixed(1)}%</p>
-            <p className="text-sm text-gray-600">Hit Rate</p>
+          <div style={{ textAlign: 'center' }}>
+            <p style={{
+              fontSize: '32px',
+              fontWeight: '700',
+              color: '#3b82f6',
+              margin: '0'
+            }}>
+              {summary.cacheHitRate.toFixed(1)}%
+            </p>
+            <p style={{
+              fontSize: '14px',
+              color: 'var(--muted)',
+              margin: '4px 0 0 0'
+            }}>
+              {t('cost.hitRate', 'Hit Rate')}
+            </p>
           </div>
         </div>
         
         {summary.estimatedSavingsFromCache > 0 && (
-          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-sm text-green-800">
-              💡 <strong>Smart Caching Impact:</strong> You've saved{' '}
-              <strong>{CostCalculator.formatCost(summary.estimatedSavingsFromCache, settings.currency)}</strong>{' '}
-              thanks to intelligent caching! Without caching, your total cost would have been{' '}
-              <strong>{CostCalculator.formatCost(summary.totalCost + summary.estimatedSavingsFromCache, settings.currency)}</strong>.
+          <div style={{
+            marginTop: '16px',
+            padding: '16px',
+            background: 'rgba(16, 185, 129, 0.1)',
+            border: '1px solid rgba(16, 185, 129, 0.2)',
+            borderRadius: '8px'
+          }}>
+            <p style={{
+              fontSize: '14px',
+              color: '#10b981',
+              margin: '0',
+              lineHeight: '1.5'
+            }}>
+              💡 <strong>{t('cost.smartCachingImpact', 'Smart Caching Impact')}:</strong> {t('cost.savingsMessage', `You've saved {{savings}} thanks to intelligent caching! Without caching, your total cost would have been {{totalWithSavings}}.`, {
+                savings: CostCalculator.formatCost(summary.estimatedSavingsFromCache, settings.currency),
+                totalWithSavings: CostCalculator.formatCost(summary.totalCost + summary.estimatedSavingsFromCache, settings.currency)
+              })}
             </p>
           </div>
         )}
       </div>
 
       {/* Actions */}
-      <div className="flex gap-4">
+      <div style={{
+        display: 'flex',
+        gap: '12px',
+        flexWrap: 'wrap'
+      }}>
         <button
           onClick={() => {
             const data = costTrackingService.exportData();
@@ -371,23 +835,61 @@ export default function Cost() {
             a.click();
             URL.revokeObjectURL(url);
           }}
-          className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 text-sm"
+          style={{
+            padding: '10px 16px',
+            background: 'var(--panel)',
+            color: 'var(--text)',
+            border: '1px solid var(--border)',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.background = 'var(--border)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.background = 'var(--panel)';
+          }}
         >
-          📄 Export Data
+          📄 {t('cost.exportData', 'Export Data')}
         </button>
         
         <button
           onClick={() => {
-            if (confirm('Are you sure you want to clear all cost data? This action cannot be undone.')) {
+            if (confirm(t('cost.clearDataConfirm', 'Are you sure you want to clear all cost data? This action cannot be undone.'))) {
               costTrackingService.clearAllEntries();
               loadData();
             }
           }}
-          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
+          style={{
+            padding: '10px 16px',
+            background: '#ef4444',
+            color: 'white',
+            border: '1px solid #ef4444',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.background = '#dc2626';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.background = '#ef4444';
+          }}
         >
-          🗑️ Clear Data
+          🗑️ {t('cost.clearData', 'Clear Data')}
         </button>
       </div>
-    </div>
+      
+      </div>
+    </>
   );
 }

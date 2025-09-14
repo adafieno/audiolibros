@@ -2503,5 +2503,141 @@
   "audioProduction.wetMix": {
     "string": "Seco/Húmedo:",
     "comment": "Etiqueta para control de mezcla húmeda en configuración de reverberación"
+  },
+  "cost.title": {
+    "string": "Seguimiento de Costos",
+    "comment": "Título principal para la página del panel de seguimiento de costos"
+  },
+  "cost.description": {
+    "string": "Monitorea los costos de servicios de IA y analiza los ahorros de caché",
+    "comment": "Texto descriptivo para el panel de seguimiento de costos"
+  },
+  "cost.loading": {
+    "string": "Cargando datos de costos...",
+    "comment": "Mensaje de carga mientras se recuperan los datos de costos"
+  },
+  "cost.noData": {
+    "string": "No hay datos de costos disponibles",
+    "comment": "Mensaje mostrado cuando no existen datos de seguimiento de costos"
+  },
+  "cost.settings": {
+    "string": "Configuración",
+    "comment": "Texto del botón y título del panel para configuración de seguimiento de costos"
+  },
+  "cost.timeRange.7d": {
+    "string": "Últimos 7 días",
+    "comment": "Opción de rango de tiempo para los últimos 7 días"
+  },
+  "cost.timeRange.30d": {
+    "string": "Últimos 30 días",
+    "comment": "Opción de rango de tiempo para los últimos 30 días"
+  },
+  "cost.timeRange.90d": {
+    "string": "Últimos 90 días",
+    "comment": "Opción de rango de tiempo para los últimos 90 días"
+  },
+  "cost.timeRange.all": {
+    "string": "Todo el tiempo",
+    "comment": "Opción de rango de tiempo para todos los datos históricos"
+  },
+  "cost.pricing.openaiGpt4Input": {
+    "string": "Entrada OpenAI GPT-4 (por 1K tokens)",
+    "comment": "Etiqueta para configuración de precio de tokens de entrada de OpenAI GPT-4"
+  },
+  "cost.pricing.openaiGpt4Output": {
+    "string": "Salida OpenAI GPT-4 (por 1K tokens)",
+    "comment": "Etiqueta para configuración de precio de tokens de salida de OpenAI GPT-4"
+  },
+  "cost.pricing.elevenlabsTts": {
+    "string": "ElevenLabs TTS (por 1K caracteres)",
+    "comment": "Etiqueta para configuración de precio de caracteres de ElevenLabs TTS"
+  },
+  "cost.pricing.azureTts": {
+    "string": "Azure TTS (por 1K caracteres)",
+    "comment": "Etiqueta para configuración de precio de caracteres de Azure TTS"
+  },
+  "cost.enableTracking": {
+    "string": "Habilitar Seguimiento de Costos",
+    "comment": "Etiqueta de checkbox para habilitar/deshabilitar seguimiento de costos"
+  },
+  "cost.trackCacheSavings": {
+    "string": "Seguir Ahorros de Caché",
+    "comment": "Etiqueta de checkbox para habilitar/deshabilitar seguimiento de ahorros de caché"
+  },
+  "cost.totalCost": {
+    "string": "Costo Total",
+    "comment": "Etiqueta para tarjeta de costo total acumulado"
+  },
+  "cost.cacheSavings": {
+    "string": "Ahorros de Caché",
+    "comment": "Etiqueta para tarjeta de ahorros de caché"
+  },
+  "cost.netCost": {
+    "string": "Costo Neto",
+    "comment": "Etiqueta para tarjeta de costo neto (total menos ahorros)"
+  },
+  "cost.totalUsage": {
+    "string": "Uso Total",
+    "comment": "Etiqueta para tarjeta de estadísticas de uso"
+  },
+  "cost.afterCacheSavings": {
+    "string": "Después de ahorros de caché",
+    "comment": "Subtítulo para tarjeta de costo neto"
+  },
+  "cost.cacheHitRate": {
+    "string": "Tasa de Aciertos de Caché",
+    "comment": "Etiqueta para porcentaje de tasa de aciertos de caché"
+  },
+  "cost.costByService": {
+    "string": "Costo por Servicio",
+    "comment": "Título para sección de desglose de costos por servicio"
+  },
+  "cost.llmServices": {
+    "string": "Servicios LLM",
+    "comment": "Etiqueta para servicios de Modelos de Lenguaje Grande en desglose de costos"
+  },
+  "cost.ttsServices": {
+    "string": "Servicios TTS",
+    "comment": "Etiqueta para servicios de Texto a Voz en desglose de costos"
+  },
+  "cost.topOperations": {
+    "string": "Operaciones Principales por Costo",
+    "comment": "Título para sección de operaciones más costosas"
+  },
+  "cost.cachePerformance": {
+    "string": "Rendimiento de Caché",
+    "comment": "Título para sección de estadísticas de rendimiento de caché"
+  },
+  "cost.cacheHits": {
+    "string": "Aciertos de Caché",
+    "comment": "Etiqueta para estadísticas de aciertos de caché"
+  },
+  "cost.cacheMisses": {
+    "string": "Fallos de Caché",
+    "comment": "Etiqueta para estadísticas de fallos de caché"
+  },
+  "cost.hitRate": {
+    "string": "Tasa de Aciertos",
+    "comment": "Etiqueta para porcentaje de tasa de aciertos de caché"
+  },
+  "cost.smartCachingImpact": {
+    "string": "Impacto del Caché Inteligente",
+    "comment": "Título para mensaje de impacto de ahorros de caché"
+  },
+  "cost.savingsMessage": {
+    "string": "¡Has ahorrado {{savings}} gracias al caché inteligente! Sin caché, tu costo total habría sido {{totalWithSavings}}.",
+    "comment": "Mensaje mostrando impacto de ahorros de caché con valores de costo"
+  },
+  "cost.exportData": {
+    "string": "Exportar Datos",
+    "comment": "Texto del botón para exportar datos de costos"
+  },
+  "cost.clearData": {
+    "string": "Limpiar Datos",
+    "comment": "Texto del botón para limpiar todos los datos de costos"
+  },
+  "cost.clearDataConfirm": {
+    "string": "¿Estás seguro de que quieres limpiar todos los datos de costos? Esta acción no se puede deshacer.",
+    "comment": "Texto del diálogo de confirmación para limpiar datos de costos"
   }
 }

@@ -2043,5 +2043,141 @@
   "audioProduction.wetMix": {
     "string": "Wet mix:",
     "comment": "Label for wet mix control in reverb settings"
+  },
+  "cost.title": {
+    "string": "Cost Tracking",
+    "comment": "Main title for the cost tracking dashboard page"
+  },
+  "cost.description": {
+    "string": "Monitor AI service costs and analyze cache savings",
+    "comment": "Description text for the cost tracking dashboard"
+  },
+  "cost.loading": {
+    "string": "Loading cost data...",
+    "comment": "Loading message while cost data is being retrieved"
+  },
+  "cost.noData": {
+    "string": "No cost data available",
+    "comment": "Message displayed when no cost tracking data exists"
+  },
+  "cost.settings": {
+    "string": "Settings",
+    "comment": "Button text and panel title for cost tracking settings"
+  },
+  "cost.timeRange.7d": {
+    "string": "Last 7 days",
+    "comment": "Time range option for last 7 days"
+  },
+  "cost.timeRange.30d": {
+    "string": "Last 30 days",
+    "comment": "Time range option for last 30 days"
+  },
+  "cost.timeRange.90d": {
+    "string": "Last 90 days",
+    "comment": "Time range option for last 90 days"
+  },
+  "cost.timeRange.all": {
+    "string": "All time",
+    "comment": "Time range option for all historical data"
+  },
+  "cost.pricing.openaiGpt4Input": {
+    "string": "OpenAI GPT-4 Input (per 1K tokens)",
+    "comment": "Label for OpenAI GPT-4 input token pricing setting"
+  },
+  "cost.pricing.openaiGpt4Output": {
+    "string": "OpenAI GPT-4 Output (per 1K tokens)",
+    "comment": "Label for OpenAI GPT-4 output token pricing setting"
+  },
+  "cost.pricing.elevenlabsTts": {
+    "string": "ElevenLabs TTS (per 1K chars)",
+    "comment": "Label for ElevenLabs TTS character pricing setting"
+  },
+  "cost.pricing.azureTts": {
+    "string": "Azure TTS (per 1K chars)",
+    "comment": "Label for Azure TTS character pricing setting"
+  },
+  "cost.enableTracking": {
+    "string": "Enable Cost Tracking",
+    "comment": "Checkbox label to enable/disable cost tracking"
+  },
+  "cost.trackCacheSavings": {
+    "string": "Track Cache Savings",
+    "comment": "Checkbox label to enable/disable cache savings tracking"
+  },
+  "cost.totalCost": {
+    "string": "Total Cost",
+    "comment": "Label for total accumulated cost card"
+  },
+  "cost.cacheSavings": {
+    "string": "Cache Savings",
+    "comment": "Label for cache savings cost card"
+  },
+  "cost.netCost": {
+    "string": "Net Cost",
+    "comment": "Label for net cost (total minus savings) card"
+  },
+  "cost.totalUsage": {
+    "string": "Total Usage",
+    "comment": "Label for usage statistics card"
+  },
+  "cost.afterCacheSavings": {
+    "string": "After cache savings",
+    "comment": "Subtitle for net cost card"
+  },
+  "cost.cacheHitRate": {
+    "string": "Cache Hit Rate",
+    "comment": "Label for cache hit rate percentage"
+  },
+  "cost.costByService": {
+    "string": "Cost by Service",
+    "comment": "Title for service cost breakdown section"
+  },
+  "cost.llmServices": {
+    "string": "LLM Services",
+    "comment": "Label for Large Language Model services in cost breakdown"
+  },
+  "cost.ttsServices": {
+    "string": "TTS Services",
+    "comment": "Label for Text-to-Speech services in cost breakdown"
+  },
+  "cost.topOperations": {
+    "string": "Top Operations by Cost",
+    "comment": "Title for most expensive operations section"
+  },
+  "cost.cachePerformance": {
+    "string": "Cache Performance",
+    "comment": "Title for cache performance statistics section"
+  },
+  "cost.cacheHits": {
+    "string": "Cache Hits",
+    "comment": "Label for cache hit statistics"
+  },
+  "cost.cacheMisses": {
+    "string": "Cache Misses",
+    "comment": "Label for cache miss statistics"
+  },
+  "cost.hitRate": {
+    "string": "Hit Rate",
+    "comment": "Label for cache hit rate percentage"
+  },
+  "cost.smartCachingImpact": {
+    "string": "Smart Caching Impact",
+    "comment": "Title for cache savings impact message"
+  },
+  "cost.savingsMessage": {
+    "string": "You've saved {{savings}} thanks to intelligent caching! Without caching, your total cost would have been {{totalWithSavings}}.",
+    "comment": "Message showing cache savings impact with cost values"
+  },
+  "cost.exportData": {
+    "string": "Export Data",
+    "comment": "Button text for exporting cost data"
+  },
+  "cost.clearData": {
+    "string": "Clear Data",
+    "comment": "Button text for clearing all cost data"
+  },
+  "cost.clearDataConfirm": {
+    "string": "Are you sure you want to clear all cost data? This action cannot be undone.",
+    "comment": "Confirmation dialog text for clearing cost data"
   }
 }

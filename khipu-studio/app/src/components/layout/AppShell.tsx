@@ -22,6 +22,7 @@ const projectRoutes: RouteItem[] = [
   { to: "/book",       key: "nav.book",       icon: "📖", workflowStep: "project" },
   { to: "/project",    key: "nav.project",    icon: "📄", workflowStep: "project" },
   { to: "/manuscript", key: "nav.manuscript", icon: "✍️", workflowStep: "manuscript" },
+  { to: "/cost",       key: "nav.cost",       icon: "💰", workflowStep: "manuscript" }, // Show alongside manuscript
   { to: "/casting",    key: "nav.casting",    icon: "🗣️", workflowStep: "casting" },
   { to: "/characters", key: "nav.characters", icon: "🎭", workflowStep: "characters" },
   { to: "/planning",   key: "nav.planning",   icon: "🪄", workflowStep: "planning" },
@@ -42,7 +43,7 @@ export function AppShell(props: { title?: string; pageName?: string; projectName
   );
   
   const routes: RouteItem[] = root
-    ? [homeRoute, ...availableProjectRoutes, costRoute, settingsRoute]
+    ? [homeRoute, ...availableProjectRoutes, settingsRoute]
     : [homeRoute, costRoute, settingsRoute];
 
   // Compose top bar: "Khipu Studio — Page Name — Project Name"
