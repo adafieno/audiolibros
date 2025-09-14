@@ -394,8 +394,9 @@ export async function generateCachedAudition(
         if (projectRoot) {
           await costTrackingService.setProjectRoot(projectRoot);
           
-          // Get text for cost calculation
-          const segmentText = options.text || 'Hello, I am a voice you can use for your audiobook. This is a sample of how I sound when reading your content.';
+          // Get proper audition text (locale-aware)
+          const { getAuditionText } = await import('./tts-audition');
+          const segmentText = getAuditionText(options.voice.locale, options.config, options.text);
           
           // Determine TTS provider from voice engine
           let provider: 'azure-tts' | 'openai-tts' = 'azure-tts';
@@ -465,8 +466,9 @@ export async function generateCachedAudition(
       if (projectRoot && result.success) {
         await costTrackingService.setProjectRoot(projectRoot);
         
-        // Get text for cost calculation
-        const segmentText = options.text || 'Hello, I am a voice you can use for your audiobook. This is a sample of how I sound when reading your content.';
+        // Get proper audition text (locale-aware)
+        const { getAuditionText } = await import('./tts-audition');
+        const segmentText = getAuditionText(options.voice.locale, options.config, options.text);
         
         // Determine TTS provider from voice engine
         let provider: 'azure-tts' | 'openai-tts' = 'azure-tts'; // default

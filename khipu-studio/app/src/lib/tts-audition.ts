@@ -245,7 +245,7 @@ async function getAzureToken(region: string, key: string, timeout: number = 1000
 /**
  * Get audition text for the given locale with intelligent fallback and project pauses
  */
-function getAuditionText(locale: string, config: ProjectConfig, customText?: string): string {
+export function getAuditionText(locale: string, config: ProjectConfig, customText?: string): string {
   let text = customText;
 
   if (!text) {
