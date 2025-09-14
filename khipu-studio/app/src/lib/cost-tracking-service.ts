@@ -143,7 +143,7 @@ export class CostTrackingService {
           })) as CostEntry[];
           console.log(`Loaded ${this.costEntries.length} cost entries from file system`);
         }
-      } catch (_error) {
+      } catch {
         // File doesn't exist yet, that's okay
         console.log('Cost entries file not found, starting fresh');
         this.costEntries = [];
@@ -161,7 +161,7 @@ export class CostTrackingService {
           this.settings = { ...DEFAULT_COST_SETTINGS, ...JSON.parse(settingsResult) };
           console.log('Loaded cost settings from file system');
         }
-      } catch (_error) {
+      } catch {
         // File doesn't exist yet, that's okay
         console.log('Cost settings file not found, using defaults');
         this.settings = { ...DEFAULT_COST_SETTINGS };

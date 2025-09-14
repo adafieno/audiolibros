@@ -382,6 +382,54 @@ export async function generateCachedAudition(
     const cachedUrl = await audioCache.get(cacheKey);
     if (cachedUrl) {
       console.log("✅ Found cached audio, playing");
+
+      // Track cost savings for cache hit
+      try {
+        const { costTrackingService } = await import('./cost-tracking-service');
+        
+        // Get project root from the global project store
+        const { useProject } = await import('../store/project');
+        const projectRoot = useProject.getState().root;
+        
+        if (projectRoot) {
+          await costTrackingService.setProjectRoot(projectRoot);
+          
+          // Get text for cost calculation
+          const segmentText = options.text || 'Hello, I am a voice you can use for your audiobook. This is a sample of how I sound when reading your content.';
+          
+          // Determine TTS provider from voice engine
+          let provider: 'azure-tts' | 'openai-tts' = 'azure-tts';
+          switch (options.voice.engine) {
+            case 'azure':
+              provider = 'azure-tts';
+              break;
+            case 'openai':
+              provider = 'openai-tts';
+              break;
+            case 'elevenlabs':
+              provider = 'azure-tts'; // Fallback
+              break;
+            case 'google':
+              provider = 'azure-tts'; // Fallback
+              break;
+          }
+          
+          console.log(`📊 Tracking cached audition - provider: ${provider}, characters: ${segmentText.length} (SAVINGS)`);
+          
+          costTrackingService.trackTtsUsage({
+            provider: provider,
+            operation: 'voice_audition',
+            charactersProcessed: segmentText.length,
+            wasCached: true,
+            cacheHit: true,
+            projectId: options.config.bookMeta?.title || 'unknown',
+            segmentId: `audition_${options.voice.id}`
+          });
+        }
+      } catch (costError) {
+        console.warn('Failed to track cached audition cost savings:', costError);
+      }
+
       return {
         success: true,
         audioUrl: cachedUrl,
@@ -405,6 +453,55 @@ export async function generateCachedAudition(
       hasAudioUrl: !!result.audioUrl, 
       error: result.error 
     });
+
+    // Track TTS cost for audition
+    try {
+      const { costTrackingService } = await import('./cost-tracking-service');
+      
+      // Get project root from the global project store
+      const { useProject } = await import('../store/project');
+      const projectRoot = useProject.getState().root;
+      
+      if (projectRoot && result.success) {
+        await costTrackingService.setProjectRoot(projectRoot);
+        
+        // Get text for cost calculation
+        const segmentText = options.text || 'Hello, I am a voice you can use for your audiobook. This is a sample of how I sound when reading your content.';
+        
+        // Determine TTS provider from voice engine
+        let provider: 'azure-tts' | 'openai-tts' = 'azure-tts'; // default
+        switch (options.voice.engine) {
+          case 'azure':
+            provider = 'azure-tts';
+            break;
+          case 'openai':
+            provider = 'openai-tts';
+            break;
+          case 'elevenlabs':
+            provider = 'azure-tts'; // Fallback to azure-tts for now since elevenlabs not in types
+            break;
+          case 'google':
+            provider = 'azure-tts'; // Fallback to azure-tts for now since google not in types
+            break;
+        }
+        
+        console.log(`📊 Tracking audition TTS cost - provider: ${provider}, characters: ${segmentText.length}`);
+        
+        costTrackingService.trackTtsUsage({
+          provider: provider,
+          operation: 'voice_audition',
+          charactersProcessed: segmentText.length,
+          wasCached: false,
+          cacheHit: false,
+          projectId: options.config.bookMeta?.title || 'unknown',
+          segmentId: `audition_${options.voice.id}`
+        });
+      } else if (!projectRoot) {
+        console.warn('No project root available for audition cost tracking');
+      }
+    } catch (costError) {
+      console.warn('Failed to track audition TTS cost:', costError);
+    }
     
     // Cache successful results only
     if (result.success && result.audioUrl) {

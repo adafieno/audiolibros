@@ -282,6 +282,7 @@ export class AudioPreviewService {
   /**
    * Internal preview method that handles both normal and exaggerated processing
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async previewInternal(options: PreviewOptions, _isExaggerated: boolean = false): Promise<void> {
     try {
       // Stop any current playback
@@ -1004,9 +1005,10 @@ export class AudioPreviewService {
    * Save audio data to a temporary file for SoX processing
    * @deprecated Not needed anymore - using direct cached TTS files
    */
-  private async saveTempAudio(_arrayBuffer: ArrayBuffer, _segmentId: string): Promise<string> {
+  private async saveTempAudio(arrayBuffer: ArrayBuffer, segmentId: string): Promise<string> {
     // This method is kept for reference but not used
     // We now use cached TTS files directly
+    console.warn(`saveTempAudio is deprecated - ignoring call for segment ${segmentId} with ${arrayBuffer.byteLength} bytes`);
     throw new Error('saveTempAudio is deprecated - using cached TTS files directly');
   }
 }
