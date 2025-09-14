@@ -2159,6 +2159,23 @@
     "string": "Marcado para revisión",
     "comment": "Información sobre herramienta indicando que el segmento está marcado para revisión"
   },
+  "audioProduction.segmentText": {
+    "string": "Texto del Segmento",
+    "comment": "Encabezado para el componente de visualización de texto"
+  },
+  "audioProduction.selectSegmentToViewText": {
+    "string": "Selecciona un segmento para ver su texto",
+    "comment": "Mensaje de marcador de posición cuando no hay segmento seleccionado para mostrar texto"
+  },
+  "audioProduction.voice": {
+    "string": "Voz",
+    "comment": "Etiqueta para información de voz en la visualización de texto"
+  },
+  "audioProduction.progress": {
+    "string": "Progreso",
+    "comment": "Etiqueta para la barra de progreso en la visualización de texto"
+  },
+
   "manuscript.loadingChapter": {
     "string": "Cargando capítulo…",
     "comment": "Mensaje de estado al cargar un capítulo"

@@ -1698,6 +1698,22 @@
     "string": "Marked for revision",
     "comment": "Tooltip indicating segment is marked for revision"
   },
+  "audioProduction.segmentText": {
+    "string": "Segment Text",
+    "comment": "Header for the text display component"
+  },
+  "audioProduction.selectSegmentToViewText": {
+    "string": "Select a segment to view its text",
+    "comment": "Placeholder message when no segment is selected for text display"
+  },
+  "audioProduction.voice": {
+    "string": "Voice",
+    "comment": "Label for voice information in text display"
+  },
+  "audioProduction.progress": {
+    "string": "Progress",
+    "comment": "Label for progress bar in text display"
+  },
 
   "manuscript.loadingChapter": {
     "string": "Loading chapter…",

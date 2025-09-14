@@ -1384,6 +1384,8 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               <TextDisplay
                 text={audioSegments[selectedRowIndex].text}
                 isPlaying={audioPreview.isPlaying}
+                currentTime={audioPreview.currentTime}
+                totalDuration={audioPreview.duration}
                 voiceName={audioSegments[selectedRowIndex].voice}
                 segmentId={audioSegments[selectedRowIndex].segmentId.toString()}
               />
