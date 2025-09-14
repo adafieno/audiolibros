@@ -246,7 +246,7 @@ export default function Home() {
   const disabledCreate = useMemo(() => !parentDir || !projName.trim(), [parentDir, projName]);
 
   return (
-    <div style={{ padding: "16px", maxWidth: "100%" }}>
+    <div style={{ maxWidth: "100%" }}>
       <PageHeader 
         title={t("home.existingProjects")}
         description={t("home.instructions")}

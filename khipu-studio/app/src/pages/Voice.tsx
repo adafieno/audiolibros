@@ -839,7 +839,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   }
 
   return (
-    <div style={{ padding: "16px", height: "100%", display: "flex", flexDirection: "column" }}>
+    <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <PageHeader 
         title={t("audioProduction.pageTitle")}
         description={t("audioProduction.pageDescription")}
