@@ -1129,24 +1129,8 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             <div style={{ flex: 1, padding: "12px", overflow: "auto" }}>
               {selectedRowIndex >= 0 && selectedRowIndex < audioSegments.length ? (
                 (() => {
-                  const currentSegment = audioSegments[selectedRowIndex];
                   return (
                     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                      {/* Segment Info */}
-                      <div style={{ padding: "12px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "4px" }}>
-                        <h4 style={{ margin: "0 0 8px 0", fontSize: "14px", color: "var(--text)" }}>
-                          {t("audioProduction.segmentTitle", { chunkId: currentSegment.chunkId })}
-                        </h4>
-                        <p style={{ margin: "0 0 8px 0", fontSize: "12px", color: "var(--textSecondary)" }}>
-                          {t("audioProduction.voiceLabel")} {currentSegment.voice || t("audioProduction.notAssigned")}
-                        </p>
-                        <div style={{ fontSize: "13px", color: "var(--text)", lineHeight: "1.4", padding: "8px", backgroundColor: "var(--input)", borderRadius: "3px" }}>
-                          {currentSegment.text}
-                        </div>
-                      </div>
-
-
-
                       {/* Audio Processing Chain */}
                       <div style={{ padding: "12px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "4px" }}>
                         <h4 style={{ margin: "0 0 12px 0", fontSize: "14px", color: "var(--text)" }}>
