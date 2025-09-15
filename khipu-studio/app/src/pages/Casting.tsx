@@ -518,7 +518,7 @@ export default function CastingPage() {
                             {t("casting.audition.loading")}
                           </>
                         ) : (
-                          <>🎵 {t("casting.audition.button")}</>
+                          <>{t("casting.audition.button")}</>
                         )}
                       </StandardButton>
                     </div>

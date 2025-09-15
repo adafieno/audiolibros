@@ -728,7 +728,7 @@ function CharactersPage() {
                             {t("casting.audition.loading")}
                           </>
                         ) : (
-                          <>🎵 {t("casting.audition.button")}</>
+                          <>{t("casting.audition.button")}</>
                         )}
                       </StandardButton>
                     )}

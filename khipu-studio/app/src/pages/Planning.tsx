@@ -728,7 +728,7 @@ function EditablePreview({
               ) : isAudioPlaying ? (
                 <>🔊 {t("common.playing")}</>
               ) : (
-                <>🎵 Audición</>
+                <>{t("casting.audition.button")}</>
               )}
             </StandardButton>
           )}
