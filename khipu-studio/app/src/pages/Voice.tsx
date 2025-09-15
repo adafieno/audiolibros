@@ -891,7 +891,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             {selectedChapter && audioSegments.length > 0 && (
               <StandardButton
                 variant="secondary"
-                size="compact"
                 onClick={() => {
                   setInsertPosition(selectedRowIndex + 1);
                   setShowSfxDialog(true);
