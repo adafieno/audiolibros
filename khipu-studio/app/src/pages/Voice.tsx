@@ -161,12 +161,37 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   const handleFileSelection = useCallback(async (file: File) => {
     const isValid = await processAudioFile(file);
     
-    if (isValid && selectedChapter && audioProductionService && fileValidationResult?.valid) {
+    if (isValid && selectedChapter && audioProductionService && fileValidationResult?.valid && root) {
       try {
-        // Create UI segment and update state
+        setValidationError("Converting and saving audio file...");
+        
+        // Convert file to ArrayBuffer for transmission to Electron
+        const arrayBuffer = await file.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+        
+        // Generate WAV filename (replace extension)
+        const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
+        const wavFilename = `${nameWithoutExt}.wav`;
+        const targetPath = `sfx/${wavFilename}`;
+        
+        // Convert and save the audio file
+        const saveResult = await window.khipu!.call("audio:convertAndSave", {
+          projectRoot: root,
+          audioData: Array.from(uint8Array), // Convert to regular array for IPC
+          filename: file.name,
+          targetPath: targetPath
+        });
+        
+        if (!saveResult.success) {
+          throw new Error(saveResult.error || "Failed to save audio file");
+        }
+        
+        console.log(`🎵 Successfully saved audio file: ${saveResult.savedPath}`);
+        
+        // Create UI segment with the saved WAV file
         const sfxSegment = createSfxSegment(
-          file.name,
-          `sfx/${file.name}`,
+          wavFilename, // Use the WAV filename
+          saveResult.savedPath || targetPath, // Fallback to target path if savedPath is undefined
           fileValidationResult.duration || 0
         );
         
@@ -185,10 +210,10 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         setValidationError(null);
       } catch (error) {
         console.error("Error processing audio file:", error);
-        setValidationError("Error processing file");
+        setValidationError(`Error processing file: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     }
-  }, [selectedChapter, audioProductionService, fileValidationResult, audioSegments, insertPosition, processAudioFile]);
+  }, [selectedChapter, audioProductionService, fileValidationResult, audioSegments, insertPosition, processAudioFile, root]);
 
   // Update segment's processing chain with automatic persistence
   const updateCurrentProcessingChain = useCallback((newChain: AudioProcessingChain) => {
@@ -659,7 +684,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     const segment = audioSegments[index];
     
     if (!segment || !root) {
-
       return;
     }
 
@@ -667,75 +691,122 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       if (audioPreview.isPlaying && audioPreview.playbackState.segmentId === segment.chunkId) {
         // Pause if currently playing this segment
         await audioPreview.pause();
-      } else {
-        // Load necessary data for TTS generation if needed
-        const [projectConfig, charactersData, planData] = await Promise.all([
-          // Load project config
-          window.khipu!.call("fs:read", {
-            projectRoot: root,
-            relPath: "project.khipu.json",
-            json: true,
-          }).catch(() => null),
+        return;
+      }
+
+      // Handle imported audio files (SFX segments) differently
+      // ⚠️ IMPORTANT: SFX segments MUST bypass all caching and TTS processing
+      if (segment.segmentType === 'sfx' && segment.sfxFile) {
+        console.log('🎵 Playing SFX segment directly (bypassing cache):', segment.sfxFile.filename);
+        
+        // For imported audio files, we play them directly from saved files
+        // NO TTS generation, NO audio caching, NO processing chains
+        const audioFilePath = segment.sfxFile.path;
+        
+        try {
+          // Read the audio file data directly from project directory
+          // This bypasses all caching mechanisms
+          console.log('📁 Loading SFX file directly from:', audioFilePath);
+          const audioData = await window.khipu!.call('fs:readAudioFile', audioFilePath);
           
-          // Load characters data
-          window.khipu!.call("fs:read", {
-            projectRoot: root,
-            relPath: "dossier/characters.json",
-            json: true,
-          }).catch(() => null),
+          // Create blob URL from the audio data for direct playback
+          const blob = new Blob([audioData], { type: 'audio/wav' });
+          const audioUrl = URL.createObjectURL(blob);
+          const audio = new Audio(audioUrl);
           
-          // Load plan data to get segment details
-          selectedChapter ? window.khipu!.call("fs:read", {
-            projectRoot: root,
-            relPath: `ssml/plans/${selectedChapter}.plan.json`,
-            json: true,
-          }).catch(() => null) : null
-        ]);
-
-        // Find the full segment data from plan
-        let segmentData = null;
-        if (planData) {
-          const chunks = Array.isArray(planData) ? planData : (planData as { chunks?: unknown[] })?.chunks;
-          segmentData = chunks?.find((chunk: unknown) => (chunk as { id?: string }).id === segment.chunkId);
+          // Set up cleanup
+          audio.onended = () => {
+            URL.revokeObjectURL(audioUrl);
+            console.log('🧹 Cleaned up SFX blob URL');
+          };
+          audio.onerror = () => {
+            URL.revokeObjectURL(audioUrl);
+            console.error('❌ SFX audio playback error');
+          };
+          
+          // Start playback immediately
+          await audio.play();
+          
+          console.log('✅ Started playing SFX segment directly (no cache used)');
+          
+        } catch (error) {
+          console.error('❌ Failed to play SFX segment directly:', error);
+          console.error('SFX file path:', audioFilePath);
         }
+        
+        // CRITICAL: Return here to prevent SFX segments from falling through
+        // to the TTS/caching pipeline below
+        return;
+      }
 
-        // Find character data
-        let characterData = null;
-        if (charactersData && segment.voice && segment.voice !== "unassigned") {
-          const characters = Array.isArray(charactersData) ? charactersData : (charactersData as { characters?: unknown[] })?.characters;
-          characterData = characters?.find((char: unknown) => {
-            const character = char as { name?: string; id?: string };
-            return character.name === segment.voice || character.id === segment.voice;
-          });
-        }
+      // Original TTS segment handling
+      // Load necessary data for TTS generation if needed
+      const [projectConfig, charactersData, planData] = await Promise.all([
+        // Load project config
+        window.khipu!.call("fs:read", {
+          projectRoot: root,
+          relPath: "project.khipu.json",
+          json: true,
+        }).catch(() => null),
+        
+        // Load characters data
+        window.khipu!.call("fs:read", {
+          projectRoot: root,
+          relPath: "dossier/characters.json",
+          json: true,
+        }).catch(() => null),
+        
+        // Load plan data to get segment details
+        selectedChapter ? window.khipu!.call("fs:read", {
+          projectRoot: root,
+          relPath: `ssml/plans/${selectedChapter}.plan.json`,
+          json: true,
+        }).catch(() => null) : null
+      ]);
 
-        console.log('🎤 Audio preview data:', {
-          segmentId: segment.chunkId,
-          hasProjectConfig: !!projectConfig,
-          hasCharacter: !!characterData,
-          hasSegment: !!segmentData,
-          voiceAssignment: (characterData as { voiceAssignment?: unknown })?.voiceAssignment
-        });
+      // Find the full segment data from plan
+      let segmentData = null;
+      if (planData) {
+        const chunks = Array.isArray(planData) ? planData : (planData as { chunks?: unknown[] })?.chunks;
+        segmentData = chunks?.find((chunk: unknown) => (chunk as { id?: string }).id === segment.chunkId);
+      }
 
-        // Create proper Segment structure for TTS generation
-        const segmentForTTS: Segment = {
-          segment_id: typeof segment.chunkId === 'string' ? parseInt(segment.chunkId) : segment.chunkId,
-          start_idx: segment.start_char || 0,
-          end_idx: segment.end_char || 0,
-          delimiter: "",
-          text: segment.text,
-          originalText: segment.text,
-          voice: segment.voice
-        };
-
-        // Start playing this segment with current processing chain
-        // Preview system will generate audio on-demand if needed
-        await audioPreview.preview(segment.chunkId, currentProcessingChain, undefined, undefined, {
-          segment: segmentForTTS,
-          character: characterData as Character,
-          projectConfig: projectConfig as ProjectConfig
+      // Find character data
+      let characterData = null;
+      if (charactersData && segment.voice && segment.voice !== "unassigned") {
+        const characters = Array.isArray(charactersData) ? charactersData : (charactersData as { characters?: unknown[] })?.characters;
+        characterData = characters?.find((char: unknown) => {
+          const character = char as { name?: string; id?: string };
+          return character.name === segment.voice || character.id === segment.voice;
         });
       }
+
+      console.log('🎤 Audio preview data:', {
+        segmentId: segment.chunkId,
+        hasProjectConfig: !!projectConfig,
+        hasCharacter: !!characterData,
+        hasSegment: !!segmentData,
+        voiceAssignment: (characterData as { voiceAssignment?: unknown })?.voiceAssignment
+      });
+
+      // Create proper Segment structure for TTS generation
+      const segmentForTTS: Segment = {
+        segment_id: typeof segment.chunkId === 'string' ? parseInt(segment.chunkId) : segment.chunkId,
+        start_idx: segment.start_char || 0,
+        end_idx: segment.end_char || 0,
+        delimiter: "",
+        text: segment.text,
+        originalText: segment.text,
+        voice: segment.voice
+      };
+
+      // Start playing this segment with current processing chain
+      // Preview system will generate audio on-demand if needed
+      await audioPreview.preview(segment.chunkId, currentProcessingChain, undefined, undefined, {
+        segment: segmentForTTS,
+        character: characterData as Character,
+        projectConfig: projectConfig as ProjectConfig
+      });
     } catch (error) {
       console.error("Playback failed:", error);
 

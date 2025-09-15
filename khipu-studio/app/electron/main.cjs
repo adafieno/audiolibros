@@ -1291,6 +1291,101 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
       return -99;
     }
   });
+
+  // ---- IPC: Convert and save imported audio file ----
+  // ⚠️ IMPORTANT: This process does NOT use any caching mechanisms
+  // SFX files are converted once and saved permanently to project directory
+  ipcMain.handle("audio:convertAndSave", async (_e, { projectRoot, audioData, filename, targetPath }) => {
+    try {
+      console.log(`🎵 Converting and saving SFX file (NO CACHE): ${filename} -> ${targetPath}`);
+      
+      // Ensure target directory exists
+      const targetFullPath = path.join(projectRoot, targetPath);
+      const targetDir = path.dirname(targetFullPath);
+      await fsp.mkdir(targetDir, { recursive: true });
+      
+      // Create a temporary file for the input audio
+      const tempInputPath = path.join(__dirname, '../../temp', `import_${Date.now()}_${filename}`);
+      await fsp.mkdir(path.dirname(tempInputPath), { recursive: true });
+      
+      // Write the raw audio data to temp file
+      const buffer = Buffer.from(audioData);
+      await fsp.writeFile(tempInputPath, buffer);
+      
+      // Get SOX processor (but don't use its caching mechanisms)
+      const processor = getAudioProcessor();
+      
+      try {
+        // Use SOX command directly for format conversion
+        // NOTE: We bypass SOX processor's caching system and process directly
+        const { spawn } = require('child_process');
+        
+        // Build SOX command: input -> 44.1kHz mono 16-bit WAV output
+        // This is a one-time conversion, NOT cached
+        const soxArgs = [
+          tempInputPath,
+          '-r', '44100',    // Sample rate: 44.1kHz
+          '-c', '1',        // Channels: mono
+          '-b', '16',       // Bit depth: 16-bit
+          targetFullPath
+        ];
+        
+        console.log(`Running SOX conversion (NO CACHE): sox ${soxArgs.join(' ')}`);
+        
+        const soxProcess = spawn(processor.soxPath, soxArgs);
+        
+        let stderr = '';
+        soxProcess.stderr.on('data', (data) => {
+          stderr += data.toString();
+        });
+        
+        const exitCode = await new Promise((resolve) => {
+          soxProcess.on('close', resolve);
+        });
+        
+        if (exitCode !== 0) {
+          throw new Error(`SOX conversion failed (exit code ${exitCode}): ${stderr}`);
+        }
+        
+        console.log(`✅ SOX conversion successful`);
+        
+      } catch (soxError) {
+        console.warn(`SOX conversion failed, trying direct copy: ${soxError.message}`);
+        
+        // Fallback: direct copy if SOX fails
+        await fsp.copyFile(tempInputPath, targetFullPath);
+        console.log(`📋 Used direct file copy as fallback`);
+      }
+      
+      // Clean up temp file
+      try {
+        await fsp.unlink(tempInputPath);
+      } catch (cleanupError) {
+        console.warn('Failed to clean up temp file:', cleanupError);
+      }
+      
+      // Verify the output file exists
+      if (fs.existsSync(targetFullPath)) {
+        const stats = await fsp.stat(targetFullPath);
+        console.log(`✅ Successfully saved: ${targetPath} (${stats.size} bytes)`);
+        
+        return {
+          success: true,
+          savedPath: targetPath,
+          sizeBytes: stats.size
+        };
+      } else {
+        throw new Error('Output file was not created');
+      }
+      
+    } catch (error) {
+      console.error('Audio conversion and save failed:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  });
 }
 
 app.whenReady().then(createWin);

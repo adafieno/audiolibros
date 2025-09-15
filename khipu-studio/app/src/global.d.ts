@@ -145,6 +145,22 @@ export interface KhipuRequestMap {
   // File system
   "fs:readAudioFile": { in: string; out: ArrayBuffer };
   
+  // Audio conversion and import
+  "audio:convertAndSave": {
+    in: {
+      projectRoot: string;
+      audioData: number[];
+      filename: string;
+      targetPath: string;
+    };
+    out: {
+      success: boolean;
+      savedPath?: string;
+      sizeBytes?: number;
+      error?: string;
+    };
+  };
+  
   // SoX Audio Processing
   "audioProcessor:processAudio": {
     in: {

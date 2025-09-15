@@ -96,7 +96,7 @@ export function createSfxSegment(
     displayOrder: 0, // Will be set when inserting
     chunkId: `sfx_${Date.now()}`,
     text: `[Sound Effect: ${filename}]`,
-    voice: "",
+    voice: "SFX", // Display "SFX" in the Character/Voice column
     locked: false,
     sfxAfter: null,
     hasAudio: false,
