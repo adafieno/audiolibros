@@ -205,12 +205,32 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       
       console.log(`🎵 Successfully saved audio file: ${saveResult.savedPath}`);
       
-      // Create UI segment with the saved WAV file
+      // Create the SFX file metadata
+      const sfxFileData = {
+        filename: wavFilename,
+        path: targetPath,
+        duration: fileValidationResult.duration || 0
+      };
+      
+      // Save SFX metadata to persistent storage
+      const savedSegmentId = await audioProductionService.addSfxSegment(
+        selectedChapter,
+        insertPosition,
+        sfxFileData
+      );
+      
+      console.log(`💾 Saved SFX metadata with ID: ${savedSegmentId}`);
+      
+      // Create UI segment with the saved WAV file, using the persistent segment ID
       const sfxSegment = createSfxSegment(
         wavFilename, // Use the WAV filename
         saveResult.savedPath || targetPath, // Fallback to target path if savedPath is undefined
         fileValidationResult.duration || 0
       );
+      
+      // Override the generated ID with the persistent one
+      sfxSegment.chunkId = savedSegmentId;
+      sfxSegment.rowKey = `sfx_row_${savedSegmentId}`;
       
       const updatedSegments = insertSegmentAtPosition(
         audioSegments,
@@ -2296,6 +2316,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               <div 
                 onDrop={(e) => {
                   e.preventDefault();
+                  e.stopPropagation();
                   setIsDragOver(false);
                   const files = e.dataTransfer.files;
                   if (files.length > 0) {
@@ -2304,10 +2325,12 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                 }}
                 onDragOver={(e) => {
                   e.preventDefault();
+                  e.stopPropagation();
                   setIsDragOver(true);
                 }}
                 onDragLeave={(e) => {
                   e.preventDefault();
+                  e.stopPropagation();
                   setIsDragOver(false);
                 }}
                 style={{
@@ -2323,7 +2346,11 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                 onClick={() => {
                   // Trigger file input click
                   const fileInput = document.getElementById('audio-file-input') as HTMLInputElement;
-                  if (fileInput) fileInput.click();
+                  if (fileInput) {
+                    // Reset the input value before opening dialog to ensure change event fires
+                    fileInput.value = '';
+                    fileInput.click();
+                  }
                 }}
               >
                 <input
@@ -2335,6 +2362,8 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                     if (file) {
                       handleFileSelection(file);
                     }
+                    // Always clear the input to ensure change event fires next time
+                    e.target.value = '';
                   }}
                   style={{
                     position: "absolute",
