@@ -2713,44 +2713,44 @@
     "comment": "Mensaje mostrado cuando se completa la operación de automatización de prueba"
   },
   "cost.timeByOperation": {
-    "string": "Tiempo por Operación",
-    "comment": "Título para la visualización de desglose de tiempo por operación"
+    "string": "Tiempo por Fase",
+    "comment": "Título para la visualización de desglose de tiempo por fase"
   },
   "cost.pageNames.voice": {
-    "string": "Página de Voz",
-    "comment": "Nombre para mostrar de la página de voz en seguimiento de tiempo"
+    "string": "Fase de Voz",
+    "comment": "Nombre para mostrar de la fase de voz en seguimiento de tiempo"
   },
   "cost.pageNames.casting": {
-    "string": "Página de Casting",
-    "comment": "Nombre para mostrar de la página de casting en seguimiento de tiempo"
+    "string": "Fase de Casting",
+    "comment": "Nombre para mostrar de la fase de casting en seguimiento de tiempo"
   },
   "cost.pageNames.characters": {
-    "string": "Página de Personajes",
-    "comment": "Nombre para mostrar de la página de personajes en seguimiento de tiempo"
+    "string": "Fase de Personajes",
+    "comment": "Nombre para mostrar de la fase de personajes en seguimiento de tiempo"
   },
   "cost.pageNames.planning": {
-    "string": "Página de Planificación",
-    "comment": "Nombre para mostrar de la página de planificación en seguimiento de tiempo"
+    "string": "Fase de Planificación",
+    "comment": "Nombre para mostrar de la fase de planificación en seguimiento de tiempo"
   },
   "cost.pageNames.manuscript": {
-    "string": "Página de Manuscrito",
-    "comment": "Nombre para mostrar de la página de manuscrito en seguimiento de tiempo"
+    "string": "Fase de Manuscrito",
+    "comment": "Nombre para mostrar de la fase de manuscrito en seguimiento de tiempo"
   },
   "cost.pageNames.packaging": {
-    "string": "Página de Empaquetado",
-    "comment": "Nombre para mostrar de la página de empaquetado en seguimiento de tiempo"
+    "string": "Fase de Empaquetado",
+    "comment": "Nombre para mostrar de la fase de empaquetado en seguimiento de tiempo"
   },
   "cost.pageNames.cost": {
-    "string": "Página de Costos",
-    "comment": "Nombre para mostrar de la página de costos en seguimiento de tiempo"
+    "string": "Fase de Costos",
+    "comment": "Nombre para mostrar de la fase de costos en seguimiento de tiempo"
   },
   "cost.pageNames.home": {
-    "string": "Página de Inicio",
-    "comment": "Nombre para mostrar de la página de inicio en seguimiento de tiempo"
+    "string": "Fase de Inicio",
+    "comment": "Nombre para mostrar de la fase de inicio en seguimiento de tiempo"
   },
   "cost.pageNames.unknown": {
-    "string": "Página Desconocida",
-    "comment": "Nombre para mostrar de página desconocida en seguimiento de tiempo"
+    "string": "Fase Desconocida",
+    "comment": "Nombre para mostrar de fase desconocida en seguimiento de tiempo"
   },
   "cost.operationNames.character_detection": {
     "string": "Detección de Personajes",

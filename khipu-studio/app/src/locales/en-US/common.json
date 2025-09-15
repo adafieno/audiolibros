@@ -2265,44 +2265,44 @@
     "comment": "Message shown when test automation operation completes"
   },
   "cost.timeByOperation": {
-    "string": "Time by Operation",
-    "comment": "Title for the time breakdown by operation visualization"
+    "string": "Time by Phase",
+    "comment": "Title for the time breakdown by phase visualization"
   },
   "cost.pageNames.voice": {
-    "string": "Voice Page",
-    "comment": "Display name for voice page in time tracking"
+    "string": "Voice Phase",
+    "comment": "Display name for voice phase in time tracking"
   },
   "cost.pageNames.casting": {
-    "string": "Casting Page",
-    "comment": "Display name for casting page in time tracking"
+    "string": "Casting Phase",
+    "comment": "Display name for casting phase in time tracking"
   },
   "cost.pageNames.characters": {
-    "string": "Characters Page",
-    "comment": "Display name for characters page in time tracking"
+    "string": "Characters Phase",
+    "comment": "Display name for characters phase in time tracking"
   },
   "cost.pageNames.planning": {
-    "string": "Planning Page",
-    "comment": "Display name for planning page in time tracking"
+    "string": "Planning Phase",
+    "comment": "Display name for planning phase in time tracking"
   },
   "cost.pageNames.manuscript": {
-    "string": "Manuscript Page",
-    "comment": "Display name for manuscript page in time tracking"
+    "string": "Manuscript Phase",
+    "comment": "Display name for manuscript phase in time tracking"
   },
   "cost.pageNames.packaging": {
-    "string": "Packaging Page",
-    "comment": "Display name for packaging page in time tracking"
+    "string": "Packaging Phase",
+    "comment": "Display name for packaging phase in time tracking"
   },
   "cost.pageNames.cost": {
-    "string": "Cost Page",
-    "comment": "Display name for cost page in time tracking"
+    "string": "Cost Phase",
+    "comment": "Display name for cost phase in time tracking"
   },
   "cost.pageNames.home": {
-    "string": "Home Page",
-    "comment": "Display name for home page in time tracking"
+    "string": "Home Phase",
+    "comment": "Display name for home phase in time tracking"
   },
   "cost.pageNames.unknown": {
-    "string": "Unknown Page",
-    "comment": "Display name for unknown page in time tracking"
+    "string": "Unknown Phase",
+    "comment": "Display name for unknown phase in time tracking"
   },
   "cost.operationNames.character_detection": {
     "string": "Character Detection",

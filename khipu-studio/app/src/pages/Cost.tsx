@@ -1065,7 +1065,7 @@ export default function Cost() {
             color: 'var(--text)',
             margin: '0 0 16px 0'
           }}>
-            {t('cost.timeTracking.operationBreakdown', 'Time by Operation')}
+            {t('cost.timeByOperation', 'Time by Phase')}
           </h3>
           {operationBreakdown.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '400px', overflowY: 'auto' }}>
