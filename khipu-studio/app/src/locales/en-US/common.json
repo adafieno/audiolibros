@@ -262,11 +262,11 @@
     "comment": "Button text to add a language to voice selection"
   },
   "casting.addGender": {
-    "string": "🌪️ Filter Gender",
+    "string": "Filter Gender",
     "comment": "Button text to filter by voice gender"
   },
   "casting.addLocale": {
-    "string": "🌪️ Filter Locale",
+    "string": "Filter Locale",
     "comment": "Button text to filter by voice locale"
   },
   "casting.languagesLabel": {
