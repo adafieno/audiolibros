@@ -1037,7 +1037,8 @@ export class CostTrackingService {
         count: data.count,
         operations: Array.from(data.operations)
       }))
-      .sort((a, b) => b.cost - a.cost);
+      .sort((a, b) => b.cost - a.cost)
+      .slice(0, 5); // Only show top 5 modules
     
     // Enhanced daily breakdown with more metrics
     const dailyCostsMap: Record<string, { 
