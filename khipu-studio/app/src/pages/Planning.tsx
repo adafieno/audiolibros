@@ -2337,17 +2337,23 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
               </div>
               
               <div ref={gridRef} style={{ flex: 1, overflow: "auto" }}>
-                <table style={{ width: "100%", fontSize: "12px" }}>
-                  <thead style={{ position: "sticky", top: 0, backgroundColor: "var(--panel)", borderBottom: "1px solid var(--border)" }}>
-                    <tr style={{ textAlign: "left" }}>
-                      <th style={{ padding: "8px 6px" }}></th>
-                      <th style={{ padding: "4px", textAlign: "center", width: "32px" }} title={t("audioProduction.revisionStatus")}>🏳</th>
-                      <th style={{ padding: "8px 6px" }}>id</th>
-                      <th style={{ padding: "8px 6px" }}>{t("planning.table.delim")}</th>
-                      <th style={{ padding: "8px 6px" }}>{t("planning.table.start")}</th>
-                      <th style={{ padding: "8px 6px" }}>{t("planning.table.end")}</th>
-                      <th style={{ padding: "8px 6px" }}>{t("planning.table.len")}</th>
-                      <th style={{ padding: "8px 6px", minWidth: "150px" }}>{t("planning.table.character")}</th>
+                <table style={{ width: "100%", fontSize: "12px", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ 
+                      backgroundColor: "var(--panelAccent)", 
+                      borderBottom: "2px solid var(--border)",
+                      position: "sticky", 
+                      top: 0,
+                      zIndex: 1
+                    }}>
+                      <th style={{ padding: "6px 8px", textAlign: "left", fontSize: "11px", fontWeight: 600, width: "24px" }}></th>
+                      <th style={{ padding: "6px 4px", textAlign: "center", fontSize: "11px", fontWeight: 600, width: "32px" }} title={t("audioProduction.revisionStatus")}>🏳</th>
+                      <th style={{ padding: "6px 8px", textAlign: "left", fontSize: "11px", fontWeight: 600, minWidth: "40px" }}>ID</th>
+                      <th style={{ padding: "6px 8px", textAlign: "center", fontSize: "11px", fontWeight: 600, width: "40px" }}>{t("planning.table.delim")}</th>
+                      <th style={{ padding: "6px 8px", textAlign: "right", fontSize: "11px", fontWeight: 600, width: "50px" }}>{t("planning.table.start")}</th>
+                      <th style={{ padding: "6px 8px", textAlign: "right", fontSize: "11px", fontWeight: 600, width: "50px" }}>{t("planning.table.end")}</th>
+                      <th style={{ padding: "6px 8px", textAlign: "right", fontSize: "11px", fontWeight: 600, width: "50px" }}>{t("planning.table.len")}</th>
+                      <th style={{ padding: "6px 8px", textAlign: "left", fontSize: "11px", fontWeight: 600, minWidth: "150px" }}>{t("planning.table.character")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -2358,55 +2364,103 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
                         onClick={() => setSelIndex(i)}
                         style={{
                           cursor: "pointer",
-                          backgroundColor: i === selIndex ? "var(--accent)" : "transparent",
-                          color: i === selIndex ? "white" : "var(--text)"
+                          backgroundColor: i === selIndex ? "var(--accent)" : (i % 2 === 0 ? "var(--panel)" : "transparent"),
+                          color: i === selIndex ? "white" : "var(--text)",
+                          borderBottom: "1px solid var(--border)",
+                          transition: "background-color 0.15s ease"
                         }}
                       >
-                        <td style={{ padding: "4px 6px", color: i === selIndex ? "white" : "var(--muted)" }}>{i === selIndex ? "▶" : ""}</td>
-                        <td style={{ padding: "4px", textAlign: "center" }}>
-                          <button
+                        <td style={{ 
+                          padding: "4px 8px", 
+                          color: i === selIndex ? "white" : "var(--accent)",
+                          fontWeight: 500,
+                          textAlign: "center"
+                        }}>
+                          {i === selIndex ? "▶" : ""}
+                        </td>
+                        <td style={{ padding: "2px 4px", textAlign: "center" }}>
+                          <StandardButton
                             onClick={(e) => {
                               e.stopPropagation();
                               handleToggleRevisionMark(r.segmentId);
                             }}
+                            size="compact"
+                            variant={isSegmentMarkedForRevision(r.segmentId) ? "warning" : "secondary"}
                             style={{
-                              background: "none",
-                              border: "none",
-                              cursor: "pointer",
-                              fontSize: "14px",
+                              minWidth: "24px",
+                              height: "24px",
                               padding: "2px",
-                              color: isSegmentMarkedForRevision(r.segmentId) ? "var(--warning)" : "var(--muted)",
-                              opacity: isSegmentMarkedForRevision(r.segmentId) ? 1 : 0.5,
+                              fontSize: "12px",
+                              opacity: isSegmentMarkedForRevision(r.segmentId) ? 1 : 0.6,
                             }}
                             title={isSegmentMarkedForRevision(r.segmentId) ? 
                               t("audioProduction.removeRevisionMark") : 
                               t("audioProduction.markForRevision")}
                           >
                             {isSegmentMarkedForRevision(r.segmentId) ? "🚩" : "🏳"}
-                          </button>
+                          </StandardButton>
                         </td>
-                        <td style={{ padding: "4px 6px", whiteSpace: "nowrap" }}>{r.segmentId}</td>
-                        <td style={{ padding: "4px 6px", textAlign: "center" }}>{r.delimiter}</td>
-                        <td style={{ padding: "4px 6px", textAlign: "right" }}>{r.start}</td>
-                        <td style={{ padding: "4px 6px", textAlign: "right" }}>{r.end}</td>
-                        <td style={{ padding: "4px 6px", textAlign: "right" }}>{r.length}</td>
-                        <td style={{ padding: "4px 6px" }}>
+                        <td style={{ 
+                          padding: "4px 8px", 
+                          whiteSpace: "nowrap",
+                          fontFamily: "monospace",
+                          fontSize: "11px",
+                          color: i === selIndex ? "white" : "var(--muted)"
+                        }}>
+                          {r.segmentId}
+                        </td>
+                        <td style={{ 
+                          padding: "4px 8px", 
+                          textAlign: "center",
+                          fontFamily: "monospace",
+                          fontSize: "11px"
+                        }}>
+                          {r.delimiter}
+                        </td>
+                        <td style={{ 
+                          padding: "4px 8px", 
+                          textAlign: "right",
+                          fontFamily: "monospace",
+                          fontSize: "11px"
+                        }}>
+                          {r.start}
+                        </td>
+                        <td style={{ 
+                          padding: "4px 8px", 
+                          textAlign: "right",
+                          fontFamily: "monospace",
+                          fontSize: "11px"
+                        }}>
+                          {r.end}
+                        </td>
+                        <td style={{ 
+                          padding: "4px 8px", 
+                          textAlign: "right",
+                          fontFamily: "monospace",
+                          fontSize: "11px"
+                        }}>
+                          {r.length}
+                        </td>
+                        <td style={{ padding: "4px 8px" }}>
                           <select 
                             value={r.voice}
                             onChange={(e) => updateRowVoice(i, e.target.value)}
                             style={{ 
                               width: "100%", 
-                              padding: "2px 4px", 
+                              padding: "3px 6px", 
                               fontSize: "11px",
-                              backgroundColor: "var(--panel)", 
-                              color: "var(--text)", 
+                              backgroundColor: i === selIndex ? "rgba(255,255,255,0.1)" : "var(--panel)", 
+                              color: i === selIndex ? "white" : "var(--text)", 
                               border: "1px solid var(--border)", 
-                              borderRadius: "3px" 
+                              borderRadius: "4px",
+                              outline: "none"
                             }}
                           >
                             <option value="">Select...</option>
                             {availableCharacters.map((char, index) => (
-                              <option key={`${char}-${index}`} value={char}>{char}</option>
+                              <option key={`${char}-${index}`} value={char} style={{ backgroundColor: "var(--panel)", color: "var(--text)" }}>
+                                {char}
+                              </option>
                             ))}
                           </select>
                         </td>
