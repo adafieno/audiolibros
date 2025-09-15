@@ -2229,7 +2229,7 @@
     "comment": "Message displayed when no cache savings data exists for any operation"
   },
   "cost.exportData": {
-    "string": "Export Data as CSV",
+    "string": "Export to CSV",
     "comment": "Button text for exporting cost data as CSV file"
   },
   "cost.clearData": {

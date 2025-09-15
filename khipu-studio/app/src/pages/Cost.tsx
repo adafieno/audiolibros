@@ -218,21 +218,6 @@ export default function Cost() {
         <div style={{ textAlign: 'center' }}>
           <p style={{ color: 'var(--text)', fontSize: '18px', marginBottom: '8px' }}>{t('cost.noProjectLoaded', 'No project loaded')}</p>
           <p style={{ color: 'var(--muted)', fontSize: '14px' }}>{t('cost.openProjectFirst', 'Please open a project first to view cost tracking.')}</p>
-          <StandardButton
-            variant="primary"
-            onClick={() => {
-              console.log('🔧 Manual project root test');
-              const testRoot = 'C:\\projects\\audiobooks\\projects\\test_7';
-              console.log(`Setting test project root: ${testRoot}`);
-              costTrackingService.setProjectRoot(testRoot);
-              loadData();
-            }}
-            style={{
-              marginTop: '16px'
-            }}
-          >
-            {t('cost.testWithSampleProject', 'Test with sample project')}
-          </StandardButton>
         </div>
       </div>
     );
@@ -324,27 +309,6 @@ export default function Cost() {
             <option value="all">{t('cost.timeRange.all', 'All time')}</option>
           </select>
           
-          {/* Refresh Button */}
-          <StandardButton
-            variant="secondary"
-            onClick={async () => {
-              console.log('🔄 Manual refresh triggered');
-              if (root) {
-                setIsLoading(true);
-                await costTrackingService.reloadFromFileSystem();
-                loadData();
-              }
-            }}
-            title={t('cost.refresh', 'Refresh data from files')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-          >
-            🔄 {t('cost.refresh', 'Refresh')}
-          </StandardButton>
-          
           {/* Settings Button */}
           <StandardButton
             variant={showSettings ? 'primary' : 'secondary'}
@@ -355,7 +319,7 @@ export default function Cost() {
               gap: '6px'
             }}
           >
-            ⚙️ {t('cost.settings', 'Settings')}
+            {t('cost.settings', 'Settings')}
           </StandardButton>
 
           {/* Export Button */}
@@ -381,7 +345,7 @@ export default function Cost() {
               gap: '6px'
             }}
           >
-            📄 {t('cost.exportData', 'Export')}
+            {t('cost.exportData', 'Export')}
           </StandardButton>
           
           {/* Clear Button */}
@@ -1549,7 +1513,7 @@ export default function Cost() {
               margin: '0',
               lineHeight: '1.5'
             }}>
-              💡 <strong>{t('cost.smartCachingImpact', 'Smart Caching Impact')}:</strong> {t('cost.savingsMessage', `You've saved {{savings}} thanks to intelligent caching! Without caching, your total cost would have been {{totalWithSavings}}.`, {
+              <strong>{t('cost.smartCachingImpact', 'Smart Caching Impact')}:</strong> {t('cost.savingsMessage', `You've saved {{savings}} thanks to intelligent caching! Without caching, your total cost would have been {{totalWithSavings}}.`, {
                 savings: formatCost(summary.estimatedSavingsFromCache),
                 totalWithSavings: formatCost(summary.totalCost + summary.estimatedSavingsFromCache)
               })}

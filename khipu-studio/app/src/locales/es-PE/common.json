@@ -2677,7 +2677,7 @@
     "comment": "Mensaje mostrado cuando no existen datos de ahorros de caché para ninguna operación"
   },
   "cost.exportData": {
-    "string": "Exportar datos como CSV",
+    "string": "Exportar a CSV",
     "comment": "Texto del botón para exportar datos de costos como archivo CSV"
   },
   "cost.clearData": {
