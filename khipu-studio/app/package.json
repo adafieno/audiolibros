@@ -2,12 +2,26 @@
     "private": true,
     "version": "0.0.0",
     "type": "module",
+    "description": "AI-powered audiobook production studio with multi-language support",
+    "author": {
+        "name": "Agustín Da Fieno Delucchi",
+        "email": "adafieno@hotmail.com"
+    },
+    "homepage": "https://your-website.com",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/yourusername/khipu-studio.git"
+    },
     "scripts": {
         "lint": "eslint .",
         "preview": "vite preview",
         "dev": "concurrently -k \"vite\" \"cross-env VITE_DEV=1 electron .\"",
         "build:ui": "vite build",
-        "build": "npm run build:ui && electron-builder"
+        "build": "npm run build:ui && electron-builder",
+        "build:win": "npm run build:ui && electron-builder --win",
+        "build:mac": "npm run build:ui && electron-builder --mac",
+        "build:linux": "npm run build:ui && electron-builder --linux",
+        "build:all": "npm run build:ui && electron-builder --win --mac --linux"
     },
     "dependencies": {
         "@tanstack/react-table": "^8.21.3",

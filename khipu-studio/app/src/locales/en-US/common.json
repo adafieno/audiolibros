@@ -1598,17 +1598,25 @@
     "string": "Add SFX",
     "comment": "Short label for add sound effect button"
   },
-  "audioProduction.selectWavFile": {
-    "string": "Select WAV File",
-    "comment": "Label for WAV file selection in sound effect dialog"
+  "audioProduction.selectAudioFile": {
+    "string": "Select Audio File",
+    "comment": "Label for audio file selection in sound effect dialog"
+  },
+  "audioProduction.audioFileRequirements": {
+    "string": "Supported: WAV, MP3, M4A, AAC, OGG, FLAC • Max 300 seconds or 60MB",
+    "comment": "File format requirements for audio files"
   },
   "audioProduction.chooseFile": {
     "string": "Choose File",
     "comment": "Button text for file selection in sound effect dialog"
   },
+  "audioProduction.selectWavFile": {
+    "string": "Select WAV File",
+    "comment": "Label for WAV file selection in sound effect dialog (deprecated)"
+  },
   "audioProduction.wavFileRequirements": {
     "string": "Requirements: 16-48kHz, 16/24-bit, stereo/mono, max 300 seconds",
-    "comment": "File format requirements for WAV files"
+    "comment": "File format requirements for WAV files (deprecated)"
   },
   "audioProduction.invalidWavFile": {
     "string": "Invalid WAV file: {{error}}",

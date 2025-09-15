@@ -5,7 +5,7 @@ import { useAudioPreview } from "../hooks/useAudioPreview";
 import { createDefaultProcessingChain } from "../lib/audio-production-utils";
 import AudioProductionService from "../lib/audio-production-service";
 import { AUDIO_PRESETS, getPresetsByCategory, getPresetById, type AudioPreset } from "../data/audio-presets";
-import { validateWavFile, createSfxSegment, insertSegmentAtPosition } from "../lib/additional-segments";
+import { validateAudioFile, createSfxSegment, insertSegmentAtPosition } from "../lib/additional-segments";
 import { TextDisplay } from "../components/KaraokeTextDisplay";
 import { PageHeader } from "../components/PageHeader";
 import { StandardButton } from "../components/StandardButton";
@@ -62,6 +62,18 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   // Additional segments state
   const [showSfxDialog, setShowSfxDialog] = useState(false);
   const [insertPosition, setInsertPosition] = useState<number>(-1); // Where to insert new segment
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileValidationResult, setFileValidationResult] = useState<{
+    valid: boolean;
+    error?: string;
+    duration?: number;
+    sampleRate?: number;
+    channels?: number;
+    bitDepth?: number;
+    format?: string;
+  } | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
   
   // Effect chain section collapse states - all collapsed by default
   const [sectionExpanded, setSectionExpanded] = useState({
@@ -121,6 +133,62 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   const audioProductionService = useMemo(() => {
     return root ? new AudioProductionService(root) : null;
   }, [root]);
+
+  // Helper function to process and validate an audio file
+  const processAudioFile = useCallback(async (file: File) => {
+    setSelectedFile(file);
+    setValidationError(null);
+    setFileValidationResult(null);
+    
+    try {
+      const validationResult = await validateAudioFile(file);
+      setFileValidationResult(validationResult);
+      
+      if (!validationResult.valid) {
+        setValidationError(validationResult.error || "Invalid audio file");
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      setValidationError(errorMessage);
+      return false;
+    }
+  }, []);
+
+  // Helper function to handle file selection (both drag-drop and file picker)
+  const handleFileSelection = useCallback(async (file: File) => {
+    const isValid = await processAudioFile(file);
+    
+    if (isValid && selectedChapter && audioProductionService && fileValidationResult?.valid) {
+      try {
+        // Create UI segment and update state
+        const sfxSegment = createSfxSegment(
+          file.name,
+          `sfx/${file.name}`,
+          fileValidationResult.duration || 0
+        );
+        
+        const updatedSegments = insertSegmentAtPosition(
+          audioSegments,
+          sfxSegment,
+          insertPosition
+        );
+        
+        setAudioSegments(updatedSegments);
+        setShowSfxDialog(false);
+        
+        // Reset state
+        setSelectedFile(null);
+        setFileValidationResult(null);
+        setValidationError(null);
+      } catch (error) {
+        console.error("Error processing audio file:", error);
+        setValidationError("Error processing file");
+      }
+    }
+  }, [selectedChapter, audioProductionService, fileValidationResult, audioSegments, insertPosition, processAudioFile]);
 
   // Update segment's processing chain with automatic persistence
   const updateCurrentProcessingChain = useCallback((newChain: AudioProcessingChain) => {
@@ -899,7 +967,11 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               <StandardButton
                 variant="secondary"
                 onClick={() => {
-                  setInsertPosition(selectedRowIndex + 1);
+                  setInsertPosition(selectedRowIndex); // Insert before current segment, not after
+                  // Reset state when opening dialog
+                  setSelectedFile(null);
+                  setFileValidationResult(null);
+                  setValidationError(null);
                   setShowSfxDialog(true);
                 }}
                 title={t("audioProduction.insertSoundEffect")}
@@ -1387,7 +1459,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                         </div>
                         
                         {/* Processing Summary */}
-                        <div style={{ marginBottom: "12px", padding: "6px", backgroundColor: "var(--accent)", color: "white", borderRadius: "3px", fontSize: "10px" }}>
+                        <div style={{ marginBottom: "12px", padding: "8px", backgroundColor: "var(--input)", color: "var(--text)", borderRadius: "3px", fontSize: "12px", border: "1px solid var(--border)" }}>
                           <strong>{t("audioProduction.activeEffects")}</strong> {[
                             currentProcessingChain.noiseCleanup.highPassFilter.enabled && t("audioProduction.hpFilterDynamic", { frequency: currentProcessingChain.noiseCleanup.highPassFilter.frequency }),
                             currentProcessingChain.noiseCleanup.deClickDeEss.enabled && t("audioProduction.deEssDynamic", { intensity: currentProcessingChain.noiseCleanup.deClickDeEss.intensity }),
@@ -2012,51 +2084,51 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             
             <div style={{ marginBottom: "16px" }}>
               <label style={{ display: "block", marginBottom: "8px", fontSize: "13px", fontWeight: 500 }}>
-                {t("audioProduction.selectWavFile")}
+                {t("audioProduction.selectAudioFile")}
               </label>
-              <div style={{ position: "relative", display: "inline-block", width: "100%" }}>
+              
+              {/* Drag and Drop Zone */}
+              <div 
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDragOver(false);
+                  const files = e.dataTransfer.files;
+                  if (files.length > 0) {
+                    handleFileSelection(files[0]);
+                  }
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragOver(true);
+                }}
+                onDragLeave={(e) => {
+                  e.preventDefault();
+                  setIsDragOver(false);
+                }}
+                style={{
+                  position: "relative",
+                  border: `2px dashed ${isDragOver ? 'var(--accent)' : 'var(--border)'}`,
+                  borderRadius: "8px",
+                  padding: "24px",
+                  textAlign: "center",
+                  backgroundColor: isDragOver ? 'var(--accent)10' : 'var(--panel)',
+                  transition: "all 0.2s ease",
+                  cursor: "pointer"
+                }}
+                onClick={() => {
+                  // Trigger file input click
+                  const fileInput = document.getElementById('audio-file-input') as HTMLInputElement;
+                  if (fileInput) fileInput.click();
+                }}
+              >
                 <input
+                  id="audio-file-input"
                   type="file"
-                  accept=".wav"
+                  accept=".wav,.mp3,.m4a,.aac,.ogg,.flac,audio/*"
                   onChange={async (e) => {
                     const file = e.target.files?.[0];
-                    if (file && selectedChapter && audioProductionService) {
-                      try {
-                        const validationResult = await validateWavFile(file);
-                        if (validationResult.valid) {
-                          // Create and save the SFX segment to filesystem
-                          // const sfxData = {
-                          //   path: `sfx/${file.name}`,
-                          //   filename: file.name,
-                          //   duration: validationResult.duration || 0,
-                          //   validated: true
-                          // };
-                          
-                          // const segmentId = await audioProductionService.addSfxSegment(
-                          //   selectedChapter,
-                          //   insertPosition,
-                          //   sfxData
-                          // );
-                          
-                          // Create UI segment and update state
-                          const sfxSegment = createSfxSegment(
-                            file.name,
-                            `sfx/${file.name}`,
-                            validationResult.duration || 0
-                          );
-                          
-                          const updatedSegments = insertSegmentAtPosition(
-                            audioSegments,
-                            sfxSegment,
-                            insertPosition
-                          );
-                          
-                          setAudioSegments(updatedSegments);
-                          setShowSfxDialog(false);
-                        }
-                      } catch (error) {
-                        console.error("Error processing SFX file:", error);
-                      }
+                    if (file) {
+                      handleFileSelection(file);
                     }
                   }}
                   style={{
@@ -2064,33 +2136,76 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                     opacity: 0,
                     width: "100%",
                     height: "100%",
-                    cursor: "pointer"
+                    cursor: "pointer",
+                    top: 0,
+                    left: 0
                   }}
                 />
-                <StandardButton
-                  variant="outline"
-                  style={{
-                    width: "100%",
-                    justifyContent: "flex-start",
-                    textAlign: "left",
-                    padding: "8px 12px"
-                  }}
-                >
-                  📁 {t("audioProduction.chooseFile")}
-                </StandardButton>
+                
+                <div style={{ fontSize: "48px", marginBottom: "8px" }}>
+                  {selectedFile ? "✅" : "📁"}
+                </div>
+                
+                {selectedFile ? (
+                  <div>
+                    <div style={{ fontWeight: 500, marginBottom: "4px", color: "var(--text)" }}>
+                      {selectedFile.name}
+                    </div>
+                    {fileValidationResult?.valid && (
+                      <div style={{ fontSize: "12px", color: "var(--textSecondary)", marginBottom: "8px" }}>
+                        {fileValidationResult.format} • {Math.round((fileValidationResult.duration || 0) * 10) / 10}s • {Math.round(selectedFile.size / 1024)}KB
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ fontWeight: 500, marginBottom: "4px", color: "var(--text)" }}>
+                      {isDragOver ? "Drop audio file here" : "Drop audio file here or click to browse"}
+                    </div>
+                  </div>
+                )}
+                
+                {validationError && (
+                  <div style={{ 
+                    color: "var(--error)", 
+                    fontSize: "13px", 
+                    marginTop: "8px",
+                    padding: "8px",
+                    backgroundColor: "var(--error)20",
+                    borderRadius: "4px"
+                  }}>
+                    ❌ {validationError}
+                  </div>
+                )}
               </div>
-              <div style={{ fontSize: "13px", color: "var(--textSecondary)", marginTop: "4px" }}>
-                {t("audioProduction.wavFileRequirements")}
+              
+              <div style={{ fontSize: "13px", color: "var(--textSecondary)", marginTop: "8px" }}>
+                {t("audioProduction.audioFileRequirements")}
               </div>
             </div>
 
             <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
               <StandardButton
                 variant="secondary"
-                onClick={() => setShowSfxDialog(false)}
+                onClick={() => {
+                  setShowSfxDialog(false);
+                  // Reset state
+                  setSelectedFile(null);
+                  setFileValidationResult(null);
+                  setValidationError(null);
+                }}
               >
                 {t("common.cancel")}
               </StandardButton>
+              
+              {selectedFile && fileValidationResult?.valid && (
+                <StandardButton
+                  variant="primary"
+                  onClick={() => handleFileSelection(selectedFile)}
+                >
+                  {t("audioProduction.addSegment")}
+                </StandardButton>
+              )}
             </div>
           </div>
         </div>

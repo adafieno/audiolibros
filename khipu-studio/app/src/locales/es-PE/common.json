@@ -2047,9 +2047,17 @@
     "string": "Agregar SFX",
     "comment": "Etiqueta corta para botón agregar efecto sonoro"
   },
+  "audioProduction.selectAudioFile": {
+    "string": "Seleccionar Archivo de Audio",
+    "comment": "Etiqueta para selección de archivo de audio en diálogo de efecto sonoro"
+  },
+  "audioProduction.audioFileRequirements": {
+    "string": "Soportados: WAV, MP3, M4A, AAC, OGG, FLAC • Máx 300 segundos o 60MB",
+    "comment": "Requisitos de formato para archivos de audio"
+  },
   "audioProduction.selectWavFile": {
     "string": "Seleccionar Archivo WAV",
-    "comment": "Etiqueta para selección de archivo WAV en diálogo de efecto sonoro"
+    "comment": "Etiqueta para selección de archivo WAV en diálogo de efecto sonoro (obsoleto)"
   },
   "audioProduction.chooseFile": {
     "string": "Elegir Archivo",

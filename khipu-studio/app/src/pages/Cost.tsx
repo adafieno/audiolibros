@@ -1278,7 +1278,7 @@ export default function Cost() {
                 'orchestration': '🪄',
                 'audio_production': '🎙️',
                 'chapter_planning': '🪄',
-                'unknown': '❓'
+                'unknown': '🤷‍♀️'
               };
               
               return (
