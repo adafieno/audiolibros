@@ -354,12 +354,22 @@ export class CostTrackingService {
     projectId?: string;
     chapterId?: string;
   } = {}): TimeEntry {
-    console.log(`🤖 Tracking automation: ${operation} (${this.formatDuration(duration)})`);
+    console.log(`🤖 [AUTOMATION TRACKING] Creating time entry: ${operation} (${this.formatDuration(duration)})`);
     
-    return this.trackTimeActivity('automation', duration, {
+    const entry = this.trackTimeActivity('automation', duration, {
       ...context,
       operation
     });
+    
+    console.log(`📊 [AUTOMATION TRACKING] Time entry created:`, {
+      id: entry.id,
+      operation: entry.operation,
+      activityType: entry.activityType,
+      duration: entry.duration,
+      formattedDuration: this.formatDuration(entry.duration)
+    });
+    
+    return entry;
   }
   
   /**
@@ -375,7 +385,7 @@ export class CostTrackingService {
     } = {}
   ): Promise<T> {
     const startTime = Date.now();
-    console.log(`🤖 Starting automation: ${operation}`, {
+    console.log(`🤖 [AUTOMATION TRACKING] Starting: ${operation}`, {
       startTime: new Date(startTime).toISOString(),
       context,
       currentSession: this.currentSession?.id
@@ -384,19 +394,23 @@ export class CostTrackingService {
     try {
       const result = await fn();
       const duration = Date.now() - startTime;
-      console.log(`✅ Automation completed: ${operation}`, {
+      console.log(`✅ [AUTOMATION TRACKING] Completed: ${operation}`, {
         duration,
-        durationFormatted: this.formatDuration(duration)
+        durationFormatted: this.formatDuration(duration),
+        willCreateTimeEntry: true
       });
       this.trackAutomation(operation, duration, context);
+      console.log(`📊 [AUTOMATION TRACKING] Time entry created for: ${operation}`);
       return result;
     } catch (error) {
       const duration = Date.now() - startTime;
-      console.log(`❌ Automation failed: ${operation}`, {
+      console.log(`❌ [AUTOMATION TRACKING] Failed: ${operation}`, {
         duration,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
+        willCreateFailedTimeEntry: true
       });
       this.trackAutomation(operation + '_failed', duration, context);
+      console.log(`📊 [AUTOMATION TRACKING] Failed time entry created for: ${operation}_failed`);
       throw error;
     }
   }

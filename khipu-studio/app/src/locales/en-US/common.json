@@ -2268,24 +2268,65 @@
     "string": "Time by Operation",
     "comment": "Title for the time breakdown by operation visualization"
   },
-  "cost.pageNames": {
-    "voice": "Voice Page",
-    "casting": "Casting Page", 
-    "characters": "Characters Page",
-    "planning": "Planning Page",
-    "manuscript": "Manuscript Page",
-    "packaging": "Packaging Page",
-    "cost": "Cost Page",
-    "home": "Home Page",
-    "unknown": "Unknown Page"
+  "cost.pageNames.voice": {
+    "string": "Voice Page",
+    "comment": "Display name for voice page in time tracking"
   },
-  "cost.operationNames": {
-    "character_detection": "Character Detection",
-    "characters:assignVoices": "Voice Assignment",
-    "characters:auditionVoice": "Voice Audition",
-    "plan:build": "Plan Generation",
-    "manuscript:parse": "Manuscript Parsing",
-    "audio:process": "Audio Processing"
+  "cost.pageNames.casting": {
+    "string": "Casting Page",
+    "comment": "Display name for casting page in time tracking"
+  },
+  "cost.pageNames.characters": {
+    "string": "Characters Page",
+    "comment": "Display name for characters page in time tracking"
+  },
+  "cost.pageNames.planning": {
+    "string": "Planning Page",
+    "comment": "Display name for planning page in time tracking"
+  },
+  "cost.pageNames.manuscript": {
+    "string": "Manuscript Page",
+    "comment": "Display name for manuscript page in time tracking"
+  },
+  "cost.pageNames.packaging": {
+    "string": "Packaging Page",
+    "comment": "Display name for packaging page in time tracking"
+  },
+  "cost.pageNames.cost": {
+    "string": "Cost Page",
+    "comment": "Display name for cost page in time tracking"
+  },
+  "cost.pageNames.home": {
+    "string": "Home Page",
+    "comment": "Display name for home page in time tracking"
+  },
+  "cost.pageNames.unknown": {
+    "string": "Unknown Page",
+    "comment": "Display name for unknown page in time tracking"
+  },
+  "cost.operationNames.character_detection": {
+    "string": "Character Detection",
+    "comment": "Display name for character detection operation"
+  },
+  "cost.operationNames.characters:assignVoices": {
+    "string": "Voice Assignment",
+    "comment": "Display name for voice assignment operation"
+  },
+  "cost.operationNames.characters:auditionVoice": {
+    "string": "Voice Audition",
+    "comment": "Display name for voice audition operation"
+  },
+  "cost.operationNames.plan:build": {
+    "string": "Plan Generation",
+    "comment": "Display name for plan generation operation"
+  },
+  "cost.operationNames.manuscript:parse": {
+    "string": "Manuscript Parsing",
+    "comment": "Display name for manuscript parsing operation"
+  },
+  "cost.operationNames.audio:process": {
+    "string": "Audio Processing",
+    "comment": "Display name for audio processing operation"
   },
   "cost.saved": {
     "string": "Saved",

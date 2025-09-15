@@ -2716,24 +2716,65 @@
     "string": "Tiempo por Operación",
     "comment": "Título para la visualización de desglose de tiempo por operación"
   },
-  "cost.pageNames": {
-    "voice": "Página de Voz",
-    "casting": "Página de Casting", 
-    "characters": "Página de Personajes",
-    "planning": "Página de Planificación",
-    "manuscript": "Página de Manuscrito",
-    "packaging": "Página de Empaquetado",
-    "cost": "Página de Costos",
-    "home": "Página de Inicio",
-    "unknown": "Página Desconocida"
+  "cost.pageNames.voice": {
+    "string": "Página de Voz",
+    "comment": "Nombre para mostrar de la página de voz en seguimiento de tiempo"
   },
-  "cost.operationNames": {
-    "character_detection": "Detección de Personajes",
-    "characters:assignVoices": "Asignación de Voces",
-    "characters:auditionVoice": "Audición de Voz",
-    "plan:build": "Generación de Plan",
-    "manuscript:parse": "Análisis de Manuscrito", 
-    "audio:process": "Procesamiento de Audio"
+  "cost.pageNames.casting": {
+    "string": "Página de Casting",
+    "comment": "Nombre para mostrar de la página de casting en seguimiento de tiempo"
+  },
+  "cost.pageNames.characters": {
+    "string": "Página de Personajes",
+    "comment": "Nombre para mostrar de la página de personajes en seguimiento de tiempo"
+  },
+  "cost.pageNames.planning": {
+    "string": "Página de Planificación",
+    "comment": "Nombre para mostrar de la página de planificación en seguimiento de tiempo"
+  },
+  "cost.pageNames.manuscript": {
+    "string": "Página de Manuscrito",
+    "comment": "Nombre para mostrar de la página de manuscrito en seguimiento de tiempo"
+  },
+  "cost.pageNames.packaging": {
+    "string": "Página de Empaquetado",
+    "comment": "Nombre para mostrar de la página de empaquetado en seguimiento de tiempo"
+  },
+  "cost.pageNames.cost": {
+    "string": "Página de Costos",
+    "comment": "Nombre para mostrar de la página de costos en seguimiento de tiempo"
+  },
+  "cost.pageNames.home": {
+    "string": "Página de Inicio",
+    "comment": "Nombre para mostrar de la página de inicio en seguimiento de tiempo"
+  },
+  "cost.pageNames.unknown": {
+    "string": "Página Desconocida",
+    "comment": "Nombre para mostrar de página desconocida en seguimiento de tiempo"
+  },
+  "cost.operationNames.character_detection": {
+    "string": "Detección de Personajes",
+    "comment": "Nombre para mostrar de la operación de detección de personajes"
+  },
+  "cost.operationNames.characters:assignVoices": {
+    "string": "Asignación de Voces",
+    "comment": "Nombre para mostrar de la operación de asignación de voces"
+  },
+  "cost.operationNames.characters:auditionVoice": {
+    "string": "Audición de Voz",
+    "comment": "Nombre para mostrar de la operación de audición de voz"
+  },
+  "cost.operationNames.plan:build": {
+    "string": "Generación de Plan",
+    "comment": "Nombre para mostrar de la operación de generación de plan"
+  },
+  "cost.operationNames.manuscript:parse": {
+    "string": "Análisis de Manuscrito",
+    "comment": "Nombre para mostrar de la operación de análisis de manuscrito"
+  },
+  "cost.operationNames.audio:process": {
+    "string": "Procesamiento de Audio",
+    "comment": "Nombre para mostrar de la operación de procesamiento de audio"
   },
   "cost.saved": {
     "string": "Ahorrado",
