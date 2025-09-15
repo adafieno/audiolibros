@@ -843,81 +843,80 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       <PageHeader 
         title={t("audioProduction.pageTitle")}
         description={t("audioProduction.pageDescription")}
+        actions={
+          <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
+            {/* Chapter Selector */}
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <label style={{ fontSize: "14px", fontWeight: "500", color: "var(--text)", whiteSpace: "nowrap" }}>
+                {t("audioProduction.chapterLabel")}:
+              </label>
+              <select
+                value={selectedChapter}
+                onChange={(e) => handleChapterSelect(e.target.value)}
+                style={{
+                  padding: "8px 12px",
+                  fontSize: "14px",
+                  border: "1px solid var(--border)",
+                  borderRadius: "6px",
+                  backgroundColor: "var(--input)",
+                  color: "var(--text)",
+                  minWidth: "200px",
+                  cursor: "pointer",
+                  appearance: "none",
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: "right 8px center",
+                  backgroundRepeat: "no-repeat",
+                  backgroundSize: "16px",
+                  paddingRight: "32px"
+                }}
+              >
+                <option value="" style={{ backgroundColor: "var(--panel)", color: "var(--text)" }}>
+                  {t("audioProduction.selectChapter")}
+                </option>
+                {getChaptersWithPlans().map((chapter) => (
+                  <option 
+                    key={chapter.id} 
+                    value={chapter.id}
+                    style={{ 
+                      backgroundColor: "var(--panel)", 
+                      color: "var(--text)",
+                      padding: "4px 8px"
+                    }}
+                  >
+                    📝 {chapter.id} {chapter.title ? `- ${chapter.title}` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Main Action Button */}
+            {selectedChapter && (
+              <StandardButton
+                variant="primary"
+                onClick={handleGenerateChapterAudio}
+                disabled={audioSegments.length === 0}
+              >
+                {t("audioProduction.generateChapterAudio")}
+              </StandardButton>
+            )}
+          </div>
+        }
       />
 
-      {/* Chapter selector with integrated audio production progress */}
-      <div style={{ marginBottom: "16px", padding: "16px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "6px" }}>
-        <div style={{ display: "flex", gap: "16px", alignItems: "center", flexWrap: "wrap" }}>
-          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-            <label style={{ fontSize: "14px", fontWeight: "500", color: "var(--text)" }}>
-              {t("audioProduction.chapterLabel")}:
-            </label>
-            <select
-              value={selectedChapter}
-              onChange={(e) => handleChapterSelect(e.target.value)}
-              style={{
-                padding: "8px 12px",
-                fontSize: "14px",
-                border: "1px solid var(--border)",
-                borderRadius: "6px",
-                backgroundColor: "var(--input)",
-                color: "var(--text)",
-                minWidth: "200px",
-                cursor: "pointer",
-                appearance: "none",
-                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                backgroundPosition: "right 8px center",
-                backgroundRepeat: "no-repeat",
-                backgroundSize: "16px",
-                paddingRight: "32px"
-              }}
-            >
-              <option value="" style={{ backgroundColor: "var(--panel)", color: "var(--text)" }}>
-                                {t("audioProduction.selectChapter")}
-              </option>
-              {getChaptersWithPlans().map((chapter) => (
-                <option 
-                  key={chapter.id} 
-                  value={chapter.id}
-                  style={{ 
-                    backgroundColor: "var(--panel)", 
-                    color: "var(--text)",
-                    padding: "4px 8px"
-                  }}
-                >
-                  📝 {chapter.id} {chapter.title ? `- ${chapter.title}` : ""}
-                </option>
-              ))}
-            </select>
-          </div>
-          
-          {/* Audio Production Progress status */}
-          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-            {(() => {
-              const audioCompleteCount = Array.from(chapterStatus.values()).filter(status => status.isAudioComplete).length;
-              const totalChapters = chapters.length;
-              const allComplete = totalChapters > 0 && audioCompleteCount === totalChapters;
-              
-              return (
-                <span style={{ 
-                  fontSize: "12px", 
-                  fontWeight: "400",
-                  color: allComplete ? "var(--success)" : "var(--muted)",
-                  backgroundColor: allComplete ? "rgba(34, 197, 94, 0.1)" : "rgba(107, 114, 126, 0.1)",
-                  padding: "4px 8px",
-                  borderRadius: "4px",
-                  whiteSpace: "nowrap"
-                }}>
-                  {allComplete 
-                    ? t("audioProduction.audioProductionComplete") 
-                    : t("audioProduction.chaptersLoaded", { completed: audioCompleteCount, total: totalChapters })
-                  }
-                </span>
-              );
-            })()}
-          </div>
+      {/* Status message */}
+      {message && (
+        <div style={{
+          marginBottom: "16px",
+          padding: "12px",
+          borderRadius: "6px",
+          fontSize: "14px",
+          backgroundColor: "var(--panelAccent)",
+          border: "1px solid var(--border)",
+          color: "var(--text)"
+        }}>
+          {message}
         </div>
-      </div>
+      )}
 
       {/* Action Buttons Toolbar - Unified audio production controls */}
       {selectedChapter && (
@@ -932,27 +931,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           border: "1px solid var(--border)",
           borderRadius: "4px"
         }}>
-          {/* Generation Controls */}
-          <StandardButton
-            variant="primary"
-            onClick={handleGenerateChapterAudio}
-            disabled={audioSegments.length === 0}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px"
-            }}
-          >
-            {t("audioProduction.generateChapterAudio")}
-          </StandardButton>
-
-          {/* Separator */}
-          <div style={{ 
-            width: "1px", 
-            height: "24px", 
-            backgroundColor: "var(--border)" 
-          }}></div>
-
           {/* Preview Controls with Navigation */}
           <div style={{
             display: "flex",
@@ -1022,7 +1000,8 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             </StandardButton>
           </div>
 
-          <button
+          <StandardButton
+            variant="primary"
             onClick={async () => {
               // Playlist approach - plays all segments continuously
               if (audioSegments.length === 0) {
@@ -1136,40 +1115,22 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             }}
             disabled={audioSegments.length === 0 || audioPreview.isLoading}
             style={{
-              padding: "10px 16px",
-              fontSize: "13px",
-              fontWeight: 500,
-              backgroundColor: audioSegments.length > 0 ? "var(--accent)" : "var(--muted)",
-              color: "white",
-              border: "1px solid transparent",
-              borderRadius: "4px",
-              cursor: audioSegments.length > 0 ? "pointer" : "not-allowed",
               marginLeft: "12px"
             }}
           >
             🎬 {t("audioProduction.playAll")}
-          </button>
+          </StandardButton>
 
-          <button
+          <StandardButton
+            variant="danger"
             onClick={handleStopAudio}
             disabled={!audioPreview.isPlaying && !audioPreview.isLoading}
             style={{
-              padding: "10px 16px",
-              fontSize: "13px",
-              fontWeight: 500,
-              backgroundColor: (audioPreview.isPlaying || audioPreview.isLoading) ? "var(--error)" : "var(--muted)",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: (audioPreview.isPlaying || audioPreview.isLoading) ? "pointer" : "not-allowed",
-              opacity: (audioPreview.isPlaying || audioPreview.isLoading) ? 1 : 0.5,
-              display: "flex",
-              alignItems: "center",
-              gap: "6px"
+              marginLeft: "6px"
             }}
           >
             ⏹ {t("audioProduction.stop")}
-          </button>
+          </StandardButton>
 
           {/* Separator for additional segments */}
           <div style={{ 
@@ -1180,57 +1141,18 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           }}></div>
 
           {/* Additional Segments Controls */}
-          <button
+          <StandardButton
+            variant="secondary"
+            size="compact"
             onClick={() => {
               setInsertPosition(selectedRowIndex + 1);
               setShowSfxDialog(true);
             }}
             disabled={audioSegments.length === 0}
-            style={{
-              padding: "8px 12px",
-              fontSize: "12px",
-              fontWeight: 500,
-              backgroundColor: audioSegments.length > 0 ? "var(--accent)" : "var(--muted)",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: audioSegments.length > 0 ? "pointer" : "not-allowed",
-              opacity: audioSegments.length > 0 ? 1 : 0.6,
-              display: "flex",
-              alignItems: "center",
-              gap: "4px"
-            }}
             title={t("audioProduction.insertSoundEffect")}
           >
             🎵 {t("audioProduction.addSfx")}
-          </button>
-
-          {/* Status indicator - minimal */}
-          <div style={{
-            marginLeft: "auto",
-            fontSize: "11px",
-            color: "var(--textSecondary)",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px"
-          }}>
-            {audioPreview.error ? (
-              <span style={{ color: "var(--error)" }}>❌ {t("audioProduction.error")}</span>
-            ) : audioPreview.isLoading ? (
-              <span style={{ color: "var(--warning)" }}>🔄 {t("audioProduction.processing")}</span>
-            ) : audioPreview.isPlaying ? (
-              <span style={{ color: "var(--success)" }}>
-                🎵 {t("audioProduction.playing")}
-                {audioPreview.duration > 0 && (
-                  <span style={{ marginLeft: "8px" }}>
-                    {Math.floor(audioPreview.currentTime)}s / {Math.floor(audioPreview.duration)}s
-                  </span>
-                )}
-              </span>
-            ) : (
-              <span>{t("audioProduction.segmentsLoaded", { count: audioSegments.length })}</span>
-            )}
-          </div>
+          </StandardButton>
         </div>
       )}
 
@@ -1289,7 +1211,9 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                         {selectedRowIndex === index ? "▶" : ""}
                       </td>
                       <td style={{ padding: "4px", textAlign: "center" }}>
-                        <button
+                        <StandardButton
+                          variant="secondary"
+                          size="compact"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleToggleRevisionMark(index);
@@ -1297,18 +1221,18 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                           style={{
                             background: "none",
                             border: "none",
-                            cursor: "pointer",
-                            fontSize: "14px",
                             padding: "2px",
                             color: revisionMarks.has(segment.segmentId.toString()) ? "var(--warning)" : "var(--muted)",
                             opacity: revisionMarks.has(segment.segmentId.toString()) ? 1 : 0.5,
+                            minWidth: "auto",
+                            minHeight: "auto"
                           }}
                           title={revisionMarks.has(segment.segmentId.toString()) ? 
                             t("audioProduction.removeRevisionMark") : 
                             t("audioProduction.markForRevision")}
                         >
                           {revisionMarks.has(segment.segmentId.toString()) ? "🚩" : "🏳"}
-                        </button>
+                        </StandardButton>
                       </td>
                       <td style={{ padding: "8px", color: "inherit" }}>
                         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
@@ -2045,20 +1969,12 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             </div>
 
             <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
-              <button
+              <StandardButton
+                variant="secondary"
                 onClick={() => setShowSfxDialog(false)}
-                style={{
-                  padding: "8px 16px",
-                  fontSize: "13px",
-                  backgroundColor: "var(--muted)",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer"
-                }}
               >
                 {t("common.cancel")}
-              </button>
+              </StandardButton>
             </div>
           </div>
         </div>
