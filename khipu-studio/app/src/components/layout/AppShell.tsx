@@ -26,7 +26,7 @@ const projectRoutes: RouteItem[] = [
   { to: "/characters", key: "nav.characters", icon: "🎭", workflowStep: "characters" },
   { to: "/planning",   key: "nav.planning",   icon: "🪄", workflowStep: "planning" },
   { to: "/voice",      key: "nav.voice",      icon: "🎙️", workflowStep: "voice" },
-  { to: "/packaging",  key: "nav.packaging",  icon: "📦", workflowStep: "characters" },
+  { to: "/packaging",  key: "nav.packaging",  icon: "📦", workflowStep: "voice" },
   { to: "/cost",       key: "nav.cost",       icon: "💰", workflowStep: "project" }, // Always at end, right before Settings
 ];
 
@@ -69,7 +69,7 @@ export function AppShell(props: { title?: string; pageName?: string; projectName
       { step: "characters", labelKey: "nav.characters" },
       { step: "planning", labelKey: "nav.planning" },
       { step: "voice", labelKey: "nav.voice" },
-      { step: "characters", labelKey: "nav.packaging" },
+      { step: "export", labelKey: "nav.packaging" },
     ];
 
     const completed = steps.filter(s => isStepCompleted(s.step));

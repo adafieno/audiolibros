@@ -333,7 +333,7 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
         description={t("packaging.description")}
         actions={
           <WorkflowCompleteButton 
-            step="characters"
+            step="export"
             disabled={enabledPlatforms.length === 0 || readyPlatforms.length === 0}
           >
             {t("packaging.markComplete")}
