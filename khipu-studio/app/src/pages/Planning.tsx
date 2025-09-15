@@ -647,7 +647,7 @@ function EditablePreview({
                   padding: "6px 12px"
                 }}
               >
-                🗑️ Eliminar
+                Delete
               </StandardButton>
               
               <StandardButton

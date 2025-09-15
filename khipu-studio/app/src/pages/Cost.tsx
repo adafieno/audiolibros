@@ -231,7 +231,7 @@ export default function Cost() {
               marginTop: '16px'
             }}
           >
-            🧪 Test with sample project
+            {t('cost.testWithSampleProject', 'Test with sample project')}
           </StandardButton>
         </div>
       </div>
@@ -399,7 +399,7 @@ export default function Cost() {
               gap: '6px'
             }}
           >
-            🗑️ {t('cost.clearData', 'Clear')}
+            {t('cost.clearData', 'Clear')}
           </StandardButton>
         </div>
       </div>

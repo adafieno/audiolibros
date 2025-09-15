@@ -187,7 +187,7 @@ export const AudioProcessingTestControls: React.FC<AudioProcessingTestControlsPr
         size="compact"
         style={{ fontSize: '12px' }}
       >
-        🗑️ Clear Cache (if needed)
+        Clear Cache (if needed)
       </StandardButton>
     </div>
   );
