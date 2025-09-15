@@ -887,6 +887,26 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               </select>
             </div>
 
+            {/* Insert SFX Button */}
+            {selectedChapter && audioSegments.length > 0 && (
+              <StandardButton
+                variant="secondary"
+                size="compact"
+                onClick={() => {
+                  setInsertPosition(selectedRowIndex + 1);
+                  setShowSfxDialog(true);
+                }}
+                title={t("audioProduction.insertSoundEffect")}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px"
+                }}
+              >
+                🎵 Insert SFX
+              </StandardButton>
+            )}
+
             {/* Main Action Button */}
             {selectedChapter && (
               <StandardButton
@@ -1027,13 +1047,14 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                 <div style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "2px",
+                  gap: "1px",
                   border: "1px solid var(--border)",
                   borderRadius: "6px",
-                  padding: "2px"
+                  padding: "1px"
                 }}>
                   <StandardButton
                     variant="primary"
+                    size="compact"
                     onClick={async () => {
                       if (selectedRowIndex > 0) {
                         const newIndex = selectedRowIndex - 1;
@@ -1047,7 +1068,9 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: "4px"
+                      padding: "4px 8px",
+                      minWidth: "36px",
+                      justifyContent: "center"
                     }}
                   >
                     |◀
@@ -1055,23 +1078,25 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
                   <StandardButton
                     variant={audioPreview.isPlaying && audioPreview.playbackState.segmentId === audioSegments[selectedRowIndex]?.chunkId ? "warning" : "primary"}
+                    size="compact"
                     onClick={() => handlePlaySegment(selectedRowIndex)}
                     disabled={audioSegments.length === 0 || audioPreview.isLoading}
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: "6px",
-                      minWidth: "80px",
+                      padding: "4px 10px",
+                      minWidth: "50px",
                       justifyContent: "center"
                     }}
                   >
-                    {audioPreview.isLoading ? `⏳ ${t("audioProduction.loading")}` :
-                     audioPreview.isPlaying && audioPreview.playbackState.segmentId === audioSegments[selectedRowIndex]?.chunkId ? `⏸ ${t("audioProduction.pause")}` :
-                     `▶ ${t("audioProduction.play")}`}
+                    {audioPreview.isLoading ? `⏳` :
+                     audioPreview.isPlaying && audioPreview.playbackState.segmentId === audioSegments[selectedRowIndex]?.chunkId ? `⏸` :
+                     `▶`}
                   </StandardButton>
 
                   <StandardButton
                     variant="primary"
+                    size="compact"
                     onClick={async () => {
                       if (selectedRowIndex < audioSegments.length - 1) {
                         const newIndex = selectedRowIndex + 1;
@@ -1085,7 +1110,9 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: "4px"
+                      padding: "4px 8px",
+                      minWidth: "36px",
+                      justifyContent: "center"
                     }}
                   >
                     ▶|
@@ -1094,6 +1121,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
                 <StandardButton
                   variant="primary"
+                  size="compact"
                   onClick={async () => {
                     // Playlist approach - plays all segments continuously
                     if (audioSegments.length === 0) {
@@ -1205,7 +1233,8 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                   }}
                   disabled={audioSegments.length === 0 || audioPreview.isLoading}
                   style={{
-                    marginLeft: "12px"
+                    marginLeft: "8px",
+                    padding: "4px 10px"
                   }}
                 >
                   🎬 {t("audioProduction.playAll")}
@@ -1213,10 +1242,12 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
                 <StandardButton
                   variant="danger"
+                  size="compact"
                   onClick={handleStopAudio}
                   disabled={!audioPreview.isPlaying && !audioPreview.isLoading}
                   style={{
-                    marginLeft: "6px"
+                    marginLeft: "4px",
+                    padding: "4px 10px"
                   }}
                 >
                   ⏹ {t("audioProduction.stop")}
@@ -1230,19 +1261,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                   margin: "0 8px" 
                 }}></div>
 
-                {/* Additional Segments Controls */}
-                <StandardButton
-                  variant="secondary"
-                  size="compact"
-                  onClick={() => {
-                    setInsertPosition(selectedRowIndex + 1);
-                    setShowSfxDialog(true);
-                  }}
-                  disabled={audioSegments.length === 0}
-                  title={t("audioProduction.insertSoundEffect")}
-                >
-                  🎵 {t("audioProduction.addSfx")}
-                </StandardButton>
+                {/* Additional Segments Controls - moved to header */}
               </div>
             )}
             
