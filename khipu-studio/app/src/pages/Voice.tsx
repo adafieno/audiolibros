@@ -717,6 +717,13 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         return;
       }
 
+      // Check if current SFX segment is already playing and pause it
+      if (currentSfxAudio?.isPlaying && currentSfxAudio.segmentId === segment.chunkId) {
+        // Pause if currently playing this SFX segment
+        currentSfxAudio.audio.pause();
+        return;
+      }
+
       // Handle imported audio files (SFX segments) differently
       // ⚠️ IMPORTANT: SFX segments MUST bypass all caching and TTS processing
       if (segment.segmentType === 'sfx' && segment.sfxFile) {
@@ -1520,7 +1527,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                   variant="danger"
                   size="compact"
                   onClick={handleStopAudio}
-                  disabled={!audioPreview.isPlaying && !audioPreview.isLoading}
+                  disabled={!isAnyAudioPlaying() && !audioPreview.isLoading}
                   style={{
                     marginLeft: "4px",
                     padding: "4px 10px"
