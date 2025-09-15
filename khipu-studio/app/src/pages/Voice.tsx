@@ -52,7 +52,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [chapterStatus, setChapterStatus] = useState<Map<string, ChapterStatus>>(new Map());
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<string>("");
   const [selectedChapter, setSelectedChapter] = useState<string>("");
   const [audioSegments, setAudioSegments] = useState<AudioSegmentRow[]>([]);
   const [generatingAudio, setGeneratingAudio] = useState<Set<string>>(new Set());
@@ -63,6 +62,15 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   // Additional segments state
   const [showSfxDialog, setShowSfxDialog] = useState(false);
   const [insertPosition, setInsertPosition] = useState<number>(-1); // Where to insert new segment
+  
+  // Effect chain section collapse states - all collapsed by default
+  const [sectionExpanded, setSectionExpanded] = useState({
+    noiseCleanup: false,
+    dynamicControl: false,
+    eqShaping: false,
+    spatialEnhancement: false,
+    consistencyMastering: false
+  });
 
   // Audio preview functionality
   const audioPreview = useAudioPreview();
@@ -252,7 +260,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     }
 
     try {
-      setMessage(t("audioProduction.loadingPlanData"));
       const planPath = `ssml/plans/${chapterId}.plan.json`;
       console.log("Loading plan from:", planPath);
       
@@ -271,7 +278,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
       if (!planData) {
         console.warn("Plan file is null or undefined");
-        setMessage(t("audioProduction.noPlanDataFound"));
         return;
       }
 
@@ -295,7 +301,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         }));
       } else {
         console.warn("Plan file has no valid segments or chunks data:", planData);
-        setMessage(t("audioProduction.invalidPlanData"));
+
         return;
       }
 
@@ -453,32 +459,28 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             return segment;
           }));
           
-          setMessage(t("audioProduction.loadedSegmentsWithChains", { segments: audioSegmentRows.length, chains: Object.keys(savedProcessingChains).length }));
-        } else {
-          setMessage(t("audioProduction.loadedSegmentsWithAudio", { segments: audioSegmentRows.length, completed: completionStatus.completedSegments }));
         }
       } catch (error) {
         console.warn('Failed to load processing chains:', error);
-        setMessage(t("audioProduction.loadedSegmentsWithAudio", { segments: audioSegmentRows.length, completed: completionStatus.completedSegments }));
       }
       
       // Update processing chain from metadata - this would set a default for all segments
       // For now, we'll comment this out to let segments manage their own chains
       // setProcessingChain(audioMetadata.globalProcessingChain);
       
-      setMessage(t("audioProduction.loadedSegmentsWithAudio", { segments: audioSegmentRows.length, completed: completionStatus.completedSegments }));
+
     } catch (error) {
       console.error("Failed to load plan data:", error);
-      setMessage(t("audioProduction.failedToLoadPlanData", { error: error instanceof Error ? error.message : 'Unknown error' }));
+
     }
-  }, [root, audioProductionService, t]);
+  }, [root, audioProductionService]);
 
   const loadChapters = useCallback(async () => {
     if (!root) return;
     
     try {
       setLoading(true);
-      setMessage(t("audioProduction.loadingChapters"));
+
       onStatus(t("audioProduction.loadingChapters"));
       
       const chapterList = await window.khipu!.call("chapters:list", { projectRoot: root });
@@ -499,7 +501,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       }
     } catch (error) {
       console.error("Failed to load chapters:", error);
-      setMessage(t("audioProduction.failedToLoadChapters"));
+
       onStatus("");
     } finally {
       setLoading(false);
@@ -525,7 +527,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     setGeneratingAudio(prev => new Set(prev).add(segment.chunkId));
     
     try {
-      setMessage(t("audioProduction.generatingAudioForSegment", { chunkId: segment.chunkId }));
+
       
       // TODO: Call audio generation API
       // await window.khipu!.call("audio:generate", {
@@ -560,10 +562,10 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         return updated;
       });
       
-      setMessage(t("audioProduction.audioGeneratedForSegment", { chunkId: segment.chunkId }));
+
     } catch (error) {
       console.error("Failed to generate audio:", error);
-      setMessage(t("audioProduction.failedToGenerateAudio", { chunkId: segment.chunkId }));
+
     } finally {
       setGeneratingAudio(prev => {
         const next = new Set(prev);
@@ -571,12 +573,12 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         return next;
       });
     }
-  }, [audioSegments, selectedChapter, audioProductionService, generatingAudio, t]);
+  }, [audioSegments, selectedChapter, audioProductionService, generatingAudio]);
 
   const handleGenerateChapterAudio = useCallback(async () => {
     if (!selectedChapter || audioSegments.length === 0) return;
 
-    setMessage(t("audioProduction.generatingChapterAudio"));
+
     
     for (let i = 0; i < audioSegments.length; i++) {
       if (!audioSegments[i].hasAudio) {
@@ -584,8 +586,8 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       }
     }
     
-    setMessage(t("audioProduction.chapterAudioComplete"));
-  }, [selectedChapter, audioSegments, handleGenerateSegmentAudio, t]);
+
+  }, [selectedChapter, audioSegments, handleGenerateSegmentAudio]);
 
   // Audio preview handlers
   const handlePlaySegment = useCallback(async (segmentIndex?: number) => {
@@ -593,7 +595,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     const segment = audioSegments[index];
     
     if (!segment || !root) {
-      setMessage(t("audioProduction.noSegmentSelected"));
+
       return;
     }
 
@@ -672,9 +674,9 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       }
     } catch (error) {
       console.error("Playback failed:", error);
-      setMessage(t("audioProduction.previewFailed", { error: error instanceof Error ? error.message : String(error) }));
+
     }
-  }, [selectedRowIndex, audioSegments, audioPreview, currentProcessingChain, root, selectedChapter, t]);
+  }, [selectedRowIndex, audioSegments, audioPreview, currentProcessingChain, root, selectedChapter]);
 
   const handleStopAudio = useCallback(async () => {
     try {
@@ -780,10 +782,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         saveRevisionToAudioMetadata(segment.chunkId, !isCurrentlyMarked) // Audio metadata still uses chunkId for file operations
       ]);
 
-      setMessage(isCurrentlyMarked 
-        ? t("audioProduction.revisionMarkRemoved")
-        : t("audioProduction.revisionMarkAdded"));
-
     } catch (error) {
       console.error("Error updating revision mark:", error);
       // Revert local state on error
@@ -796,9 +794,9 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         }
         return newMarks;
       });
-      setMessage(t("audioProduction.revisionMarkError"));
+
     }
-  }, [audioSegments, revisionMarks, root, selectedChapter, t, saveRevisionToPlan, saveRevisionToAudioMetadata]);
+  }, [audioSegments, revisionMarks, root, selectedChapter, saveRevisionToPlan, saveRevisionToAudioMetadata]);
 
   useEffect(() => {
     loadChapters();
@@ -902,259 +900,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           </div>
         }
       />
-
-      {/* Status message */}
-      {message && (
-        <div style={{
-          marginBottom: "16px",
-          padding: "12px",
-          borderRadius: "6px",
-          fontSize: "14px",
-          backgroundColor: "var(--panelAccent)",
-          border: "1px solid var(--border)",
-          color: "var(--text)"
-        }}>
-          {message}
-        </div>
-      )}
-
-      {/* Action Buttons Toolbar - Unified audio production controls */}
-      {selectedChapter && (
-        <div style={{ 
-          display: "flex", 
-          alignItems: "center", 
-          gap: "12px",
-          marginBottom: "24px",
-          flexWrap: "wrap",
-          padding: "12px",
-          backgroundColor: "var(--panel)",
-          border: "1px solid var(--border)",
-          borderRadius: "4px"
-        }}>
-          {/* Preview Controls with Navigation */}
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "2px",
-            border: "1px solid var(--border)",
-            borderRadius: "6px",
-            padding: "2px"
-          }}>
-            <StandardButton
-              variant="primary"
-              onClick={async () => {
-                if (selectedRowIndex > 0) {
-                  const newIndex = selectedRowIndex - 1;
-                  setSelectedRowIndex(newIndex);
-                  // Automatically play the previous segment
-                  await handlePlaySegment(newIndex);
-                }
-              }}
-              disabled={audioSegments.length === 0 || selectedRowIndex <= 0 || audioPreview.isLoading}
-              title={t("audioProduction.previousSegment")}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "4px"
-              }}
-            >
-              |◀
-            </StandardButton>
-
-            <StandardButton
-              variant={audioPreview.isPlaying && audioPreview.playbackState.segmentId === audioSegments[selectedRowIndex]?.chunkId ? "warning" : "primary"}
-              onClick={() => handlePlaySegment(selectedRowIndex)}
-              disabled={audioSegments.length === 0 || audioPreview.isLoading}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                minWidth: "80px",
-                justifyContent: "center"
-              }}
-            >
-              {audioPreview.isLoading ? `⏳ ${t("audioProduction.loading")}` :
-               audioPreview.isPlaying && audioPreview.playbackState.segmentId === audioSegments[selectedRowIndex]?.chunkId ? `⏸ ${t("audioProduction.pause")}` :
-               `▶ ${t("audioProduction.play")}`}
-            </StandardButton>
-
-            <StandardButton
-              variant="primary"
-              onClick={async () => {
-                if (selectedRowIndex < audioSegments.length - 1) {
-                  const newIndex = selectedRowIndex + 1;
-                  setSelectedRowIndex(newIndex);
-                  // Automatically play the next segment
-                  await handlePlaySegment(newIndex);
-                }
-              }}
-              disabled={audioSegments.length === 0 || selectedRowIndex >= audioSegments.length - 1 || audioPreview.isLoading}
-              title={t("audioProduction.nextSegment")}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "4px"
-              }}
-            >
-              ▶|
-            </StandardButton>
-          </div>
-
-          <StandardButton
-            variant="primary"
-            onClick={async () => {
-              // Playlist approach - plays all segments continuously
-              if (audioSegments.length === 0) {
-                setMessage(t("audioProduction.noSegmentsAvailable"));
-                return;
-              }
-
-              if (!root) {
-                setMessage(t("audioProduction.projectNotLoaded"));
-                return;
-              }
-
-              const startIndex = selectedRowIndex >= 0 ? selectedRowIndex : 0;
-              
-              try {
-                console.log(`🎬 Starting Play All from segment ${startIndex}`);
-                
-                // Load shared data once
-                const [projectConfig, charactersData] = await Promise.all([
-                  window.khipu!.call("fs:read", {
-                    projectRoot: root,
-                    relPath: "project.khipu.json",
-                    json: true,
-                  }).catch(() => null),
-                  
-                  window.khipu!.call("fs:read", {
-                    projectRoot: root,
-                    relPath: "dossier/characters.json",
-                    json: true,
-                  }).catch(() => null),
-                ]);
-
-                if (!projectConfig || !charactersData) {
-                  throw new Error("Could not load project data");
-                }
-
-                // Prepare segments for playlist
-                const segmentsToPlay = audioSegments.slice(startIndex);
-                const playlistSegments = [];
-
-                for (const segment of segmentsToPlay) {
-                  // Find character data
-                  const characters = Array.isArray(charactersData) ? charactersData : (charactersData as { characters?: unknown[] })?.characters;
-                  const characterData = characters?.find((char: unknown) => {
-                    const character = char as { name?: string; id?: string };
-                    return character.name === segment.voice || character.id === segment.voice;
-                  });
-
-                  if (!characterData) {
-                    console.warn(`⚠️ No character found for ${segment.voice}`);
-                    continue;
-                  }
-
-                  const character = characterData as Character;
-                  if (!character.voiceAssignment) {
-                    console.warn(`⚠️ No voice assignment for ${character.name}`);
-                    continue;
-                  }
-
-                  const processingChain = segment.processingChain || getCleanPolishedPreset();
-
-                  playlistSegments.push({
-                    segmentId: `segment_${segment.chunkId}`,
-                    processingChain,
-                    segment: {
-                      segment_id: parseInt(segment.chunkId || "0"),
-                      start_idx: 0,
-                      end_idx: segment.text?.length || 0,
-                      delimiter: "",
-                      text: segment.text || "",
-                      voice: segment.voice || ""
-                    },
-                    character,
-                    projectConfig: projectConfig as ProjectConfig
-                  });
-                }
-
-                if (playlistSegments.length === 0) {
-                  throw new Error("No valid segments found");
-                }
-
-                console.log(`🎉 Playing ${playlistSegments.length} segments as continuous playlist`);
-
-                // Track which segments are actually in the playlist (may be fewer than total)
-                const playlistStartIndex = startIndex;
-                const processedSegmentIndexes: number[] = [];
-                
-                // Build mapping of processed segments back to original indexes
-                for (let i = 0; i < segmentsToPlay.length; i++) {
-                  const segment = segmentsToPlay[i];
-                  const segmentInPlaylist = playlistSegments.find(ps => ps.segmentId === `segment_${segment.chunkId}`);
-                  if (segmentInPlaylist) {
-                    processedSegmentIndexes.push(playlistStartIndex + i);
-                  }
-                }
-
-                await audioPreview.playAllAsPlaylist(playlistSegments, (currentSegmentIndex: number, segmentDurations: number[]) => {
-                  // Map the playlist segment index back to the original grid index
-                  if (currentSegmentIndex >= 0 && currentSegmentIndex < processedSegmentIndexes.length) {
-                    const gridIndex = processedSegmentIndexes[currentSegmentIndex];
-                    if (gridIndex !== selectedRowIndex) {
-                      console.log(`🎯 Progress: Playing segment ${currentSegmentIndex + 1}/${segmentDurations.length}, grid row ${gridIndex + 1}`);
-                      setSelectedRowIndex(gridIndex);
-                    }
-                  }
-                });
-                
-              } catch (error) {
-                console.error("🚫 Play All failed:", error);
-              }
-            }}
-            disabled={audioSegments.length === 0 || audioPreview.isLoading}
-            style={{
-              marginLeft: "12px"
-            }}
-          >
-            🎬 {t("audioProduction.playAll")}
-          </StandardButton>
-
-          <StandardButton
-            variant="danger"
-            onClick={handleStopAudio}
-            disabled={!audioPreview.isPlaying && !audioPreview.isLoading}
-            style={{
-              marginLeft: "6px"
-            }}
-          >
-            ⏹ {t("audioProduction.stop")}
-          </StandardButton>
-
-          {/* Separator for additional segments */}
-          <div style={{ 
-            width: "1px", 
-            height: "24px", 
-            backgroundColor: "var(--border)",
-            margin: "0 8px" 
-          }}></div>
-
-          {/* Additional Segments Controls */}
-          <StandardButton
-            variant="secondary"
-            size="compact"
-            onClick={() => {
-              setInsertPosition(selectedRowIndex + 1);
-              setShowSfxDialog(true);
-            }}
-            disabled={audioSegments.length === 0}
-            title={t("audioProduction.insertSoundEffect")}
-          >
-            🎵 {t("audioProduction.addSfx")}
-          </StandardButton>
-        </div>
-      )}
 
       {/* Check if no chapters with plans are available */}
       {chapters.length > 0 && getChaptersWithPlans().length === 0 ? (
@@ -1264,6 +1009,243 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               />
             )}
             
+            {/* Action Buttons Toolbar - Unified audio production controls */}
+            {selectedRowIndex >= 0 && selectedRowIndex < audioSegments.length && (
+              <div style={{ 
+                display: "flex", 
+                alignItems: "center", 
+                gap: "12px",
+                marginBottom: "12px",
+                marginTop: "12px",
+                flexWrap: "wrap",
+                padding: "12px",
+                backgroundColor: "var(--panel)",
+                border: "1px solid var(--border)",
+                borderRadius: "4px"
+              }}>
+                {/* Preview Controls with Navigation */}
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "2px",
+                  border: "1px solid var(--border)",
+                  borderRadius: "6px",
+                  padding: "2px"
+                }}>
+                  <StandardButton
+                    variant="primary"
+                    onClick={async () => {
+                      if (selectedRowIndex > 0) {
+                        const newIndex = selectedRowIndex - 1;
+                        setSelectedRowIndex(newIndex);
+                        // Automatically play the previous segment
+                        await handlePlaySegment(newIndex);
+                      }
+                    }}
+                    disabled={audioSegments.length === 0 || selectedRowIndex <= 0 || audioPreview.isLoading}
+                    title={t("audioProduction.previousSegment")}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px"
+                    }}
+                  >
+                    |◀
+                  </StandardButton>
+
+                  <StandardButton
+                    variant={audioPreview.isPlaying && audioPreview.playbackState.segmentId === audioSegments[selectedRowIndex]?.chunkId ? "warning" : "primary"}
+                    onClick={() => handlePlaySegment(selectedRowIndex)}
+                    disabled={audioSegments.length === 0 || audioPreview.isLoading}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      minWidth: "80px",
+                      justifyContent: "center"
+                    }}
+                  >
+                    {audioPreview.isLoading ? `⏳ ${t("audioProduction.loading")}` :
+                     audioPreview.isPlaying && audioPreview.playbackState.segmentId === audioSegments[selectedRowIndex]?.chunkId ? `⏸ ${t("audioProduction.pause")}` :
+                     `▶ ${t("audioProduction.play")}`}
+                  </StandardButton>
+
+                  <StandardButton
+                    variant="primary"
+                    onClick={async () => {
+                      if (selectedRowIndex < audioSegments.length - 1) {
+                        const newIndex = selectedRowIndex + 1;
+                        setSelectedRowIndex(newIndex);
+                        // Automatically play the next segment
+                        await handlePlaySegment(newIndex);
+                      }
+                    }}
+                    disabled={audioSegments.length === 0 || selectedRowIndex >= audioSegments.length - 1 || audioPreview.isLoading}
+                    title={t("audioProduction.nextSegment")}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px"
+                    }}
+                  >
+                    ▶|
+                  </StandardButton>
+                </div>
+
+                <StandardButton
+                  variant="primary"
+                  onClick={async () => {
+                    // Playlist approach - plays all segments continuously
+                    if (audioSegments.length === 0) {
+                      return;
+                    }
+
+                    if (!root) {
+                      return;
+                    }
+
+                    const startIndex = selectedRowIndex >= 0 ? selectedRowIndex : 0;
+                    
+                    try {
+                      console.log(`🎬 Starting Play All from segment ${startIndex}`);
+                      
+                      // Load shared data once
+                      const [projectConfig, charactersData] = await Promise.all([
+                        window.khipu!.call("fs:read", {
+                          projectRoot: root,
+                          relPath: "project.khipu.json",
+                          json: true,
+                        }).catch(() => null),
+                        
+                        window.khipu!.call("fs:read", {
+                          projectRoot: root,
+                          relPath: "dossier/characters.json",
+                          json: true,
+                        }).catch(() => null),
+                      ]);
+
+                      if (!projectConfig || !charactersData) {
+                        throw new Error("Could not load project data");
+                      }
+
+                      // Prepare segments for playlist
+                      const segmentsToPlay = audioSegments.slice(startIndex);
+                      const playlistSegments = [];
+
+                      for (const segment of segmentsToPlay) {
+                        // Find character data
+                        const characters = Array.isArray(charactersData) ? charactersData : (charactersData as { characters?: unknown[] })?.characters;
+                        const characterData = characters?.find((char: unknown) => {
+                          const character = char as { name?: string; id?: string };
+                          return character.name === segment.voice || character.id === segment.voice;
+                        });
+
+                        if (!characterData) {
+                          console.warn(`⚠️ No character found for ${segment.voice}`);
+                          continue;
+                        }
+
+                        const character = characterData as Character;
+                        if (!character.voiceAssignment) {
+                          console.warn(`⚠️ No voice assignment for ${character.name}`);
+                          continue;
+                        }
+
+                        const processingChain = segment.processingChain || getCleanPolishedPreset();
+
+                        playlistSegments.push({
+                          segmentId: `segment_${segment.chunkId}`,
+                          processingChain,
+                          segment: {
+                            segment_id: parseInt(segment.chunkId || "0"),
+                            start_idx: 0,
+                            end_idx: segment.text?.length || 0,
+                            delimiter: "",
+                            text: segment.text || "",
+                            voice: segment.voice || ""
+                          },
+                          character,
+                          projectConfig: projectConfig as ProjectConfig
+                        });
+                      }
+
+                      if (playlistSegments.length === 0) {
+                        throw new Error("No valid segments found");
+                      }
+
+                      console.log(`🎉 Playing ${playlistSegments.length} segments as continuous playlist`);
+
+                      // Track which segments are actually in the playlist (may be fewer than total)
+                      const playlistStartIndex = startIndex;
+                      const processedSegmentIndexes: number[] = [];
+                      
+                      // Build mapping of processed segments back to original indexes
+                      for (let i = 0; i < segmentsToPlay.length; i++) {
+                        const segment = segmentsToPlay[i];
+                        const segmentInPlaylist = playlistSegments.find(ps => ps.segmentId === `segment_${segment.chunkId}`);
+                        if (segmentInPlaylist) {
+                          processedSegmentIndexes.push(playlistStartIndex + i);
+                        }
+                      }
+
+                      await audioPreview.playAllAsPlaylist(playlistSegments, (currentSegmentIndex: number, segmentDurations: number[]) => {
+                        // Map the playlist segment index back to the original grid index
+                        if (currentSegmentIndex >= 0 && currentSegmentIndex < processedSegmentIndexes.length) {
+                          const gridIndex = processedSegmentIndexes[currentSegmentIndex];
+                          if (gridIndex !== selectedRowIndex) {
+                            console.log(`🎯 Progress: Playing segment ${currentSegmentIndex + 1}/${segmentDurations.length}, grid row ${gridIndex + 1}`);
+                            setSelectedRowIndex(gridIndex);
+                          }
+                        }
+                      });
+                      
+                    } catch (error) {
+                      console.error("🚫 Play All failed:", error);
+                    }
+                  }}
+                  disabled={audioSegments.length === 0 || audioPreview.isLoading}
+                  style={{
+                    marginLeft: "12px"
+                  }}
+                >
+                  🎬 {t("audioProduction.playAll")}
+                </StandardButton>
+
+                <StandardButton
+                  variant="danger"
+                  onClick={handleStopAudio}
+                  disabled={!audioPreview.isPlaying && !audioPreview.isLoading}
+                  style={{
+                    marginLeft: "6px"
+                  }}
+                >
+                  ⏹ {t("audioProduction.stop")}
+                </StandardButton>
+
+                {/* Separator for additional segments */}
+                <div style={{ 
+                  width: "1px", 
+                  height: "24px", 
+                  backgroundColor: "var(--border)",
+                  margin: "0 8px" 
+                }}></div>
+
+                {/* Additional Segments Controls */}
+                <StandardButton
+                  variant="secondary"
+                  size="compact"
+                  onClick={() => {
+                    setInsertPosition(selectedRowIndex + 1);
+                    setShowSfxDialog(true);
+                  }}
+                  disabled={audioSegments.length === 0}
+                  title={t("audioProduction.insertSoundEffect")}
+                >
+                  🎵 {t("audioProduction.addSfx")}
+                </StandardButton>
+              </div>
+            )}
+            
             {/* Audio Production Module */}
           <div style={{ border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
             <div style={{ padding: "8px 12px", backgroundColor: "var(--panelAccent)", borderBottom: "1px solid var(--border)", fontSize: "14px", fontWeight: 500 }}>
@@ -1290,7 +1272,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                             <select 
                               style={{ 
                                 padding: "6px", 
-                                fontSize: "11px", 
+                                fontSize: "13px", 
                                 backgroundColor: "var(--input)", 
                                 border: "1px solid var(--border)", 
                                 borderRadius: "3px",
@@ -1399,11 +1381,30 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                         
                         {/* 1. Noise & Cleanup */}
                         <div style={{ marginBottom: "16px", padding: "8px", backgroundColor: "var(--input)", borderRadius: "3px", border: "1px solid var(--border)" }}>
-                          <h5 style={{ margin: "0 0 6px 0", fontSize: "12px", color: "var(--text)", fontWeight: 500 }}>
-                            {t("audioProduction.processingStep1")}
+                          <h5 
+                            style={{ 
+                              margin: "0 0 6px 0", 
+                              fontSize: "12px", 
+                              color: "var(--text)", 
+                              fontWeight: 500,
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between"
+                            }}
+                            onClick={() => setSectionExpanded(prev => ({
+                              ...prev,
+                              noiseCleanup: !prev.noiseCleanup
+                            }))}
+                          >
+                            <span>{t("audioProduction.processingStep1")}</span>
+                            <span style={{ fontSize: "10px" }}>
+                              {sectionExpanded.noiseCleanup ? "▼" : "▶"}
+                            </span>
                           </h5>
+                          {sectionExpanded.noiseCleanup && (
                           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
+                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
                               <input 
                                 type="checkbox" 
                                 checked={currentProcessingChain.noiseCleanup.highPassFilter.enabled}
@@ -1441,7 +1442,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 <option value="90">90 Hz</option>
                               </select>
                             </label>
-                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
+                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
                               <input 
                                 type="checkbox" 
                                 checked={currentProcessingChain.noiseCleanup.deClickDeEss.enabled}
@@ -1480,15 +1481,35 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               </select>
                             </label>
                           </div>
+                          )}
                         </div>
 
                         {/* 2. Dynamic Control */}
                         <div style={{ marginBottom: "16px", padding: "8px", backgroundColor: "var(--input)", borderRadius: "3px", border: "1px solid var(--border)" }}>
-                          <h5 style={{ margin: "0 0 6px 0", fontSize: "12px", color: "var(--text)", fontWeight: 500 }}>
-                            {t("audioProduction.dynamicControlTitle")}
+                          <h5 
+                            style={{ 
+                              margin: "0 0 6px 0", 
+                              fontSize: "12px", 
+                              color: "var(--text)", 
+                              fontWeight: 500,
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between"
+                            }}
+                            onClick={() => setSectionExpanded(prev => ({
+                              ...prev,
+                              dynamicControl: !prev.dynamicControl
+                            }))}
+                          >
+                            <span>{t("audioProduction.dynamicControlTitle")}</span>
+                            <span style={{ fontSize: "10px" }}>
+                              {sectionExpanded.dynamicControl ? "▼" : "▶"}
+                            </span>
                           </h5>
+                          {sectionExpanded.dynamicControl && (
                           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
+                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
                               <input 
                                 type="checkbox" 
                                 checked={currentProcessingChain.dynamicControl.compression.enabled}
@@ -1526,7 +1547,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 <option value="3:1">3:1</option>
                               </select>
                             </label>
-                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
+                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
                               <input 
                                 type="checkbox" 
                                 checked={currentProcessingChain.dynamicControl.limiter.enabled}
@@ -1546,15 +1567,35 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               <span>{t("audioProduction.limiterSafeguard")}</span>
                             </label>
                           </div>
+                          )}
                         </div>
 
                         {/* 3. EQ Shaping */}
                         <div style={{ marginBottom: "16px", padding: "8px", backgroundColor: "var(--input)", borderRadius: "3px", border: "1px solid var(--border)" }}>
-                          <h5 style={{ margin: "0 0 6px 0", fontSize: "12px", color: "var(--text)", fontWeight: 500 }}>
-                            {t("audioProduction.eqShapingTitle")}
+                          <h5 
+                            style={{ 
+                              margin: "0 0 6px 0", 
+                              fontSize: "12px", 
+                              color: "var(--text)", 
+                              fontWeight: 500,
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between"
+                            }}
+                            onClick={() => setSectionExpanded(prev => ({
+                              ...prev,
+                              eqShaping: !prev.eqShaping
+                            }))}
+                          >
+                            <span>{t("audioProduction.eqShapingTitle")}</span>
+                            <span style={{ fontSize: "10px" }}>
+                              {sectionExpanded.eqShaping ? "▼" : "▶"}
+                            </span>
                           </h5>
+                          {sectionExpanded.eqShaping && (
                           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
+                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
                               <input 
                                 type="checkbox" 
                                 checked={currentProcessingChain.eqShaping.lowMidCut.enabled}
@@ -1592,7 +1633,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 <option value="300">300 Hz</option>
                               </select>
                             </label>
-                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
+                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
                               <input 
                                 type="checkbox" 
                                 checked={currentProcessingChain.eqShaping.presenceBoost.enabled}
@@ -1630,7 +1671,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 <option value="5">5 kHz</option>
                               </select>
                             </label>
-                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
+                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
                               <input 
                                 type="checkbox" 
                                 checked={currentProcessingChain.eqShaping.airLift.enabled}
@@ -1669,15 +1710,35 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               </select>
                             </label>
                           </div>
+                          )}
                         </div>
 
                         {/* 4. Spatial / Aesthetic Enhancements */}
                         <div style={{ marginBottom: "16px", padding: "8px", backgroundColor: "var(--input)", borderRadius: "3px", border: "1px solid var(--border)" }}>
-                          <h5 style={{ margin: "0 0 6px 0", fontSize: "12px", color: "var(--text)", fontWeight: 500 }}>
-                            {t("audioProduction.processingStep4")}
+                          <h5 
+                            style={{ 
+                              margin: "0 0 6px 0", 
+                              fontSize: "12px", 
+                              color: "var(--text)", 
+                              fontWeight: 500,
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between"
+                            }}
+                            onClick={() => setSectionExpanded(prev => ({
+                              ...prev,
+                              spatialEnhancement: !prev.spatialEnhancement
+                            }))}
+                          >
+                            <span>{t("audioProduction.processingStep4")}</span>
+                            <span style={{ fontSize: "10px" }}>
+                              {sectionExpanded.spatialEnhancement ? "▼" : "▶"}
+                            </span>
                           </h5>
+                          {sectionExpanded.spatialEnhancement && (
                           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
+                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
                               <input 
                                 type="checkbox" 
                                 checked={currentProcessingChain.spatialEnhancement.reverb.enabled}
@@ -1737,7 +1798,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               />
                               <span>{currentProcessingChain.spatialEnhancement.reverb.wetMix}%</span>
                             </div>
-                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
+                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
                               <input 
                                 type="checkbox" 
                                 checked={currentProcessingChain.spatialEnhancement.stereoEnhancer.enabled}
@@ -1757,15 +1818,35 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               <span>{t("audioProduction.stereoEnhancerSubtle")}</span>
                             </label>
                           </div>
+                        )}
                         </div>
 
                         {/* 5. Consistency & Mastering */}
                         <div style={{ marginBottom: "12px", padding: "8px", backgroundColor: "var(--input)", borderRadius: "3px", border: "1px solid var(--border)" }}>
-                          <h5 style={{ margin: "0 0 6px 0", fontSize: "12px", color: "var(--text)", fontWeight: 500 }}>
-                            5. {t("audioProduction.consistencyMasteringTitle")}
+                          <h5 
+                            style={{ 
+                              margin: "0 0 6px 0", 
+                              fontSize: "12px", 
+                              color: "var(--text)", 
+                              fontWeight: 500,
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between"
+                            }}
+                            onClick={() => setSectionExpanded(prev => ({
+                              ...prev,
+                              consistencyMastering: !prev.consistencyMastering
+                            }))}
+                          >
+                            <span>5. {t("audioProduction.consistencyMasteringTitle")}</span>
+                            <span style={{ fontSize: "10px" }}>
+                              {sectionExpanded.consistencyMastering ? "▼" : "▶"}
+                            </span>
                           </h5>
+                          {sectionExpanded.consistencyMastering && (
                           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
+                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
                               <input 
                                 type="checkbox" 
                                 checked={currentProcessingChain.mastering.normalization.enabled}
@@ -1804,7 +1885,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 <option value="-23">-23 LUFS</option>
                               </select>
                             </label>
-                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
+                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
                               <input 
                                 type="checkbox" 
                                 checked={currentProcessingChain.mastering.peakLimiting.enabled}
@@ -1823,7 +1904,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               />
                               <span>{t("audioProduction.peakLimitMax")}</span>
                             </label>
-                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px" }}>
+                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
                               <input 
                                 type="checkbox" 
                                 checked={currentProcessingChain.mastering.dithering.enabled}
@@ -1843,6 +1924,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               <span>{t("audioProduction.finalDither")}</span>
                             </label>
                           </div>
+                        )}
                         </div>
                       </div>
                     </div>
@@ -1864,7 +1946,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           color: "var(--textSecondary)",
           fontSize: "14px"
         }}>
-          {message || t("audioProduction.noAudioSegments")}
+          {t("audioProduction.noAudioSegments")}
         </div>
       ) : (
         <div style={{
@@ -1944,13 +2026,10 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                         );
                         
                         setAudioSegments(updatedSegments);
-                        setMessage(t("audioProduction.sfxSegmentAdded"));
                         setShowSfxDialog(false);
-                      } else {
-                        setMessage(t("audioProduction.invalidWavFile", { error: validationResult.error }));
                       }
                     } catch (error) {
-                      setMessage(t("audioProduction.errorCreatingSegment", { error: String(error) }));
+                      console.error("Error processing SFX file:", error);
                     }
                   }
                 }}
@@ -1963,7 +2042,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                   color: "var(--text)"
                 }}
               />
-              <div style={{ fontSize: "11px", color: "var(--textSecondary)", marginTop: "4px" }}>
+              <div style={{ fontSize: "13px", color: "var(--textSecondary)", marginTop: "4px" }}>
                 {t("audioProduction.wavFileRequirements")}
               </div>
             </div>
