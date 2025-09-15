@@ -1122,9 +1122,9 @@ export default function Cost() {
               fontSize: '14px',
               padding: '40px 20px'
             }}>
-              <p>No operation data available yet.</p>
+              <p>{t('cost.noOperationData', 'No operation data available yet.')}</p>
               <p style={{ fontSize: '12px', marginTop: '8px' }}>
-                Try using some automation features like voice audition, voice assignment, or chapter planning.
+                {t('cost.tryAutomationFeatures', 'Try using some automation features like voice audition, voice assignment, or chapter planning.')}
               </p>
             </div>
           )}

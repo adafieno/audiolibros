@@ -2776,6 +2776,22 @@
     "string": "Procesamiento de Audio",
     "comment": "Nombre para mostrar de la operación de procesamiento de audio"
   },
+  "cost.timeTracking.automation": {
+    "string": "automatización",
+    "comment": "Etiqueta para tiempo de automatización en la visualización de seguimiento de tiempo"
+  },
+  "cost.timeTracking.title": {
+    "string": "Tiempo Empleado",
+    "comment": "Título para la tarjeta de seguimiento de tiempo"
+  },
+  "cost.noOperationData": {
+    "string": "Aún no hay datos de operación disponibles.",
+    "comment": "Mensaje cuando no hay datos de operación de tiempo disponibles"
+  },
+  "cost.tryAutomationFeatures": {
+    "string": "Prueba usar algunas funciones de automatización como audición de voz, asignación de voces, o planificación de capítulos.",
+    "comment": "Mensaje de sugerencia para que los usuarios prueben funciones de automatización"
+  },
   "cost.saved": {
     "string": "Ahorrado",
     "comment": "Etiqueta para costo ahorrado en tooltips de timeline al pasar el mouse"

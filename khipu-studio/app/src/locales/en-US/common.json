@@ -2328,6 +2328,22 @@
     "string": "Audio Processing",
     "comment": "Display name for audio processing operation"
   },
+  "cost.timeTracking.automation": {
+    "string": "automation",
+    "comment": "Label for automation time in time tracking display"
+  },
+  "cost.timeTracking.title": {
+    "string": "Time Spent",
+    "comment": "Title for the time tracking card"
+  },
+  "cost.noOperationData": {
+    "string": "No operation data available yet.",
+    "comment": "Message when no time operation data is available"
+  },
+  "cost.tryAutomationFeatures": {
+    "string": "Try using some automation features like voice audition, voice assignment, or chapter planning.",
+    "comment": "Suggestion message for users to try automation features"
+  },
   "cost.saved": {
     "string": "Saved",
     "comment": "Label for saved cost in timeline hover tooltips"
