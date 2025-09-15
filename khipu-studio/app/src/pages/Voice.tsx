@@ -5,7 +5,7 @@ import { useAudioPreview } from "../hooks/useAudioPreview";
 import { createDefaultProcessingChain } from "../lib/audio-production-utils";
 import AudioProductionService from "../lib/audio-production-service";
 import { AUDIO_PRESETS, getPresetsByCategory, getPresetById, type AudioPreset } from "../data/audio-presets";
-import { validateAudioFile, createSfxSegment, insertSegmentAtPosition } from "../lib/additional-segments";
+import { validateAudioFile } from "../lib/additional-segments";
 import { TextDisplay } from "../components/KaraokeTextDisplay";
 import { PageHeader } from "../components/PageHeader";
 import { StandardButton } from "../components/StandardButton";
@@ -62,7 +62,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   // Additional segments state
   const [showSfxDialog, setShowSfxDialog] = useState(false);
   const [insertPosition, setInsertPosition] = useState<number>(-1); // Where to insert new segment
-  const [isDragOver, setIsDragOver] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileValidationResult, setFileValidationResult] = useState<{
     valid: boolean;
@@ -212,33 +211,23 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         duration: fileValidationResult.duration || 0
       };
       
+      // Calculate the correct display order to insert before the selected position
+      // insertPosition is the row index where we want to insert BEFORE
+      // We'll save the raw insertPosition and let the loading logic handle proper ordering
+      const targetDisplayOrder = insertPosition;
+      
       // Save SFX metadata to persistent storage
       const savedSegmentId = await audioProductionService.addSfxSegment(
         selectedChapter,
-        insertPosition,
+        targetDisplayOrder,
         sfxFileData
       );
       
       console.log(`💾 Saved SFX metadata with ID: ${savedSegmentId}`);
       
-      // Create UI segment with the saved WAV file, using the persistent segment ID
-      const sfxSegment = createSfxSegment(
-        wavFilename, // Use the WAV filename
-        saveResult.savedPath || targetPath, // Fallback to target path if savedPath is undefined
-        fileValidationResult.duration || 0
-      );
+      // Reload the chapter data to include the new SFX segment
+      await loadPlanData(selectedChapter);
       
-      // Override the generated ID with the persistent one
-      sfxSegment.chunkId = savedSegmentId;
-      sfxSegment.rowKey = `sfx_row_${savedSegmentId}`;
-      
-      const updatedSegments = insertSegmentAtPosition(
-        audioSegments,
-        sfxSegment,
-        insertPosition
-      );
-      
-      setAudioSegments(updatedSegments);
       setImportStatus("✅ Audio file imported successfully!");
       
       // Hide the dialog after a short delay
@@ -256,7 +245,8 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       setValidationError(`Failed to import audio file: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setImportStatus(null);
     }
-  }, [selectedFile, fileValidationResult, selectedChapter, audioProductionService, root, audioSegments, insertPosition]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFile, fileValidationResult, selectedChapter, audioProductionService, root, insertPosition]); // loadPlanData intentionally omitted to avoid circular dependency
 
   // Update segment's processing chain with automatic persistence
   const updateCurrentProcessingChain = useCallback((newChain: AudioProcessingChain) => {
@@ -389,6 +379,92 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     return status;
   }, [root]);
 
+  const loadAudioProductionData = useCallback(async (chapterId: string, planSegments: AudioSegmentRow[]) => {
+    if (!audioProductionService || !chapterId) {
+      return planSegments;
+    }
+
+    try {
+      console.log(`🎵 Loading audio production data for chapter ${chapterId}`);
+      
+      // Load additional segments (sound effects)
+      const additionalSegments = await audioProductionService.loadAdditionalSegments(chapterId);
+      
+      if (additionalSegments.sfxSegments.length > 0) {
+        console.log(`🎵 Loading ${additionalSegments.sfxSegments.length} additional sound effect segments`);
+        
+        // Create a mixed array of all segments with their intended positions
+        const allSegmentsWithPositions: Array<{
+          segment: AudioSegmentRow;
+          originalPosition: number;
+          type: 'plan' | 'sfx';
+        }> = [];
+        
+        // Add plan segments (their position is their current index)
+        planSegments.forEach((planSegment, index) => {
+          allSegmentsWithPositions.push({
+            segment: planSegment,
+            originalPosition: index,
+            type: 'plan'
+          });
+        });
+        
+        // Add SFX segments (their position is where they want to be inserted)
+        additionalSegments.sfxSegments.forEach((sfxSegment, sfxIndex) => {
+          const sfxRow: AudioSegmentRow = {
+            rowKey: `${chapterId}_${sfxSegment.id}_sfx`,
+            segmentId: -1 - sfxIndex, // Use negative IDs for SFX segments to avoid conflicts
+            displayOrder: 0, // Will be recalculated below
+            chunkId: sfxSegment.id,
+            text: `[SFX: ${sfxSegment.sfxFile.filename}]`,
+            voice: "",
+            locked: false,
+            sfxAfter: null,
+            hasAudio: sfxSegment.sfxFile.validated || false,
+            audioPath: sfxSegment.sfxFile.path,
+            start_char: 0,
+            end_char: 0,
+            segmentType: 'sfx' as const,
+            isAdditional: true,
+            sfxFile: sfxSegment.sfxFile,
+            processingChain: sfxSegment.processingChain
+          };
+          
+          allSegmentsWithPositions.push({
+            segment: sfxRow,
+            originalPosition: sfxSegment.displayOrder, // This is the intended insertion position
+            type: 'sfx'
+          });
+        });
+        
+        // Sort by insertion position, with SFX segments inserted before plan segments at the same position
+        allSegmentsWithPositions.sort((a, b) => {
+          if (a.originalPosition === b.originalPosition) {
+            // If same position, SFX comes before plan segments
+            return a.type === 'sfx' ? -1 : 1;
+          }
+          return a.originalPosition - b.originalPosition;
+        });
+        
+        // Extract the sorted segments and assign clean sequential display orders
+        const finalSegments = allSegmentsWithPositions.map((item, index) => ({
+          ...item.segment,
+          displayOrder: index
+        }));
+        
+        console.log(`🎵 Merged ${planSegments.length} plan segments with ${additionalSegments.sfxSegments.length} SFX segments`);
+        console.log(`🔍 Final arrangement:`, finalSegments.map(s => ({ id: s.chunkId, type: s.segmentType, displayOrder: s.displayOrder })));
+        
+        return finalSegments;
+      }
+    } catch (error) {
+      console.warn('Failed to load audio production data:', error);
+    }
+    
+    // Return plan segments if no additional segments or if loading failed
+    return planSegments;
+  }, [audioProductionService]);
+
   const loadPlanData = useCallback(async (chapterId: string) => {
     if (!root || !chapterId || !audioProductionService) {
       setAudioSegments([]);
@@ -503,46 +579,12 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         };
       });
 
+      // Load plan segments first
       setAudioSegments(audioSegmentRows);
       
-      // Load and merge additional segments (sound effects)
-      try {
-        const additionalSegments = await audioProductionService.loadAdditionalSegments(chapterId);
-        
-        if (additionalSegments.sfxSegments.length > 0) {
-          console.log(`🎵 Loading ${additionalSegments.sfxSegments.length} additional sound effect segments`);
-          
-          // Convert additional segments to AudioSegmentRow format
-          const additionalRows: AudioSegmentRow[] = additionalSegments.sfxSegments.map((sfxSegment, index) => ({
-            rowKey: `${chapterId}_${sfxSegment.id}_sfx`,
-            segmentId: -1 - index, // Use negative IDs for SFX segments to avoid conflicts
-            displayOrder: sfxSegment.displayOrder,
-            chunkId: sfxSegment.id,
-            text: `[SFX: ${sfxSegment.sfxFile.filename}]`,
-            voice: "",
-            locked: false,
-            sfxAfter: null,
-            hasAudio: sfxSegment.sfxFile.validated || false,
-            audioPath: sfxSegment.sfxFile.path,
-            start_char: 0,
-            end_char: 0,
-            segmentType: 'sfx' as const,
-            isAdditional: true,
-            sfxFile: sfxSegment.sfxFile,
-            processingChain: sfxSegment.processingChain
-          }));
-          
-          // Merge with plan segments and sort by display order
-          const allSegments = [...audioSegmentRows, ...additionalRows]
-            .sort((a, b) => a.displayOrder - b.displayOrder);
-          
-          setAudioSegments(allSegments);
-          console.log(`🎵 Merged ${audioSegmentRows.length} plan segments with ${additionalRows.length} SFX segments`);
-        }
-      } catch (error) {
-        console.warn('Failed to load additional segments:', error);
-        // Continue with just plan segments if additional segments fail to load
-      }
+      // Then load and merge audio production data (including SFX)
+      const allSegments = await loadAudioProductionData(chapterId, audioSegmentRows);
+      setAudioSegments(allSegments);
       
       // Load revision marks from plan data
       const revisionMarkedChunks = new Set<string>();
@@ -609,7 +651,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       console.error("Failed to load plan data:", error);
 
     }
-  }, [root, audioProductionService]);
+  }, [root, audioProductionService, loadAudioProductionData]);
 
   const loadChapters = useCallback(async () => {
     if (!root) return;
@@ -812,17 +854,17 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             console.error('❌ SFX audio playback error');
           };
           
-          // Initialize state before starting playback
+          // Start playback first
+          await audio.play();
+          
+          // Initialize state after starting playback to ensure isPlaying is correct
           setCurrentSfxAudio({
             audio,
             segmentId: segment.chunkId,
-            duration: 0, // Will be updated when metadata loads
-            currentTime: 0,
-            isPlaying: false
+            duration: audio.duration || 0,
+            currentTime: audio.currentTime,
+            isPlaying: !audio.paused // This should be true after play() succeeds
           });
-          
-          // Start playback
-          await audio.play();
           
           console.log('✅ Started playing SFX segment directly (no cache used)');
           
@@ -2312,35 +2354,15 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                 {t("audioProduction.selectAudioFile")}
               </label>
               
-              {/* Drag and Drop Zone */}
+              {/* File Selection Area */}
               <div 
-                onDrop={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setIsDragOver(false);
-                  const files = e.dataTransfer.files;
-                  if (files.length > 0) {
-                    handleFileSelection(files[0]);
-                  }
-                }}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setIsDragOver(true);
-                }}
-                onDragLeave={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setIsDragOver(false);
-                }}
                 style={{
                   position: "relative",
-                  border: `2px dashed ${isDragOver ? 'var(--accent)' : 'var(--border)'}`,
+                  border: "2px solid var(--border)",
                   borderRadius: "8px",
                   padding: "24px",
                   textAlign: "center",
-                  backgroundColor: isDragOver ? 'var(--accent)10' : 'var(--panel)',
-                  transition: "all 0.2s ease",
+                  backgroundColor: "var(--panel)",
                   cursor: "pointer"
                 }}
                 onClick={() => {
@@ -2394,7 +2416,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                 ) : (
                   <div>
                     <div style={{ fontWeight: 500, marginBottom: "4px", color: "var(--text)" }}>
-                      {isDragOver ? "Drop audio file here" : "Drop audio file here or click to browse"}
+                      Click to select audio file
                     </div>
                   </div>
                 )}
