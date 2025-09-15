@@ -464,54 +464,200 @@ function EditablePreview({
   };
 
   return (
-    <div>
-      <div className="mb-2 flex-end" style={{ 
-        fontSize: "12px", 
-        color: "var(--muted)"
+    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+      {/* Text Display Panel */}
+      <div style={{ 
+        border: "1px solid var(--border)", 
+        borderRadius: "6px", 
+        overflow: "hidden",
+        backgroundColor: "var(--panel)"
       }}>
-        <div className="flex gap-2">
+          {/* Text Panel Header */}
+          <div style={{ 
+            padding: "8px 12px", 
+            backgroundColor: "var(--panelAccent)", 
+            borderBottom: "1px solid var(--border)", 
+            fontSize: "14px", 
+            fontWeight: 500,
+            display: "flex",
+            alignItems: "center",
+            gap: "8px"
+          }}>
+            <span>📝 Texto del Segmento</span>
+            <span style={{ fontSize: "12px", color: "var(--muted)" }}>• Voz: {current.voice || "unassigned"}</span>
+            <span style={{ fontSize: "12px", color: "var(--muted)" }}>• ID: {current.segmentId}</span>
+          </div>
+          
+          {/* Text Content */}
+          <div style={{ padding: "16px" }}>
+            {isEditing ? (
+              <textarea
+                ref={textareaRef}
+                value={editedText}
+                onChange={handleTextareaChange}
+                onKeyDown={handleKeyDown}
+                onBlur={handleTextareaBlur}
+                onSelect={(e) => setCursorPosition((e.target as HTMLTextAreaElement).selectionStart)}
+                style={{
+                  width: "100%",
+                  minHeight: "120px",
+                  fontSize: "16px",
+                  lineHeight: "1.6",
+                  color: "var(--text)",
+                  backgroundColor: "var(--background)",
+                  border: "2px solid var(--accent)",
+                  borderRadius: "4px",
+                  padding: "12px",
+                  fontFamily: "inherit",
+                  resize: "vertical",
+                  outline: "none"
+                }}
+                placeholder={t("planning.editPlaceholder")}
+              />
+            ) : (
+              <div 
+                ref={previewRef}
+                onClick={handleStartEdit}
+                style={{ 
+                  fontSize: "16px", 
+                  lineHeight: "1.6", 
+                  color: "var(--text)", 
+                  whiteSpace: "pre-wrap",
+                  minHeight: "120px",
+                  padding: "12px",
+                  border: "1px solid var(--border)",
+                  borderRadius: "4px",
+                  cursor: "text",
+                  backgroundColor: "var(--background)"
+                }}
+                title={t("planning.clickToEdit")}
+              >
+                {renderTextWithCursor(displayText, cursorPosition)}
+              </div>
+            )}
+            
+            {/* Size statistics */}
+            {(() => {
+              const text = isEditing ? editedText : displayText;
+              const validation = validateSegmentSize(text);
+              const stats = validation.stats;
+              const isOverLimit = stats.words > SEGMENT_LIMITS.recommendedWords || 
+                                 stats.chars > SEGMENT_LIMITS.recommendedChars * 1.5 || 
+                                 stats.kb > SEGMENT_LIMITS.maxKB;
+              return (
+                <div style={{ 
+                  fontSize: "11px", 
+                  color: isOverLimit ? "var(--error)" : "var(--muted)", 
+                  marginTop: "12px",
+                  padding: "8px 12px",
+                  backgroundColor: "var(--panelBackground)",
+                  borderRadius: "4px",
+                  display: "flex",
+                  gap: "16px",
+                  border: "1px solid var(--border)"
+                }}>
+                  <span>📏 {stats.words}/{SEGMENT_LIMITS.recommendedWords} {t("planning.stats.words")}</span>
+                  <span>🔤 {stats.chars}/{SEGMENT_LIMITS.recommendedChars} {t("planning.stats.chars")}</span>
+                  <span>💾 {stats.kb.toFixed(1)}/{SEGMENT_LIMITS.maxKB}KB</span>
+                  {isOverLimit && <span style={{ color: "var(--error)", fontWeight: "bold" }}>⚠️ {t("planning.overLimits")}</span>}
+                </div>
+              );
+            })()}
+            
+            {isEditing && (
+              <div style={{
+                fontSize: "11px", 
+                color: "var(--muted)", 
+                marginTop: "8px",
+                fontStyle: "italic",
+                padding: "8px",
+                backgroundColor: "var(--panelBackground)",
+                borderRadius: "4px",
+                border: "1px solid var(--border)"
+              }}>
+                💡 {t("planning.editInstructions")}
+                <br />
+                {t("planning.splitInstructions")}
+              </div>
+            )}
+          </div>
+      </div>
+
+      {/* Action Buttons Toolbar Panel - underneath text */}
+      <div style={{ 
+        border: "1px solid var(--border)", 
+        borderRadius: "6px", 
+        overflow: "hidden",
+        backgroundColor: "var(--panel)"
+      }}>
+        {/* Toolbar Content */}
+        <div style={{ 
+          padding: "12px",
+          display: "flex", 
+          alignItems: "center",
+          gap: "8px",
+          flexWrap: "wrap"
+        }}>
           {!isEditing ? (
             <>
               <StandardButton
                 onClick={handleStartEdit}
                 size="compact"
                 title={t("planning.tooltips.clickToEdit")}
+                style={{
+                  padding: "6px 12px"
+                }}
               >
-                ✏️ {t("planning.edit")}
+                ✏️ Editar
               </StandardButton>
-              {/* Merge operations when not editing */}
+              
               <StandardButton
                 onClick={() => handleMergeSegment('backward')}
                 disabled={!canMergeBackward}
                 size="compact"
                 title={t("planning.mergeWithPrevious")}
+                style={{
+                  padding: "6px 12px"
+                }}
               >
-                ◀ {t("planning.merge")}
+                ◀ Unir
               </StandardButton>
+              
               <StandardButton
                 onClick={() => handleMergeSegment('forward')}
                 disabled={!canMergeForward}
                 size="compact"
                 title={t("planning.mergeWithNext")}
+                style={{
+                  padding: "6px 12px"
+                }}
               >
-                {t("planning.merge")} ▶
+                Unir ▶
               </StandardButton>
+              
               <StandardButton
                 onClick={handleDeleteSegment}
                 disabled={!canDelete}
                 variant="danger"
                 size="compact"
                 title={t("planning.deleteThisSegment")}
+                style={{
+                  padding: "6px 12px"
+                }}
               >
-                🗑️ {t("planning.delete")}
+                🗑️ Eliminar
               </StandardButton>
+              
               <StandardButton
                 onClick={undoSegmentOperation}
                 disabled={!canUndo}
                 size="compact"
                 title={t("planning.undoLastOperation")}
+                style={{
+                  padding: "6px 12px"
+                }}
               >
-                ↶ {t("planning.undo")}
+                ↶ Deshacer
               </StandardButton>
             </>
           ) : (
@@ -521,32 +667,44 @@ function EditablePreview({
                 disabled={!canSplit}
                 size="compact"
                 title={t("planning.splitAtCursor")}
+                style={{
+                  padding: "6px 12px"
+                }}
               >
                 ✂️ {t("planning.splitAtCursor")}
               </StandardButton>
+              
               <StandardButton
                 onClick={handleCancelEdit}
                 size="compact"
                 title={t("planning.tooltips.cancelEdit")}
+                style={{
+                  padding: "6px 12px"
+                }}
               >
                 ❌ {t("planning.cancel")}
               </StandardButton>
             </>
           )}
+          
+          {/* Audition button - if voice is assigned */}
           {current.voice && current.voice !== "unassigned" && (
             <StandardButton
-              onClick={() => {
-                console.log(`🎵 AUDITION BUTTON CLICKED - Segment ${current.segmentId}:`);
-                console.log(`  - isDirty: ${isDirty}`);
-                console.log(`  - editedText: "${editedText}"`);
-                console.log(`  - originalSegment.text: "${originalSegment?.text}"`);
-                console.log(`  - originalSegment.originalText: "${originalSegment?.originalText}"`);
-                console.log(`  - overrideText: ${isDirty ? `"${editedText}"` : 'undefined'}`);
-                console.log(`  - disableCache: ${isDirty}`);
-                onAudition(current.segmentId, isDirty ? editedText : undefined, isDirty);
+                onClick={() => {
+                  console.log(`🎵 AUDITION BUTTON CLICKED - Segment ${current.segmentId}:`);
+                  console.log(`  - isDirty: ${isDirty}`);
+                  console.log(`  - editedText: "${editedText}"`);
+                  console.log(`  - originalSegment.text: "${originalSegment?.text}"`);
+                  console.log(`  - originalSegment.originalText: "${originalSegment?.originalText}"`);
+                  console.log(`  - overrideText: ${isDirty ? `"${editedText}"` : 'undefined'}`);
+                  console.log(`  - disableCache: ${isDirty}`);
+                  onAudition(current.segmentId, isDirty ? editedText : undefined, isDirty);
+                }}
+                disabled={isAudioLoading || auditioningSegments.has(current.segmentId)}
+                size="compact"
+              style={{
+                padding: "6px 12px"
               }}
-              disabled={isAudioLoading || auditioningSegments.has(current.segmentId)}
-              size="compact"
             >
               {(isAudioLoading || auditioningSegments.has(current.segmentId)) ? (
                 <>
@@ -564,121 +722,12 @@ function EditablePreview({
               ) : isAudioPlaying ? (
                 <>🔊 {t("common.playing")}</>
               ) : (
-                <>🎵 {t("casting.audition.button")}</>
+                <>🎵 Audición</>
               )}
             </StandardButton>
           )}
         </div>
       </div>
-      
-      {/* Separator between toolbar and content */}
-      <div style={{
-        height: "1px",
-        backgroundColor: "var(--border)",
-        margin: "8px 0",
-        opacity: 0.3
-      }} />
-      
-      {isEditing ? (
-        <textarea
-          ref={textareaRef}
-          value={editedText}
-          onChange={handleTextareaChange}
-          onKeyDown={handleKeyDown}
-          onBlur={handleTextareaBlur}
-          onSelect={(e) => setCursorPosition((e.target as HTMLTextAreaElement).selectionStart)}
-          style={{
-            width: "100%",
-            minHeight: "120px",
-            fontSize: "16px",
-            lineHeight: "1.6",
-            color: "var(--text)",
-            backgroundColor: "var(--background)",
-            border: "2px solid var(--accent)",
-            borderRadius: "4px",
-            padding: "8px",
-            fontFamily: "inherit",
-            resize: "vertical",
-            outline: "none"
-          }}
-          placeholder={t("planning.editPlaceholder")}
-        />
-      ) : (
-        <div 
-          ref={previewRef}
-          onClick={handleStartEdit}
-          style={{ 
-            fontSize: "16px", 
-            lineHeight: "1.6", 
-            color: "var(--text)", 
-            whiteSpace: "pre-wrap",
-            minHeight: "120px",
-            padding: "8px",
-            border: "1px solid transparent",
-            borderRadius: "4px",
-            cursor: "text",
-            backgroundColor: "var(--background)"
-          }}
-          title={t("planning.clickToEdit")}
-        >
-          {renderTextWithCursor(displayText, cursorPosition)}
-        </div>
-      )}
-      
-      {/* Size statistics */}
-      {(() => {
-        const text = isEditing ? editedText : displayText;
-        const validation = validateSegmentSize(text);
-        const stats = validation.stats;
-        const isOverLimit = stats.words > SEGMENT_LIMITS.recommendedWords || 
-                           stats.chars > SEGMENT_LIMITS.recommendedChars * 1.5 || 
-                           stats.kb > SEGMENT_LIMITS.maxKB;
-        return (
-          <div style={{ 
-            fontSize: "11px", 
-            color: isOverLimit ? "var(--error)" : "var(--muted)", 
-            marginTop: "6px",
-            padding: "4px 8px",
-            backgroundColor: "var(--panelBackground)",
-            borderRadius: "3px",
-            display: "flex",
-            gap: "12px"
-          }}>
-            <span>📏 {stats.words}/{SEGMENT_LIMITS.recommendedWords} {t("planning.stats.words")}</span>
-            <span>🔤 {stats.chars}/{SEGMENT_LIMITS.recommendedChars} {t("planning.stats.chars")}</span>
-            <span>💾 {stats.kb.toFixed(1)}/{SEGMENT_LIMITS.maxKB}KB</span>
-            {isOverLimit && <span style={{ color: "var(--error)", fontWeight: "bold" }}>⚠️ {t("planning.overLimits")}</span>}
-          </div>
-        );
-      })()}
-      
-      {isEditing && (
-        <div style={{
-          fontSize: "11px", 
-          color: "var(--muted)", 
-          marginTop: "4px",
-          fontStyle: "italic"
-        }}>
-          💡 {t("planning.editInstructions")}
-          <br />
-          {t("planning.splitInstructions")}
-        </div>
-      )}
-
-      {message && (
-        <div style={{ 
-          fontSize: "12px", 
-          color: message.includes("successfully") ? "var(--success)" : "var(--error)", 
-          marginTop: "8px",
-          padding: "4px 8px",
-          border: `1px solid ${message.includes("successfully") ? "var(--success)" : "var(--error)"}`,
-          borderRadius: "4px",
-          backgroundColor: message.includes("successfully") ? "var(--successBg)" : "var(--errorBg)"
-        }}>
-          {message}
-        </div>
-      )}
-
     </div>
   );
 }
