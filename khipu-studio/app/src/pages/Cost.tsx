@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useProject } from '../store/project';
 import { StandardButton } from '../components/StandardButton';
-import type { CostSummary, CostSettings } from '../types/cost-tracking';
+import type { CostSummary, CostSettings, TimeActivityType } from '../types/cost-tracking';
 import { costTrackingService } from '../lib/cost-tracking-service';
 import { CostCalculator } from '../types/cost-tracking';
 
@@ -22,6 +22,13 @@ export default function Cost() {
   const [summary, setSummary] = useState<CostSummary | null>(null);
   const [settings, setSettings] = useState<CostSettings | null>(null);
   const [savingsByOperation, setSavingsByOperation] = useState<Record<string, { savings: number; percentage: number; count: number }>>({} as Record<string, { savings: number; percentage: number; count: number }>);
+  const [operationBreakdown, setOperationBreakdown] = useState<Array<{
+    operation: string;
+    totalTime: number;
+    count: number;
+    averageTime: number;
+    activityType: TimeActivityType;
+  }>>([]);
   const [selectedTimeRange, setSelectedTimeRange] = useState<'7d' | '30d' | '90d' | 'all'>('30d');
   const [showSettings, setShowSettings] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,23 +46,28 @@ export default function Cost() {
     return new Intl.NumberFormat(currentLocale, options).format(num);
   };
 
-  // Helper function for time formatting
+  // Helper function for time formatting with decimal precision
   const formatTimeSpent = (milliseconds: number): string => {
-    if (milliseconds < 1000) return '0s';
+    if (milliseconds < 100) return '0.0s'; // Show 0.0s for very small times
     
-    const seconds = Math.floor(milliseconds / 1000);
+    const totalSeconds = milliseconds / 1000;
+    const seconds = Math.floor(totalSeconds);
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
     
     if (days > 0) {
-      return `${days}d ${hours % 24}h`;
+      const remainingHours = hours % 24;
+      const decimalHours = remainingHours + (minutes % 60) / 60;
+      return `${days}d ${decimalHours.toFixed(1)}h`;
     } else if (hours > 0) {
-      return `${hours}h ${minutes % 60}m`;
+      const decimalHours = hours + (minutes % 60) / 60;
+      return `${decimalHours.toFixed(1)}h`;
     } else if (minutes > 0) {
-      return `${minutes}m`;
+      const decimalMinutes = minutes + (seconds % 60) / 60;
+      return `${decimalMinutes.toFixed(1)}m`;
     } else {
-      return `${seconds}s`;
+      return `${totalSeconds.toFixed(1)}s`;
     }
   };
 
@@ -149,10 +161,12 @@ export default function Cost() {
       const summaryData = costTrackingService.generateSummary(startDate);
       const settingsData = costTrackingService.getSettings();
       const savingsData = costTrackingService.getSavingsByOperation(startDate);
+      const operationBreakdown = costTrackingService.getTimeBreakdownByOperation(startDate);
       
       setSummary(summaryData);
       setSettings(settingsData);
       setSavingsByOperation(savingsData);
+      setOperationBreakdown(operationBreakdown);
       
       // Debug time tracking data
       console.log(`⏱️ Time tracking summary:`, {
@@ -887,6 +901,64 @@ export default function Cost() {
           </div>
         </div>
       </div>
+
+      {/* Time Breakdown by Operation */}
+      {operationBreakdown.length > 0 && (
+        <div style={{
+          background: 'var(--card)',
+          borderRadius: '8px',
+          padding: '20px',
+          border: '1px solid var(--border)'
+        }}>
+          <h3 style={{
+            fontSize: '16px',
+            fontWeight: '600',
+            color: 'var(--text)',
+            margin: '0 0 16px 0'
+          }}>
+            {t('cost.timeTracking.operationBreakdown', 'Time by Operation')}
+          </h3>
+          <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+            {operationBreakdown.map((item, index) => (
+              <div key={item.operation} style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '8px 0',
+                borderBottom: index < operationBreakdown.length - 1 ? '1px solid var(--border)' : 'none'
+              }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: 'var(--text)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}>
+                    <span>{item.activityType === 'automation' ? '🤖' : '👤'}</span>
+                    {item.operation.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                  </div>
+                  <div style={{
+                    fontSize: '12px',
+                    color: 'var(--muted)',
+                    marginTop: '2px'
+                  }}>
+                    {item.count} {item.count === 1 ? 'operation' : 'operations'} • avg {formatTimeSpent(item.averageTime)}
+                  </div>
+                </div>
+                <div style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: item.activityType === 'automation' ? 'var(--success)' : 'var(--primary)'
+                }}>
+                  {formatTimeSpent(item.totalTime)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Service Breakdown */}
       <div style={{

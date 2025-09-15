@@ -859,23 +859,28 @@ export function useCharacters(): UseCharactersApi {
       });
       
       // Call voice audition through IPC and track automation time
+      console.log(`🎯 About to track voice audition automation for character: ${character.name}`);
       await costTrackingService.trackAutomatedOperation(
         'characters:auditionVoice',
         async () => {
+          console.log(`🎯 Executing voice audition IPC call...`);
           if (!api.call) throw new Error("IPC method not available");
-          return await api.call("characters:auditionVoice", {
+          const result = await api.call("characters:auditionVoice", {
             projectRoot: safeProjectRoot,
             characterId: characterId,
             voiceId: character.voiceAssignment?.voiceId || '',
             style: character.voiceAssignment?.style || '',
             sampleText: auditionText
           });
+          console.log(`🎯 Voice audition IPC call completed`);
+          return result;
         },
         {
           page: 'casting',
           projectId: safeProjectRoot.split('/').pop() || 'unknown'
         }
       );
+      console.log(`🎯 Voice audition automation tracking completed`);
       
       setMessage("Voice sample played");
     } catch (e) {

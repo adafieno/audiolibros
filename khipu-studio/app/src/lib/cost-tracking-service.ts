@@ -954,6 +954,56 @@ export class CostTrackingService {
   }
   
   /**
+   * Get time breakdown by operation for detailed reporting
+   */
+  getTimeBreakdownByOperation(startDate?: Date, endDate?: Date): Array<{
+    operation: string;
+    totalTime: number;
+    count: number;
+    averageTime: number;
+    activityType: TimeActivityType;
+  }> {
+    const now = new Date();
+    const start = startDate || new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); // 30 days ago
+    const end = endDate || now;
+    
+    const timeEntriesInRange = this.timeEntries.filter(entry => 
+      entry.timestamp >= start && entry.timestamp <= end && entry.operation
+    );
+    
+    // Group by operation
+    const operationStats: Record<string, {
+      totalTime: number;
+      count: number;
+      activityType: TimeActivityType;
+    }> = {};
+    
+    for (const entry of timeEntriesInRange) {
+      const operation = entry.operation!;
+      if (!operationStats[operation]) {
+        operationStats[operation] = {
+          totalTime: 0,
+          count: 0,
+          activityType: entry.activityType
+        };
+      }
+      operationStats[operation].totalTime += entry.duration;
+      operationStats[operation].count += 1;
+    }
+    
+    // Convert to array and calculate averages
+    return Object.entries(operationStats)
+      .map(([operation, stats]) => ({
+        operation,
+        totalTime: stats.totalTime,
+        count: stats.count,
+        averageTime: stats.totalTime / stats.count,
+        activityType: stats.activityType
+      }))
+      .sort((a, b) => b.totalTime - a.totalTime); // Sort by total time descending
+  }
+
+  /**
    * Calculate savings by operation for a time period
    */
   getSavingsByOperation(startDate?: Date, endDate?: Date): Record<string, { savings: number; percentage: number; count: number }> {
