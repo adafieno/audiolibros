@@ -128,6 +128,7 @@ export default function Home() {
   const [msg, setMsg] = useState("");
 
   // Create form state
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const [parentDir, setParentDir] = useState<string>("");
   const [projName, setProjName] = useState<string>("");
 
@@ -239,17 +240,273 @@ export default function Home() {
     await window.khipu!.call("project:open", { path: res.path });
     setRoot(res.path);
     setProjName("");
+    setParentDir("");
+    setShowCreateForm(false);
     setMsg(t("home.createSuccess"));
     nav("/book", { replace: true });
   }
 
   const disabledCreate = useMemo(() => !parentDir || !projName.trim(), [parentDir, projName]);
 
+  // Helper function to close create form modal
+  const closeCreateForm = () => {
+    setShowCreateForm(false);
+    setMsg("");
+    setProjName("");
+    setParentDir("");
+  };
+
+  // Add keyboard support for modal
+  useEffect(() => {
+    if (!showCreateForm) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        closeCreateForm();
+      }
+    };
+    
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [showCreateForm]);
+
   return (
     <div style={{ maxWidth: "100%" }}>
+      {/* Create Project Modal Overlay */}
+      {showCreateForm && (
+        <div 
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000
+          }}
+          onClick={(e) => {
+            // Close modal when clicking outside the modal content
+            if (e.target === e.currentTarget) {
+              closeCreateForm();
+            }
+          }}
+        >
+          <div style={{
+            backgroundColor: "var(--panel)",
+            border: "1px solid var(--border)",
+            borderRadius: "8px",
+            padding: "24px",
+            minWidth: "500px",
+            maxWidth: "600px",
+            maxHeight: "80vh",
+            overflow: "auto"
+          }}>
+            <div style={{ 
+              display: "flex", 
+              justifyContent: "space-between", 
+              alignItems: "center", 
+              marginBottom: "20px" 
+            }}>
+              <h3 style={{ 
+                fontSize: "20px", 
+                fontWeight: "bold", 
+                color: "var(--text)", 
+                margin: 0 
+              }}>
+                {t("home.createNew")}
+              </h3>
+              <button
+                onClick={closeCreateForm}
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: "24px",
+                  cursor: "pointer",
+                  color: "var(--muted)",
+                  padding: "0",
+                  width: "32px",
+                  height: "32px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}
+              >
+                ×
+              </button>
+            </div>
+            
+            <p style={{ 
+              color: "var(--muted)", 
+              fontSize: "14px", 
+              marginBottom: "20px",
+              lineHeight: "1.5"
+            }}>
+              {t("home.projectSetup")}
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <label style={{ 
+                  display: "block", 
+                  fontSize: "14px", 
+                  fontWeight: "500", 
+                  color: "var(--text)", 
+                  marginBottom: "6px" 
+                }}>
+                  {t("home.parentDir")}
+                </label>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <input
+                    value={parentDir}
+                    readOnly
+                    placeholder={t("home.parentDirPlaceholder")}
+                    style={{
+                      flex: 1,
+                      padding: "8px 12px",
+                      fontSize: "14px",
+                      backgroundColor: "var(--panel)",
+                      color: "var(--text)",
+                      border: "1px solid var(--border)",
+                      borderRadius: "4px"
+                    }}
+                  />
+                  <button 
+                    className="btn" 
+                    onClick={browseParent}
+                    style={{
+                      padding: "8px 12px",
+                      fontSize: "14px",
+                      backgroundColor: "var(--accent)",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      whiteSpace: "nowrap"
+                    }}
+                  >
+                    {t("home.browse")}
+                  </button>
+                </div>
+              </div>
+              
+              <div>
+                <label style={{ 
+                  display: "block", 
+                  fontSize: "14px", 
+                  fontWeight: "500", 
+                  color: "var(--text)", 
+                  marginBottom: "6px" 
+                }}>
+                  {t("home.projectName")}
+                </label>
+                <input
+                  value={projName}
+                  onChange={(e) => setProjName(e.target.value)}
+                  placeholder={t("home.projectNamePlaceholder")}
+                  style={{
+                    width: "100%",
+                    padding: "8px 12px",
+                    fontSize: "14px",
+                    backgroundColor: "var(--panel)",
+                    color: "var(--text)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "4px"
+                  }}
+                />
+              </div>
+              
+              <div style={{ 
+                display: "flex", 
+                justifyContent: "space-between", 
+                alignItems: "center",
+                marginTop: "8px"
+              }}>
+                <div>
+                  {msg && (
+                    <span style={{ 
+                      fontSize: "14px", 
+                      color: msg.includes("Error") || msg.includes("error") ? "#ef4444" : "#10b981" 
+                    }}>
+                      {msg}
+                    </span>
+                  )}
+                </div>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button 
+                    className="btn" 
+                    onClick={closeCreateForm}
+                    style={{
+                      padding: "8px 16px",
+                      fontSize: "14px",
+                      backgroundColor: "var(--panel)",
+                      color: "var(--text)",
+                      border: "1px solid var(--border)",
+                      borderRadius: "6px",
+                      cursor: "pointer"
+                    }}
+                  >
+                    {t("planning.cancel")}
+                  </button>
+                  <button 
+                    className="btn" 
+                    onClick={createNew} 
+                    disabled={disabledCreate}
+                    style={{
+                      padding: "8px 16px",
+                      fontSize: "14px",
+                      backgroundColor: disabledCreate ? "#6b7280" : "#10b981",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "6px",
+                      cursor: disabledCreate ? "not-allowed" : "pointer"
+                    }}
+                  >
+                    {t("home.create")}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <PageHeader 
         title={t("home.existingProjects")}
         description={t("home.instructions")}
+        actions={
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button 
+              className="btn" 
+              onClick={() => setShowCreateForm(true)}
+              style={{
+                padding: "8px 16px",
+                backgroundColor: "var(--panel)",
+                color: "var(--text)",
+                border: "1px solid var(--border)",
+                borderRadius: "6px",
+                cursor: "pointer"
+              }}
+            >
+              {t("home.createNew")}
+            </button>
+            <button 
+              className="btn" 
+              onClick={chooseExisting}
+              style={{
+                padding: "8px 16px",
+                backgroundColor: "var(--panel)",
+                color: "var(--text)",
+                border: "1px solid var(--border)",
+                borderRadius: "6px",
+                cursor: "pointer"
+              }}
+            >
+              {t("home.openExisting")}
+            </button>
+          </div>
+        }
       />
       
       {/* Open existing */}
@@ -390,184 +647,6 @@ export default function Home() {
               ))}
           </div>
         )}
-        
-        <div style={{ 
-          borderTop: "1px solid var(--border)", 
-          paddingTop: "16px",
-          display: "flex",
-          gap: "8px"
-        }}>
-          <button 
-            className="btn" 
-            onClick={chooseExisting}
-            style={{
-              padding: "8px 16px",
-              backgroundColor: "var(--panel)",
-              color: "var(--text)",
-              border: "1px solid var(--border)",
-              borderRadius: "6px",
-              cursor: "pointer"
-            }}
-          >
-            {t("home.openExisting")}
-          </button>
-        </div>
-      </section>
-
-      {/* Create new */}
-      <section style={{ 
-        borderTop: "1px solid var(--border)", 
-        paddingTop: "32px" 
-      }}>
-        <h3 style={{ fontSize: "20px", fontWeight: "bold", color: "var(--text)", marginBottom: "8px" }}>
-          {t("home.createNew")}
-        </h3>
-        <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "16px" }}>
-          {t("home.projectSetup")}
-        </p>
-        
-        <div style={{
-          backgroundColor: "var(--panel)",
-          border: "1px solid var(--border)",
-          borderRadius: "8px",
-          padding: "20px",
-          maxWidth: "800px"
-        }}>
-          <div style={{ marginBottom: "16px" }}>
-            <label style={{ 
-              display: "block", 
-              marginBottom: "6px", 
-              fontWeight: "500",
-              fontSize: "14px",
-              color: "var(--text)"
-            }}>
-              {t("home.baseFolder")}
-            </label>
-            <div style={{ display: "flex", gap: "8px" }}>
-              <input
-                value={parentDir}
-                onChange={(e) => setParentDir(e.target.value)}
-                placeholder={t("home.baseFolderPlaceholder")}
-                style={{
-                  flex: 1,
-                  padding: "8px 12px",
-                  fontSize: "14px",
-                  backgroundColor: "var(--panel)",
-                  color: "var(--text)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "4px"
-                }}
-              />
-              <button 
-                className="btn" 
-                onClick={browseParent}
-                style={{
-                  padding: "8px 16px",
-                  fontSize: "14px",
-                  backgroundColor: "var(--panel)",
-                  color: "var(--text)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "4px",
-                  cursor: "pointer"
-                }}
-              >
-                {t("home.browse")}
-              </button>
-            </div>
-          </div>
-          
-          <div style={{ marginBottom: "20px" }}>
-            <label style={{ 
-              display: "block", 
-              marginBottom: "6px", 
-              fontWeight: "500",
-              fontSize: "14px",
-              color: "var(--text)"
-            }}>
-              {t("home.projectName")}
-            </label>
-            <input
-              value={projName}
-              onChange={(e) => setProjName(e.target.value)}
-              placeholder={t("home.projectNamePlaceholder")}
-              style={{
-                width: "100%",
-                padding: "8px 12px",
-                fontSize: "14px",
-                backgroundColor: "var(--panel)",
-                color: "var(--text)",
-                border: "1px solid var(--border)",
-                borderRadius: "4px"
-              }}
-            />
-          </div>
-          
-          <div style={{ 
-            display: "flex", 
-            justifyContent: "space-between", 
-            alignItems: "center" 
-          }}>
-            <div>
-              {msg && (
-                <span style={{ 
-                  fontSize: "14px", 
-                  color: msg.includes("Error") || msg.includes("error") ? "#ef4444" : "#10b981" 
-                }}>
-                  {msg}
-                </span>
-              )}
-            </div>
-            <button 
-              className="btn" 
-              onClick={createNew} 
-              disabled={disabledCreate}
-              style={{
-                padding: "8px 16px",
-                fontSize: "14px",
-                backgroundColor: disabledCreate ? "#6b7280" : "#10b981",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                cursor: disabledCreate ? "not-allowed" : "pointer"
-              }}
-            >
-              {t("home.create")}
-            </button>
-          </div>
-        </div>
-        
-        <details style={{ marginTop: "16px", maxWidth: "800px" }}>
-          <summary style={{ 
-            cursor: "pointer", 
-            fontSize: "14px", 
-            color: "var(--muted)",
-            marginBottom: "8px"
-          }}>
-            {t("home.structurePreview")}
-          </summary>
-          <pre style={{ 
-            whiteSpace: "pre-wrap",
-            backgroundColor: "var(--panel)",
-            padding: "12px",
-            borderRadius: "4px",
-            border: "1px solid var(--border)",
-            fontSize: "12px",
-            color: "var(--muted)",
-            margin: "8px 0"
-          }}>
-{`analysis/chapters_txt/
-dossier/
-ssml/plans/
-ssml/xml/
-cache/tts/
-audio/chapters/
-audio/book/
-exports/
-project.khipu.json
-book.meta.json
-production.settings.json`}
-          </pre>
-        </details>
       </section>
     </div>
   );

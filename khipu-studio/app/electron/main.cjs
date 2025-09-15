@@ -559,7 +559,36 @@ function createWin() {
   /* Project: list, choose, create, open */
   ipcMain.handle("project:listRecents", async () => {
     const cfg = await getAppConfig();
-    return (cfg.recentProjects || []).map((p) => ({ path: p, name: path.basename(p) }));
+    const currentRecents = cfg.recentProjects || [];
+    const validRecents = [];
+
+    // Check each project path to see if it still exists
+    for (const projectPath of currentRecents) {
+      try {
+        const stat = await fsp.stat(projectPath);
+        if (stat.isDirectory()) {
+          // Also check if it has a project file to confirm it's a valid project
+          const projectConfigPath = path.join(projectPath, "project.khipu.json");
+          try {
+            await fsp.access(projectConfigPath);
+            validRecents.push(projectPath);
+          } catch {
+            // Project directory exists but no config file - skip it silently
+          }
+        }
+      } catch {
+        // Directory doesn't exist - skip it silently
+      }
+    }
+
+    // Update the config if we found any invalid projects
+    if (validRecents.length !== currentRecents.length) {
+      cfg.recentProjects = validRecents;
+      await setAppConfig(cfg);
+      console.log(`Auto-cleaned recent projects: ${currentRecents.length} -> ${validRecents.length}`);
+    }
+
+    return validRecents.map((p) => ({ path: p, name: path.basename(p) }));
   });
   ipcMain.handle("project:browseForParent", async () => {
     const res = await dialog.showOpenDialog({ properties: ["openDirectory", "createDirectory"] });
