@@ -2749,8 +2749,8 @@
     "comment": "Nombre para mostrar de la fase de inicio en seguimiento de tiempo"
   },
   "cost.pageNames.unknown": {
-    "string": "Fase Desconocida",
-    "comment": "Nombre para mostrar de fase desconocida en seguimiento de tiempo"
+    "string": "Fase Otros",
+    "comment": "Nombre para mostrar de fase otros en seguimiento de tiempo"
   },
   "cost.operationNames.character_detection": {
     "string": "Detección de Personajes",
@@ -2961,8 +2961,8 @@
     "comment": "Etiqueta para configuración de precios de caracteres de OpenAI TTS"
   },
   "cost.unknown": {
-    "string": "Desconocido",
-    "comment": "Etiqueta para página u operación desconocida"
+    "string": "Otros",
+    "comment": "Etiqueta para página u operación otros"
   },
   "cost.cacheHit_one": {
     "string": "Acierto de caché",

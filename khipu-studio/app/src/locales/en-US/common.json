@@ -2301,8 +2301,8 @@
     "comment": "Display name for home phase in time tracking"
   },
   "cost.pageNames.unknown": {
-    "string": "Unknown Phase",
-    "comment": "Display name for unknown phase in time tracking"
+    "string": "Other Phase",
+    "comment": "Display name for other phase in time tracking"
   },
   "cost.operationNames.character_detection": {
     "string": "Character Detection",
@@ -2513,8 +2513,8 @@
     "comment": "Label for OpenAI TTS character pricing setting"
   },
   "cost.unknown": {
-    "string": "Unknown",
-    "comment": "Label for unknown page or operation"
+    "string": "Other",
+    "comment": "Label for other page or operation"
   },
   "cost.cacheHit_one": {
     "string": "Cache Hit",

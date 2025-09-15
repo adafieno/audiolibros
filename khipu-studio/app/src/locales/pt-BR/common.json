@@ -1767,6 +1767,14 @@
     "string": "Tem certeza de que deseja limpar todos os dados de custo? Esta ação não pode ser desfeita.",
     "comment": "Texto do diálogo de confirmação para limpar dados de custo"
   },
+  "cost.pageNames.unknown": {
+    "string": "Fase outros",
+    "comment": "Nome de exibição para fase outros no rastreamento de tempo"
+  },
+  "cost.unknown": {
+    "string": "Outros",
+    "comment": "Rótulo para página ou operação outros"
+  },
   "packaging.title": {
     "string": "Empacotamento",
     "comment": "Título principal da página de empacotamento"
