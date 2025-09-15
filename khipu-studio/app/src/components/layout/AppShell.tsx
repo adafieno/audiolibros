@@ -188,7 +188,7 @@ export function AppShell(props: { title?: string; pageName?: string; projectName
                     right: "2px",
                     fontSize: "10px",
                     lineHeight: 1,
-                    color: "#10b981",
+                    color: "var(--success)",
                     fontWeight: "bold",
                     textShadow: "0 0 2px rgba(0,0,0,0.8)",
                   }}

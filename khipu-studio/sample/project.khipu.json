@@ -1,10 +1,6 @@
 {
   "version": 1,
   "language": "es-PE",
-  "paths": {
-    "bookMeta": "book.meta.json",
-    "production": "production.settings.json"
-  },
   "planning": {
     "maxKb": 48,
     "llmAttribution": "off"
@@ -56,6 +52,10 @@
         "apiVersion": ""
       }
     }
+  },
+  "paths": {
+    "bookMeta": "book.meta.json",
+    "production": "production.settings.json"
   },
   "workflow": {
     "manuscript": {

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { PlanFile, PlanChunk } from "../../types/plan";
 import { loadPlan, savePlan } from "../../lib/fs";
+import StandardButton from "../../components/StandardButton";
 
 type Props = {
   projectRoot: string;
@@ -130,8 +131,12 @@ export default function PlanBoard({ projectRoot, planRelPath, chapterId, onOpenC
   return (
     <div style={{ marginTop: 16 }}>
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-        <button onClick={() => onOpenChapter(chapterId)}>Editar capítulo</button>
-        <button onClick={regen}>Regenerar plan</button>
+        <StandardButton onClick={() => onOpenChapter(chapterId)} variant="primary" size="compact">
+          Editar capítulo
+        </StandardButton>
+        <StandardButton onClick={regen} variant="secondary" size="compact">
+          Regenerar plan
+        </StandardButton>
         <span style={{ color: "#9ca3af" }}>{msg}</span>
       </div>
 
@@ -180,8 +185,12 @@ function Row({ chunk, onToggle }: { chunk: PlanChunk; onToggle: () => void }) {
       </label>
       <div style={{ whiteSpace: "pre-wrap" }}>{preview}</div>
       <div style={{ display: "flex", gap: 6 }}>
-        <button disabled title={t("plan.addSfx")}>SFX</button>
-        <button disabled title={t("plan.goToText")}>{t("plan.goToSourceText")}</button>
+        <StandardButton disabled title={t("plan.addSfx")} variant="secondary" size="compact">
+          SFX
+        </StandardButton>
+        <StandardButton disabled title={t("plan.goToText")} variant="secondary" size="compact">
+          {t("plan.goToSourceText")}
+        </StandardButton>
       </div>
     </>
   );

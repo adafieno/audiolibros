@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useProject } from "../store/project";
 import { WorkflowCompleteButton } from "../components/WorkflowCompleteButton";
 import { PageHeader } from "../components/PageHeader";
+import StandardButton from "../components/StandardButton";
 import {
   loadProjectConfig, saveProjectConfig,
 } from "../lib/config";
@@ -307,21 +308,13 @@ export default function Project() {
                     borderRadius: "4px"
                   }}
                 />
-                <button 
-                  className="btn" 
+                <StandardButton 
                   onClick={browseOutputFolder}
-                  style={{
-                    padding: "8px 16px",
-                    fontSize: "14px",
-                    backgroundColor: "var(--panel)",
-                    color: "var(--text)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "4px",
-                    cursor: "pointer"
-                  }}
+                  variant="secondary"
+                  size="compact"
                 >
                   {t("home.browse")}
-                </button>
+                </StandardButton>
               </div>
             </label>
           </div>

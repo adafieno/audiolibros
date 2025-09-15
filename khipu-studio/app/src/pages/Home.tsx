@@ -5,6 +5,7 @@ import { useProject } from "../store/project";
 import { bootstrapVoiceInventory } from "../lib/voice";
 import { bootstrapProjectFiles } from "../lib/project-bootstrap";
 import { PageHeader } from "../components/PageHeader";
+import StandardButton from "../components/StandardButton";
 import type { ProjectConfig, BookMeta } from "../types/config";
 
 type RecentItem = { 
@@ -373,22 +374,14 @@ export default function Home() {
                       borderRadius: "4px"
                     }}
                   />
-                  <button 
-                    className="btn" 
+                  <StandardButton 
                     onClick={browseParent}
-                    style={{
-                      padding: "8px 12px",
-                      fontSize: "14px",
-                      backgroundColor: "var(--accent)",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                      whiteSpace: "nowrap"
-                    }}
+                    variant="primary"
+                    size="compact"
+                    style={{ whiteSpace: "nowrap" }}
                   >
                     {t("home.browse")}
-                  </button>
+                  </StandardButton>
                 </div>
               </div>
               
@@ -428,44 +421,26 @@ export default function Home() {
                   {msg && (
                     <span style={{ 
                       fontSize: "14px", 
-                      color: msg.includes("Error") || msg.includes("error") ? "#ef4444" : "#10b981" 
+                      color: msg.includes("Error") || msg.includes("error") ? "var(--error)" : "var(--success)" 
                     }}>
                       {msg}
                     </span>
                   )}
                 </div>
                 <div style={{ display: "flex", gap: "8px" }}>
-                  <button 
-                    className="btn" 
+                  <StandardButton 
                     onClick={closeCreateForm}
-                    style={{
-                      padding: "8px 16px",
-                      fontSize: "14px",
-                      backgroundColor: "var(--panel)",
-                      color: "var(--text)",
-                      border: "1px solid var(--border)",
-                      borderRadius: "6px",
-                      cursor: "pointer"
-                    }}
+                    variant="secondary"
                   >
                     {t("planning.cancel")}
-                  </button>
-                  <button 
-                    className="btn" 
+                  </StandardButton>
+                  <StandardButton 
                     onClick={createNew} 
                     disabled={disabledCreate}
-                    style={{
-                      padding: "8px 16px",
-                      fontSize: "14px",
-                      backgroundColor: disabledCreate ? "#6b7280" : "#10b981",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "6px",
-                      cursor: disabledCreate ? "not-allowed" : "pointer"
-                    }}
+                    variant="success"
                   >
                     {t("home.create")}
-                  </button>
+                  </StandardButton>
                 </div>
               </div>
             </div>
@@ -477,34 +452,20 @@ export default function Home() {
         description={t("home.instructions")}
         actions={
           <div style={{ display: "flex", gap: "8px" }}>
-            <button 
-              className="btn" 
+            <StandardButton 
               onClick={() => setShowCreateForm(true)}
-              style={{
-                padding: "8px 16px",
-                backgroundColor: "var(--panel)",
-                color: "var(--text)",
-                border: "1px solid var(--border)",
-                borderRadius: "6px",
-                cursor: "pointer"
-              }}
+              variant="secondary"
+              size="compact"
             >
               {t("home.createNew")}
-            </button>
-            <button 
-              className="btn" 
+            </StandardButton>
+            <StandardButton 
               onClick={chooseExisting}
-              style={{
-                padding: "8px 16px",
-                backgroundColor: "var(--panel)",
-                color: "var(--text)",
-                border: "1px solid var(--border)",
-                borderRadius: "6px",
-                cursor: "pointer"
-              }}
+              variant="secondary"
+              size="compact"
             >
               {t("home.openExisting")}
-            </button>
+            </StandardButton>
           </div>
         }
       />

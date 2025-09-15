@@ -4,6 +4,7 @@
 import React, { useState } from 'react';
 import { useAudioPreview } from '../hooks/useAudioPreview';
 import { createDefaultProcessingChain } from '../lib/audio-production-utils';
+import StandardButton from './StandardButton';
 import type { AudioProcessingChain } from '../types/audio-production';
 import type { Segment } from '../types/plan';
 import type { Character } from '../types/character';
@@ -116,7 +117,7 @@ export const AudioProcessingTestControls: React.FC<AudioProcessingTestControlsPr
       padding: '16px',
       border: '2px solid #333',
       borderRadius: '8px',
-      backgroundColor: '#f5f5f5',
+      backgroundColor: 'var(--panel)',
       margin: '16px',
       fontFamily: 'monospace'
     }}>
@@ -124,64 +125,40 @@ export const AudioProcessingTestControls: React.FC<AudioProcessingTestControlsPr
       <p>Use these controls to compare audio with and without processing effects:</p>
       
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
-        <button 
+        <StandardButton 
           onClick={handleTestWithoutProcessing}
           disabled={isTestingEffects}
-          style={{ 
-            padding: '8px 16px', 
-            backgroundColor: '#e74c3c', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '4px',
-            cursor: isTestingEffects ? 'not-allowed' : 'pointer'
-          }}
+          variant="danger"
+          size="compact"
         >
           🎵 Play RAW (No Processing)
-        </button>
+        </StandardButton>
         
-        <button 
+        <StandardButton 
           onClick={handleTestWithProcessing}
           disabled={isTestingEffects}
-          style={{ 
-            padding: '8px 16px', 
-            backgroundColor: '#3498db', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '4px',
-            cursor: isTestingEffects ? 'not-allowed' : 'pointer'
-          }}
+          variant="primary"
+          size="compact"
         >
           🎛️ Play with DEFAULT Processing
-        </button>
+        </StandardButton>
         
-        <button 
+        <StandardButton 
           onClick={handleTestWithExaggeratedEffects}
           disabled={isTestingEffects}
-          style={{ 
-            padding: '8px 16px', 
-            backgroundColor: '#9b59b6', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '4px',
-            cursor: isTestingEffects ? 'not-allowed' : 'pointer'
-          }}
+          variant="warning"
+          size="compact"
         >
           🎭 Play with EXAGGERATED Effects
-        </button>
+        </StandardButton>
         
-        <button 
+        <StandardButton 
           onClick={handleStop}
-          style={{ 
-            padding: '8px 16px', 
-            backgroundColor: '#95a5a6', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
+          variant="secondary"
+          size="compact"
         >
           ⏹️ Stop
-        </button>
+        </StandardButton>
       </div>
 
       <div style={{ marginBottom: '16px' }}>
@@ -204,20 +181,14 @@ export const AudioProcessingTestControls: React.FC<AudioProcessingTestControlsPr
         </ul>
       </div>
 
-      <button 
+      <StandardButton 
         onClick={handleClearCache}
-        style={{ 
-          padding: '4px 8px', 
-          backgroundColor: '#e67e22', 
-          color: 'white', 
-          border: 'none', 
-          borderRadius: '4px',
-          fontSize: '12px',
-          cursor: 'pointer'
-        }}
+        variant="warning"
+        size="compact"
+        style={{ fontSize: '12px' }}
       >
         🗑️ Clear Cache (if needed)
-      </button>
+      </StandardButton>
     </div>
   );
 };

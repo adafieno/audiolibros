@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import StandardButton from './StandardButton';
 
 interface ImageSelectorProps {
   projectRoot: string;
@@ -194,17 +195,11 @@ export function ImageSelector({ projectRoot, value, onChange, hideButtons = fals
 
       {!hideButtons && (
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <button 
+          <StandardButton 
             onClick={handleFileSelect} 
             disabled={loading}
-            style={{ 
-              padding: "8px 16px",
-              backgroundColor: "#007acc",
-              color: "white",
-              border: "none",
-              borderRadius: 4,
-              cursor: loading ? "not-allowed" : "pointer"
-            }}
+            loading={loading}
+            variant="primary"
           >
             {loading 
               ? t("common.loading")
@@ -212,22 +207,15 @@ export function ImageSelector({ projectRoot, value, onChange, hideButtons = fals
                 ? t("book.coverImage.change") 
                 : t("book.coverImage.select")
             }
-          </button>
+          </StandardButton>
           
           {value && (
-            <button 
+            <StandardButton 
               onClick={handleRemove}
-              style={{ 
-                padding: "8px 16px",
-                backgroundColor: "#dc3545",
-                color: "white",
-                border: "none",
-                borderRadius: 4,
-                cursor: "pointer"
-              }}
+              variant="danger"
             >
               {t("book.coverImage.remove")}
-            </button>
+            </StandardButton>
           )}
         </div>
       )}
@@ -238,11 +226,11 @@ export function ImageSelector({ projectRoot, value, onChange, hideButtons = fals
 
       {error && (
         <div style={{ 
-          color: "#dc3545", 
+          color: "var(--error)", 
           fontSize: 12, 
           padding: 8, 
-          backgroundColor: "#f8d7da",
-          border: "1px solid #f5c6cb",
+          backgroundColor: "var(--error-bg, #f8d7da)",
+          border: "1px solid var(--error-border, #f5c6cb)",
           borderRadius: 4
         }}>
           {error}

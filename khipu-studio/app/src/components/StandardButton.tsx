@@ -1,6 +1,6 @@
 import React, { type ButtonHTMLAttributes } from 'react';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'success' | 'danger' | 'warning';
+export type ButtonVariant = 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'ghost' | 'outline';
 export type ButtonSize = 'compact' | 'normal' | 'large';
 
 export interface StandardButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -85,6 +85,16 @@ export function StandardButton({
         background: 'var(--warning)',
         color: 'white',
         border: '1px solid var(--warning)',
+      },
+      ghost: {
+        background: 'transparent',
+        color: 'var(--text)',
+        border: '1px solid transparent',
+      },
+      outline: {
+        background: 'transparent',
+        color: 'var(--accent)',
+        border: '1px solid var(--accent)',
       }
     };
 
@@ -116,6 +126,13 @@ export function StandardButton({
       case 'warning':
         button.style.background = '#d97706';
         break;
+      case 'ghost':
+        button.style.background = 'var(--panelAccent)';
+        break;
+      case 'outline':
+        button.style.background = 'var(--accent)';
+        button.style.color = 'white';
+        break;
     }
     
     if (size !== 'compact') {
@@ -134,6 +151,8 @@ export function StandardButton({
       success: 'var(--success)',
       danger: 'var(--error)',
       warning: 'var(--warning)',
+      ghost: 'transparent',
+      outline: 'transparent',
     };
     
     button.style.background = variantStyles[variant];
