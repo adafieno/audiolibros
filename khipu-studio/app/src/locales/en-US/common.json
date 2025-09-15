@@ -2200,13 +2200,13 @@
     "string": "You've saved {{savings}} thanks to intelligent caching! Without caching, your total cost would have been {{totalWithSavings}}.",
     "comment": "Message showing cache savings impact with cost values"
   },
-  "cost.savingsByService": {
-    "string": "Cache Savings by Service",
-    "comment": "Title for the panel showing cache savings breakdown by AI service provider"
+  "cost.savingsByOperation": {
+    "string": "Cache Savings by Operation",
+    "comment": "Title for the panel showing cache savings breakdown by operation type"
   },
   "cost.noSavingsData": {
     "string": "No cache savings data available",
-    "comment": "Message displayed when no cache savings data exists for any service provider"
+    "comment": "Message displayed when no cache savings data exists for any operation"
   },
   "cost.exportData": {
     "string": "Export Data as CSV",

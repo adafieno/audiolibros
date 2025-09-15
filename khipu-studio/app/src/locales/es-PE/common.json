@@ -2652,13 +2652,13 @@
     "string": "¡Has ahorrado {{savings}} gracias al caché inteligente! Sin caché, tu costo total habría sido {{totalWithSavings}}.",
     "comment": "Mensaje mostrando impacto de ahorros de caché con valores de costo"
   },
-  "cost.savingsByService": {
-    "string": "Ahorros de caché por servicio",
-    "comment": "Título para el panel que muestra el desglose de ahorros de caché por proveedor de servicios de IA"
+  "cost.savingsByOperation": {
+    "string": "Ahorros de caché por operación",
+    "comment": "Título para el panel que muestra el desglose de ahorros de caché por tipo de operación"
   },
   "cost.noSavingsData": {
     "string": "No hay datos de ahorros de caché disponibles",
-    "comment": "Mensaje mostrado cuando no existen datos de ahorros de caché para ningún proveedor de servicios"
+    "comment": "Mensaje mostrado cuando no existen datos de ahorros de caché para ninguna operación"
   },
   "cost.exportData": {
     "string": "Exportar datos como CSV",

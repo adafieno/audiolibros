@@ -27,7 +27,7 @@ const projectRoutes: RouteItem[] = [
   { to: "/planning",   key: "nav.planning",   icon: "🪄", workflowStep: "planning" },
   { to: "/voice",      key: "nav.voice",      icon: "🎙️", workflowStep: "voice" },
   { to: "/packaging",  key: "nav.packaging",  icon: "📦", workflowStep: "voice" },
-  { to: "/cost",       key: "nav.cost",       icon: "💰", workflowStep: "project" }, // Always at end, right before Settings
+  { to: "/cost",       key: "nav.cost",       icon: "💰" }, // No workflowStep = no completion checkmark
 ];
 
 export function AppShell(props: { title?: string; pageName?: string; projectName?: string; status?: string; children: ReactNode }) {
