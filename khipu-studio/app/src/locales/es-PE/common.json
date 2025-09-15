@@ -2696,6 +2696,45 @@
     "string": "Total",
     "comment": "Etiqueta para costo total en tooltips de timeline al pasar el mouse"
   },
+  "cost.debug": {
+    "string": "Debug",
+    "comment": "Texto del botón para debuggear el estado del seguimiento de tiempo"
+  },
+  "cost.testData": {
+    "string": "Datos de Prueba",
+    "comment": "Texto del botón para crear datos de prueba de seguimiento de tiempo"
+  },
+  "cost.testAutomation": {
+    "string": "test:automatización",
+    "comment": "Nombre de operación para operaciones de automatización de prueba"
+  },
+  "cost.automationCompleted": {
+    "string": "Automatización de prueba completada",
+    "comment": "Mensaje mostrado cuando se completa la operación de automatización de prueba"
+  },
+  "cost.timeByOperation": {
+    "string": "Tiempo por Operación",
+    "comment": "Título para la visualización de desglose de tiempo por operación"
+  },
+  "cost.pageNames": {
+    "voice": "Página de Voz",
+    "casting": "Página de Casting", 
+    "characters": "Página de Personajes",
+    "planning": "Página de Planificación",
+    "manuscript": "Página de Manuscrito",
+    "packaging": "Página de Empaquetado",
+    "cost": "Página de Costos",
+    "home": "Página de Inicio",
+    "unknown": "Página Desconocida"
+  },
+  "cost.operationNames": {
+    "character_detection": "Detección de Personajes",
+    "characters:assignVoices": "Asignación de Voces",
+    "characters:auditionVoice": "Audición de Voz",
+    "plan:build": "Generación de Plan",
+    "manuscript:parse": "Análisis de Manuscrito", 
+    "audio:process": "Procesamiento de Audio"
+  },
   "cost.saved": {
     "string": "Ahorrado",
     "comment": "Etiqueta para costo ahorrado en tooltips de timeline al pasar el mouse"

@@ -2248,6 +2248,45 @@
     "string": "Total",
     "comment": "Label for total cost in timeline hover tooltips"
   },
+  "cost.debug": {
+    "string": "Debug",
+    "comment": "Button text for debugging time tracking state"
+  },
+  "cost.testData": {
+    "string": "Test Data",
+    "comment": "Button text for creating test time tracking data"
+  },
+  "cost.testAutomation": {
+    "string": "test:automation",
+    "comment": "Operation name for test automation operations"
+  },
+  "cost.automationCompleted": {
+    "string": "Test automation completed",
+    "comment": "Message shown when test automation operation completes"
+  },
+  "cost.timeByOperation": {
+    "string": "Time by Operation",
+    "comment": "Title for the time breakdown by operation visualization"
+  },
+  "cost.pageNames": {
+    "voice": "Voice Page",
+    "casting": "Casting Page", 
+    "characters": "Characters Page",
+    "planning": "Planning Page",
+    "manuscript": "Manuscript Page",
+    "packaging": "Packaging Page",
+    "cost": "Cost Page",
+    "home": "Home Page",
+    "unknown": "Unknown Page"
+  },
+  "cost.operationNames": {
+    "character_detection": "Character Detection",
+    "characters:assignVoices": "Voice Assignment",
+    "characters:auditionVoice": "Voice Audition",
+    "plan:build": "Plan Generation",
+    "manuscript:parse": "Manuscript Parsing",
+    "audio:process": "Audio Processing"
+  },
   "cost.saved": {
     "string": "Saved",
     "comment": "Label for saved cost in timeline hover tooltips"

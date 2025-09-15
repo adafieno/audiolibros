@@ -409,57 +409,6 @@ export default function Cost() {
           >
             {t('cost.clearData', 'Clear')}
           </StandardButton>
-          
-          {/* Test Data Button */}
-          <StandardButton
-            variant="outline" 
-            onClick={async () => {
-              try {
-                // Create both test time data and a test automation operation
-                costTrackingService.createTestTimeData();
-                
-                // Add a test automation operation
-                await costTrackingService.trackAutomatedOperation(
-                  'test:automation',
-                  async () => {
-                    // Simulate some work
-                    await new Promise(resolve => setTimeout(resolve, 1500));
-                    return 'Test automation completed';
-                  },
-                  { page: 'cost', projectId: 'test' }
-                );
-                
-                await loadData();
-              } catch (error) {
-                console.error('Error creating test data:', error);
-              }
-            }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              marginLeft: '8px'
-            }}
-          >
-            🧪 Test Data
-          </StandardButton>
-          
-          {/* Debug State Button */}
-          <StandardButton
-            variant="outline" 
-            onClick={() => {
-              console.log('🔍 Debugging time tracking state...');
-              costTrackingService.debugTimeTrackingState();
-            }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              marginLeft: '8px'
-            }}
-          >
-            🔍 Debug
-          </StandardButton>
         </div>
       </div>
 
@@ -1141,9 +1090,11 @@ export default function Cost() {
                       {(() => {
                         if (item.operation.startsWith('user:')) {
                           const page = item.operation.replace('user:', '');
-                          return `${page.charAt(0).toUpperCase() + page.slice(1)} Page`;
+                          return t(`cost.pageNames.${page}`, `${page.charAt(0).toUpperCase() + page.slice(1)} Page`);
                         }
-                        return item.operation.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()).replace(/:/g, ': ');
+                        return t(`cost.operationNames.${item.operation}`, 
+                          item.operation.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()).replace(/:/g, ': ')
+                        );
                       })()}
                     </div>
                     <div style={{

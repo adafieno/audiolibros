@@ -1058,7 +1058,9 @@ export class CostTrackingService {
         averageTime: stats.totalTime / stats.count,
         activityType: stats.activityType
       }))
-      .sort((a, b) => b.totalTime - a.totalTime); // Sort by total time descending
+      .filter(item => !item.operation.includes('unknown')) // Filter out unknown pages
+      .sort((a, b) => b.totalTime - a.totalTime) // Sort by total time descending
+      .slice(0, 5); // Limit to top 5
   }
 
   /**
@@ -1079,13 +1081,20 @@ export class CostTrackingService {
     console.log('🧪 Current time entries before test:', this.timeEntries.length);
     console.log('🧪 Current session:', this.currentSession?.id);
     
+    // First, show current automation time before adding test data
+    const currentAutomationTime = this.timeEntries
+      .filter(e => e.activityType === 'automation')
+      .reduce((sum, e) => sum + e.duration, 0);
+    console.log('🧪 Current automation time before test:', this.formatDuration(currentAutomationTime));
+    
     for (const item of testData) {
       if ('operation' in item) {
         console.log('🧪 Adding automation entry:', item);
-        this.trackTimeActivity(item.activityType, item.duration, { 
+        const entry = this.trackTimeActivity(item.activityType, item.duration, { 
           operation: item.operation,
           page: 'test' 
         });
+        console.log('🧪 Created automation entry:', entry);
       } else {
         console.log('🧪 Adding user interaction entry:', item);
         this.trackTimeActivity(item.activityType, item.duration, { 
@@ -1095,6 +1104,18 @@ export class CostTrackingService {
     }
     
     console.log('🧪 Test data created. Total time entries:', this.timeEntries.length);
+    
+    // Debug: Show automation entries after test data
+    const automationEntries = this.timeEntries.filter(e => e.activityType === 'automation');
+    console.log('🧪 Automation entries after test:', automationEntries.length);
+    automationEntries.forEach(entry => {
+      console.log('  🤖', {
+        operation: entry.operation,
+        duration: this.formatDuration(entry.duration),
+        activityType: entry.activityType,
+        id: entry.id
+      });
+    });
     
     // Debug: Show breakdown after test data
     const breakdown = this.getTimeBreakdownByOperation();
@@ -1112,6 +1133,14 @@ export class CostTrackingService {
       automationTime: this.formatDuration(automationTime),
       userTime: this.formatDuration(userTime),
       totalEntries: this.timeEntries.length
+    });
+    
+    // IMPORTANT: Check what the summary method returns
+    const summary = this.generateSummary();
+    console.log('🧪 Summary data after test:', {
+      totalAutomationTime: summary.totalAutomationTime,
+      totalActiveTime: summary.totalActiveTime,
+      totalAutomationTimeFormatted: this.formatDuration(summary.totalAutomationTime)
     });
     
     this.notifyDataChange();
