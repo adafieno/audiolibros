@@ -87,6 +87,10 @@
     "string": "Procesando",
     "comment": ""
   },
+  "common.cancel": {
+    "string": "Cancelar",
+    "comment": "Texto genérico de botón cancelar"
+  },
   "image.errors.failedToCopy": {
     "string": "Error al copiar imagen",
     "comment": ""
@@ -2046,6 +2050,10 @@
   "audioProduction.selectWavFile": {
     "string": "Seleccionar Archivo WAV",
     "comment": "Etiqueta para selección de archivo WAV en diálogo de efecto sonoro"
+  },
+  "audioProduction.chooseFile": {
+    "string": "Elegir Archivo",
+    "comment": "Texto de botón para selección de archivo en diálogo de efecto sonoro"
   },
   "audioProduction.wavFileRequirements": {
     "string": "Requisitos: 16-48kHz, 16/24-bit, estéreo/mono, máx 300 segundos",

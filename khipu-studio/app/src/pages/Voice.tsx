@@ -2014,59 +2014,71 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               <label style={{ display: "block", marginBottom: "8px", fontSize: "13px", fontWeight: 500 }}>
                 {t("audioProduction.selectWavFile")}
               </label>
-              <input
-                type="file"
-                accept=".wav"
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (file && selectedChapter && audioProductionService) {
-                    try {
-                      const validationResult = await validateWavFile(file);
-                      if (validationResult.valid) {
-                        // Create and save the SFX segment to filesystem
-                        // const sfxData = {
-                        //   path: `sfx/${file.name}`,
-                        //   filename: file.name,
-                        //   duration: validationResult.duration || 0,
-                        //   validated: true
-                        // };
-                        
-                        // const segmentId = await audioProductionService.addSfxSegment(
-                        //   selectedChapter,
-                        //   insertPosition,
-                        //   sfxData
-                        // );
-                        
-                        // Create UI segment and update state
-                        const sfxSegment = createSfxSegment(
-                          file.name,
-                          `sfx/${file.name}`,
-                          validationResult.duration || 0
-                        );
-                        
-                        const updatedSegments = insertSegmentAtPosition(
-                          audioSegments,
-                          sfxSegment,
-                          insertPosition
-                        );
-                        
-                        setAudioSegments(updatedSegments);
-                        setShowSfxDialog(false);
+              <div style={{ position: "relative", display: "inline-block", width: "100%" }}>
+                <input
+                  type="file"
+                  accept=".wav"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (file && selectedChapter && audioProductionService) {
+                      try {
+                        const validationResult = await validateWavFile(file);
+                        if (validationResult.valid) {
+                          // Create and save the SFX segment to filesystem
+                          // const sfxData = {
+                          //   path: `sfx/${file.name}`,
+                          //   filename: file.name,
+                          //   duration: validationResult.duration || 0,
+                          //   validated: true
+                          // };
+                          
+                          // const segmentId = await audioProductionService.addSfxSegment(
+                          //   selectedChapter,
+                          //   insertPosition,
+                          //   sfxData
+                          // );
+                          
+                          // Create UI segment and update state
+                          const sfxSegment = createSfxSegment(
+                            file.name,
+                            `sfx/${file.name}`,
+                            validationResult.duration || 0
+                          );
+                          
+                          const updatedSegments = insertSegmentAtPosition(
+                            audioSegments,
+                            sfxSegment,
+                            insertPosition
+                          );
+                          
+                          setAudioSegments(updatedSegments);
+                          setShowSfxDialog(false);
+                        }
+                      } catch (error) {
+                        console.error("Error processing SFX file:", error);
                       }
-                    } catch (error) {
-                      console.error("Error processing SFX file:", error);
                     }
-                  }
-                }}
-                style={{
-                  width: "100%",
-                  padding: "8px",
-                  border: "1px solid var(--border)",
-                  borderRadius: "4px",
-                  backgroundColor: "var(--input)",
-                  color: "var(--text)"
-                }}
-              />
+                  }}
+                  style={{
+                    position: "absolute",
+                    opacity: 0,
+                    width: "100%",
+                    height: "100%",
+                    cursor: "pointer"
+                  }}
+                />
+                <StandardButton
+                  variant="outline"
+                  style={{
+                    width: "100%",
+                    justifyContent: "flex-start",
+                    textAlign: "left",
+                    padding: "8px 12px"
+                  }}
+                >
+                  📁 {t("audioProduction.chooseFile")}
+                </StandardButton>
+              </div>
               <div style={{ fontSize: "13px", color: "var(--textSecondary)", marginTop: "4px" }}>
                 {t("audioProduction.wavFileRequirements")}
               </div>

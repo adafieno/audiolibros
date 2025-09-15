@@ -359,6 +359,10 @@
     "string": "Processing",
     "comment": "Default status message during processing operations"
   },
+  "common.cancel": {
+    "string": "Cancel",
+    "comment": "Generic cancel button text"
+  },
 
   "status.completed": {
     "string": "Completed",
@@ -1597,6 +1601,10 @@
   "audioProduction.selectWavFile": {
     "string": "Select WAV File",
     "comment": "Label for WAV file selection in sound effect dialog"
+  },
+  "audioProduction.chooseFile": {
+    "string": "Choose File",
+    "comment": "Button text for file selection in sound effect dialog"
   },
   "audioProduction.wavFileRequirements": {
     "string": "Requirements: 16-48kHz, 16/24-bit, stereo/mono, max 300 seconds",
