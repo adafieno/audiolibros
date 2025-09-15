@@ -417,7 +417,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             displayOrder: 0, // Will be recalculated below
             chunkId: sfxSegment.id,
             text: `[SFX: ${sfxSegment.sfxFile.filename}]`,
-            voice: "",
+            voice: "SFX",
             locked: false,
             sfxAfter: null,
             hasAudio: sfxSegment.sfxFile.validated || false,
@@ -477,8 +477,12 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     if (direction === 'up') {
       newInsertPosition = Math.max(0, segmentIndex - 1);
     } else {
-      newInsertPosition = Math.min(audioSegments.length, segmentIndex + 2); // +2 because we want to move past the next segment
+      newInsertPosition = Math.min(audioSegments.length - 1, segmentIndex + 1);
     }
+    
+    // Store the segment ID to track after reload
+    const movedSegmentId = segment.chunkId;
+    const wasSelected = selectedRowIndex === segmentIndex;
     
     try {
       // Update the SFX segment's display order in storage
@@ -487,12 +491,21 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       // Reload the chapter data to reflect the change
       await loadPlanData(selectedChapter);
       
+      // If the moved segment was selected, update selection to follow it
+      if (wasSelected) {
+        // Find the segment in its new position
+        const newIndex = audioSegments.findIndex(s => s.chunkId === movedSegmentId && s.segmentType === 'sfx');
+        if (newIndex >= 0) {
+          setSelectedRowIndex(newIndex);
+        }
+      }
+      
       console.log(`🔄 Moved SFX segment ${segment.chunkId} ${direction}`);
     } catch (error) {
       console.error(`Failed to move SFX segment ${direction}:`, error);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedChapter, audioProductionService, audioSegments]); // loadPlanData intentionally omitted to avoid circular dependency
+  }, [selectedChapter, audioProductionService, audioSegments, selectedRowIndex]); // loadPlanData intentionally omitted to avoid circular dependency
 
   const deleteSfxSegment = useCallback(async (segmentIndex: number) => {
     if (!selectedChapter || !audioProductionService) return;
@@ -1007,9 +1020,14 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     }
   }, [selectedRowIndex, audioSegments, audioPreview, currentProcessingChain, root, selectedChapter, currentSfxAudio]);
 
-  // Handle row click: set selection and play audio
+  // Handle row click: only set selection (no auto-play)
   const handleRowClick = useCallback(async (index: number) => {
     setSelectedRowIndex(index);
+  }, []);
+
+  // Handle play button click: play audio for the specified segment
+  const handlePlayButtonClick = useCallback(async (index: number, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent row click
     
     try {
       await handlePlaySegment(index);
@@ -1344,7 +1362,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                     <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}></th>
                     <th style={{ padding: "4px", textAlign: "center", color: "var(--text)", fontWeight: 500, width: "32px" }} title={t("audioProduction.revisionStatus")}>🏳</th>
                     <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>{t("audioProduction.tableHeaderId")}</th>
-                    <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>{t("audioProduction.tableHeaderVoice")}</th>
+                    <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>Character</th>
                     <th style={{ padding: "4px", textAlign: "center", color: "var(--text)", fontWeight: 500, width: "80px" }}>SFX</th>
                   </tr>
                 </thead>
@@ -1361,7 +1379,25 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                       }}
                     >
                       <td style={{ padding: "8px", color: selectedRowIndex === index ? "white" : "var(--muted)" }}>
-                        {selectedRowIndex === index ? "▶" : ""}
+                        {selectedRowIndex === index ? (
+                          <StandardButton
+                            variant="secondary"
+                            size="compact"
+                            onClick={(e) => handlePlayButtonClick(index, e)}
+                            title="Play audio segment"
+                            style={{
+                              background: "none",
+                              border: "none",
+                              padding: "2px 4px",
+                              color: "inherit",
+                              fontSize: "12px",
+                              minWidth: "20px",
+                              minHeight: "20px"
+                            }}
+                          >
+                            ▶
+                          </StandardButton>
+                        ) : ""}
                       </td>
                       <td style={{ padding: "4px", textAlign: "center" }}>
                         <StandardButton
