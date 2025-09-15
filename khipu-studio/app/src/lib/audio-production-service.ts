@@ -469,6 +469,31 @@ export class AudioProductionService {
   }
 
   /**
+   * Remove an SFX segment specifically
+   */
+  async removeSfxSegment(chapterId: string, segmentId: string): Promise<void> {
+    return this.removeAdditionalSegment(chapterId, segmentId);
+  }
+
+  /**
+   * Update the position of an SFX segment
+   */
+  async updateSfxSegmentPosition(chapterId: string, segmentId: string, newDisplayOrder: number): Promise<void> {
+    const additionalSegments = await this.loadAdditionalSegments(chapterId);
+    
+    // Find and update the SFX segment
+    const sfxSegment = additionalSegments.sfxSegments.find(seg => seg.id === segmentId);
+    if (sfxSegment) {
+      sfxSegment.displayOrder = newDisplayOrder;
+      
+      // Sort by display order
+      additionalSegments.sfxSegments.sort((a, b) => a.displayOrder - b.displayOrder);
+      
+      await this.saveAdditionalSegments(chapterId, additionalSegments);
+    }
+  }
+
+  /**
    * Update display orders for additional segments (after reordering)
    */
   async updateAdditionalSegmentOrders(

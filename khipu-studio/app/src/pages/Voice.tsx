@@ -465,6 +465,60 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     return planSegments;
   }, [audioProductionService]);
 
+  // SFX management functions
+  const moveSfxSegment = useCallback(async (segmentIndex: number, direction: 'up' | 'down') => {
+    if (!selectedChapter || !audioProductionService) return;
+    
+    const segment = audioSegments[segmentIndex];
+    if (!segment || segment.segmentType !== 'sfx') return;
+    
+    // Calculate new insertion position
+    let newInsertPosition: number;
+    if (direction === 'up') {
+      newInsertPosition = Math.max(0, segmentIndex - 1);
+    } else {
+      newInsertPosition = Math.min(audioSegments.length, segmentIndex + 2); // +2 because we want to move past the next segment
+    }
+    
+    try {
+      // Update the SFX segment's display order in storage
+      await audioProductionService.updateSfxSegmentPosition(selectedChapter, segment.chunkId, newInsertPosition);
+      
+      // Reload the chapter data to reflect the change
+      await loadPlanData(selectedChapter);
+      
+      console.log(`🔄 Moved SFX segment ${segment.chunkId} ${direction}`);
+    } catch (error) {
+      console.error(`Failed to move SFX segment ${direction}:`, error);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedChapter, audioProductionService, audioSegments]); // loadPlanData intentionally omitted to avoid circular dependency
+
+  const deleteSfxSegment = useCallback(async (segmentIndex: number) => {
+    if (!selectedChapter || !audioProductionService) return;
+    
+    const segment = audioSegments[segmentIndex];
+    if (!segment || segment.segmentType !== 'sfx') return;
+    
+    try {
+      // Remove the SFX segment from storage
+      await audioProductionService.removeSfxSegment(selectedChapter, segment.chunkId);
+      
+      // Reload the chapter data to reflect the change
+      await loadPlanData(selectedChapter);
+      
+      // Adjust selected row if needed
+      if (selectedRowIndex >= segmentIndex) {
+        setSelectedRowIndex(Math.max(0, selectedRowIndex - 1));
+      }
+      
+      console.log(`🗑️ Deleted SFX segment ${segment.chunkId}`);
+    } catch (error) {
+      console.error('Failed to delete SFX segment:', error);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedChapter, audioProductionService, audioSegments, selectedRowIndex]); // loadPlanData intentionally omitted to avoid circular dependency
+
   const loadPlanData = useCallback(async (chapterId: string) => {
     if (!root || !chapterId || !audioProductionService) {
       setAudioSegments([]);
@@ -1291,6 +1345,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                     <th style={{ padding: "4px", textAlign: "center", color: "var(--text)", fontWeight: 500, width: "32px" }} title={t("audioProduction.revisionStatus")}>🏳</th>
                     <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>{t("audioProduction.tableHeaderId")}</th>
                     <th style={{ padding: "8px", textAlign: "left", color: "var(--text)", fontWeight: 500 }}>{t("audioProduction.tableHeaderVoice")}</th>
+                    <th style={{ padding: "4px", textAlign: "center", color: "var(--text)", fontWeight: 500, width: "80px" }}>SFX</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1340,6 +1395,81 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                       </td>
                       <td style={{ padding: "8px", color: "inherit", fontSize: "12px" }}>
                         {segment.voice}
+                      </td>
+                      <td style={{ padding: "4px", textAlign: "center" }}>
+                        {segment.segmentType === 'sfx' ? (
+                          <div style={{ display: "flex", gap: "2px", justifyContent: "center", alignItems: "center" }}>
+                            <StandardButton
+                              variant="secondary"
+                              size="compact"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                moveSfxSegment(index, 'up');
+                              }}
+                              disabled={index === 0}
+                              title="Move SFX up"
+                              style={{
+                                background: "none",
+                                border: "none",
+                                padding: "2px 4px",
+                                color: index === 0 ? "var(--muted)" : "var(--text)",
+                                opacity: index === 0 ? 0.5 : 1,
+                                minWidth: "20px",
+                                minHeight: "20px",
+                                fontSize: "10px"
+                              }}
+                            >
+                              ↑
+                            </StandardButton>
+                            <StandardButton
+                              variant="secondary"
+                              size="compact"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                moveSfxSegment(index, 'down');
+                              }}
+                              disabled={index === audioSegments.length - 1}
+                              title="Move SFX down"
+                              style={{
+                                background: "none",
+                                border: "none",
+                                padding: "2px 4px",
+                                color: index === audioSegments.length - 1 ? "var(--muted)" : "var(--text)",
+                                opacity: index === audioSegments.length - 1 ? 0.5 : 1,
+                                minWidth: "20px",
+                                minHeight: "20px",
+                                fontSize: "10px"
+                              }}
+                            >
+                              ↓
+                            </StandardButton>
+                            <StandardButton
+                              variant="secondary"
+                              size="compact"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (confirm(`Delete SFX segment "${segment.sfxFile?.filename}"?`)) {
+                                  deleteSfxSegment(index);
+                                }
+                              }}
+                              title="Delete SFX segment"
+                              style={{
+                                background: "none",
+                                border: "none",
+                                padding: "2px 4px",
+                                color: "var(--error)",
+                                minWidth: "20px",
+                                minHeight: "20px",
+                                fontSize: "10px"
+                              }}
+                            >
+                              🗑
+                            </StandardButton>
+                          </div>
+                        ) : (
+                          // Empty cell for non-SFX segments
+                          <span style={{ color: "var(--muted)", fontSize: "10px" }}>—</span>
+                        )}
                       </td>
                     </tr>
                   ))}
