@@ -74,6 +74,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     format?: string;
   } | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [importStatus, setImportStatus] = useState<string | null>(null);
   
   // Effect chain section collapse states - all collapsed by default
   const [sectionExpanded, setSectionExpanded] = useState({
@@ -95,6 +96,15 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
   // Track whether custom settings mode is enabled
   const [customSettingsEnabled, setCustomSettingsEnabled] = useState(false);
+  
+  // SFX audio playback state
+  const [currentSfxAudio, setCurrentSfxAudio] = useState<{
+    audio: HTMLAudioElement;
+    segmentId: string;
+    duration: number;
+    currentTime: number;
+    isPlaying: boolean;
+  } | null>(null);
 
   // Get current segment's processing chain (or Clean Polished default if none set)
   const getCurrentProcessingChain = useCallback((): AudioProcessingChain => {
@@ -157,63 +167,76 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     }
   }, []);
 
-  // Helper function to handle file selection (both drag-drop and file picker)
+  // Helper function to handle file selection (validation only)
   const handleFileSelection = useCallback(async (file: File) => {
-    const isValid = await processAudioFile(file);
+    await processAudioFile(file);
+  }, [processAudioFile]);
+  
+  // Helper function to actually import and add the selected file
+  const handleImportSelectedFile = useCallback(async () => {
+    if (!selectedFile || !fileValidationResult?.valid || !selectedChapter || !audioProductionService || !root) {
+      return;
+    }
     
-    if (isValid && selectedChapter && audioProductionService && fileValidationResult?.valid && root) {
-      try {
-        setValidationError("Converting and saving audio file...");
-        
-        // Convert file to ArrayBuffer for transmission to Electron
-        const arrayBuffer = await file.arrayBuffer();
-        const uint8Array = new Uint8Array(arrayBuffer);
-        
-        // Generate WAV filename (replace extension)
-        const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
-        const wavFilename = `${nameWithoutExt}.wav`;
-        const targetPath = `sfx/${wavFilename}`;
-        
-        // Convert and save the audio file
-        const saveResult = await window.khipu!.call("audio:convertAndSave", {
-          projectRoot: root,
-          audioData: Array.from(uint8Array), // Convert to regular array for IPC
-          filename: file.name,
-          targetPath: targetPath
-        });
-        
-        if (!saveResult.success) {
-          throw new Error(saveResult.error || "Failed to save audio file");
-        }
-        
-        console.log(`🎵 Successfully saved audio file: ${saveResult.savedPath}`);
-        
-        // Create UI segment with the saved WAV file
-        const sfxSegment = createSfxSegment(
-          wavFilename, // Use the WAV filename
-          saveResult.savedPath || targetPath, // Fallback to target path if savedPath is undefined
-          fileValidationResult.duration || 0
-        );
-        
-        const updatedSegments = insertSegmentAtPosition(
-          audioSegments,
-          sfxSegment,
-          insertPosition
-        );
-        
-        setAudioSegments(updatedSegments);
+    try {
+      setImportStatus("🔄 Converting and saving audio file...");
+      setValidationError(null);
+      
+      // Convert file to ArrayBuffer for transmission to Electron
+      const arrayBuffer = await selectedFile.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      
+      // Generate WAV filename (replace extension)
+      const nameWithoutExt = selectedFile.name.replace(/\.[^/.]+$/, "");
+      const wavFilename = `${nameWithoutExt}.wav`;
+      const targetPath = `sfx/${wavFilename}`;
+      
+      // Convert and save the audio file
+      const saveResult = await window.khipu!.call("audio:convertAndSave", {
+        projectRoot: root,
+        audioData: Array.from(uint8Array), // Convert to regular array for IPC
+        filename: selectedFile.name,
+        targetPath: targetPath
+      });
+      
+      if (!saveResult.success) {
+        throw new Error(saveResult.error || "Failed to save audio file");
+      }
+      
+      console.log(`🎵 Successfully saved audio file: ${saveResult.savedPath}`);
+      
+      // Create UI segment with the saved WAV file
+      const sfxSegment = createSfxSegment(
+        wavFilename, // Use the WAV filename
+        saveResult.savedPath || targetPath, // Fallback to target path if savedPath is undefined
+        fileValidationResult.duration || 0
+      );
+      
+      const updatedSegments = insertSegmentAtPosition(
+        audioSegments,
+        sfxSegment,
+        insertPosition
+      );
+      
+      setAudioSegments(updatedSegments);
+      setImportStatus("✅ Audio file imported successfully!");
+      
+      // Hide the dialog after a short delay
+      setTimeout(() => {
         setShowSfxDialog(false);
-        
         // Reset state
         setSelectedFile(null);
         setFileValidationResult(null);
         setValidationError(null);
-      } catch (error) {
-        console.error("Error processing audio file:", error);
-        setValidationError(`Error processing file: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      }
+        setImportStatus(null);
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Failed to import SFX file:', error);
+      setValidationError(`Failed to import audio file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setImportStatus(null);
     }
-  }, [selectedChapter, audioProductionService, fileValidationResult, audioSegments, insertPosition, processAudioFile, root]);
+  }, [selectedFile, fileValidationResult, selectedChapter, audioProductionService, root, audioSegments, insertPosition]);
 
   // Update segment's processing chain with automatic persistence
   const updateCurrentProcessingChain = useCallback((newChain: AudioProcessingChain) => {
@@ -699,6 +722,13 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       if (segment.segmentType === 'sfx' && segment.sfxFile) {
         console.log('🎵 Playing SFX segment directly (bypassing cache):', segment.sfxFile.filename);
         
+        // If there's already SFX audio playing, stop it first
+        if (currentSfxAudio?.isPlaying) {
+          currentSfxAudio.audio.pause();
+          currentSfxAudio.audio.currentTime = 0;
+          setCurrentSfxAudio(null);
+        }
+        
         // For imported audio files, we play them directly from saved files
         // NO TTS generation, NO audio caching, NO processing chains
         const audioFilePath = segment.sfxFile.path;
@@ -707,6 +737,16 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           // Read the audio file data directly from project directory
           // This bypasses all caching mechanisms
           console.log('📁 Loading SFX file directly from:', audioFilePath);
+          console.log('📁 Project root:', root);
+          
+          if (!root) {
+            throw new Error('Project root is not available');
+          }
+          
+          if (!audioFilePath) {
+            throw new Error('Audio file path is not available');
+          }
+          
           const audioData = await window.khipu!.call('fs:readAudioFile', { 
             projectRoot: root, 
             filePath: audioFilePath 
@@ -717,17 +757,44 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           const audioUrl = URL.createObjectURL(blob);
           const audio = new Audio(audioUrl);
           
-          // Set up cleanup
+          // Set up audio state tracking
+          const updateSfxState = () => {
+            setCurrentSfxAudio(prev => prev ? {
+              ...prev,
+              currentTime: audio.currentTime,
+              duration: audio.duration || 0,
+              isPlaying: !audio.paused
+            } : null);
+          };
+          
+          // Set up event listeners for progress tracking
+          audio.ontimeupdate = updateSfxState;
+          audio.onloadedmetadata = updateSfxState;
+          audio.onplay = updateSfxState;
+          audio.onpause = updateSfxState;
+          
           audio.onended = () => {
             URL.revokeObjectURL(audioUrl);
+            setCurrentSfxAudio(null);
             console.log('🧹 Cleaned up SFX blob URL');
           };
+          
           audio.onerror = () => {
             URL.revokeObjectURL(audioUrl);
+            setCurrentSfxAudio(null);
             console.error('❌ SFX audio playback error');
           };
           
-          // Start playback immediately
+          // Initialize state before starting playback
+          setCurrentSfxAudio({
+            audio,
+            segmentId: segment.chunkId,
+            duration: 0, // Will be updated when metadata loads
+            currentTime: 0,
+            isPlaying: false
+          });
+          
+          // Start playback
           await audio.play();
           
           console.log('✅ Started playing SFX segment directly (no cache used)');
@@ -735,6 +802,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         } catch (error) {
           console.error('❌ Failed to play SFX segment directly:', error);
           console.error('SFX file path:', audioFilePath);
+          setCurrentSfxAudio(null);
         }
         
         // CRITICAL: Return here to prevent SFX segments from falling through
@@ -814,7 +882,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       console.error("Playback failed:", error);
 
     }
-  }, [selectedRowIndex, audioSegments, audioPreview, currentProcessingChain, root, selectedChapter]);
+  }, [selectedRowIndex, audioSegments, audioPreview, currentProcessingChain, root, selectedChapter, currentSfxAudio]);
 
   // Handle row click: set selection and play audio
   const handleRowClick = useCallback(async (index: number) => {
@@ -829,11 +897,55 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
   const handleStopAudio = useCallback(async () => {
     try {
+      // Stop regular audio preview
       await audioPreview.stop();
+      
+      // Stop SFX audio if playing
+      if (currentSfxAudio?.isPlaying) {
+        currentSfxAudio.audio.pause();
+        currentSfxAudio.audio.currentTime = 0;
+        setCurrentSfxAudio(null);
+        console.log('⏹️ Stopped SFX audio playback');
+      }
     } catch (error) {
       console.error("Stop failed:", error);
     }
-  }, [audioPreview]);
+  }, [audioPreview, currentSfxAudio]);
+
+  // Helper functions to determine current audio state
+  const isCurrentSegmentPlaying = useCallback((segmentIndex: number) => {
+    if (segmentIndex < 0 || segmentIndex >= audioSegments.length) return false;
+    
+    const segment = audioSegments[segmentIndex];
+    
+    // Check SFX audio state
+    if (segment.segmentType === 'sfx' && currentSfxAudio) {
+      return currentSfxAudio.segmentId === segment.chunkId && currentSfxAudio.isPlaying;
+    }
+    
+    // Check regular audio preview state
+    return audioPreview.isPlaying && audioPreview.playbackState.segmentId === segment.chunkId;
+  }, [audioSegments, currentSfxAudio, audioPreview.isPlaying, audioPreview.playbackState.segmentId]);
+  
+  const isAnyAudioPlaying = useCallback(() => {
+    return audioPreview.isPlaying || (currentSfxAudio?.isPlaying ?? false);
+  }, [audioPreview.isPlaying, currentSfxAudio?.isPlaying]);
+  
+  const getCurrentAudioTime = useCallback(() => {
+    const selectedSegment = audioSegments[selectedRowIndex];
+    if (selectedSegment?.segmentType === 'sfx' && currentSfxAudio?.segmentId === selectedSegment.chunkId) {
+      return currentSfxAudio.currentTime;
+    }
+    return audioPreview.currentTime;
+  }, [audioSegments, selectedRowIndex, currentSfxAudio, audioPreview.currentTime]);
+  
+  const getCurrentAudioDuration = useCallback(() => {
+    const selectedSegment = audioSegments[selectedRowIndex];
+    if (selectedSegment?.segmentType === 'sfx' && currentSfxAudio?.segmentId === selectedSegment.chunkId) {
+      return currentSfxAudio.duration;
+    }
+    return audioPreview.duration;
+  }, [audioSegments, selectedRowIndex, currentSfxAudio, audioPreview.duration]);
 
   // Revision mark helper functions
   const saveRevisionToPlan = useCallback(async (segmentIdStr: string, marked: boolean) => {
@@ -1173,9 +1285,9 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             {selectedRowIndex >= 0 && selectedRowIndex < audioSegments.length && (
               <TextDisplay
                 text={audioSegments[selectedRowIndex].text}
-                isPlaying={audioPreview.isPlaying}
-                currentTime={audioPreview.currentTime}
-                totalDuration={audioPreview.duration}
+                isPlaying={isCurrentSegmentPlaying(selectedRowIndex)}
+                currentTime={getCurrentAudioTime()}
+                totalDuration={getCurrentAudioDuration()}
                 voiceName={audioSegments[selectedRowIndex].voice}
                 segmentId={audioSegments[selectedRowIndex].segmentId.toString()}
               />
@@ -1220,29 +1332,37 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      padding: "4px 8px",
-                      minWidth: "36px",
-                      justifyContent: "center"
+                      justifyContent: "center",
+                      padding: "6px 8px",
+                      minWidth: "44px",
+                      minHeight: "36px",
+                      fontSize: "14px",
+                      lineHeight: "1",
+                      border: "1px solid transparent"
                     }}
                   >
                     |◀
                   </StandardButton>
 
                   <StandardButton
-                    variant={audioPreview.isPlaying && audioPreview.playbackState.segmentId === audioSegments[selectedRowIndex]?.chunkId ? "warning" : "primary"}
+                    variant={isCurrentSegmentPlaying(selectedRowIndex) ? "warning" : "primary"}
                     size="compact"
                     onClick={() => handlePlaySegment(selectedRowIndex)}
                     disabled={audioSegments.length === 0 || audioPreview.isLoading}
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      padding: "4px 10px",
-                      minWidth: "50px",
-                      justifyContent: "center"
+                      justifyContent: "center",
+                      padding: "6px 12px",
+                      minWidth: "56px",
+                      minHeight: "36px",
+                      fontSize: "14px",
+                      lineHeight: "1",
+                      border: "1px solid transparent"
                     }}
                   >
                     {audioPreview.isLoading ? `⏳` :
-                     audioPreview.isPlaying && audioPreview.playbackState.segmentId === audioSegments[selectedRowIndex]?.chunkId ? `⏸` :
+                     isCurrentSegmentPlaying(selectedRowIndex) ? `⏸` :
                      `▶`}
                   </StandardButton>
 
@@ -1262,9 +1382,13 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      padding: "4px 8px",
-                      minWidth: "36px",
-                      justifyContent: "center"
+                      justifyContent: "center",
+                      padding: "6px 8px",
+                      minWidth: "44px",
+                      minHeight: "36px",
+                      fontSize: "14px",
+                      lineHeight: "1",
+                      border: "1px solid transparent"
                     }}
                   >
                     ▶|
@@ -2251,6 +2375,19 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                     ❌ {validationError}
                   </div>
                 )}
+                
+                {importStatus && (
+                  <div style={{ 
+                    color: importStatus.startsWith("✅") ? "var(--success)" : "var(--primary)", 
+                    fontSize: "13px", 
+                    marginTop: "8px",
+                    padding: "8px",
+                    backgroundColor: importStatus.startsWith("✅") ? "var(--success)20" : "var(--primary)20",
+                    borderRadius: "4px"
+                  }}>
+                    {importStatus}
+                  </div>
+                )}
               </div>
               
               <div style={{ fontSize: "13px", color: "var(--textSecondary)", marginTop: "8px" }}>
@@ -2275,7 +2412,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
               {selectedFile && fileValidationResult?.valid && (
                 <StandardButton
                   variant="primary"
-                  onClick={() => handleFileSelection(selectedFile)}
+                  onClick={handleImportSelectedFile}
                 >
                   {t("audioProduction.addSegment")}
                 </StandardButton>

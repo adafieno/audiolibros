@@ -1222,18 +1222,29 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
     }
   });
 
-  ipcMain.handle("fs:readAudioFile", async (_e, { projectRoot, filePath }) => {
+  ipcMain.handle("fs:readAudioFile", async (_e, arg) => {
     try {
       // Read audio file as buffer for Web Audio API
       let resolvedPath;
-      if (projectRoot && filePath && !path.isAbsolute(filePath)) {
-        // Resolve relative to project root if both are provided
-        resolvedPath = path.join(projectRoot, filePath);
-      } else if (filePath) {
-        // Legacy: if just filePath provided, resolve it directly
-        resolvedPath = path.resolve(filePath);
+      
+      // Handle both new object format and legacy string format
+      if (typeof arg === 'string') {
+        // Legacy format: single string parameter (should be absolute path)
+        resolvedPath = path.resolve(arg);
+      } else if (arg && typeof arg === 'object') {
+        // New object format: { projectRoot?, filePath }
+        const { projectRoot, filePath } = arg;
+        if (projectRoot && filePath && !path.isAbsolute(filePath)) {
+          // Resolve relative to project root if both are provided
+          resolvedPath = path.join(projectRoot, filePath);
+        } else if (filePath) {
+          // Absolute filePath
+          resolvedPath = path.resolve(filePath);
+        } else {
+          throw new Error('filePath is required');
+        }
       } else {
-        throw new Error('Either projectRoot+filePath or absolute filePath must be provided');
+        throw new Error('Either a file path string or { projectRoot?, filePath } object must be provided');
       }
       
       console.log(`📖 Reading audio file: ${resolvedPath}`);
