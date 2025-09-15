@@ -1914,6 +1914,21 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
     }
   };
 
+  // Handle row click: set selection and play audio
+  const handleRowClick = async (rowIndex: number) => {
+    setSelIndex(rowIndex);
+    
+    // Get the segment ID from the filtered row
+    const row = filteredRows[rowIndex];
+    if (row && row.segmentId) {
+      try {
+        await handleSegmentAudition(row.segmentId);
+      } catch (error) {
+        console.error('Failed to play segment audio:', error);
+      }
+    }
+  };
+
   // Handle segment audition with character voice
   const handleSegmentAudition = async (segmentId: number, overrideText?: string, disableCache?: boolean) => {
     console.log("🔊 Starting audition for segment:", segmentId);
@@ -2360,7 +2375,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
                       <tr 
                         key={r.rowKey} 
                         data-row={i}
-                        onClick={() => setSelIndex(i)}
+                        onClick={() => handleRowClick(i)}
                         style={{
                           cursor: "pointer",
                           backgroundColor: i === selIndex ? "var(--accent)" : (i % 2 === 0 ? "var(--panel)" : "transparent"),

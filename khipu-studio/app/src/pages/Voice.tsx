@@ -516,10 +516,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     }
   }, [loadPlanData]);
 
-  const handleRowSelection = useCallback((index: number) => {
-    setSelectedRowIndex(index); // Always set selection - don't toggle
-  }, []);
-
   const handleGenerateSegmentAudio = useCallback(async (rowIndex: number) => {
     const segment = audioSegments[rowIndex];
     if (!segment || !selectedChapter || !audioProductionService || generatingAudio.has(segment.chunkId)) return;
@@ -677,6 +673,17 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
     }
   }, [selectedRowIndex, audioSegments, audioPreview, currentProcessingChain, root, selectedChapter]);
+
+  // Handle row click: set selection and play audio
+  const handleRowClick = useCallback(async (index: number) => {
+    setSelectedRowIndex(index);
+    
+    try {
+      await handlePlaySegment(index);
+    } catch (error) {
+      console.error('Failed to play segment audio:', error);
+    }
+  }, [handlePlaySegment]);
 
   const handleStopAudio = useCallback(async () => {
     try {
@@ -963,7 +970,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                   {audioSegments.map((segment, index) => (
                     <tr 
                       key={segment.rowKey} 
-                      onClick={() => handleRowSelection(index)}
+                      onClick={() => handleRowClick(index)}
                       style={{ 
                         borderBottom: "1px solid var(--border)",
                         cursor: "pointer",
