@@ -1,0 +1,1886 @@
+{
+  "app.title": {
+    "string": "Khipu Studio",
+    "comment": "Título principal da aplicação exibido no cabeçalho e aba do navegador"
+  },
+  "nav.home": {
+    "string": "Início",
+    "comment": "Item do menu de navegação para a página inicial/dashboard"
+  },
+  "nav.project": {
+    "string": "Projeto",
+    "comment": "Item do menu de navegação para gerenciamento de projetos"
+  },
+  "nav.book": {
+    "string": "Livro",
+    "comment": "Item do menu de navegação para visão geral do livro"
+  },
+  "nav.manuscript": {
+    "string": "Manuscrito",
+    "comment": "Item do menu de navegação para edição do manuscrito"
+  },
+  "nav.casting": {
+    "string": "Seleção de vozes",
+    "comment": "Item do menu de navegação para seleção de vozes"
+  },
+  "nav.characters": {
+    "string": "Personagens",
+    "comment": "Item do menu de navegação para gerenciamento de personagens"
+  },
+  "nav.dossier": {
+    "string": "Dossiê",
+    "comment": "Item do menu de navegação para dossiê/documentação"
+  },
+  "nav.planning": {
+    "string": "Orquestração",
+    "comment": "Item do menu de navegação para fase de orquestração"
+  },
+  "nav.voice": {
+    "string": "Produção de áudio",
+    "comment": "Item do menu de navegação para produção de áudio"
+  },
+  "nav.cost": {
+    "string": "Rastreamento de custos",
+    "comment": "Item do menu de navegação para rastreamento de custos de serviços IA"
+  },
+  "nav.export": {
+    "string": "Exportar",
+    "comment": "Item do menu de navegação para exportação/empacotamento"
+  },
+  "nav.packaging": {
+    "string": "Empacotamento",
+    "comment": "Item do menu de navegação para empacotamento da saída"
+  },
+  "nav.settings": {
+    "string": "Configurações",
+    "comment": "Item do menu de navegação para configurações da aplicação"
+  },
+  "home.welcome": {
+    "string": "Bem-vindo ao Khipu Studio",
+    "comment": "Mensagem de boas-vindas na página inicial"
+  },
+  "home.cta": {
+    "string": "Selecione um projeto e comece com Manuscrito → Orquestração.",
+    "comment": "Texto de chamada para ação na página inicial"
+  },
+  "home.existingProjects": {
+    "string": "Projetos recentes",
+    "comment": "Cabeçalho para a seção de projetos recentes"
+  },
+  "home.openExisting": {
+    "string": "Abrir projeto existente",
+    "comment": "Texto do botão para abrir um projeto existente"
+  },
+  "home.createNew": {
+    "string": "Criar novo projeto",
+    "comment": "Cabeçalho para criar um novo projeto"
+  },
+  "home.baseFolder": {
+    "string": "Pasta base",
+    "comment": "Rótulo para seleção da pasta base"
+  },
+  "home.browse": {
+    "string": "Procurar",
+    "comment": "Texto do botão para procurar pasta"
+  },
+  "home.projectName": {
+    "string": "Nome do projeto",
+    "comment": "Rótulo para entrada do nome do projeto"
+  },
+  "home.create": {
+    "string": "Criar",
+    "comment": "Texto do botão para criar projeto"
+  },
+  "home.open": {
+    "string": "Abrir",
+    "comment": "Texto do botão para abrir projeto"
+  },
+  "home.instructions": {
+    "string": "Abra um projeto existente ou crie um novo com a estrutura recomendada.",
+    "comment": "Texto de instruções na página inicial"
+  },
+  "home.loading": {
+    "string": "Carregando…",
+    "comment": "Texto de carregamento para página inicial"
+  },
+  "home.noRecents": {
+    "string": "Nenhum projeto recente.",
+    "comment": "Mensagem quando não há projetos recentes"
+  },
+  "home.createError": {
+    "string": "Não foi possível criar o projeto.",
+    "comment": "Mensagem de erro quando a criação do projeto falha"
+  },
+  "home.createSuccess": {
+    "string": "Projeto criado ✔",
+    "comment": "Mensagem de sucesso quando o projeto é criado"
+  },
+  "home.structurePreview": {
+    "string": "Estrutura a criar",
+    "comment": "Cabeçalho para visualização da estrutura do projeto"
+  },
+  "casting.title": {
+    "string": "Seleção de vozes",
+    "comment": "Título da página de seleção de vozes"
+  },
+  "casting.description": {
+    "string": "Selecione e gerencie vozes para geração de texto para fala baseada na configuração do seu mecanismo TTS.",
+    "comment": "Descrição da página de seleção de vozes"
+  },
+  "casting.loading": {
+    "string": "Carregando inventário de vozes...",
+    "comment": "Mensagem de carregamento para dados de voz"
+  },
+  "casting.loadError": {
+    "string": "Erro ao carregar dados de voz",
+    "comment": "Mensagem de erro quando os dados de voz falham ao carregar"
+  },
+  "casting.saveError": {
+    "string": "Erro ao salvar seleção de voz",
+    "comment": "Mensagem de erro quando a seleção de voz falha ao salvar"
+  },
+  "casting.saving": {
+    "string": "Salvando seleção...",
+    "comment": "Mensagem exibida ao salvar seleção de voz"
+  },
+  "casting.saved": {
+    "string": "Seleção de voz salva ✔",
+    "comment": "Mensagem de sucesso quando a seleção de voz é salva"
+  },
+  "casting.engineTitle": {
+    "string": "Mecanismo TTS",
+    "comment": "Título da seção do mecanismo TTS"
+  },
+  "casting.engineDescription": {
+    "string": "Escolha vozes compatíveis com o mecanismo TTS selecionado:",
+    "comment": "Descrição da compatibilidade de vozes do mecanismo"
+  },
+  "casting.voicesAvailable": {
+    "string": "vozes disponíveis",
+    "comment": "Texto indicando número de vozes disponíveis"
+  },
+  "casting.currentEngine": {
+    "string": "Mecanismo atual",
+    "comment": "Rótulo para mecanismo TTS atual"
+  },
+  "casting.voicesTitle": {
+    "string": "Vozes disponíveis",
+    "comment": "Título da seção de vozes disponíveis"
+  },
+  "casting.selectAll": {
+    "string": "Selecionar todas",
+    "comment": "Texto do botão para selecionar todas as vozes"
+  },
+  "casting.deselectAll": {
+    "string": "Desmarcar todas",
+    "comment": "Texto do botão para desmarcar todas as vozes"
+  },
+  "casting.noVoicesForEngine": {
+    "string": "Nenhuma voz disponível para este mecanismo.",
+    "comment": "Mensagem quando não há vozes disponíveis para o mecanismo selecionado"
+  },
+  "casting.selectedCount": {
+    "string": "{{count}} vozes selecionadas",
+    "comment": "Texto mostrando número de vozes selecionadas"
+  },
+  "casting.save": {
+    "string": "Salvar seleção",
+    "comment": "Texto do botão para salvar seleção de voz"
+  },
+  "casting.male": {
+    "string": "Masculino",
+    "comment": "Rótulo para gênero de voz masculino"
+  },
+  "casting.female": {
+    "string": "Feminino",
+    "comment": "Rótulo para gênero de voz feminino"
+  },
+  "casting.neutral": {
+    "string": "Neutro",
+    "comment": "Rótulo para gênero de voz neutro"
+  },
+  "casting.age.child": {
+    "string": "Criança",
+    "comment": "Rótulo para voz de idade infantil"
+  },
+  "casting.age.teen": {
+    "string": "Adolescente",
+    "comment": "Rótulo para voz de idade adolescente"
+  },
+  "casting.age.adult": {
+    "string": "Adulto",
+    "comment": "Rótulo para voz de idade adulta"
+  },
+  "casting.age.elderly": {
+    "string": "Idoso",
+    "comment": "Rótulo para voz de idade idosa"
+  },
+  "casting.styles": {
+    "string": "Estilos",
+    "comment": "Rótulo para estilos de voz"
+  },
+  "casting.accents": {
+    "string": "Sotaques",
+    "comment": "Rótulo para sotaques de voz"
+  },
+  "casting.engine.azure": {
+    "string": "Azure",
+    "comment": "Nome do mecanismo TTS Azure"
+  },
+  "casting.engine.elevenlabs": {
+    "string": "ElevenLabs",
+    "comment": "Nome do mecanismo TTS ElevenLabs"
+  },
+  "casting.engine.openai": {
+    "string": "OpenAI",
+    "comment": "Nome do mecanismo TTS OpenAI"
+  },
+  "casting.engine.google": {
+    "string": "Google Cloud",
+    "comment": "Nome do mecanismo TTS Google Cloud"
+  },
+  "casting.audition.loadError": {
+    "string": "Erro ao carregar áudio",
+    "comment": "Mensagem de erro quando a visualização de áudio falha ao carregar"
+  },
+  "casting.complete": {
+    "string": "Concluir seleção",
+    "comment": "Texto do botão para concluir etapa de seleção"
+  },
+  "casting.completed": {
+    "string": "Seleção concluída ✔",
+    "comment": "Mensagem quando a etapa de seleção é concluída"
+  },
+  "casting.completeError": {
+    "string": "Erro ao concluir seleção",
+    "comment": "Mensagem de erro quando a conclusão da seleção falha"
+  },
+  "casting.addLanguage": {
+    "string": "+ Adicionar idioma",
+    "comment": "Texto do botão para adicionar idioma à seleção de vozes"
+  },
+  "casting.addGender": {
+    "string": "Filtrar gênero",
+    "comment": "Texto do botão para filtrar por gênero de voz"
+  },
+  "casting.addLocale": {
+    "string": "Filtrar localidade",
+    "comment": "Texto do botão para filtrar por localidade de voz"
+  },
+  "casting.languagesLabel": {
+    "string": "Idiomas:",
+    "comment": "Rótulo para tags de idiomas selecionados"
+  },
+  "casting.audition.button": {
+    "string": "Audição",
+    "comment": "Texto do botão para audição de voz"
+  },
+  "casting.audition.loading": {
+    "string": "Reproduzindo...",
+    "comment": "Texto do botão quando audição está reproduzindo"
+  },
+  "settings.title": {
+    "string": "Configurações",
+    "comment": "Título da página de configurações"
+  },
+  "settings.description": {
+    "string": "Ajustar configurações globais da aplicação.",
+    "comment": "Texto de descrição da página de configurações"
+  },
+  "settings.theme": {
+    "string": "Tema",
+    "comment": "Rótulo para configuração de seleção de tema"
+  },
+  "settings.themeSystem": {
+    "string": "Sistema",
+    "comment": "Opção de tema para seguir o tema do sistema"
+  },
+  "settings.themeDark": {
+    "string": "Escuro",
+    "comment": "Opção de tema escuro"
+  },
+  "settings.themeLight": {
+    "string": "Claro",
+    "comment": "Opção de tema claro"
+  },
+  "settings.themeNote": {
+    "string": "Tema aplica-se globalmente.",
+    "comment": "Nota sobre o escopo de aplicação do tema"
+  },
+  "settings.language": {
+    "string": "Idioma",
+    "comment": "Rótulo para configuração de seleção de idioma"
+  },
+  "settings.languageSelectLabel": {
+    "string": "Selecionar idioma",
+    "comment": "Rótulo para dropdown de seleção de idioma"
+  },
+  "settings.save": {
+    "string": "Salvar",
+    "comment": "Texto do botão salvar para configurações"
+  },
+  "settings.saving": {
+    "string": "Salvando…",
+    "comment": "Mensagem de status ao salvar configurações"
+  },
+  "settings.saved": {
+    "string": "Salvo ✔",
+    "comment": "Mensagem de sucesso quando configurações são salvas"
+  },
+  "settings.error": {
+    "string": "Erro",
+    "comment": "Mensagem de erro quando salvamento de configurações falha"
+  },
+  "settings.loading": {
+    "string": "Carregando…",
+    "comment": "Mensagem de carregamento para página de configurações"
+  },
+  "settings.autoSave": {
+    "string": "Alterações são salvas automaticamente.",
+    "comment": "Mensagem indicando que configurações são salvas automaticamente"
+  },
+  "common.loading": {
+    "string": "Carregando...",
+    "comment": "Indicador genérico de estado de carregamento"
+  },
+  "common.playing": {
+    "string": "Reproduzindo...",
+    "comment": "Indicador de estado de reprodução de áudio"
+  },
+  "common.audition": {
+    "string": "Audição",
+    "comment": "Texto do botão para audição/visualização de áudio"
+  },
+  "common.processing": {
+    "string": "Processando",
+    "comment": "Mensagem de status padrão durante operações de processamento"
+  },
+  "common.cancel": {
+    "string": "Cancelar",
+    "comment": "Texto genérico do botão cancelar"
+  },
+  "status.completed": {
+    "string": "Concluído",
+    "comment": "Mensagem genérica de status de conclusão"
+  },
+  "status.failed": {
+    "string": "Falhou",
+    "comment": "Mensagem genérica de status de falha"
+  },
+  "status.noProjectLoaded": {
+    "string": "Nenhum projeto carregado",
+    "comment": "Mensagem de status quando nenhum projeto está carregado"
+  },
+  "status.loadProjectToManagePlanning": {
+    "string": "Por favor carregue um projeto primeiro para gerenciar orquestração.",
+    "comment": "Instruções para carregar projeto para orquestração"
+  },
+  "status.loadProjectToManageCharacters": {
+    "string": "Por favor carregue um projeto primeiro para gerenciar personagens.",
+    "comment": "Instruções para carregar projeto para personagens"
+  },
+  "image.errors.failedToCopy": {
+    "string": "Falha ao copiar imagem",
+    "comment": "Mensagem de erro quando operação de cópia de imagem falha"
+  },
+  "image.errors.failedToGetFilename": {
+    "string": "Falha ao obter nome do arquivo da imagem copiada",
+    "comment": "Mensagem de erro quando não é possível extrair nome do arquivo da imagem copiada"
+  },
+  "image.errors.failedToSelect": {
+    "string": "Erro ao selecionar imagem. Tente novamente.",
+    "comment": "Mensagem de erro quando seleção de imagem falha"
+  },
+  "manuscript.saved": {
+    "string": "Salvo ✔",
+    "comment": "Mensagem de sucesso quando alterações do manuscrito são salvas"
+  },
+  "manuscript.saveError": {
+    "string": "Erro ao salvar",
+    "comment": "Mensagem de erro quando salvamento do manuscrito falha"
+  },
+  "manuscript.importDocx": {
+    "string": "Importar .docx…",
+    "comment": "Texto do botão para importar arquivos docx"
+  },
+  "manuscript.refresh": {
+    "string": "Atualizar",
+    "comment": "Texto do botão para atualizar lista do manuscrito"
+  },
+  "manuscript.completeButton": {
+    "string": "Marcar manuscrito como completo",
+    "comment": "Texto do botão para marcar etapa do manuscrito como completa"
+  },
+  "plan.noPlanToShow": {
+    "string": "Nenhum plano para mostrar",
+    "comment": "Mensagem quando não há dados de plano disponíveis para exibir"
+  },
+  "plan.goToText": {
+    "string": "Ir para texto",
+    "comment": "Texto do botão para navegar para o texto fonte no manuscrito"
+  },
+  "planning.tooltips.clickToEdit": {
+    "string": "Clique para editar texto (alterações salvam apenas no plano)",
+    "comment": "Dica para segmentos de texto editáveis na visualização de orquestração"
+  },
+  "planning.tooltips.splitSegment": {
+    "string": "Dividir segmento na posição do cursor",
+    "comment": "Dica para botão de dividir segmento"
+  },
+  "planning.tooltips.mergeBackward": {
+    "string": "Mesclar com segmento anterior",
+    "comment": "Dica para botão de mesclar para trás"
+  },
+  "planning.tooltips.mergeForward": {
+    "string": "Mesclar com próximo segmento",
+    "comment": "Dica para botão de mesclar para frente"
+  },
+  "planning.tooltips.deleteSegment": {
+    "string": "Deletar este segmento",
+    "comment": "Dica para botão de deletar segmento"
+  },
+  "planning.tooltips.undoChanges": {
+    "string": "Desfazer alterações para texto original",
+    "comment": "Dica para botão de desfazer alterações"
+  },
+  "planning.tooltips.auditionSegment": {
+    "string": "Escutar este segmento",
+    "comment": "Dica para botão de audição de segmento"
+  },
+  "planning.merge.noNextSegment": {
+    "string": "Nenhum próximo segmento para mesclar",
+    "comment": "Mensagem de erro ao tentar mesclar para frente sem próximo segmento"
+  },
+  "planning.merge.noPreviousSegment": {
+    "string": "Nenhum segmento anterior para mesclar",
+    "comment": "Mensagem de erro ao tentar mesclar para trás sem segmento anterior"
+  },
+  "planning.status.reloading": {
+    "string": "Arquivo de plano atualizado, recarregando...",
+    "comment": "Mensagem de status quando arquivo de plano é atualizado e sendo recarregado"
+  },
+  "planning.status.completed": {
+    "string": "Página de orquestração marcada como completa",
+    "comment": "Mensagem de status quando etapa de orquestração é concluída"
+  },
+  "planning.status.allChaptersCompleted": {
+    "string": "Todos os capítulos concluídos! Fase de orquestração está agora completa.",
+    "comment": "Mensagem de status quando todos os capítulos são concluídos"
+  },
+  "planning.progress.complete": {
+    "string": "Orquestração completa",
+    "comment": "Texto exibido quando toda orquestração está completa"
+  },
+  "planning.progress.status": {
+    "string": "Progresso da orquestração: {{completed}}/{{total}} capítulos completos",
+    "comment": "Texto mostrando progresso de conclusão da orquestração"
+  },
+  "planning.progress.unlockNext": {
+    "string": "Complete toda orquestração de capítulos para desbloquear próxima etapa do fluxo",
+    "comment": "Texto explicando o que é necessário para prosseguir"
+  },
+  "planning.readyForSsml": {
+    "string": "Pronto para voz",
+    "comment": "Texto do distintivo exibido quando orquestração está completa e pronta para próxima etapa"
+  },
+  "planning.errors.selectChapter": {
+    "string": "Selecione um capítulo e certifique-se de que o projeto esteja carregado.",
+    "comment": "Mensagem de erro quando nenhum capítulo está selecionado ou projeto não carregado"
+  },
+  "planning.errors.chapterNotFound": {
+    "string": "Capítulo selecionado não encontrado.",
+    "comment": "Mensagem de erro quando capítulo selecionado não pode ser encontrado"
+  },
+  "planning.errors.ipcNotAvailable": {
+    "string": "IPC não disponível. Certifique-se de que o Electron esteja executando.",
+    "comment": "Mensagem de erro quando Electron IPC não está disponível"
+  },
+  "planning.errors.failedToGeneratePlans": {
+    "string": "Falha ao gerar planos. Tente gerar planos manualmente primeiro.",
+    "comment": "Mensagem de erro quando geração automática de planos falha"
+  },
+  "planning.errors.serviceConnectionFailed": {
+    "string": "Falha ao conectar ao serviço de atribuição de personagens. Usando lógica de fallback.",
+    "comment": "Mensagem de erro quando conexão do serviço de atribuição de personagens falha"
+  },
+  "planning.errors.completedButFailedReload": {
+    "string": "Atribuição de personagens concluída mas falha ao recarregar. Atualize o capítulo.",
+    "comment": "Mensagem de erro quando atribuição de personagens é concluída mas recarregamento falha"
+  },
+  "planning.unknownCharacter": {
+    "string": "Nenhum personagem",
+    "comment": "Rótulo para personagem desconhecido na orquestração"
+  },
+  "planning.segmentNotFound": {
+    "string": "Segmento não encontrado",
+    "comment": "Mensagem de erro quando segmento não pode ser encontrado"
+  },
+  "planning.invalidSplitPosition": {
+    "string": "Posição de divisão inválida",
+    "comment": "Mensagem de erro quando posição de divisão é inválida"
+  },
+  "planning.cannotDeleteLastSegment": {
+    "string": "Não é possível deletar o último segmento do capítulo",
+    "comment": "Mensagem de erro ao tentar deletar o último segmento"
+  },
+  "planning.segmentTextNotFound": {
+    "string": "Texto do segmento não encontrado",
+    "comment": "Mensagem de erro quando texto do segmento está ausente"
+  },
+  "planning.segmentSplitSuccessfully": {
+    "string": "Segmento dividido com sucesso",
+    "comment": "Mensagem de sucesso quando segmento é dividido"
+  },
+  "planning.splitOperationFailed": {
+    "string": "Operação de divisão falhou",
+    "comment": "Mensagem de erro quando operação de divisão falha"
+  },
+  "planning.mergeOperationFailed": {
+    "string": "Operação de mesclagem falhou",
+    "comment": "Mensagem de erro quando operação de mesclagem falha"
+  },
+  "planning.segmentDeletedSuccessfully": {
+    "string": "Segmento deletado com sucesso",
+    "comment": "Mensagem de sucesso quando segmento é deletado"
+  },
+  "planning.deleteOperationFailed": {
+    "string": "Operação de exclusão falhou",
+    "comment": "Mensagem de erro quando operação de exclusão falha"
+  },
+  "planning.mergeWithPrevious": {
+    "string": "Mesclar com segmento anterior",
+    "comment": "Dica para botão de mesclar com anterior"
+  },
+  "planning.mergeWithNext": {
+    "string": "Mesclar com próximo segmento",
+    "comment": "Dica para botão de mesclar com próximo"
+  },
+  "planning.deleteThisSegment": {
+    "string": "Deletar este segmento",
+    "comment": "Dica para botão de deletar segmento"
+  },
+  "planning.undoLastOperation": {
+    "string": "Desfazer última operação de segmento",
+    "comment": "Dica para botão de desfazer"
+  },
+  "planning.splitAtCursor": {
+    "string": "Dividir segmento na posição do cursor",
+    "comment": "Dica para botão de dividir no cursor"
+  },
+  "planning.clickToEdit": {
+    "string": "Clique para editar texto",
+    "comment": "Dica para texto editável"
+  },
+  "planning.splitInstructions": {
+    "string": "✂️ Posicione o cursor onde deseja dividir, depois clique \"Dividir no cursor\"",
+    "comment": "Instruções para dividir segmentos"
+  },
+  "planning.undoSuccessful": {
+    "string": "Desfazer bem-sucedido",
+    "comment": "Mensagem de sucesso quando operação de desfazer é bem-sucedida"
+  },
+  "planning.tooltips.saveChanges": {
+    "string": "Salvar alterações (Ctrl+Enter)",
+    "comment": "Dica para botão de salvar alterações"
+  },
+  "planning.tooltips.cancelEdit": {
+    "string": "Cancelar edição (Escape)",
+    "comment": "Dica para botão de cancelar edição"
+  },
+  "book.title": {
+    "string": "Metadados do livro",
+    "comment": "Título da página de metadados do livro"
+  },
+  "book.description": {
+    "string": "Gerenciar informações do livro, metadados e detalhes de publicação",
+    "comment": "Descrição da página de metadados do livro"
+  },
+  "book.loading": {
+    "string": "Carregando metadados do livro...",
+    "comment": "Mensagem de carregamento para metadados do livro"
+  },
+  "book.save": {
+    "string": "Salvar",
+    "comment": "Texto do botão salvar para metadados do livro"
+  },
+  "book.saved": {
+    "string": "Metadados do livro salvos",
+    "comment": "Mensagem de sucesso quando metadados do livro são salvos"
+  },
+  "book.saveError": {
+    "string": "Erro ao salvar metadados do livro",
+    "comment": "Mensagem de erro quando salvamento de metadados do livro falha"
+  },
+  "book.loadError": {
+    "string": "Erro ao carregar metadados do livro",
+    "comment": "Mensagem de erro quando carregamento de metadados do livro falha"
+  },
+  "book.completeButton": {
+    "string": "Marcar metadados do livro como completos",
+    "comment": "Texto do botão para concluir etapa de metadados do livro"
+  },
+  "book.basicInfo": {
+    "string": "Informações básicas",
+    "comment": "Cabeçalho da seção para informações básicas do livro"
+  },
+  "book.title.label": {
+    "string": "Título",
+    "comment": "Rótulo para campo de título do livro"
+  },
+  "book.subtitle.label": {
+    "string": "Subtítulo",
+    "comment": "Rótulo para campo de subtítulo do livro"
+  },
+  "book.authors.label": {
+    "string": "Autores",
+    "comment": "Rótulo para campo de autores do livro"
+  },
+  "book.authors.placeholder": {
+    "string": "Autor 1, Autor 2",
+    "comment": "Texto de exemplo para entrada de autores"
+  },
+  "book.narrators.label": {
+    "string": "Narradores",
+    "comment": "Rótulo para campo de narradores do livro"
+  },
+  "book.narrators.placeholder": {
+    "string": "Narrador 1, Narrador 2",
+    "comment": "Texto de exemplo para entrada de narradores"
+  },
+  "book.content": {
+    "string": "Informações do conteúdo",
+    "comment": "Cabeçalho da seção para informações do conteúdo"
+  },
+  "book.description.label": {
+    "string": "Descrição",
+    "comment": "Rótulo para campo de descrição do livro"
+  },
+  "book.keywords.label": {
+    "string": "Palavras-chave",
+    "comment": "Rótulo para campo de palavras-chave do livro"
+  },
+  "book.keywords.placeholder": {
+    "string": "palavra-chave1, palavra-chave2, palavra-chave3",
+    "comment": "Texto de exemplo para entrada de palavras-chave"
+  },
+  "book.categories.label": {
+    "string": "Categorias",
+    "comment": "Rótulo para campo de categorias do livro"
+  },
+  "book.categories.placeholder": {
+    "string": "Ficção / Literário, Suspense",
+    "comment": "Texto de exemplo para entrada de categorias"
+  },
+  "book.language.label": {
+    "string": "Idioma",
+    "comment": "Rótulo para campo de idioma do livro"
+  },
+  "book.language.selectOption": {
+    "string": "Selecionar idioma e região...",
+    "comment": "Opção padrão para dropdown de seleção de idioma"
+  },
+  "book.publishing": {
+    "string": "Informações de publicação",
+    "comment": "Cabeçalho da seção para informações de publicação"
+  },
+  "book.publisher.label": {
+    "string": "Editora",
+    "comment": "Rótulo para campo de editora"
+  },
+  "book.publishingDate.label": {
+    "string": "Data de publicação",
+    "comment": "Rótulo para campo de data de publicação"
+  },
+  "book.isbn.label": {
+    "string": "ISBN",
+    "comment": "Rótulo para campo de ISBN"
+  },
+  "book.sku.label": {
+    "string": "SKU",
+    "comment": "Rótulo para campo de SKU"
+  },
+  "project.title": {
+    "string": "Configuração do projeto",
+    "comment": "Título da página de configuração do projeto"
+  },
+  "project.description": {
+    "string": "Configure mecanismos IA, credenciais e opções de empacotamento do projeto.",
+    "comment": "Descrição da página de configuração do projeto"
+  },
+  "project.loading": {
+    "string": "Carregando configuração...",
+    "comment": "Mensagem de carregamento para configuração do projeto"
+  },
+  "project.save": {
+    "string": "Salvar",
+    "comment": "Texto do botão salvar para configuração do projeto"
+  },
+  "project.saved": {
+    "string": "Configuração salva",
+    "comment": "Mensagem de sucesso quando configuração é salva"
+  },
+  "project.saveError": {
+    "string": "Erro ao salvar configuração",
+    "comment": "Mensagem de erro quando salvamento de configuração falha"
+  },
+  "project.loadError": {
+    "string": "Erro ao carregar configuração",
+    "comment": "Mensagem de erro quando carregamento de configuração falha"
+  },
+  "project.completeButton": {
+    "string": "Marcar configuração como completa",
+    "comment": "Texto do botão para concluir etapa de configuração do projeto"
+  },
+  "project.markComplete": {
+    "string": "Marcar configuração como completa",
+    "comment": "Texto do botão para concluir configuração do projeto"
+  },
+  "project.general": {
+    "string": "Configuração geral",
+    "comment": "Cabeçalho da seção para configuração geral"
+  },
+  "project.language": {
+    "string": "Idioma do projeto",
+    "comment": "Rótulo para configuração de idioma do projeto"
+  },
+  "project.manuscript": {
+    "string": "Manuscrito",
+    "comment": "Cabeçalho da seção para configurações do manuscrito"
+  },
+  "project.chapterGlob": {
+    "string": "Padrão de arquivo de capítulo",
+    "comment": "Rótulo para configuração de padrão de arquivo de capítulo"
+  },
+  "project.planning": {
+    "string": "Orquestração",
+    "comment": "Cabeçalho da seção para configurações de orquestração"
+  },
+  "project.pauseUnitsInfo": {
+    "string": "Valores de pausa são em milissegundos.",
+    "comment": "Nota informativa sobre unidades de pausa sendo em milissegundos"
+  },
+  "project.maxKb": {
+    "string": "KB máximo por consulta",
+    "comment": "Rótulo para configuração de KB máximo por consulta"
+  },
+  "project.llmAttribution": {
+    "string": "Atribuição LLM",
+    "comment": "Rótulo para configuração de atribuição LLM"
+  },
+  "project.attributionOn": {
+    "string": "Habilitado",
+    "comment": "Rótulo para opção de atribuição habilitada"
+  },
+  "project.attributionOff": {
+    "string": "Desabilitado",
+    "comment": "Rótulo para opção de atribuição desabilitada"
+  },
+  "project.ssml": {
+    "string": "SSML",
+    "comment": "Cabeçalho da seção para configurações SSML"
+  },
+  "project.rate": {
+    "string": "Taxa",
+    "comment": "Rótulo para configuração de taxa SSML"
+  },
+  "project.pitch": {
+    "string": "Tom",
+    "comment": "Rótulo para configuração de tom SSML"
+  },
+  "project.breaks": {
+    "string": "Pausas (ms)",
+    "comment": "Rótulo para configuração de pausas SSML"
+  },
+  "project.pauseConfiguration": {
+    "string": "Configure durações de pausa (em milissegundos) a serem inseridas na orquestração:",
+    "comment": "Descrição da seção de configuração de pausas"
+  },
+  "project.ttsCachingInfo": {
+    "string": "Cache TTS está sempre habilitado para desempenho ideal.",
+    "comment": "Informação sobre cache TTS"
+  },
+  "project.llm": {
+    "string": "Mecanismo LLM",
+    "comment": "Cabeçalho da seção para configurações do mecanismo LLM"
+  },
+  "project.llmEngine": {
+    "string": "Mecanismo",
+    "comment": "Rótulo para seleção do mecanismo LLM"
+  },
+  "project.llmModel": {
+    "string": "Modelo (OpenAI)",
+    "comment": "Texto de exemplo para campo de modelo OpenAI"
+  },
+  "project.llmModelLocal": {
+    "string": "Modelo (Local)",
+    "comment": "Texto de exemplo para campo de modelo local"
+  },
+  "project.llmEndpoint": {
+    "string": "Endpoint (Local)",
+    "comment": "Texto de exemplo para campo de endpoint local"
+  },
+  "project.tts": {
+    "string": "Mecanismo TTS",
+    "comment": "Cabeçalho da seção para configurações do mecanismo TTS"
+  },
+  "project.ttsEngine": {
+    "string": "Mecanismo",
+    "comment": "Rótulo para seleção do mecanismo TTS"
+  },
+  "project.ttsVoiceAzure": {
+    "string": "Voz Azure (ex.: pt-BR-FranciscaNeural)",
+    "comment": "Texto de exemplo para campo de voz Azure"
+  },
+  "project.ttsVoiceElevenlabs": {
+    "string": "ID da voz ElevenLabs",
+    "comment": "Texto de exemplo para campo de ID da voz ElevenLabs"
+  },
+  "project.ttsModelLocal": {
+    "string": "Modelo local (opcional)",
+    "comment": "Texto de exemplo para campo de modelo TTS local"
+  },
+  "project.openaiCredentials": {
+    "string": "Credenciais OpenAI",
+    "comment": "Cabeçalho da seção de credenciais OpenAI"
+  },
+  "project.openaiApiKey": {
+    "string": "Chave da API OpenAI",
+    "comment": "Rótulo para campo de chave da API OpenAI"
+  },
+  "project.azureOpenaiCredentials": {
+    "string": "Credenciais Azure OpenAI",
+    "comment": "Cabeçalho da seção de credenciais Azure OpenAI"
+  },
+  "project.azureOpenaiApiKey": {
+    "string": "Chave da API Azure OpenAI",
+    "comment": "Rótulo para campo de chave da API Azure OpenAI"
+  },
+  "project.azureOpenaiApiKeyPlaceholder": {
+    "string": "Digite a chave da API Azure OpenAI",
+    "comment": "Texto de exemplo para campo de chave da API Azure OpenAI"
+  },
+  "project.azureTtsCredentials": {
+    "string": "Credenciais Azure TTS",
+    "comment": "Cabeçalho da seção de credenciais Azure TTS"
+  },
+  "project.azureTtsKey": {
+    "string": "Chave Azure TTS",
+    "comment": "Rótulo para campo de chave Azure TTS"
+  },
+  "project.azureRegion": {
+    "string": "Região Azure",
+    "comment": "Rótulo para campo de região Azure"
+  },
+  "project.sentencePause": {
+    "string": "Pausa de frase",
+    "comment": "Rótulo para configuração de pausa de frase"
+  },
+  "project.paragraphPause": {
+    "string": "Pausa de parágrafo",
+    "comment": "Rótulo para configuração de pausa de parágrafo"
+  },
+  "project.chapterPause": {
+    "string": "Pausa de capítulo",
+    "comment": "Rótulo para configuração de pausa de capítulo"
+  },
+  "project.commaPause": {
+    "string": "Pausa de vírgula",
+    "comment": "Rótulo para configuração de pausa de vírgula"
+  },
+  "project.colonPause": {
+    "string": "Pausa de dois pontos",
+    "comment": "Rótulo para configuração de pausa de dois pontos"
+  },
+  "project.semicolonPause": {
+    "string": "Pausa de ponto e vírgula",
+    "comment": "Rótulo para configuração de pausa de ponto e vírgula"
+  },
+  "manu.title": {
+    "string": "Manuscrito",
+    "comment": "Título da página do manuscrito"
+  },
+  "manu.description": {
+    "string": "Importar e analisar o manuscrito do livro e verificar detecção adequada de capítulos",
+    "comment": "Descrição da página do manuscrito"
+  },
+  "workflow.readyToStart": {
+    "string": "Fluxo de trabalho: Pronto para iniciar",
+    "comment": "Mensagem de status do fluxo quando pronto para iniciar"
+  },
+  "workflow.completed": {
+    "string": "Concluído: {{steps}}",
+    "comment": "Status do fluxo mostrando etapas concluídas"
+  },
+  "workflow.completedLabel": {
+    "string": "Concluído",
+    "comment": "Rótulo para status de fluxo concluído"
+  },
+  "workflow.next": {
+    "string": "Próximo: {{step}}",
+    "comment": "Status do fluxo mostrando próxima etapa"
+  },
+  "workflow.nextLabel": {
+    "string": "Próximo",
+    "comment": "Rótulo para próxima etapa"
+  },
+  "workflow.allComplete": {
+    "string": "🎉 Todas as etapas do fluxo concluídas!",
+    "comment": "Mensagem de sucesso quando todas as etapas do fluxo estão prontas"
+  },
+  "workflow.buttonCompleted": {
+    "string": "✓ Concluído",
+    "comment": "Texto do botão mostrando etapa concluída"
+  },
+  "workflow.stepCompleted": {
+    "string": "Etapa concluída",
+    "comment": "Mensagem quando etapa é concluída"
+  },
+  "characters.description": {
+    "string": "Detecção, edição e preparação de voz.",
+    "comment": "Descrição da página de personagens"
+  },
+  "characters.title": {
+    "string": "Personagens",
+    "comment": "Título da página de personagens"
+  },
+  "characters.voiceAssignment": {
+    "string": "Atribuição de voz",
+    "comment": "Rótulo da seção de atribuição de voz"
+  },
+  "characters.detecting": {
+    "string": "Detectando...",
+    "comment": "Texto do botão durante detecção de personagens"
+  },
+  "characters.assigningProgress": {
+    "string": "Atribuindo... {{percent}}%",
+    "comment": "Texto de progresso durante atribuição de vozes com porcentagem"
+  },
+  "planning.description": {
+    "string": "Divisão de fragmentos compatível com TTS e atribuição de voz de personagem - trabalhe capítulo por capítulo.",
+    "comment": "Descrição da página de orquestração"
+  },
+  "planning.title": {
+    "string": "Orquestração",
+    "comment": "Título da página de orquestração"
+  },
+  "planning.searchText": {
+    "string": "Pesquisar texto…",
+    "comment": "Texto de exemplo para entrada de pesquisa na orquestração"
+  },
+  "planning.stats.words": {
+    "string": "palavras",
+    "comment": "Rótulo para estatísticas de contagem de palavras"
+  },
+  "planning.stats.chars": {
+    "string": "chars",
+    "comment": "Rótulo para estatísticas de contagem de caracteres"
+  },
+  "planning.selectChapterToBegin": {
+    "string": "Selecione um capítulo para começar",
+    "comment": "Mensagem quando nenhum capítulo está selecionado"
+  },
+  "planning.chooseChapterFromDropdown": {
+    "string": "Escolha um capítulo do menu suspenso acima para visualizar ou gerar seu plano.",
+    "comment": "Instruções para seleção de capítulo"
+  },
+  "planning.selectChapterOption": {
+    "string": "Selecionar um capítulo...",
+    "comment": "Opção padrão no menu suspenso de capítulo"
+  },
+  "planning.selectChapter": {
+    "string": "Selecionar capítulo",
+    "comment": "Texto do botão quando nenhum capítulo está selecionado"
+  },
+  "planning.generating": {
+    "string": "Gerando...",
+    "comment": "Texto do botão durante geração do plano"
+  },
+  "planning.assigning": {
+    "string": "Atribuindo...",
+    "comment": "Texto do botão durante atribuição de personagens"
+  },
+  "planning.generateInstruction": {
+    "string": "Clique \"Gerar plano para {{chapter}}\" para criar fragmentos compatíveis com TTS com detecção IA de locutor.",
+    "comment": "Instrução para gerar plano para um capítulo"
+  },
+  "planning.segmentsAndVoices": {
+    "string": "Segmentos e atribuição de voz",
+    "comment": "Cabeçalho da seção de segmentos e atribuição de voz"
+  },
+  "planning.chunksVoiceAssignment": {
+    "string": "Segmentos e atribuição de voz",
+    "comment": "Cabeçalho da seção de fragmentos e atribuição de voz na orquestração"
+  },
+  "home.projectSetup": {
+    "string": "Configure um novo projeto de audiolivro com a estrutura de pastas necessária.",
+    "comment": "Descrição para criar um novo projeto"
+  },
+  "home.parentDir": {
+    "string": "Diretório pai",
+    "comment": "Rótulo para campo de diretório pai no modal criar projeto"
+  },
+  "home.parentDirPlaceholder": {
+    "string": "C:\\projetos\\audiolivros",
+    "comment": "Texto de exemplo para campo de diretório pai no modal criar projeto"
+  },
+  "project.keywords": {
+    "string": "Palavras-chave:",
+    "comment": "Rótulo para campo de palavras-chave do projeto"
+  },
+  "project.categories": {
+    "string": "Categorias:",
+    "comment": "Rótulo para campo de categorias do projeto"
+  },
+  "project.openaiBaseUrl": {
+    "string": "URL base OpenAI (opcional)",
+    "comment": "Rótulo para campo opcional de URL base OpenAI"
+  },
+  "project.packaging": {
+    "string": "Empacotamento",
+    "comment": "Cabeçalho da seção de empacotamento"
+  },
+  "project.outputDirectory": {
+    "string": "Diretório de saída",
+    "comment": "Rótulo para campo de diretório de saída"
+  },
+  "project.targetPlatforms": {
+    "string": "Plataformas alvo",
+    "comment": "Rótulo da seção de plataformas alvo"
+  },
+  "planning.generatePlanFor": {
+    "string": "Gerar plano",
+    "comment": "Texto do botão para gerar plano para capítulo específico"
+  },
+  "planning.assignCharacters": {
+    "string": "Atribuir personagens",
+    "comment": "Texto do botão para atribuir personagens"
+  },
+  "planning.savePlan": {
+    "string": "Salvar plano",
+    "comment": "Texto do botão para salvar dados de orquestração"
+  },
+  "planning.markChapterComplete": {
+    "string": "Marcar capítulo como completo",
+    "comment": "Texto do botão para marcar capítulo como completo"
+  },
+  "planning.chapterLabel": {
+    "string": "Capítulo:",
+    "comment": "Rótulo para seleção de capítulo"
+  },
+  "planning.chunkLabel": {
+    "string": "Fragmento",
+    "comment": "Rótulo da seção de fragmento"
+  },
+  "planning.chunkAll": {
+    "string": "(todos)",
+    "comment": "Opção para mostrar todos os fragmentos"
+  },
+  "planning.onlyUnknowns": {
+    "string": "apenas desconhecidos",
+    "comment": "Opção para mostrar apenas fragmentos desconhecidos"
+  },
+  "planning.preview": {
+    "string": "Visualizar",
+    "comment": "Cabeçalho da seção de visualização"
+  },
+  "planning.edit": {
+    "string": "Editar",
+    "comment": "Texto do botão para editar conteúdo"
+  },
+  "planning.merge": {
+    "string": "Mesclar",
+    "comment": "Texto do botão para mesclar segmentos"
+  },
+  "planning.delete": {
+    "string": "Deletar",
+    "comment": "Texto do botão para deletar item"
+  },
+  "planning.undo": {
+    "string": "Desfazer",
+    "comment": "Texto do botão para desfazer alterações"
+  },
+  "planning.table.delim": {
+    "string": "delim",
+    "comment": "Cabeçalho da tabela para coluna de delimitador"
+  },
+  "planning.table.start": {
+    "string": "início",
+    "comment": "Cabeçalho da tabela para coluna de posição inicial"
+  },
+  "planning.table.end": {
+    "string": "fim",
+    "comment": "Cabeçalho da tabela para coluna de posição final"
+  },
+  "planning.table.len": {
+    "string": "comp",
+    "comment": "Cabeçalho da tabela para coluna de comprimento"
+  },
+  "planning.table.character": {
+    "string": "personagem",
+    "comment": "Cabeçalho da tabela para coluna de personagem"
+  },
+  "characters.defaultStyle": {
+    "string": "Estilo padrão",
+    "comment": "Rótulo para estilo de voz padrão"
+  },
+  "characters.styleEmpathetic": {
+    "string": "empático",
+    "comment": "Opção de estilo de voz: empático"
+  },
+  "characters.method": {
+    "string": "Método",
+    "comment": "Rótulo para método de atribuição"
+  },
+  "characters.methodManual": {
+    "string": "Manual",
+    "comment": "Método de atribuição manual"
+  },
+  "characters.methodAutoAssigned": {
+    "string": "Atribuído automaticamente",
+    "comment": "Método de atribuição automática"
+  },
+  "characters.intensity": {
+    "string": "Intensidade",
+    "comment": "Rótulo para controle de intensidade de voz"
+  },
+  "characters.rate": {
+    "string": "Velocidade",
+    "comment": "Rótulo para controle de velocidade de voz"
+  },
+  "characters.pitch": {
+    "string": "Tom",
+    "comment": "Rótulo para controle de tom de voz"
+  },
+  "characters.audition": {
+    "string": "Audição",
+    "comment": "Texto do botão para audição de voz de personagem"
+  },
+  "characters.remove": {
+    "string": "Remover",
+    "comment": "Texto do botão para remover personagem"
+  },
+  "characters.detectRefresh": {
+    "string": "Detectar / Atualizar",
+    "comment": "Texto do botão para detecção/atualização de personagem"
+  },
+  "characters.add": {
+    "string": "Adicionar",
+    "comment": "Texto do botão para adicionar personagem"
+  },
+  "characters.sortByFrequency": {
+    "string": "Ordenar por frequência",
+    "comment": "Texto do botão para ordenar personagens por frequência"
+  },
+  "characters.assignVoices": {
+    "string": "Atribuir vozes",
+    "comment": "Texto do botão para atribuir vozes aos personagens"
+  },
+  "characters.save": {
+    "string": "Salvar",
+    "comment": "Texto do botão para salvar dados de personagem"
+  },
+  "characters.frequency": {
+    "string": "Frequência",
+    "comment": "Rótulo para porcentagem de frequência do personagem"
+  },
+  "characters.markComplete": {
+    "string": "Marcar como completo",
+    "comment": "Texto do botão para marcar etapa de personagens como completa"
+  },
+  "planning.save": {
+    "string": "Salvar",
+    "comment": "Texto do botão salvar no editor de orquestração"
+  },
+  "planning.cancel": {
+    "string": "Cancelar",
+    "comment": "Texto do botão cancelar no editor de orquestração"
+  },
+  "planning.editPlaceholder": {
+    "string": "Editar texto aqui... (Ctrl+Enter para salvar, Escape para cancelar)",
+    "comment": "Texto de exemplo para editor de texto na orquestração"
+  },
+  "planning.overLimits": {
+    "string": "ACIMA DOS LIMITES",
+    "comment": "Texto de aviso quando segmento está acima dos limites de tamanho"
+  },
+  "planning.editInstructions": {
+    "string": "Alterações são salvas apenas no plano, não no manuscrito original. Use Ctrl+Enter para salvar, Escape para cancelar.",
+    "comment": "Instruções para editar segmentos"
+  },
+  "planning.chapterComplete": {
+    "string": "Capítulo completo",
+    "comment": "Texto exibido quando capítulo é marcado como completo"
+  },
+  "characters.personality": {
+    "string": "Personalidade",
+    "comment": "Rótulo para traços de personalidade do personagem"
+  },
+  "characters.speakingStyle": {
+    "string": "Estilo de fala",
+    "comment": "Rótulo para estilo de fala do personagem"
+  },
+  "home.byAuthors": {
+    "string": "por {{authors}}",
+    "comment": "Texto de atribuição de autor em cartões de livro"
+  },
+  "languages.ar": {
+    "string": "Árabe",
+    "comment": "Nome do idioma para Árabe"
+  },
+  "languages.bg": {
+    "string": "Búlgaro",
+    "comment": "Nome do idioma para Búlgaro"
+  },
+  "languages.ca": {
+    "string": "Catalão",
+    "comment": "Nome do idioma para Catalão"
+  },
+  "languages.cs": {
+    "string": "Tcheco",
+    "comment": "Nome do idioma para Tcheco"
+  },
+  "languages.da": {
+    "string": "Dinamarquês",
+    "comment": "Nome do idioma para Dinamarquês"
+  },
+  "languages.de": {
+    "string": "Alemão",
+    "comment": "Nome do idioma para Alemão"
+  },
+  "languages.el": {
+    "string": "Grego",
+    "comment": "Nome do idioma para Grego"
+  },
+  "languages.en": {
+    "string": "Inglês",
+    "comment": "Nome do idioma para Inglês"
+  },
+  "languages.es": {
+    "string": "Espanhol",
+    "comment": "Nome do idioma para Espanhol"
+  },
+  "languages.et": {
+    "string": "Estoniano",
+    "comment": "Nome do idioma para Estoniano"
+  },
+  "languages.eu": {
+    "string": "Basco",
+    "comment": "Nome do idioma para Basco"
+  },
+  "languages.fi": {
+    "string": "Finlandês",
+    "comment": "Nome do idioma para Finlandês"
+  },
+  "languages.fr": {
+    "string": "Francês",
+    "comment": "Nome do idioma para Francês"
+  },
+  "languages.gl": {
+    "string": "Galego",
+    "comment": "Nome do idioma para Galego"
+  },
+  "languages.he": {
+    "string": "Hebraico",
+    "comment": "Nome do idioma para Hebraico"
+  },
+  "languages.hi": {
+    "string": "Hindi",
+    "comment": "Nome do idioma para Hindi"
+  },
+  "languages.hr": {
+    "string": "Croata",
+    "comment": "Nome do idioma para Croata"
+  },
+  "languages.hu": {
+    "string": "Húngaro",
+    "comment": "Nome do idioma para Húngaro"
+  },
+  "languages.id": {
+    "string": "Indonésio",
+    "comment": "Nome do idioma para Indonésio"
+  },
+  "languages.it": {
+    "string": "Italiano",
+    "comment": "Nome do idioma para Italiano"
+  },
+  "languages.ja": {
+    "string": "Japonês",
+    "comment": "Nome do idioma para Japonês"
+  },
+  "languages.ko": {
+    "string": "Coreano",
+    "comment": "Nome do idioma para Coreano"
+  },
+  "languages.lt": {
+    "string": "Lituano",
+    "comment": "Nome do idioma para Lituano"
+  },
+  "languages.lv": {
+    "string": "Letão",
+    "comment": "Nome do idioma para Letão"
+  },
+  "languages.mt": {
+    "string": "Maltês",
+    "comment": "Nome do idioma para Maltês"
+  },
+  "languages.nb": {
+    "string": "Norueguês",
+    "comment": "Nome do idioma para Norueguês"
+  },
+  "languages.nl": {
+    "string": "Holandês",
+    "comment": "Nome do idioma para Holandês"
+  },
+  "languages.pl": {
+    "string": "Polonês",
+    "comment": "Nome do idioma para Polonês"
+  },
+  "languages.pt": {
+    "string": "Português",
+    "comment": "Nome do idioma para Português"
+  },
+  "languages.ro": {
+    "string": "Romeno",
+    "comment": "Nome do idioma para Romeno"
+  },
+  "languages.ru": {
+    "string": "Russo",
+    "comment": "Nome do idioma para Russo"
+  },
+  "languages.sk": {
+    "string": "Eslovaco",
+    "comment": "Nome do idioma para Eslovaco"
+  },
+  "languages.sl": {
+    "string": "Esloveno",
+    "comment": "Nome do idioma para Esloveno"
+  },
+  "languages.sv": {
+    "string": "Sueco",
+    "comment": "Nome do idioma para Sueco"
+  },
+  "languages.th": {
+    "string": "Tailandês",
+    "comment": "Nome do idioma para Tailandês"
+  },
+  "languages.tr": {
+    "string": "Turco",
+    "comment": "Nome do idioma para Turco"
+  },
+  "languages.uk": {
+    "string": "Ucraniano",
+    "comment": "Nome do idioma para Ucraniano"
+  },
+  "languages.vi": {
+    "string": "Vietnamita",
+    "comment": "Nome do idioma para Vietnamita"
+  },
+  "languages.zh": {
+    "string": "Chinês",
+    "comment": "Nome do idioma para Chinês"
+  },
+  "characters.addDescriptionPlaceholder": {
+    "string": "Adicionar descrição do personagem...",
+    "comment": "Texto de exemplo para entrada de descrição do personagem"
+  },
+  "home.baseFolderPlaceholder": {
+    "string": "C:\\projetos\\audio",
+    "comment": "Texto de exemplo para pasta base do projeto"
+  },
+  "home.projectNamePlaceholder": {
+    "string": "meu_livro",
+    "comment": "Texto de exemplo para nome do projeto"
+  },
+  "book.isbnPlaceholder": {
+    "string": "978-0-000000-00-0",
+    "comment": "Texto de exemplo para campo ISBN"
+  },
+  "book.copyrightPlaceholder": {
+    "string": "© 2025 Nome do Autor",
+    "comment": "Texto de exemplo para campo de direitos autorais"
+  },
+  "project.azureModelPlaceholder": {
+    "string": "Modelo (gpt-4o)",
+    "comment": "Texto de exemplo para modelo Azure OpenAI"
+  },
+  "project.azureEndpointPlaceholder": {
+    "string": "URL do Endpoint",
+    "comment": "Texto de exemplo para endpoint Azure"
+  },
+  "project.azureApiVersionPlaceholder": {
+    "string": "Versão da API (2024-02-15-preview)",
+    "comment": "Texto de exemplo para versão da API Azure"
+  },
+  "project.openaiApiKeyPlaceholder": {
+    "string": "sk-...",
+    "comment": "Texto de exemplo para chave da API OpenAI"
+  },
+  "project.openaiBaseUrlPlaceholder": {
+    "string": "https://api.openai.com/v1",
+    "comment": "Texto de exemplo para URL base OpenAI"
+  },
+  "project.azureTtsApiKeyPlaceholder": {
+    "string": "Digite a chave da API Azure TTS",
+    "comment": "Texto de exemplo para chave da API Azure TTS"
+  },
+  "project.azureRegionPlaceholder": {
+    "string": "ex.: eastus",
+    "comment": "Texto de exemplo para região Azure"
+  },
+  "project.outputFolderPlaceholder": {
+    "string": "saida",
+    "comment": "Texto de exemplo para pasta de saída"
+  },
+  "audioProduction.loadingPlanData": {
+    "string": "Carregando dados do plano...",
+    "comment": "Mensagem de status ao carregar dados do plano"
+  },
+  "audioProduction.noPlanDataFound": {
+    "string": "Nenhum dado de plano encontrado",
+    "comment": "Mensagem de erro quando dados do plano não estão disponíveis"
+  },
+  "audioProduction.invalidPlanData": {
+    "string": "Dados de plano inválidos - nenhum fragmento encontrado",
+    "comment": "Mensagem de erro quando dados do plano não têm fragmentos válidos"
+  },
+  "audioProduction.loadingChapters": {
+    "string": "Carregando capítulos...",
+    "comment": "Mensagem de status ao carregar lista de capítulos"
+  },
+  "audioProduction.failedToLoadChapters": {
+    "string": "Falha ao carregar capítulos",
+    "comment": "Mensagem de erro quando carregamento de capítulos falha"
+  },
+  "audioProduction.generatingAudioForSegment": {
+    "string": "Gerando áudio para segmento {{chunkId}}...",
+    "comment": "Mensagem de status ao gerar áudio para segmento específico"
+  },
+  "audioProduction.audioGeneratedForSegment": {
+    "string": "Áudio gerado para segmento {{chunkId}}",
+    "comment": "Mensagem de sucesso quando áudio do segmento é gerado"
+  },
+  "audioProduction.failedToGenerateAudio": {
+    "string": "Falha ao gerar áudio para segmento {{chunkId}}",
+    "comment": "Mensagem de erro quando geração de áudio falha"
+  },
+  "audioProduction.generatingChapterAudio": {
+    "string": "Gerando áudio para capítulo inteiro...",
+    "comment": "Mensagem de status ao gerar áudio para capítulo inteiro"
+  },
+  "audioProduction.chapterAudioComplete": {
+    "string": "Geração de áudio do capítulo completa!",
+    "comment": "Mensagem de sucesso quando geração de áudio do capítulo está completa"
+  },
+  "audioProduction.noSegmentSelected": {
+    "string": "Nenhum segmento selecionado ou projeto não carregado",
+    "comment": "Mensagem de erro ao tentar visualizar sem seleção"
+  },
+  "audioProduction.previewFailed": {
+    "string": "Visualização falhou: {{error}}",
+    "comment": "Mensagem de erro quando visualização de áudio falha"
+  },
+  "audioProduction.noSegmentsAvailable": {
+    "string": "Nenhum segmento disponível para reproduzir",
+    "comment": "Mensagem de erro quando playlist não tem segmentos"
+  },
+  "audioProduction.projectNotLoaded": {
+    "string": "Projeto não carregado",
+    "comment": "Mensagem de erro quando projeto não está carregado"
+  },
+  "audioProduction.loadedSegmentsWithChains": {
+    "string": "Carregados {{segments}} segmentos com {{chains}} cadeias de processamento personalizadas",
+    "comment": "Mensagem de status mostrando segmentos carregados e cadeias personalizadas"
+  },
+  "audioProduction.loadedSegmentsWithAudio": {
+    "string": "Carregados {{segments}} segmentos ({{completed}} com áudio)",
+    "comment": "Mensagem de status mostrando segmentos carregados e status de conclusão"
+  },
+  "audioProduction.failedToLoadPlanData": {
+    "string": "Falha ao carregar dados do plano: {{error}}",
+    "comment": "Mensagem de erro quando carregamento de dados do plano falha com erro específico"
+  },
+  "audioProduction.selectChapter": {
+    "string": "Selecionar capítulo",
+    "comment": "Texto da opção padrão no dropdown de capítulo"
+  },
+  "audioProduction.audioProductionComplete": {
+    "string": "Produção de áudio completa",
+    "comment": "Texto de status quando todos os capítulos têm áudio gerado"
+  },
+  "audioProduction.chaptersLoaded": {
+    "string": "{{completed}}/{{total}} capítulos carregados",
+    "comment": "Status mostrando quantos capítulos estão carregados com planos"
+  },
+  "audioProduction.generateChapterAudio": {
+    "string": "Gerar áudio do capítulo",
+    "comment": "Texto do botão para gerar áudio para capítulo inteiro"
+  },
+  "audioProduction.play": {
+    "string": "Reproduzir",
+    "comment": "Texto do botão para reproduzir segmento de áudio"
+  },
+  "audioProduction.pause": {
+    "string": "Pausar",
+    "comment": "Texto do botão para pausar reprodução de áudio"
+  },
+  "audioProduction.loading": {
+    "string": "Carregando...",
+    "comment": "Texto do botão quando áudio está carregando"
+  },
+  "audioProduction.playAll": {
+    "string": "Reproduzir todos",
+    "comment": "Texto do botão para reproduzir todos os segmentos em sequência"
+  },
+  "audioProduction.stop": {
+    "string": "Parar",
+    "comment": "Texto do botão para parar reprodução de áudio"
+  },
+  "audioProduction.previous": {
+    "string": "Anterior",
+    "comment": "Texto do botão para navegar ao segmento anterior"
+  },
+  "audioProduction.next": {
+    "string": "Próximo",
+    "comment": "Texto do botão para navegar ao próximo segmento"
+  },
+  "audioProduction.previousSegment": {
+    "string": "Reproduzir segmento anterior",
+    "comment": "Dica para botão de navegação anterior"
+  },
+  "audioProduction.nextSegment": {
+    "string": "Reproduzir próximo segmento",
+    "comment": "Dica para botão de navegação próximo"
+  },
+  "audioProduction.error": {
+    "string": "Erro",
+    "comment": "Indicador de status para estado de erro de áudio"
+  },
+  "audioProduction.processing": {
+    "string": "Processando...",
+    "comment": "Indicador de status ao processar áudio"
+  },
+  "audioProduction.playing": {
+    "string": "Reproduzindo",
+    "comment": "Indicador de status quando áudio está reproduzindo"
+  },
+  "audioProduction.segmentsLoaded": {
+    "string": "{{count}} segmentos carregados",
+    "comment": "Status mostrando número de segmentos carregados"
+  },
+  "audioProduction.insertSoundEffect": {
+    "string": "Inserir efeito sonoro",
+    "comment": "Botão e título do diálogo para inserir segmento de efeito sonoro"
+  },
+  "audioProduction.addSfx": {
+    "string": "Adicionar SFX",
+    "comment": "Rótulo curto para botão adicionar efeito sonoro"
+  },
+  "audioProduction.selectWavFile": {
+    "string": "Selecionar arquivo WAV",
+    "comment": "Rótulo para seleção de arquivo WAV no diálogo de efeito sonoro"
+  },
+  "audioProduction.chooseFile": {
+    "string": "Escolher arquivo",
+    "comment": "Texto do botão para seleção de arquivo no diálogo de efeito sonoro"
+  },
+  "audioProduction.wavFileRequirements": {
+    "string": "Requisitos: 16-48kHz, 16/24-bit, estéreo/mono, máx 300 segundos",
+    "comment": "Requisitos de formato para arquivos WAV"
+  },
+  "audioProduction.invalidWavFile": {
+    "string": "Arquivo WAV inválido: {{error}}",
+    "comment": "Mensagem de erro para arquivo WAV inválido com detalhes do erro"
+  },
+  "audioProduction.errorValidatingFile": {
+    "string": "Erro ao validar arquivo: {{error}}",
+    "comment": "Mensagem de erro quando validação do arquivo falha"
+  },
+  "audioProduction.sfxSegmentAdded": {
+    "string": "Segmento de efeito sonoro adicionado com sucesso",
+    "comment": "Mensagem de sucesso quando segmento de efeito sonoro é adicionado"
+  },
+  "audioProduction.addSegment": {
+    "string": "Adicionar segmento",
+    "comment": "Texto do botão para confirmar adição de novo segmento"
+  },
+  "audioProduction.errorCreatingSegment": {
+    "string": "Erro ao criar segmento: {{error}}",
+    "comment": "Mensagem de erro quando criação de segmento falha"
+  },
+  "audioProduction.noChaptersWithPlans": {
+    "string": "Nenhum capítulo com planos disponível",
+    "comment": "Mensagem quando nenhum capítulo tem planos de orquestração"
+  },
+  "audioProduction.completeOrchestrationStep": {
+    "string": "Complete a etapa de orquestração para pelo menos um capítulo para começar a produção de áudio.",
+    "comment": "Instruções para completar orquestração antes da produção de áudio"
+  },
+  "audioProduction.segments": {
+    "string": "Segmentos de áudio",
+    "comment": "Cabeçalho para tabela de segmentos de áudio"
+  },
+  "audioProduction.tableHeaderId": {
+    "string": "ID",
+    "comment": "Cabeçalho da tabela para coluna de ID do segmento"
+  },
+  "audioProduction.tableHeaderTextPreview": {
+    "string": "Visualização do texto",
+    "comment": "Cabeçalho da tabela para coluna de visualização do texto"
+  },
+  "audioProduction.tableHeaderVoice": {
+    "string": "Voz",
+    "comment": "Cabeçalho da tabela para coluna de atribuição de voz"
+  },
+  "manuscript.loadingChapter": {
+    "string": "Carregando capítulo…",
+    "comment": "Mensagem de status ao carregar capítulo"
+  },
+  "manuscript.chapterLoaded": {
+    "string": "Capítulo carregado",
+    "comment": "Mensagem de status quando capítulo é carregado com sucesso"
+  },
+  "manuscript.chapterNotFound": {
+    "string": "Arquivo de capítulo não encontrado.",
+    "comment": "Mensagem de erro quando arquivo de capítulo não é encontrado"
+  },
+  "manuscript.autoSaving": {
+    "string": "Salvando automaticamente...",
+    "comment": "Mensagem de status ao salvar automaticamente alterações"
+  },
+  "manuscript.characterCount": {
+    "string": "Caracteres: {{count}}",
+    "comment": "Exibição de contagem de caracteres no editor"
+  },
+  "cost.title": {
+    "string": "Rastreamento de custos",
+    "comment": "Título principal da página do painel de rastreamento de custos"
+  },
+  "cost.description": {
+    "string": "Monitore custos de serviços IA e analise economias de cache",
+    "comment": "Texto de descrição do painel de rastreamento de custos"
+  },
+  "cost.loading": {
+    "string": "Carregando dados de custo...",
+    "comment": "Mensagem de carregamento enquanto dados de custo estão sendo recuperados"
+  },
+  "cost.noData": {
+    "string": "Nenhum dado de custo disponível",
+    "comment": "Mensagem exibida quando não existem dados de rastreamento de custo"
+  },
+  "cost.settings": {
+    "string": "Configurações",
+    "comment": "Texto do botão e título do painel para configurações de rastreamento de custo"
+  },
+  "cost.timeRange.7d": {
+    "string": "Últimos 7 dias",
+    "comment": "Opção de intervalo de tempo para últimos 7 dias"
+  },
+  "cost.timeRange.30d": {
+    "string": "Últimos 30 dias",
+    "comment": "Opção de intervalo de tempo para últimos 30 dias"
+  },
+  "cost.timeRange.90d": {
+    "string": "Últimos 90 dias",
+    "comment": "Opção de intervalo de tempo para últimos 90 dias"
+  },
+  "cost.timeRange.all": {
+    "string": "Todo o tempo",
+    "comment": "Opção de intervalo de tempo para todos os dados históricos"
+  },
+  "cost.totalCost": {
+    "string": "Custo total",
+    "comment": "Rótulo para cartão de custo total acumulado"
+  },
+  "cost.cacheSavings": {
+    "string": "Economias de cache",
+    "comment": "Rótulo para cartão de custo de economias de cache"
+  },
+  "cost.netCost": {
+    "string": "Custo líquido",
+    "comment": "Rótulo para custo líquido (total menos economias)"
+  },
+  "cost.afterCacheSavings": {
+    "string": "Após economias de cache",
+    "comment": "Subtítulo para cartão de custo líquido"
+  },
+  "cost.cacheHitRate": {
+    "string": "Taxa de acerto do cache",
+    "comment": "Rótulo para porcentagem da taxa de acerto do cache"
+  },
+  "cost.costByService": {
+    "string": "Custo por tipo de serviço IA",
+    "comment": "Título da seção de divisão de custo por tipo de serviço (LLM vs TTS)"
+  },
+  "cost.llmServices": {
+    "string": "Serviços LLM",
+    "comment": "Rótulo para serviços de Modelo de Linguagem Grande na divisão de custo"
+  },
+  "cost.ttsServices": {
+    "string": "Serviços TTS",
+    "comment": "Rótulo para serviços de Texto para Fala na divisão de custo"
+  },
+  "cost.topOperations": {
+    "string": "Principais operações por custo",
+    "comment": "Título da seção de operações mais caras"
+  },
+  "cost.cachePerformance": {
+    "string": "Desempenho do cache",
+    "comment": "Título da seção de estatísticas de desempenho do cache"
+  },
+  "cost.cacheHits": {
+    "string": "Acertos do cache",
+    "comment": "Rótulo para estatísticas de acerto do cache"
+  },
+  "cost.cacheMisses": {
+    "string": "Falhas do cache",
+    "comment": "Rótulo para estatísticas de falha do cache"
+  },
+  "cost.hitRate": {
+    "string": "Taxa de acerto",
+    "comment": "Rótulo para porcentagem da taxa de acerto do cache"
+  },
+  "cost.smartCachingImpact": {
+    "string": "Impacto do cache inteligente",
+    "comment": "Título da mensagem de impacto das economias de cache"
+  },
+  "cost.savingsMessage": {
+    "string": "Você economizou {{savings}} graças ao cache inteligente! Sem cache, seu custo total teria sido {{totalWithSavings}}.",
+    "comment": "Mensagem mostrando impacto das economias de cache com valores de custo"
+  },
+  "cost.savingsByOperation": {
+    "string": "Economias de cache por operação",
+    "comment": "Título do painel mostrando divisão das economias de cache por tipo de operação"
+  },
+  "cost.noSavingsData": {
+    "string": "Nenhum dado de economia de cache disponível",
+    "comment": "Mensagem exibida quando não existem dados de economia de cache para nenhuma operação"
+  },
+  "cost.exportData": {
+    "string": "Exportar para CSV",
+    "comment": "Texto do botão para exportar dados de custo como arquivo CSV"
+  },
+  "cost.clearData": {
+    "string": "Limpar dados",
+    "comment": "Texto do botão para limpar todos os dados de custo"
+  },
+  "cost.clearDataConfirm": {
+    "string": "Tem certeza de que deseja limpar todos os dados de custo? Esta ação não pode ser desfeita.",
+    "comment": "Texto do diálogo de confirmação para limpar dados de custo"
+  },
+  "packaging.title": {
+    "string": "Empacotamento",
+    "comment": "Título principal da página de empacotamento"
+  },
+  "packaging.description": {
+    "string": "Prepare seu audiolivro para entrega às plataformas. Revise requisitos e crie pacotes quando estiver pronto.",
+    "comment": "Descrição da página de empacotamento"
+  },
+  "packaging.markComplete": {
+    "string": "Marcar empacotamento como completo",
+    "comment": "Texto do botão para marcar fluxo de empacotamento como completo"
+  },
+  "packaging.loadProject": {
+    "string": "Por favor carregue um projeto primeiro para gerenciar empacotamento.",
+    "comment": "Mensagem quando nenhum projeto está carregado"
+  },
+  "packaging.overview.platforms": {
+    "string": "Plataformas alvo",
+    "comment": "Cabeçalho do cartão de visão geral das plataformas"
+  },
+  "packaging.overview.platformsEnabled": {
+    "string": "plataformas habilitadas",
+    "comment": "Subtítulo da visão geral das plataformas mostrando quantas estão habilitadas"
+  },
+  "packaging.overview.ready": {
+    "string": "Pronto para empacotar",
+    "comment": "Cabeçalho do cartão de visão geral das plataformas prontas"
+  },
+  "packaging.overview.readyPlatforms": {
+    "string": "plataformas prontas",
+    "comment": "Subtítulo das plataformas prontas na visão geral"
+  },
+  "packaging.overview.audio": {
+    "string": "Progresso do áudio",
+    "comment": "Cabeçalho do cartão de visão geral do progresso do áudio"
+  },
+  "packaging.overview.chaptersAudio": {
+    "string": "capítulos com áudio",
+    "comment": "Subtítulo do progresso do áudio mostrando capítulos com áudio"
+  },
+  "packaging.platforms.title": {
+    "string": "Lista de verificação de requisitos da plataforma",
+    "comment": "Cabeçalho da seção de lista de verificação da plataforma"
+  },
+  "packaging.platforms.noneEnabled": {
+    "string": "Nenhuma plataforma está habilitada para exportação no momento.",
+    "comment": "Mensagem quando nenhuma plataforma está habilitada"
+  },
+  "packaging.platforms.enableInstructions": {
+    "string": "Habilite plataformas alvo na configuração do seu projeto para ver requisitos de empacotamento.",
+    "comment": "Instruções para habilitar plataformas"
+  },
+  "packaging.platforms.goToProject": {
+    "string": "Ir para configurações do projeto",
+    "comment": "Botão para navegar às configurações do projeto"
+  },
+  "packaging.platforms.format": {
+    "string": "Formato",
+    "comment": "Rótulo para informações de formato do pacote"
+  },
+  "packaging.platforms.complete": {
+    "string": "completo",
+    "comment": "Rótulo para porcentagem de conclusão"
+  },
+  "packaging.platforms.createPackage": {
+    "string": "Criar pacote para",
+    "comment": "Texto do botão para criar pacote para uma plataforma"
+  },
+  "packaging.requirements.title": {
+    "string": "Título",
+    "comment": "Descrição do requisito de título"
+  },
+  "packaging.requirements.author": {
+    "string": "Informações do autor",
+    "comment": "Descrição do requisito de autor"
+  },
+  "packaging.requirements.narrator": {
+    "string": "Informações do narrador",
+    "comment": "Descrição do requisito de narrador"
+  },
+  "packaging.requirements.description": {
+    "string": "Descrição do livro",
+    "comment": "Descrição do requisito de descrição"
+  },
+  "packaging.requirements.isbn": {
+    "string": "Número ISBN",
+    "comment": "Descrição do requisito de ISBN"
+  },
+  "packaging.requirements.keywords": {
+    "string": "Palavras-chave",
+    "comment": "Descrição do requisito de palavras-chave"
+  },
+  "packaging.requirements.categories": {
+    "string": "Categorias",
+    "comment": "Descrição do requisito de categorias"
+  },
+  "packaging.requirements.cover": {
+    "string": "Imagem da capa",
+    "comment": "Descrição do requisito de imagem da capa"
+  },
+  "packaging.requirements.chapters": {
+    "string": "Arquivos de capítulo",
+    "comment": "Descrição do requisito de arquivos de capítulo"
+  },
+  "packaging.requirements.audio": {
+    "string": "Arquivos de áudio",
+    "comment": "Descrição do requisito de arquivos de áudio"
+  },
+  "packaging.requirements.audioComplete": {
+    "string": "Áudio de todos os capítulos completo",
+    "comment": "Descrição do requisito de áudio completo"
+  },
+  "packaging.requirements.outputDirectory": {
+    "string": "Diretório de saída",
+    "comment": "Descrição do requisito de diretório de saída"
+  }
+}
