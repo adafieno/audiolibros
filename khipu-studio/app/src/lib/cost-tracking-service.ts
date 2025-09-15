@@ -40,7 +40,39 @@ export class CostTrackingService {
     
     // Make debug methods available in console
     if (typeof window !== 'undefined') {
-      (window as unknown as { debugAutomation: () => void }).debugAutomation = () => this.debugAutomationTracking();
+      (window as unknown as { 
+        debugAutomation: () => void;
+        debugTimeSummary: () => void;
+        testAutomation: () => void;
+      }).debugAutomation = () => this.debugAutomationTracking();
+      
+      (window as unknown as { 
+        debugAutomation: () => void;
+        debugTimeSummary: () => void;
+        testAutomation: () => void;
+      }).debugTimeSummary = () => {
+        const summary = this.generateSummary();
+        console.log(`🔍 [TIME SUMMARY DEBUG]:`, {
+          totalAutomationTime: summary.totalAutomationTime,
+          totalAutomationTimeFormatted: this.formatDuration(summary.totalAutomationTime),
+          totalActiveTime: summary.totalActiveTime,
+          totalActiveTimeFormatted: this.formatDuration(summary.totalActiveTime),
+          totalTimeEntries: this.timeEntries.length,
+          automationEntriesCount: this.timeEntries.filter(e => e.activityType === 'automation').length,
+          userEntriesCount: this.timeEntries.filter(e => e.activityType === 'user-interaction').length
+        });
+      };
+      
+      (window as unknown as { 
+        debugAutomation: () => void;
+        debugTimeSummary: () => void;
+        testAutomation: () => void;
+      }).testAutomation = () => {
+        console.log('🧪 Creating test automation entry...');
+        this.trackAutomation('test_manual_automation', 2500, { page: 'test' });
+        console.log('✅ Test automation entry created');
+        this.notifyDataChange();
+      };
     }
   }
   
@@ -87,8 +119,13 @@ export class CostTrackingService {
    */
   async setProjectRoot(projectRoot: string): Promise<void> {
     if (this.currentProjectRoot !== projectRoot) {
+      console.log(`📂 Setting project root: ${projectRoot}`);
       this.currentProjectRoot = projectRoot;
       await this.loadFromFileSystem();
+      
+      // Notify listeners that data has been loaded/changed
+      console.log(`✅ Project root set and data loaded, notifying ${this.changeCallbacks.length} listeners`);
+      this.notifyDataChange();
     }
   }
 
@@ -96,7 +133,12 @@ export class CostTrackingService {
    * Force reload data from file system (useful for refreshing after external changes)
    */
   async reloadFromFileSystem(): Promise<void> {
+    console.log('🔄 Force reloading data from file system...');
     await this.loadFromFileSystem();
+    
+    // Notify listeners that fresh data has been loaded
+    console.log(`✅ Data reloaded from file system, notifying ${this.changeCallbacks.length} listeners`);
+    this.notifyDataChange();
   }
 
   /**
@@ -489,7 +531,8 @@ export class CostTrackingService {
    * Format duration in a human-readable way
    */
   private formatDuration(milliseconds: number): string {
-    const seconds = Math.floor(milliseconds / 1000);
+    const totalSeconds = milliseconds / 1000;
+    const seconds = Math.floor(totalSeconds);
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
     
@@ -497,8 +540,11 @@ export class CostTrackingService {
       return `${hours}h ${minutes % 60}m ${seconds % 60}s`;
     } else if (minutes > 0) {
       return `${minutes}m ${seconds % 60}s`;
-    } else {
+    } else if (seconds >= 1) {
       return `${seconds}s`;
+    } else {
+      // For sub-second durations, show milliseconds
+      return `${milliseconds.toFixed(0)}ms`;
     }
   }
   
@@ -507,9 +553,12 @@ export class CostTrackingService {
    */
   private async loadFromFileSystem(): Promise<void> {
     if (!this.currentProjectRoot) {
-      console.log('No project root set, skipping file system load');
+      console.log('❌ No project root set, skipping file system load');
       return;
     }
+
+    console.log(`📁 Loading data from file system: ${this.currentProjectRoot}`);
+    console.log(`📊 Current state before load: ${this.timeEntries.length} time entries, ${this.costEntries.length} cost entries`);
 
     try {
       // Load cost entries
@@ -548,7 +597,18 @@ export class CostTrackingService {
             ...entry,
             timestamp: new Date(entry.timestamp || Date.now())
           })) as TimeEntry[];
+          
+          const automationEntries = this.timeEntries.filter(e => e.activityType === 'automation');
           console.log(`Loaded ${this.timeEntries.length} time entries from file system`);
+          console.log(`🤖 Automation entries loaded: ${automationEntries.length}`);
+          if (automationEntries.length > 0) {
+            console.log(`🤖 Recent automation entries:`, automationEntries.slice(-3).map(e => ({
+              operation: e.operation,
+              duration: e.duration,
+              durationFormatted: this.formatDuration(e.duration),
+              timestamp: e.timestamp
+            })));
+          }
         }
       } catch {
         console.log('Time entries file not found, starting fresh');
@@ -598,8 +658,21 @@ export class CostTrackingService {
         console.log('Cost settings file not found, using defaults');
         this.settings = { ...DEFAULT_COST_SETTINGS };
       }
+      
+      // Summary of loaded data
+      const automationEntries = this.timeEntries.filter(e => e.activityType === 'automation');
+      const totalAutomationTime = automationEntries.reduce((sum, e) => sum + e.duration, 0);
+      
+      console.log(`✅ Data loading complete:`, {
+        costEntries: this.costEntries.length,
+        timeEntries: this.timeEntries.length,
+        timeSessions: this.timeSessions.length,
+        automationEntries: automationEntries.length,
+        totalAutomationTime,
+        totalAutomationTimeFormatted: this.formatDuration(totalAutomationTime)
+      });
     } catch (error) {
-      console.error('Error loading cost tracking data from file system:', error);
+      console.error('❌ Error loading cost tracking data from file system:', error);
     }
   }
   
@@ -1030,6 +1103,17 @@ export class CostTrackingService {
     const totalAutomationTime = timeEntriesInRange
       .filter(entry => entry.activityType === 'automation')
       .reduce((sum, entry) => sum + entry.duration, 0);
+    
+    // Debug logging for automation time calculation
+    console.log(`🔍 [AUTOMATION TIME DEBUG]:`, {
+      timeEntriesInRange: timeEntriesInRange.length,
+      automationEntries: timeEntriesInRange.filter(entry => entry.activityType === 'automation').length,
+      automationEntriesData: timeEntriesInRange
+        .filter(entry => entry.activityType === 'automation')
+        .map(e => ({ operation: e.operation, duration: e.duration, timestamp: e.timestamp })),
+      totalAutomationTime,
+      totalAutomationTimeFormatted: this.formatDuration(totalAutomationTime)
+    });
     
     const totalSessionTime = timeSessionsInRange
       .reduce((sum, session) => sum + session.totalDuration, 0);

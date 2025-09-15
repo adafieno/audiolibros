@@ -16,9 +16,6 @@ export default function Cost() {
   const { t, i18n } = useTranslation();
   const { root } = useProject();
   
-  // Debug project root
-  console.log('🔍 Cost component - project root from useProject():', root);
-  
   const [summary, setSummary] = useState<CostSummary | null>(null);
   const [settings, setSettings] = useState<CostSettings | null>(null);
   const [operationBreakdown, setOperationBreakdown] = useState<Array<{
@@ -47,8 +44,6 @@ export default function Cost() {
 
   // Helper function for time formatting with decimal precision
   const formatTimeSpent = (milliseconds: number): string => {
-    if (milliseconds < 100) return '0.0s'; // Show 0.0s for very small times
-    
     const totalSeconds = milliseconds / 1000;
     const seconds = Math.floor(totalSeconds);
     const minutes = Math.floor(seconds / 60);
@@ -65,8 +60,11 @@ export default function Cost() {
     } else if (minutes > 0) {
       const decimalMinutes = minutes + (seconds % 60) / 60;
       return `${decimalMinutes.toFixed(1)}m`;
-    } else {
+    } else if (totalSeconds >= 1) {
       return `${totalSeconds.toFixed(1)}s`;
+    } else {
+      // For sub-second durations, show with more precision (4 decimal places)
+      return `${totalSeconds.toFixed(4)}s`;
     }
   };
 
@@ -156,14 +154,24 @@ export default function Cost() {
           startDate = undefined;
           break;
       }
-      
+
       const summaryData = costTrackingService.generateSummary(startDate);
       const settingsData = costTrackingService.getSettings();
       const operationBreakdown = costTrackingService.getTimeBreakdownByOperation(startDate);
       
+      console.log(`🔄 [LOAD DATA] About to update state:`, {
+        summaryData: {
+          totalAutomationTime: summaryData.totalAutomationTime,
+          totalActiveTime: summaryData.totalActiveTime,
+          totalSessions: summaryData.totalSessions
+        }
+      });
+      
       setSummary(summaryData);
       setSettings(settingsData);
       setOperationBreakdown(operationBreakdown);
+      
+      console.log(`✅ [LOAD DATA] State update called`);
       
       // Debug time tracking data
       console.log(`⏱️ Time tracking summary:`, {
@@ -182,29 +190,31 @@ export default function Cost() {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedTimeRange]);
-
-  // Set project root when it changes
+  }, [selectedTimeRange]); // Removed 'summary' dependency to prevent infinite loop  // Set project root when it changes and ensure data is loaded
   useEffect(() => {
-    if (root) {
-      console.log('🔧 Setting cost tracking project root:', root);
-      costTrackingService.setProjectRoot(root);
-    }
-  }, [root]);
-
-  // Load data on component mount and when time range changes
-  useEffect(() => {
-    const loadDataWithRefresh = async () => {
+    const initializeData = async () => {
       if (root) {
-        // Force reload from file system to catch any external changes
-        console.log('🔄 Reloading cost data from file system...');
-        await costTrackingService.reloadFromFileSystem();
+        console.log('🔧 Setting cost tracking project root and loading data:', root);
+        setIsLoading(true);
+        try {
+          // First set the project root and wait for data to load
+          await costTrackingService.setProjectRoot(root);
+          
+          // Force reload to ensure we have latest data
+          await costTrackingService.reloadFromFileSystem();
+          
+          // Now load the UI data
+          loadData();
+        } catch (error) {
+          console.error('Error initializing cost tracking data:', error);
+        } finally {
+          setIsLoading(false);
+        }
       }
-      loadData();
     };
     
-    loadDataWithRefresh();
-  }, [loadData, root]);
+    initializeData();
+  }, [root, loadData]);
 
   // Subscribe to cost data changes for real-time updates
   useEffect(() => {
@@ -215,6 +225,20 @@ export default function Cost() {
 
     return unsubscribe; // Cleanup subscription on unmount
   }, [loadData]);
+
+  // Debug summary state changes (throttled to reduce spam)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      console.log('🔍 [SUMMARY STATE CHANGE]', {
+        summaryExists: !!summary,
+        totalAutomationTime: summary?.totalAutomationTime,
+        totalActiveTime: summary?.totalActiveTime,
+        timestamp: new Date().toISOString()
+      });
+    }, 100); // Debounce by 100ms
+    
+    return () => clearTimeout(timeoutId);
+  }, [summary]);
 
   const handleSettingsUpdate = (newSettings: Partial<CostSettings>) => {
     if (settings) {
@@ -894,7 +918,29 @@ export default function Cost() {
                 color: 'var(--muted)',
                 margin: '4px 0 0 0'
               }}>
-                {formatTimeSpent(summary.totalAutomationTime)} {t('cost.timeTracking.automation', 'automation')}
+                {(() => {
+                  // Enhanced debug logging for automation time display
+                  const rawValue = summary.totalAutomationTime;
+                  const formattedValue = formatTimeSpent(rawValue);
+                  
+                  console.log('🔍 [UI DEBUG] Automation time detailed analysis:', {
+                    rawValue,
+                    rawValueType: typeof rawValue,
+                    isZero: rawValue === 0,
+                    isUndefined: rawValue === undefined,
+                    isNull: rawValue === null,
+                    formattedValue,
+                    shouldShow7point4s: rawValue === 7432,
+                    manualTest7432: formatTimeSpent(7432),
+                    summaryKeys: Object.keys(summary),
+                    fullSummary: summary
+                  });
+                  
+                  // Force test with known value
+                  console.log('🧪 [UI DEBUG] Force test - formatTimeSpent(7432):', formatTimeSpent(7432));
+                  
+                  return formattedValue;
+                })()} {t('cost.timeTracking.automation', 'automation')}
               </p>
             </div>
             <div style={{

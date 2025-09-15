@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Routes, Route, useLocation} from "react-router-dom";
 import { AppShell } from "./components/layout/AppShell";
+import { DebugPanel } from "./components/DebugPanel";
 import Home from "./pages/Home";
 import ManuscriptPage from "./pages/Manuscript";
 import PlanningPage from "./pages/Planning";
@@ -48,6 +49,9 @@ export default function App() {
         <Route path="/packaging" element={<PackagingPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Routes>
+      
+      {/* Debug panel - only show in development or when needed */}
+      <DebugPanel />
     </AppShell>
   );
 }
