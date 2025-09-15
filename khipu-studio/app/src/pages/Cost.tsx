@@ -21,7 +21,6 @@ export default function Cost() {
   
   const [summary, setSummary] = useState<CostSummary | null>(null);
   const [settings, setSettings] = useState<CostSettings | null>(null);
-  const [savingsByOperation, setSavingsByOperation] = useState<Record<string, { savings: number; percentage: number; count: number }>>({} as Record<string, { savings: number; percentage: number; count: number }>);
   const [operationBreakdown, setOperationBreakdown] = useState<Array<{
     operation: string;
     totalTime: number;
@@ -160,12 +159,10 @@ export default function Cost() {
       
       const summaryData = costTrackingService.generateSummary(startDate);
       const settingsData = costTrackingService.getSettings();
-      const savingsData = costTrackingService.getSavingsByOperation(startDate);
       const operationBreakdown = costTrackingService.getTimeBreakdownByOperation(startDate);
       
       setSummary(summaryData);
       setSettings(settingsData);
-      setSavingsByOperation(savingsData);
       setOperationBreakdown(operationBreakdown);
       
       // Debug time tracking data
@@ -771,6 +768,16 @@ export default function Cost() {
                 margin: '0'
               }}>
                 {formatCost(summary.estimatedSavingsFromCache)}
+                {summary.totalCost > 0 && (
+                  <span style={{
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    color: 'var(--muted)',
+                    marginLeft: '8px'
+                  }}>
+                    ({((summary.estimatedSavingsFromCache / (summary.totalCost + summary.estimatedSavingsFromCache)) * 100).toFixed(1)}%)
+                  </span>
+                )}
               </p>
             </div>
             <div style={{
@@ -902,64 +909,6 @@ export default function Cost() {
         </div>
       </div>
 
-      {/* Time Breakdown by Operation */}
-      {operationBreakdown.length > 0 && (
-        <div style={{
-          background: 'var(--card)',
-          borderRadius: '8px',
-          padding: '20px',
-          border: '1px solid var(--border)'
-        }}>
-          <h3 style={{
-            fontSize: '16px',
-            fontWeight: '600',
-            color: 'var(--text)',
-            margin: '0 0 16px 0'
-          }}>
-            {t('cost.timeTracking.operationBreakdown', 'Time by Operation')}
-          </h3>
-          <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-            {operationBreakdown.map((item, index) => (
-              <div key={item.operation} style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '8px 0',
-                borderBottom: index < operationBreakdown.length - 1 ? '1px solid var(--border)' : 'none'
-              }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    color: 'var(--text)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px'
-                  }}>
-                    <span>{item.activityType === 'automation' ? '🤖' : '👤'}</span>
-                    {item.operation.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                  </div>
-                  <div style={{
-                    fontSize: '12px',
-                    color: 'var(--muted)',
-                    marginTop: '2px'
-                  }}>
-                    {item.count} {item.count === 1 ? 'operation' : 'operations'} • avg {formatTimeSpent(item.averageTime)}
-                  </div>
-                </div>
-                <div style={{
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  color: item.activityType === 'automation' ? 'var(--success)' : 'var(--primary)'
-                }}>
-                  {formatTimeSpent(item.totalTime)}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Service Breakdown */}
       <div style={{
         display: 'grid',
@@ -1040,77 +989,6 @@ export default function Cost() {
           </div>
         </div>
 
-        {/* Cache Savings per Operation */}
-        <div style={{
-          background: 'var(--panel)',
-          border: '1px solid var(--border)',
-          borderRadius: '8px',
-          padding: '14px 16px'
-        }}>
-          <h3 style={{
-            fontSize: '16px',
-            fontWeight: '600',
-            marginBottom: '16px',
-            color: 'var(--text)',
-            margin: '0 0 12px 0'
-          }}>
-            💰 {t('cost.savingsByOperation', 'Cache Savings by Operation')}
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {Object.entries(savingsByOperation)
-              .sort(([,a], [,b]) => (b as { savings: number; percentage: number; count: number }).savings - (a as { savings: number; percentage: number; count: number }).savings)
-              .slice(0, 5)
-              .map(([operation, data]) => {
-                const typedData = data as { savings: number; percentage: number; count: number };
-                return (
-                  <div key={operation} style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '14px', color: 'var(--muted)' }}>
-                        {getOperationDisplayName(operation)}
-                      </span>
-                      <span style={{ 
-                        fontSize: '12px', 
-                        color: 'var(--success)', 
-                        background: 'var(--success-bg)',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        fontWeight: '600'
-                      }}>
-                        {typedData.percentage.toFixed(1)}%
-                      </span>
-                      <span style={{ 
-                        fontSize: '12px', 
-                        color: 'var(--muted)',
-                        background: 'var(--border)',
-                        padding: '2px 6px',
-                        borderRadius: '4px'
-                      }}>
-                        {typedData.count} hits
-                      </span>
-                    </div>
-                    <span style={{ fontWeight: '600', color: 'var(--success)' }}>
-                      {formatCost(typedData.savings)}
-                    </span>
-                  </div>
-                );
-              })}
-            {Object.keys(savingsByOperation).length === 0 && (
-              <div style={{
-                textAlign: 'center',
-                color: 'var(--muted)',
-                fontSize: '14px',
-                padding: '20px'
-              }}>
-                {t('cost.noSavingsData', 'No cache savings data available')}
-              </div>
-            )}
-          </div>
-        </div>
-
         {/* Top Operations */}
         <div style={{
           background: 'var(--panel)',
@@ -1168,6 +1046,65 @@ export default function Cost() {
             ))}
           </div>
         </div>
+
+        {/* Time Breakdown by Operation */}
+        {operationBreakdown.length > 0 && (
+          <div style={{
+            background: 'var(--panel)',
+            border: '1px solid var(--border)',
+            borderRadius: '8px',
+            padding: '20px'
+          }}>
+            <h3 style={{
+              fontSize: '18px',
+              fontWeight: '600',
+              marginBottom: '16px',
+              color: 'var(--text)',
+              margin: '0 0 16px 0'
+            }}>
+              {t('cost.timeTracking.operationBreakdown', 'Time by Operation')}
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '400px', overflowY: 'auto' }}>
+              {operationBreakdown.map((item, index) => (
+                <div key={item.operation} style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '8px 0',
+                  borderBottom: index < operationBreakdown.length - 1 ? '1px solid var(--border)' : 'none'
+                }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: 'var(--text)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}>
+                      <span>{item.activityType === 'automation' ? '🤖' : '👤'}</span>
+                      {item.operation.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                    </div>
+                    <div style={{
+                      fontSize: '12px',
+                      color: 'var(--muted)',
+                      marginTop: '2px'
+                    }}>
+                      {item.count} {item.count === 1 ? 'operation' : 'operations'} • avg {formatTimeSpent(item.averageTime)}
+                    </div>
+                  </div>
+                  <div style={{
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    color: item.activityType === 'automation' ? 'var(--success)' : 'var(--primary)'
+                  }}>
+                    {formatTimeSpent(item.totalTime)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Module Breakdown and Timeline Charts */}
