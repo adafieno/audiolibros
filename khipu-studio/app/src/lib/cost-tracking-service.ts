@@ -296,6 +296,15 @@ export class CostTrackingService {
     this.timeEntries.push(timeEntry);
     this.currentSession!.entries.push(timeEntry);
     
+    console.log(`⏰ Time entry created:`, {
+      id: timeEntry.id,
+      activityType: timeEntry.activityType,
+      operation: timeEntry.operation,
+      duration: timeEntry.duration,
+      durationFormatted: this.formatDuration(timeEntry.duration),
+      totalTimeEntries: this.timeEntries.length
+    });
+    
     // Update session totals
     switch (activityType) {
       case 'user-interaction':
@@ -346,15 +355,27 @@ export class CostTrackingService {
     } = {}
   ): Promise<T> {
     const startTime = Date.now();
-    console.log(`🤖 Starting automation: ${operation}`);
+    console.log(`🤖 Starting automation: ${operation}`, {
+      startTime: new Date(startTime).toISOString(),
+      context,
+      currentSession: this.currentSession?.id
+    });
     
     try {
       const result = await fn();
       const duration = Date.now() - startTime;
+      console.log(`✅ Automation completed: ${operation}`, {
+        duration,
+        durationFormatted: this.formatDuration(duration)
+      });
       this.trackAutomation(operation, duration, context);
       return result;
     } catch (error) {
       const duration = Date.now() - startTime;
+      console.log(`❌ Automation failed: ${operation}`, {
+        duration,
+        error: error instanceof Error ? error.message : String(error)
+      });
       this.trackAutomation(operation + '_failed', duration, context);
       throw error;
     }
@@ -968,10 +989,10 @@ export class CostTrackingService {
     const end = endDate || now;
     
     const timeEntriesInRange = this.timeEntries.filter(entry => 
-      entry.timestamp >= start && entry.timestamp <= end && entry.operation
+      entry.timestamp >= start && entry.timestamp <= end
     );
     
-    // Group by operation
+    // Group by operation or activity type + page
     const operationStats: Record<string, {
       totalTime: number;
       count: number;
@@ -979,16 +1000,33 @@ export class CostTrackingService {
     }> = {};
     
     for (const entry of timeEntriesInRange) {
-      const operation = entry.operation!;
-      if (!operationStats[operation]) {
-        operationStats[operation] = {
+      // For automation entries, use the operation name
+      // For user interaction, use page-based naming
+      // Skip idle time
+      if (entry.activityType === 'idle') continue;
+      
+      let operationKey: string;
+      
+      if (entry.operation) {
+        // Has specific operation (automation)
+        operationKey = entry.operation;
+      } else if (entry.page) {
+        // User interaction on specific page
+        operationKey = `user:${entry.page}`;
+      } else {
+        // Generic user interaction
+        operationKey = `user:general`;
+      }
+      
+      if (!operationStats[operationKey]) {
+        operationStats[operationKey] = {
           totalTime: 0,
           count: 0,
           activityType: entry.activityType
         };
       }
-      operationStats[operation].totalTime += entry.duration;
-      operationStats[operation].count += 1;
+      operationStats[operationKey].totalTime += entry.duration;
+      operationStats[operationKey].count += 1;
     }
     
     // Convert to array and calculate averages
@@ -1001,6 +1039,38 @@ export class CostTrackingService {
         activityType: stats.activityType
       }))
       .sort((a, b) => b.totalTime - a.totalTime); // Sort by total time descending
+  }
+
+  /**
+   * Create test time data for debugging (temporary method)
+   */
+  createTestTimeData(): void {
+    console.log('🧪 Creating test time data for debugging...');
+    
+    const testData = [
+      { operation: 'characters:auditionVoice', activityType: 'automation' as TimeActivityType, duration: 2500 },
+      { operation: 'characters:assignVoices', activityType: 'automation' as TimeActivityType, duration: 1800 },
+      { operation: 'plan:build', activityType: 'automation' as TimeActivityType, duration: 5000 },
+      { page: 'casting', activityType: 'user-interaction' as TimeActivityType, duration: 15000 },
+      { page: 'manuscript', activityType: 'user-interaction' as TimeActivityType, duration: 8000 },
+      { page: 'planning', activityType: 'user-interaction' as TimeActivityType, duration: 12000 }
+    ];
+    
+    for (const item of testData) {
+      if ('operation' in item) {
+        this.trackTimeActivity(item.activityType, item.duration, { 
+          operation: item.operation,
+          page: 'test' 
+        });
+      } else {
+        this.trackTimeActivity(item.activityType, item.duration, { 
+          page: item.page 
+        });
+      }
+    }
+    
+    console.log('🧪 Test data created. Total time entries:', this.timeEntries.length);
+    this.notifyDataChange();
   }
 
   /**

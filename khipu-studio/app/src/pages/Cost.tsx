@@ -173,6 +173,10 @@ export default function Cost() {
         totalSessions: summaryData.totalSessions,
         activeTimePercentage: summaryData.activeTimePercentage.toFixed(1) + '%'
       });
+      
+      // Debug operation breakdown data
+      console.log(`📊 Operation breakdown:`, operationBreakdown);
+      console.log(`📊 Operation breakdown length:`, operationBreakdown.length);
     } catch (error) {
       console.error('Error loading cost data:', error);
     } finally {
@@ -404,6 +408,27 @@ export default function Cost() {
             }}
           >
             {t('cost.clearData', 'Clear')}
+          </StandardButton>
+          
+          {/* Test Data Button */}
+          <StandardButton
+            variant="outline" 
+            onClick={async () => {
+              try {
+                costTrackingService.createTestTimeData();
+                await loadData();
+              } catch (error) {
+                console.error('Error creating test data:', error);
+              }
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              marginLeft: '8px'
+            }}
+          >
+            🧪 Test Data
           </StandardButton>
         </div>
       </div>
@@ -1048,22 +1073,22 @@ export default function Cost() {
         </div>
 
         {/* Time Breakdown by Operation */}
-        {operationBreakdown.length > 0 && (
-          <div style={{
-            background: 'var(--panel)',
-            border: '1px solid var(--border)',
-            borderRadius: '8px',
-            padding: '20px'
+        <div style={{
+          background: 'var(--panel)',
+          border: '1px solid var(--border)',
+          borderRadius: '8px',
+          padding: '20px'
+        }}>
+          <h3 style={{
+            fontSize: '18px',
+            fontWeight: '600',
+            marginBottom: '16px',
+            color: 'var(--text)',
+            margin: '0 0 16px 0'
           }}>
-            <h3 style={{
-              fontSize: '18px',
-              fontWeight: '600',
-              marginBottom: '16px',
-              color: 'var(--text)',
-              margin: '0 0 16px 0'
-            }}>
-              {t('cost.timeTracking.operationBreakdown', 'Time by Operation')}
-            </h3>
+            {t('cost.timeTracking.operationBreakdown', 'Time by Operation')}
+          </h3>
+          {operationBreakdown.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '400px', overflowY: 'auto' }}>
               {operationBreakdown.map((item, index) => (
                 <div key={item.operation} style={{
@@ -1083,7 +1108,13 @@ export default function Cost() {
                       gap: '6px'
                     }}>
                       <span>{item.activityType === 'automation' ? '🤖' : '👤'}</span>
-                      {item.operation.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                      {(() => {
+                        if (item.operation.startsWith('user:')) {
+                          const page = item.operation.replace('user:', '');
+                          return `${page.charAt(0).toUpperCase() + page.slice(1)} Page`;
+                        }
+                        return item.operation.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()).replace(/:/g, ': ');
+                      })()}
                     </div>
                     <div style={{
                       fontSize: '12px',
@@ -1103,8 +1134,20 @@ export default function Cost() {
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <div style={{
+              textAlign: 'center',
+              color: 'var(--muted)',
+              fontSize: '14px',
+              padding: '40px 20px'
+            }}>
+              <p>No operation data available yet.</p>
+              <p style={{ fontSize: '12px', marginTop: '8px' }}>
+                Try using some automation features like voice audition, voice assignment, or chapter planning.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Module Breakdown and Timeline Charts */}
@@ -1306,96 +1349,113 @@ export default function Cost() {
             <div style={{ position: 'relative' }}>
               {/* Chart Area */}
               <div style={{ 
-                height: '200px', 
+                height: '220px', 
                 position: 'relative',
                 marginBottom: '16px',
-                background: 'rgba(var(--text-rgb), 0.02)',
-                borderRadius: '4px',
-                padding: '12px'
+                background: 'var(--card)',
+                border: '1px solid var(--border)',
+                borderRadius: '6px',
+                padding: '16px 12px 12px 12px'
               }}>
+                {/* Chart title and legend */}
+                <div style={{
+                  position: 'absolute',
+                  top: '8px',
+                  left: '12px',
+                  right: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  fontSize: '12px'
+                }}>
+                  <span style={{ color: 'var(--muted)' }}>Daily Costs (Last 30 Days)</span>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <div style={{ width: '8px', height: '8px', background: '#3b82f6', borderRadius: '2px' }}></div>
+                      <span style={{ color: 'var(--muted)' }}>LLM</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <div style={{ width: '8px', height: '8px', background: '#10b981', borderRadius: '2px' }}></div>
+                      <span style={{ color: 'var(--muted)' }}>TTS</span>
+                    </div>
+                  </div>
+                </div>
+                
                 {/* Y-axis labels */}
                 <div style={{
                   position: 'absolute',
-                  left: '0',
-                  top: '0',
-                  height: '100%',
+                  left: '4px',
+                  top: '32px',
+                  bottom: '20px',
                   width: '40px',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
                   fontSize: '10px',
-                  color: 'var(--muted)'
+                  color: 'var(--muted)',
+                  textAlign: 'right',
+                  paddingRight: '4px'
                 }}>
-                  <span>{Math.max(...summary.dailyCosts.map(d => d.cost)).toFixed(3)}</span>
-                  <span>0</span>
+                  <span>${Math.max(...summary.dailyCosts.map(d => d.cost)).toFixed(3)}</span>
+                  <span style={{ alignSelf: 'center' }}>$0.001</span>
+                  <span>$0</span>
                 </div>
                 
                 {/* Chart bars */}
                 <div style={{
-                  marginLeft: '45px',
-                  height: '100%',
+                  marginLeft: '48px',
+                  marginTop: '24px',
+                  height: 'calc(100% - 44px)',
                   display: 'flex',
                   alignItems: 'end',
-                  gap: '2px',
+                  gap: '1px',
                   overflow: 'hidden'
                 }}>
                   {summary.dailyCosts.slice(-30).map((day, index) => {
                     const maxCost = Math.max(...summary.dailyCosts.map(d => d.cost));
-                    const llmHeight = maxCost > 0 ? (day.llmCost / maxCost) * 100 : 0;
-                    const ttsHeight = maxCost > 0 ? (day.ttsCost / maxCost) * 100 : 0;
+                    const totalHeight = maxCost > 0 ? (day.cost / maxCost) * 100 : 0;
+                    const ttsPortion = day.cost > 0 ? (day.ttsCost / day.cost) : 0;
                     
                     return (
-                      <div key={index} style={{
+                      <div key={`${day.date}-${index}`} style={{
                         flex: 1,
                         height: '100%',
                         position: 'relative',
-                        minWidth: '8px',
+                        minWidth: '6px',
+                        maxWidth: '12px',
                         display: 'flex',
                         flexDirection: 'column',
-                        justifyContent: 'end'
-                      }}>
-                        {/* Stacked bars for LLM and TTS costs */}
-                        {day.llmCost > 0 && (
+                        justifyContent: 'end',
+                        cursor: day.cost > 0 ? 'pointer' : 'default'
+                      }}
+                      title={day.cost > 0 ? `${day.date}: $${day.cost.toFixed(4)} (${day.operations} ops)` : `${day.date}: No activity`}
+                      >
+                        {day.cost > 0 ? (
                           <div style={{
-                            height: `${llmHeight}%`,
-                            background: '#3b82f6',
-                            borderRadius: '1px 1px 0 0',
-                            minHeight: day.llmCost > 0 ? '2px' : '0'
-                          }}></div>
-                        )}
-                        {day.ttsCost > 0 && (
-                          <div style={{
-                            height: `${ttsHeight}%`,
-                            background: '#10b981',
-                            borderRadius: day.llmCost > 0 ? '0' : '1px 1px 0 0',
-                            minHeight: day.ttsCost > 0 ? '2px' : '0'
-                          }}></div>
-                        )}
-                        
-                        {/* Tooltip on hover */}
-                        <div 
-                          style={{
-                            position: 'absolute',
-                            bottom: '100%',
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            background: 'var(--tooltip-bg, rgba(0,0,0,0.8))',
-                            color: 'var(--tooltip-text, white)',
-                            padding: '4px 8px',
-                            borderRadius: '4px',
-                            fontSize: '10px',
-                            whiteSpace: 'nowrap',
-                            opacity: 0,
-                            pointerEvents: 'none',
-                            zIndex: 10,
+                            height: `${Math.max(totalHeight, 2)}%`,
+                            background: day.llmCost > 0 && day.ttsCost > 0 
+                              ? `linear-gradient(to top, #10b981 0%, #10b981 ${ttsPortion * 100}%, #3b82f6 ${ttsPortion * 100}%, #3b82f6 100%)`
+                              : day.llmCost > 0 ? '#3b82f6' : '#10b981',
+                            borderRadius: '2px 2px 0 0',
+                            minHeight: '2px',
+                            border: '1px solid var(--border)',
+                            opacity: 0.8,
                             transition: 'opacity 0.2s'
                           }}
-                        >
-                          <div>{day.date.toLocaleDateString()}</div>
-                          <div>{t('cost.total', 'Total')}: {formatCost(day.cost)}</div>
-                          <div>{t('cost.operations', 'Operations')}: {day.operations}</div>
-                          {day.savings > 0 && <div>{t('cost.saved', 'Saved')}: {formatCost(day.savings)}</div>}
-                        </div>
+                          onMouseEnter={(e) => {
+                            (e.target as HTMLElement).style.opacity = '1';
+                          }}
+                          onMouseLeave={(e) => {
+                            (e.target as HTMLElement).style.opacity = '0.8';
+                          }}
+                          ></div>
+                        ) : (
+                          <div style={{
+                            height: '1px',
+                            background: 'var(--border)',
+                            opacity: 0.3
+                          }}></div>
+                        )}
                       </div>
                     );
                   })}
