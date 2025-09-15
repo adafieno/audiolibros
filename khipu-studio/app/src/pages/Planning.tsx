@@ -12,6 +12,7 @@ import type { Character as CharacterData } from "../types/character";
 import { costTrackingService } from "../lib/cost-tracking-service";
 import { PageHeader } from "../components/PageHeader";
 import StandardButton from "../components/StandardButton";
+import { useProcessProtection } from "../hooks/useProcessProtection";
 
 
 // Character types are imported from the shared types module
@@ -741,6 +742,7 @@ function EditablePreview({
 export default function PlanningPage({ onStatus }: { onStatus: (s: string) => void }) {
   const { t } = useTranslation();
   const { root } = useProject();
+  const { registerProcess, unregisterProcess } = useProcessProtection();
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [selectedChapter, setSelectedChapter] = useState<string>("");
   const [chapterStatus, setChapterStatus] = useState<Map<string, ChapterStatus>>(new Map());
@@ -1464,6 +1466,8 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
     
     setLoading(true);
     setRunning(true);
+    const processId = `generate-plan-${selectedChapter}`;
+    registerProcess(processId, `Generating plan for chapter ${selectedChapter}`, "Planning");
     setMessage(`Generating plan for chapter ${selectedChapter}...`);
     
     // Show immediate progress feedback
@@ -1564,6 +1568,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       setLoading(false);
       setRunning(false);
       setPlanProgress(null);
+      unregisterProcess(processId);
     }
   };
 
@@ -1676,6 +1681,8 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
     
     setAssigningCharacters(true);
     setLoading(true);
+    const processId = `assign-characters-${selectedChapter}`;
+    registerProcess(processId, `Assigning characters for chapter ${selectedChapter}`, "Planning");
     setMessage(t("planning.analyzingChapterForCharacters", { chapter: selectedChapter }));
     
     // Show immediate progress feedback
@@ -1867,6 +1874,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
     } finally {
       setAssigningCharacters(false);
       setLoading(false);
+      unregisterProcess(processId);
       setTimeout(() => {
         setCharacterAssignmentProgress(null);
       }, 2000);

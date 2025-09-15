@@ -9,6 +9,7 @@ import { validateWavFile, createSfxSegment, insertSegmentAtPosition } from "../l
 import { TextDisplay } from "../components/KaraokeTextDisplay";
 import { PageHeader } from "../components/PageHeader";
 import { StandardButton } from "../components/StandardButton";
+import { useProcessProtection } from "../hooks/useProcessProtection";
 import type { PlanChunk } from "../types/plan";
 import type { AudioProcessingChain } from "../types/audio-production";
 import type { AudioSegmentRow } from "../types/audio-production";
@@ -49,6 +50,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     };
   }, [t]);
   const { root } = useProject();
+  const { registerProcess, unregisterProcess } = useProcessProtection();
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [chapterStatus, setChapterStatus] = useState<Map<string, ChapterStatus>>(new Map());
   const [loading, setLoading] = useState(false);
@@ -521,6 +523,8 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     if (!segment || !selectedChapter || !audioProductionService || generatingAudio.has(segment.chunkId)) return;
 
     setGeneratingAudio(prev => new Set(prev).add(segment.chunkId));
+    const processId = `generate-audio-${segment.chunkId}`;
+    registerProcess(processId, `Generating audio for segment: ${segment.text.slice(0, 50)}...`, "Voice");
     
     try {
 
@@ -568,8 +572,9 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         next.delete(segment.chunkId);
         return next;
       });
+      unregisterProcess(processId);
     }
-  }, [audioSegments, selectedChapter, audioProductionService, generatingAudio]);
+  }, [audioSegments, selectedChapter, audioProductionService, generatingAudio, registerProcess, unregisterProcess]);
 
   const handleGenerateChapterAudio = useCallback(async () => {
     if (!selectedChapter || audioSegments.length === 0) return;
