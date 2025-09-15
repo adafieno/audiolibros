@@ -4,11 +4,12 @@ import i18n from "../i18n";
 
 type Lang = { code: string; label: string };
 
-// Add/rename here as you add locales
-const LANGS: Lang[] = [
-  { code: "es-PE", label: "Español (Perú)" },
-  { code: "en-US", label: "English (US)" },
-];
+// Language display names - add new languages here
+const LANGUAGE_LABELS: Record<string, string> = {
+  "es-PE": "Español (Perú)",
+  "en-US": "English (US)",
+  "pt-BR": "Português (Brasil)",
+};
 
 export default function LangSelector() {
   const { t } = useTranslation();
@@ -24,7 +25,18 @@ export default function LangSelector() {
     return () => i18n.off("languageChanged", onChange);
   }, []);
 
-  const options = useMemo(() => LANGS, []);
+  // Dynamically generate language options from i18n supported languages
+  const options = useMemo((): Lang[] => {
+    const supportedLngs = i18n.options.supportedLngs;
+    if (!supportedLngs || !Array.isArray(supportedLngs)) return [];
+    
+    return supportedLngs
+      .filter((lang: string) => lang !== 'cimode') // Filter out i18next's debug language
+      .map((code: string) => ({
+        code,
+        label: LANGUAGE_LABELS[code] || code // Fallback to code if label not found
+      }));
+  }, []);
 
   function change(lng: string) {
     i18n.changeLanguage(lng);
