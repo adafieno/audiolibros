@@ -2103,7 +2103,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
                   checked={onlyUnknown} 
                   onChange={(e) => setOnlyUnknown(e.target.checked)} 
                 />
-                Unknown
+                {t("planning.unknownCharacter")}
               </label>
             )}
             

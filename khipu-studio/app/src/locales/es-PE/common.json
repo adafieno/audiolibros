@@ -647,6 +647,14 @@
     "string": "Configura un nuevo proyecto de audiolibro con la estructura de carpetas requerida.",
     "comment": ""
   },
+  "home.parentDir": {
+    "string": "Carpeta base",
+    "comment": "Label for parent directory field in create project modal"
+  },
+  "home.parentDirPlaceholder": {
+    "string": "C:\\proyectos\\audio",
+    "comment": "Placeholder for parent directory field in create project modal"
+  },
   "settings.title": {
     "string": "Configuración",
     "comment": ""
@@ -1372,7 +1380,7 @@
     "comment": ""
   },
   "planning.unknownCharacter": {
-    "string": "desconocido",
+    "string": "Sin personaje",
     "comment": ""
   },
   "planning.selectRowToPreview": {

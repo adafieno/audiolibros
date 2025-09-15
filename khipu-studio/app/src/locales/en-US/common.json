@@ -515,6 +515,10 @@
     "string": "Character assignment completed but failed to reload. Please refresh the chapter.",
     "comment": "Error message when character assignment completes but reload fails"
   },
+  "planning.unknownCharacter": {
+    "string": "No character",
+    "comment": "Label for unknown character in planning"
+  },
 
   "planning.segmentNotFound": {
     "string": "Segment not found",
@@ -1024,6 +1028,14 @@
   "home.projectSetup": {
     "string": "Set up a new audiobook project with the required folder structure.",
     "comment": "Description for creating a new project"
+  },
+  "home.parentDir": {
+    "string": "Parent Directory",
+    "comment": "Label for parent directory field in create project modal"
+  },
+  "home.parentDirPlaceholder": {
+    "string": "C:\\projects\\audiobooks",
+    "comment": "Placeholder for parent directory field in create project modal"
   },
   "project.keywords": {
     "string": "Keywords:",
