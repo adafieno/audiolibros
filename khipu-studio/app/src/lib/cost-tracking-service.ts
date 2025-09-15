@@ -530,7 +530,7 @@ export class CostTrackingService {
   /**
    * Format duration in a human-readable way
    */
-  private formatDuration(milliseconds: number): string {
+  formatDuration(milliseconds: number): string {
     const totalSeconds = milliseconds / 1000;
     const seconds = Math.floor(totalSeconds);
     const minutes = Math.floor(seconds / 60);

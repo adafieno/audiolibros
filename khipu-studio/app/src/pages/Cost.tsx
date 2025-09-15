@@ -42,32 +42,6 @@ export default function Cost() {
     return new Intl.NumberFormat(currentLocale, options).format(num);
   };
 
-  // Helper function for time formatting with decimal precision
-  const formatTimeSpent = (milliseconds: number): string => {
-    const totalSeconds = milliseconds / 1000;
-    const seconds = Math.floor(totalSeconds);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-    
-    if (days > 0) {
-      const remainingHours = hours % 24;
-      const decimalHours = remainingHours + (minutes % 60) / 60;
-      return `${days}d ${decimalHours.toFixed(1)}h`;
-    } else if (hours > 0) {
-      const decimalHours = hours + (minutes % 60) / 60;
-      return `${decimalHours.toFixed(1)}h`;
-    } else if (minutes > 0) {
-      const decimalMinutes = minutes + (seconds % 60) / 60;
-      return `${decimalMinutes.toFixed(1)}m`;
-    } else if (totalSeconds >= 1) {
-      return `${totalSeconds.toFixed(1)}s`;
-    } else {
-      // For sub-second durations, show with more precision (4 decimal places)
-      return `${totalSeconds.toFixed(4)}s`;
-    }
-  };
-
   // React-i18next provides built-in pluralization support using the count parameter
   // No custom formatCount function needed!
 
@@ -911,7 +885,7 @@ export default function Cost() {
                 color: 'var(--text)',
                 margin: '0'
               }}>
-                {formatTimeSpent(summary.totalActiveTime)}
+                {costTrackingService.formatDuration(summary.totalActiveTime)}
               </p>
               <p style={{
                 fontSize: '14px',
@@ -921,7 +895,7 @@ export default function Cost() {
                 {(() => {
                   // Enhanced debug logging for automation time display
                   const rawValue = summary.totalAutomationTime;
-                  const formattedValue = formatTimeSpent(rawValue);
+                  const formattedValue = costTrackingService.formatDuration(rawValue);
                   
                   console.log('🔍 [UI DEBUG] Automation time detailed analysis:', {
                     rawValue,
@@ -931,13 +905,13 @@ export default function Cost() {
                     isNull: rawValue === null,
                     formattedValue,
                     shouldShow7point4s: rawValue === 7432,
-                    manualTest7432: formatTimeSpent(7432),
+                    manualTest7432: costTrackingService.formatDuration(7432),
                     summaryKeys: Object.keys(summary),
                     fullSummary: summary
                   });
                   
                   // Force test with known value
-                  console.log('🧪 [UI DEBUG] Force test - formatTimeSpent(7432):', formatTimeSpent(7432));
+                  console.log('🧪 [UI DEBUG] Force test - costTrackingService.formatDuration(7432):', costTrackingService.formatDuration(7432));
                   
                   return formattedValue;
                 })()} {t('cost.timeTracking.automation', 'automation')}
@@ -1148,7 +1122,7 @@ export default function Cost() {
                       color: 'var(--muted)',
                       marginTop: '2px'
                     }}>
-                      {item.count} {item.count === 1 ? 'operation' : 'operations'} • avg {formatTimeSpent(item.averageTime)}
+                      {item.count} {item.count === 1 ? 'operation' : 'operations'} • avg {costTrackingService.formatDuration(item.averageTime)}
                     </div>
                   </div>
                   <div style={{
@@ -1156,7 +1130,7 @@ export default function Cost() {
                     fontWeight: '600',
                     color: item.activityType === 'automation' ? 'var(--success)' : 'var(--primary)'
                   }}>
-                    {formatTimeSpent(item.totalTime)}
+                    {costTrackingService.formatDuration(item.totalTime)}
                   </div>
                 </div>
               ))}
