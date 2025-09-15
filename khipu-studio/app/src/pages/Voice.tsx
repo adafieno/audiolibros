@@ -909,7 +909,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                   gap: "6px"
                 }}
               >
-                🎵 Insert SFX
+                🎵 {t("audioProduction.insertSoundEffect")}
               </StandardButton>
             )}
 
