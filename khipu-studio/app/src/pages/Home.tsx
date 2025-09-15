@@ -454,14 +454,14 @@ export default function Home() {
           <div style={{ display: "flex", gap: "8px" }}>
             <StandardButton 
               onClick={() => setShowCreateForm(true)}
-              variant="secondary"
+              variant="primary"
               size="compact"
             >
               {t("home.createNew")}
             </StandardButton>
             <StandardButton 
               onClick={chooseExisting}
-              variant="secondary"
+              variant="primary"
               size="compact"
             >
               {t("home.openExisting")}

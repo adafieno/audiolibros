@@ -705,6 +705,7 @@ function CharactersPage() {
                     {/* Audition button - only show if voice is assigned */}
                     {c.voiceAssignment && (
                       <StandardButton
+                        variant="primary"
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();

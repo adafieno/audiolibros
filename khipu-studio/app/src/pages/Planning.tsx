@@ -601,6 +601,7 @@ function EditablePreview({
             <>
               <StandardButton
                 onClick={handleStartEdit}
+                variant="secondary"
                 size="compact"
                 title={t("planning.tooltips.clickToEdit")}
                 style={{
@@ -613,6 +614,7 @@ function EditablePreview({
               <StandardButton
                 onClick={() => handleMergeSegment('backward')}
                 disabled={!canMergeBackward}
+                variant="secondary"
                 size="compact"
                 title={t("planning.mergeWithPrevious")}
                 style={{
@@ -625,6 +627,7 @@ function EditablePreview({
               <StandardButton
                 onClick={() => handleMergeSegment('forward')}
                 disabled={!canMergeForward}
+                variant="secondary"
                 size="compact"
                 title={t("planning.mergeWithNext")}
                 style={{
@@ -650,6 +653,7 @@ function EditablePreview({
               <StandardButton
                 onClick={undoSegmentOperation}
                 disabled={!canUndo}
+                variant="secondary"
                 size="compact"
                 title={t("planning.undoLastOperation")}
                 style={{
@@ -664,6 +668,7 @@ function EditablePreview({
               <StandardButton
                 onClick={handleSplitSegment}
                 disabled={!canSplit}
+                variant="secondary"
                 size="compact"
                 title={t("planning.splitAtCursor")}
                 style={{
@@ -675,6 +680,7 @@ function EditablePreview({
               
               <StandardButton
                 onClick={handleCancelEdit}
+                variant="secondary"
                 size="compact"
                 title={t("planning.tooltips.cancelEdit")}
                 style={{
@@ -700,6 +706,7 @@ function EditablePreview({
                   onAudition(current.segmentId, isDirty ? editedText : undefined, isDirty);
                 }}
                 disabled={isAudioLoading || auditioningSegments.has(current.segmentId)}
+                variant="primary"
                 size="compact"
               style={{
                 padding: "6px 12px"

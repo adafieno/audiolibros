@@ -313,10 +313,16 @@ export default function CastingPage() {
                 ))}
             </select>
             
-            <StandardButton onClick={() => handleSelectAll(availableVoices)}>
+            <StandardButton 
+              onClick={() => handleSelectAll(availableVoices)}
+              variant="secondary"
+            >
               {t("casting.selectAll")}
             </StandardButton>
-            <StandardButton onClick={() => handleDeselectAll(availableVoices)}>
+            <StandardButton 
+              onClick={() => handleDeselectAll(availableVoices)}
+              variant="secondary"
+            >
               {t("casting.deselectAll")}
             </StandardButton>
             

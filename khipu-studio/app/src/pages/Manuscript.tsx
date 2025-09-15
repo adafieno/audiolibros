@@ -110,7 +110,10 @@ export default function ManuscriptPage() {
           description={t("manu.description")}
           actions={
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-              <StandardButton onClick={chooseDocxAndParse}>
+              <StandardButton 
+                onClick={chooseDocxAndParse}
+                variant="primary"
+              >
                 {t("manuscript.importDocx")}
               </StandardButton>
               <WorkflowCompleteButton 

@@ -444,7 +444,10 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
             <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "16px" }}>
               {t("packaging.platforms.enableInstructions")}
             </p>
-            <StandardButton onClick={() => window.location.href = "/project"}>
+            <StandardButton 
+              onClick={() => window.location.href = "/project"}
+              variant="secondary"
+            >
               {t("packaging.platforms.goToProject")}
             </StandardButton>
           </div>
