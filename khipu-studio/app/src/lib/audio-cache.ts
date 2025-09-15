@@ -1,6 +1,7 @@
 // lib/audio-cache.ts
 import { cleanupAudioUrl, type AuditionOptions, type AuditionResult } from "./tts-audition";
 import type { AudioCacheMetadata } from "../global";
+import { CostTrackingService } from './cost-tracking-service';
 
 // Re-export types for convenience
 export type { AuditionOptions, AuditionResult } from "./tts-audition";
@@ -367,17 +368,24 @@ export async function generateCachedAudition(
     text: options.text || "default" 
   });
 
-  // If caching is disabled, generate directly
-  if (!useCache) {
-    console.log("🚫 Cache disabled, generating directly");
-    const { generateAuditionDirect } = await import('./tts-audition');
-    return generateAuditionDirect(options);
-  }
-
-  const cacheKey = generateCacheKey(options);
-  console.log("🔑 Cache key generated", { cacheKey: cacheKey.substring(0, 20) + "..." });
+  // Get cost tracking service instance
+  const costTrackingService = CostTrackingService.getInstance();
   
-  // Try to get from cache first
+  // Wrap the entire audition process with automation tracking
+  return costTrackingService.trackAutomatedOperation(
+    'voice_audition',
+    async () => {
+      // If caching is disabled, generate directly
+      if (!useCache) {
+        console.log("🚫 Cache disabled, generating directly");
+        const { generateAuditionDirect } = await import('./tts-audition');
+        return generateAuditionDirect(options);
+      }
+
+      const cacheKey = generateCacheKey(options);
+      console.log("🔑 Cache key generated", { cacheKey: cacheKey.substring(0, 20) + "..." });
+      
+      // Try to get from cache first
   try {
     const cachedUrl = await audioCache.get(cacheKey);
     if (cachedUrl) {
@@ -538,6 +546,12 @@ export async function generateCachedAudition(
       error: error instanceof Error ? error.message : "Unknown error in audio generation"
     };
   }
+    }, // End of automation tracking wrapper
+    {
+      page: 'casting', 
+      projectId: options.text ? 'current-project' : 'unknown'
+    }
+  );
 }
 
 /**

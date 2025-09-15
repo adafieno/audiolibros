@@ -37,6 +37,11 @@ export class CostTrackingService {
   constructor() {
     // We'll load data when setProjectRoot is called
     this.startActivityTracking();
+    
+    // Make debug methods available in console
+    if (typeof window !== 'undefined') {
+      (window as unknown as { debugAutomation: () => void }).debugAutomation = () => this.debugAutomationTracking();
+    }
   }
   
   /**
@@ -295,6 +300,13 @@ export class CostTrackingService {
       chapterId?: string;
     } = {}
   ): TimeEntry {
+    console.log(`🔍 [DEBUG] trackTimeActivity called with:`, {
+      activityType,
+      duration,
+      context,
+      stack: new Error().stack?.split('\n').slice(1, 4).join('\n')
+    });
+    
     if (!this.currentSession) {
       this.startNewSession();
     }
@@ -313,6 +325,14 @@ export class CostTrackingService {
       isActive: activityType === 'user-interaction'
     };
     
+    console.log(`🔍 [DEBUG] Time entry about to be created:`, {
+      id: timeEntry.id,
+      activityType: timeEntry.activityType,
+      operation: timeEntry.operation,
+      duration: timeEntry.duration,
+      durationFormatted: this.formatDuration(timeEntry.duration)
+    });
+    
     this.timeEntries.push(timeEntry);
     this.currentSession!.entries.push(timeEntry);
     
@@ -323,6 +343,12 @@ export class CostTrackingService {
       duration: timeEntry.duration,
       durationFormatted: this.formatDuration(timeEntry.duration),
       totalTimeEntries: this.timeEntries.length
+    });
+    
+    console.log(`🔍 [DEBUG] Final verification - entry in array:`, {
+      lastEntry: this.timeEntries[this.timeEntries.length - 1],
+      activityTypeCheck: this.timeEntries[this.timeEntries.length - 1].activityType,
+      isAutomation: this.timeEntries[this.timeEntries.length - 1].activityType === 'automation'
     });
     
     // Update session totals
@@ -355,6 +381,7 @@ export class CostTrackingService {
     chapterId?: string;
   } = {}): TimeEntry {
     console.log(`🤖 [AUTOMATION TRACKING] Creating time entry: ${operation} (${this.formatDuration(duration)})`);
+    console.log(`🔍 [DEBUG] trackAutomation about to call trackTimeActivity with 'automation'`);
     
     const entry = this.trackTimeActivity('automation', duration, {
       ...context,
@@ -367,6 +394,12 @@ export class CostTrackingService {
       activityType: entry.activityType,
       duration: entry.duration,
       formattedDuration: this.formatDuration(entry.duration)
+    });
+    
+    console.log(`🔍 [DEBUG] Verifying automation entry was stored correctly:`, {
+      entryFromReturn: entry.activityType,
+      entryFromArray: this.timeEntries.find(e => e.id === entry.id)?.activityType,
+      allAutomationEntries: this.timeEntries.filter(e => e.activityType === 'automation').length
     });
     
     return entry;
@@ -390,6 +423,7 @@ export class CostTrackingService {
       context,
       currentSession: this.currentSession?.id
     });
+    console.log(`🔍 [DEBUG] trackAutomatedOperation called for: ${operation}`);
     
     try {
       const result = await fn();
@@ -399,6 +433,7 @@ export class CostTrackingService {
         durationFormatted: this.formatDuration(duration),
         willCreateTimeEntry: true
       });
+      console.log(`🔍 [DEBUG] About to call trackAutomation for: ${operation} with duration: ${duration}ms`);
       this.trackAutomation(operation, duration, context);
       console.log(`📊 [AUTOMATION TRACKING] Time entry created for: ${operation}`);
       return result;
@@ -409,12 +444,40 @@ export class CostTrackingService {
         error: error instanceof Error ? error.message : String(error),
         willCreateFailedTimeEntry: true
       });
+      console.log(`🔍 [DEBUG] About to call trackAutomation for FAILED: ${operation}_failed with duration: ${duration}ms`);
       this.trackAutomation(operation + '_failed', duration, context);
       console.log(`📊 [AUTOMATION TRACKING] Failed time entry created for: ${operation}_failed`);
       throw error;
     }
   }
   
+  /**
+   * Debug method to analyze current automation tracking
+   */
+  debugAutomationTracking(): void {
+    const automationEntries = this.timeEntries.filter(e => e.activityType === 'automation');
+    const userInteractionEntries = this.timeEntries.filter(e => e.activityType === 'user-interaction');
+    
+    console.log(`🔍 [DEBUG SUMMARY] Automation Tracking Analysis:`, {
+      totalEntries: this.timeEntries.length,
+      automationEntries: automationEntries.length,
+      userInteractionEntries: userInteractionEntries.length,
+      recentAutomation: automationEntries.slice(-5).map(e => ({
+        operation: e.operation,
+        activityType: e.activityType,
+        duration: this.formatDuration(e.duration),
+        timestamp: e.timestamp.toISOString()
+      })),
+      recentUserInteraction: userInteractionEntries.slice(-5).map(e => ({
+        page: e.page,
+        operation: e.operation,
+        activityType: e.activityType,
+        duration: this.formatDuration(e.duration),
+        timestamp: e.timestamp.toISOString()
+      }))
+    });
+  }
+
   /**
    * Generate a unique ID for time entries
    */

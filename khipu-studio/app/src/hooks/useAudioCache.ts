@@ -2,6 +2,7 @@
 import { useState, useCallback, useRef } from "react";
 import { generateCachedAudition } from "../lib/audio-cache";
 import { generateAuditionDirect, type AuditionOptions, type AuditionResult } from "../lib/tts-audition";
+import { CostTrackingService } from '../lib/cost-tracking-service';
 
 export interface PlayingAudio {
   audio: HTMLAudioElement;
@@ -94,7 +95,14 @@ export function useAudioCache(): UseAudioCacheReturn {
       // Use direct generation when caching is disabled to prevent infinite loops
       const result: AuditionResult = useCache 
         ? await generateCachedAudition(options, useCache)
-        : await generateAuditionDirect(options);
+        : await CostTrackingService.getInstance().trackAutomatedOperation(
+            'tts_direct_generation',
+            () => generateAuditionDirect(options),
+            {
+              page: 'audio-cache',
+              projectId: 'current-project'
+            }
+          );
       
       if (result.success && result.audioUrl) {
         let audio: HTMLAudioElement;
