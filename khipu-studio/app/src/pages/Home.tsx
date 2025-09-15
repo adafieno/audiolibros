@@ -6,7 +6,6 @@ import { bootstrapVoiceInventory } from "../lib/voice";
 import { bootstrapProjectFiles } from "../lib/project-bootstrap";
 import { PageHeader } from "../components/PageHeader";
 import StandardButton from "../components/StandardButton";
-import { NavigationProtectionTest } from "../components/NavigationProtectionTest";
 import type { ProjectConfig, BookMeta } from "../types/config";
 
 type RecentItem = { 
@@ -610,9 +609,6 @@ export default function Home() {
           </div>
         )}
       </section>
-      
-      {/* Navigation Protection Test - remove this in production */}
-      <NavigationProtectionTest />
     </div>
   );
 }

@@ -1,8 +1,8 @@
+import { NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { ReactNode } from "react";
 import { useProject, type WorkflowStep } from "../../store/project";
 import { useBookMeta } from "../../hooks/useBookMeta";
-import { ProtectedLink } from "../ProtectedLink";
 
 const STRIP_W = 88;
 const ICON_SIZE = 28;
@@ -140,69 +140,64 @@ export function AppShell(props: { title?: string; pageName?: string; projectName
           const isAvailable = r.workflowStep ? isStepAvailable(r.workflowStep) : true;
           
           return (
-            <ProtectedLink
+            <NavLink
               key={r.to}
               to={r.to}
-              className=""
+              end={!!r.exact}
+              style={() => ({
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                textDecoration: "none",
+                color: isActive ? "#ffffff" : isAvailable ? "var(--text)" : "var(--muted)",
+                background: isActive ? "var(--accent)" : "transparent",
+                borderRadius: 12,
+                padding: "12px 8px",
+                opacity: isAvailable ? 1 : 0.5,
+                position: "relative",
+                cursor: isAvailable ? "pointer" : "not-allowed",
+              })}
+              title={t(r.key)}
+              aria-label={t(r.key)}
               onClick={(e) => {
-                if (!isAvailable && e) {
+                if (!isAvailable) {
                   e.preventDefault();
                 }
               }}
             >
-              <div
+              <span
+                aria-hidden="true"
                 style={{
-                  display: "flex",
+                  fontSize: ICON_SIZE,
+                  lineHeight: 1,
+                  width: ICON_SIZE,
+                  height: ICON_SIZE,
+                  display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  textDecoration: "none",
-                  color: isActive ? "#ffffff" : isAvailable ? "var(--text)" : "var(--muted)",
-                  background: isActive ? "var(--accent)" : "transparent",
-                  borderRadius: 12,
-                  padding: "12px 8px",
-                  opacity: isAvailable ? 1 : 0.5,
-                  position: "relative",
-                  cursor: isAvailable ? "pointer" : "not-allowed",
-                  width: "100%",
-                  minHeight: 52
                 }}
-                title={t(r.key)}
-                aria-label={t(r.key)}
               >
+                {r.icon}
+              </span>
+              {/* Completion indicator */}
+              {isCompleted && (
                 <span
-                  aria-hidden="true"
                   style={{
-                    fontSize: ICON_SIZE,
+                    position: "absolute",
+                    top: "2px",
+                    right: "2px",
+                    fontSize: "10px",
                     lineHeight: 1,
-                    width: ICON_SIZE,
-                    height: ICON_SIZE,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
+                    color: "var(--success)",
+                    fontWeight: "bold",
+                    textShadow: "0 0 2px rgba(0,0,0,0.8)",
                   }}
+                  title={t("workflow.stepCompleted")}
                 >
-                  {r.icon}
+                  ✓
                 </span>
-                {/* Completion indicator */}
-                {isCompleted && (
-                  <span
-                    style={{
-                      position: "absolute",
-                      top: "2px",
-                      right: "2px",
-                      fontSize: "10px",
-                      lineHeight: 1,
-                      color: "var(--success)",
-                      fontWeight: "bold",
-                      textShadow: "0 0 2px rgba(0,0,0,0.8)",
-                    }}
-                    title={t("workflow.stepCompleted")}
-                  >
-                    ✓
-                  </span>
-                )}
-              </div>
-            </ProtectedLink>
+              )}
+            </NavLink>
           );
         })}
       </aside>

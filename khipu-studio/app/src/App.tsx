@@ -15,7 +15,6 @@ import PackagingPage from "./pages/Packaging";
 import { useState } from "react";
 import { t } from "i18next";
 import { useProject } from "./store/project";
-import { ProcessProtectionProvider } from "./contexts/ProcessProtectionContext";
 
 
 // simple placeholders (feel free to create separate files later)
@@ -30,28 +29,26 @@ export default function App() {
   const [status, setStatus] = useState("");
 
   return (
-    <ProcessProtectionProvider>
-      <AppShell
-        pageName={pageName}
-        projectName={projectName}
-        status={status}
-      >
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/project" element={<ProjectPage />} />
-          <Route path="/book" element={<BookPage />} />
-          <Route path="/manuscript" element={<ManuscriptPage />} />
-          <Route path="/casting" element={<CastingPage />} />
-          <Route path="/characters" element={<CharactersPage />} />
-          <Route path="/dossier" element={<Placeholder name={t("nav.dossier")} />} />
-          <Route path="/planning" element={<PlanningPage onStatus={setStatus} />} />
-          <Route path="/voice" element={<VoicePage onStatus={setStatus} />} />
-          <Route path="/cost" element={<CostPage />} />
-          <Route path="/packaging" element={<PackagingPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-        </Routes>
-      </AppShell>
-    </ProcessProtectionProvider>
+    <AppShell
+      pageName={pageName}
+      projectName={projectName}
+      status={status}
+    >
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/project" element={<ProjectPage />} />
+        <Route path="/book" element={<BookPage />} />
+        <Route path="/manuscript" element={<ManuscriptPage />} />
+        <Route path="/casting" element={<CastingPage />} />
+        <Route path="/characters" element={<CharactersPage />} />
+        <Route path="/dossier" element={<Placeholder name={t("nav.dossier")} />} />
+        <Route path="/planning" element={<PlanningPage onStatus={setStatus} />} />
+        <Route path="/voice" element={<VoicePage onStatus={setStatus} />} />
+        <Route path="/cost" element={<CostPage />} />
+        <Route path="/packaging" element={<PackagingPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+      </Routes>
+    </AppShell>
   );
 }
 
