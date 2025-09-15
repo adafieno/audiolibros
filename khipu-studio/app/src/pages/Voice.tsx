@@ -707,7 +707,10 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           // Read the audio file data directly from project directory
           // This bypasses all caching mechanisms
           console.log('📁 Loading SFX file directly from:', audioFilePath);
-          const audioData = await window.khipu!.call('fs:readAudioFile', audioFilePath);
+          const audioData = await window.khipu!.call('fs:readAudioFile', { 
+            projectRoot: root, 
+            filePath: audioFilePath 
+          });
           
           // Create blob URL from the audio data for direct playback
           const blob = new Blob([audioData], { type: 'audio/wav' });

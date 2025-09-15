@@ -1222,10 +1222,21 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
     }
   });
 
-  ipcMain.handle("fs:readAudioFile", async (_e, filePath) => {
+  ipcMain.handle("fs:readAudioFile", async (_e, { projectRoot, filePath }) => {
     try {
       // Read audio file as buffer for Web Audio API
-      const resolvedPath = path.resolve(filePath);
+      let resolvedPath;
+      if (projectRoot && filePath && !path.isAbsolute(filePath)) {
+        // Resolve relative to project root if both are provided
+        resolvedPath = path.join(projectRoot, filePath);
+      } else if (filePath) {
+        // Legacy: if just filePath provided, resolve it directly
+        resolvedPath = path.resolve(filePath);
+      } else {
+        throw new Error('Either projectRoot+filePath or absolute filePath must be provided');
+      }
+      
+      console.log(`📖 Reading audio file: ${resolvedPath}`);
       const buffer = await fsp.readFile(resolvedPath);
       // Convert Node.js Buffer to ArrayBuffer for Web Audio API
       const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
@@ -1320,6 +1331,25 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
         // NOTE: We bypass SOX processor's caching system and process directly
         const { spawn } = require('child_process');
         
+        console.log(`🔧 SOX path: ${processor.soxPath}`);
+        console.log(`📁 Input file: ${tempInputPath}`);
+        console.log(`📁 Output file: ${targetFullPath}`);
+        
+        // Verify input file exists before processing
+        if (!fs.existsSync(tempInputPath)) {
+          throw new Error(`Input file does not exist: ${tempInputPath}`);
+        }
+        
+        const inputStats = await fsp.stat(tempInputPath);
+        console.log(`📊 Input file size: ${inputStats.size} bytes`);
+        
+        // Ensure output directory exists
+        const outputDir = path.dirname(targetFullPath);
+        if (!fs.existsSync(outputDir)) {
+          console.log(`📂 Creating output directory: ${outputDir}`);
+          fs.mkdirSync(outputDir, { recursive: true });
+        }
+        
         // Build SOX command: input -> 44.1kHz mono 16-bit WAV output
         // This is a one-time conversion, NOT cached
         const soxArgs = [
@@ -1330,31 +1360,67 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
           targetFullPath
         ];
         
-        console.log(`Running SOX conversion (NO CACHE): sox ${soxArgs.join(' ')}`);
+        console.log(`Running SOX conversion (NO CACHE): "${processor.soxPath}" ${soxArgs.join(' ')}`);
         
         const soxProcess = spawn(processor.soxPath, soxArgs);
         
         let stderr = '';
+        let stdout = '';
         soxProcess.stderr.on('data', (data) => {
           stderr += data.toString();
+        });
+        soxProcess.stdout.on('data', (data) => {
+          stdout += data.toString();
         });
         
         const exitCode = await new Promise((resolve) => {
           soxProcess.on('close', resolve);
+          soxProcess.on('error', (error) => {
+            console.error('SOX process error:', error);
+            resolve(-1);
+          });
         });
         
         if (exitCode !== 0) {
-          throw new Error(`SOX conversion failed (exit code ${exitCode}): ${stderr}`);
+          console.error(`SOX stderr: ${stderr}`);
+          console.error(`SOX stdout: ${stdout}`);
+          throw new Error(`SOX conversion failed (exit code ${exitCode}): ${stderr || 'Unknown SOX error'}`);
         }
         
         console.log(`✅ SOX conversion successful`);
+        if (stdout) console.log(`SOX output: ${stdout}`);
+        
+        // Verify output file was created
+        if (!fs.existsSync(targetFullPath)) {
+          throw new Error(`SOX completed but output file was not created: ${targetFullPath}`);
+        }
+        
+        const outputStats = await fsp.stat(targetFullPath);
+        console.log(`📊 Output file size: ${outputStats.size} bytes`);
         
       } catch (soxError) {
-        console.warn(`SOX conversion failed, trying direct copy: ${soxError.message}`);
+        console.warn(`⚠️ SOX conversion failed, trying direct copy: ${soxError.message}`);
         
         // Fallback: direct copy if SOX fails
-        await fsp.copyFile(tempInputPath, targetFullPath);
-        console.log(`📋 Used direct file copy as fallback`);
+        try {
+          // Ensure output directory exists for fallback too
+          const outputDir = path.dirname(targetFullPath);
+          if (!fs.existsSync(outputDir)) {
+            console.log(`📂 Creating output directory for fallback: ${outputDir}`);
+            fs.mkdirSync(outputDir, { recursive: true });
+          }
+          
+          await fsp.copyFile(tempInputPath, targetFullPath);
+          console.log(`📋 Used direct file copy as fallback`);
+          
+          // Verify fallback file was created
+          if (!fs.existsSync(targetFullPath)) {
+            throw new Error(`Direct copy completed but output file was not created: ${targetFullPath}`);
+          }
+          
+        } catch (copyError) {
+          throw new Error(`Both SOX conversion and direct copy failed. SOX error: ${soxError.message}, Copy error: ${copyError.message}`);
+        }
       }
       
       // Clean up temp file

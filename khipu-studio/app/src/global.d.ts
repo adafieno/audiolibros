@@ -143,7 +143,7 @@ export interface KhipuRequestMap {
   "audio:available": { in: undefined; out: boolean };
 
   // File system
-  "fs:readAudioFile": { in: string; out: ArrayBuffer };
+  "fs:readAudioFile": { in: { projectRoot?: string; filePath: string }; out: ArrayBuffer };
   
   // Audio conversion and import
   "audio:convertAndSave": {
