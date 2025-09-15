@@ -39,6 +39,26 @@ export default function Cost() {
     return new Intl.NumberFormat(currentLocale, options).format(num);
   };
 
+  // Helper function for time formatting
+  const formatTimeSpent = (milliseconds: number): string => {
+    if (milliseconds < 1000) return '0s';
+    
+    const seconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    
+    if (days > 0) {
+      return `${days}d ${hours % 24}h`;
+    } else if (hours > 0) {
+      return `${hours}h ${minutes % 60}m`;
+    } else if (minutes > 0) {
+      return `${minutes}m`;
+    } else {
+      return `${seconds}s`;
+    }
+  };
+
   // React-i18next provides built-in pluralization support using the count parameter
   // No custom formatCount function needed!
 
@@ -133,6 +153,15 @@ export default function Cost() {
       setSummary(summaryData);
       setSettings(settingsData);
       setSavingsByOperation(savingsData);
+      
+      // Debug time tracking data
+      console.log(`⏱️ Time tracking summary:`, {
+        totalActiveTime: summaryData.totalActiveTime,
+        totalAutomationTime: summaryData.totalAutomationTime,
+        totalSessionTime: summaryData.totalSessionTime,
+        totalSessions: summaryData.totalSessions,
+        activeTimePercentage: summaryData.activeTimePercentage.toFixed(1) + '%'
+      });
     } catch (error) {
       console.error('Error loading cost data:', error);
     } finally {
@@ -807,7 +836,7 @@ export default function Cost() {
           </div>
         </div>
 
-        {/* Total Usage */}
+        {/* Total Time Tracking */}
         <div style={{
           background: 'var(--panel)',
           border: '1px solid var(--border)',
@@ -825,7 +854,7 @@ export default function Cost() {
                 color: 'var(--muted)',
                 margin: '0 0 8px 0'
               }}>
-                {t('cost.totalUsage', 'Total Usage')}
+                {t('cost.timeTracking.title', 'Time Spent')}
               </p>
               <p style={{
                 fontSize: '20px',
@@ -833,27 +862,27 @@ export default function Cost() {
                 color: 'var(--text)',
                 margin: '0'
               }}>
-                {formatNumber(Math.round(summary.totalLlmTokens / 1000))}{t('cost.units.kTokens', 'K tokens')}
+                {formatTimeSpent(summary.totalActiveTime)}
               </p>
               <p style={{
                 fontSize: '14px',
                 color: 'var(--muted)',
                 margin: '4px 0 0 0'
               }}>
-                {formatNumber(Math.round(summary.totalTtsCharacters / 1000))}{t('cost.units.kCharacters', 'K characters')}
+                {formatTimeSpent(summary.totalAutomationTime)} {t('cost.timeTracking.automation', 'automation')}
               </p>
             </div>
             <div style={{
               width: '48px',
               height: '48px',
-              background: 'rgba(147, 51, 234, 0.1)',
+              background: 'rgba(16, 185, 129, 0.1)',
               borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: '20px'
             }}>
-              📈
+              ⏱️
             </div>
           </div>
         </div>

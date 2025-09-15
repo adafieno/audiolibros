@@ -49,10 +49,20 @@ export default function ManuscriptPage() {
       console.warn('Failed to initialize cost tracking for manuscript parsing:', error);
     }
     
-    const res = await window.khipu!.call("manuscript:parse", {
-      projectRoot: root,
-      docxPath: picked,
-    });
+    const res = await costTrackingService.trackAutomatedOperation(
+      'manuscript:parse',
+      async () => {
+        if (!window.khipu?.call) throw new Error("IPC method not available");
+        return await window.khipu.call("manuscript:parse", {
+          projectRoot: root,
+          docxPath: picked,
+        });
+      },
+      {
+        page: 'manuscript',
+        projectId: root.split('/').pop() || 'unknown'
+      }
+    ) as { code: number };
     
     // Track LLM cost for manuscript parsing
     try {

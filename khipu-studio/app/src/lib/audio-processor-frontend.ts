@@ -2,6 +2,7 @@
 // Handles professional audio processing chain through Electron IPC
 
 import type { AudioProcessingChain } from '../types/audio-production';
+import { costTrackingService } from './cost-tracking-service';
 
 // Processing options for audio operations
 export interface ProcessingOptions {
@@ -56,11 +57,20 @@ export class AudioProcessorFrontend {
     const id = `process_${++this.processingId}`;
     
     try {
-      // Send processing request to main process via IPC
-      const result = await window.khipu!.call('audio:process', {
-        id,
-        ...options
-      });
+      // Send processing request to main process via IPC and track automation time
+      const result = await costTrackingService.trackAutomatedOperation(
+        'audio:process',
+        async () => {
+          if (!window.khipu?.call) throw new Error("IPC method not available");
+          return await window.khipu.call('audio:process', {
+            id,
+            ...options
+          });
+        },
+        {
+          page: 'voice' // Audio processing typically happens on voice/audio production page
+        }
+      );
 
       return result;
     } catch (error) {

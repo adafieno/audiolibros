@@ -1506,7 +1506,18 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
         console.warn('Failed to initialize cost tracking for chapter planning:', costError);
       }
       
-      const result = await window.khipu.call("plan:build", payload);
+      const result = await costTrackingService.trackAutomatedOperation(
+        'plan:build',
+        async () => {
+          if (!window.khipu?.call) throw new Error("IPC method not available");
+          return await window.khipu.call("plan:build", payload);
+        },
+        {
+          page: 'planning',
+          projectId: root.split('/').pop() || 'unknown',
+          chapterId: selectedChapter
+        }
+      );
       
       // Track LLM cost for chapter planning
       try {

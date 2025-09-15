@@ -364,7 +364,17 @@ export function useCharacters(): UseCharactersApi {
         throw new Error("IPC detection method not available");
       }
       
-      const res: DetectionIPCResult = await api.characters.detect(safeProjectRoot);
+      const res: DetectionIPCResult = await costTrackingService.trackAutomatedOperation(
+        'character_detection',
+        async () => {
+          if (!api.characters?.detect) throw new Error("IPC detection method not available");
+          return await api.characters.detect(safeProjectRoot);
+        },
+        {
+          page: 'characters',
+          projectId: safeProjectRoot.split('/').pop() || 'unknown'
+        }
+      );
       
       // Track LLM cost for character detection
       try {
@@ -729,10 +739,20 @@ export function useCharacters(): UseCharactersApi {
         page: 'casting'
       });
       
-      // Call voice assignment through IPC
-      const result = await api.call("characters:assignVoices", {
-        projectRoot: safeProjectRoot
-      }) as { success?: boolean; characters?: Character[]; availableVoices?: Voice[]; message?: string; error?: string };
+      // Call voice assignment through IPC and track automation time
+      const result = await costTrackingService.trackAutomatedOperation(
+        'characters:assignVoices',
+        async () => {
+          if (!api.call) throw new Error("IPC method not available");
+          return await api.call("characters:assignVoices", {
+            projectRoot: safeProjectRoot
+          });
+        },
+        {
+          page: 'casting',
+          projectId: safeProjectRoot.split('/').pop() || 'unknown'
+        }
+      ) as { success?: boolean; characters?: Character[]; availableVoices?: Voice[]; message?: string; error?: string };
       
       if (result.success) {
         // Update characters in UI state with assignments (don't auto-save)
@@ -838,14 +858,24 @@ export function useCharacters(): UseCharactersApi {
         page: 'casting'
       });
       
-      // Call voice audition through IPC
-      await api.call("characters:auditionVoice", {
-        projectRoot: safeProjectRoot,
-        characterId: characterId,
-        voiceId: character.voiceAssignment.voiceId,
-        style: character.voiceAssignment.style,
-        sampleText: auditionText
-      });
+      // Call voice audition through IPC and track automation time
+      await costTrackingService.trackAutomatedOperation(
+        'characters:auditionVoice',
+        async () => {
+          if (!api.call) throw new Error("IPC method not available");
+          return await api.call("characters:auditionVoice", {
+            projectRoot: safeProjectRoot,
+            characterId: characterId,
+            voiceId: character.voiceAssignment?.voiceId || '',
+            style: character.voiceAssignment?.style || '',
+            sampleText: auditionText
+          });
+        },
+        {
+          page: 'casting',
+          projectId: safeProjectRoot.split('/').pop() || 'unknown'
+        }
+      );
       
       setMessage("Voice sample played");
     } catch (e) {

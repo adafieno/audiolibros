@@ -7,6 +7,51 @@
 export type ServiceType = 'llm' | 'tts';
 
 /**
+ * Type of time tracking activity
+ */
+export type TimeActivityType = 'user-interaction' | 'automation' | 'idle';
+
+/**
+ * Time tracking entry for user activity and automation
+ */
+export interface TimeEntry {
+  id: string;
+  timestamp: Date;
+  sessionId: string;
+  activityType: TimeActivityType;
+  duration: number; // Duration in milliseconds
+  
+  // Context information
+  page?: string; // Which page/module the activity occurred on
+  operation?: string; // Specific operation if automation
+  projectId?: string;
+  chapterId?: string;
+  
+  // Additional metadata
+  userAgent?: string; // Browser info
+  isActive: boolean; // Whether this was active interaction or background
+  notes?: string;
+}
+
+/**
+ * Time tracking session
+ */
+export interface TimeSession {
+  id: string;
+  startTime: Date;
+  endTime?: Date;
+  totalDuration: number; // Total session duration in milliseconds
+  activeDuration: number; // Time spent actively interacting in milliseconds
+  automationDuration: number; // Time spent in automation in milliseconds
+  idleDuration: number; // Time spent idle in milliseconds
+  
+  // Context
+  projectId?: string;
+  userAgent?: string;
+  entries: TimeEntry[];
+}
+
+/**
  * Application pages/modules that can incur costs
  */
 export type CostPage = 
@@ -126,6 +171,14 @@ export interface CostSummary {
   totalLlmTokens: number;
   totalTtsCharacters: number;
   totalAudioSeconds: number;
+  
+  // Time tracking metrics
+  totalActiveTime: number; // Total active user interaction time in milliseconds
+  totalAutomationTime: number; // Total automation time in milliseconds
+  totalSessionTime: number; // Total session time in milliseconds
+  activeTimePercentage: number; // Percentage of time spent actively interacting
+  averageSessionDuration: number; // Average session duration in milliseconds
+  totalSessions: number; // Number of sessions in the period
   
   // Cache statistics
   totalCacheHits: number;

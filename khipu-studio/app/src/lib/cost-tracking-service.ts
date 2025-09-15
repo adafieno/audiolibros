@@ -5,7 +5,10 @@ import type {
   CostEntry, 
   CostSettings, 
   CostSummary, 
-  ServiceProvider
+  ServiceProvider,
+  TimeEntry,
+  TimeSession,
+  TimeActivityType
 } from '../types/cost-tracking';
 import { 
   CostCalculator,
@@ -18,14 +21,22 @@ import {
 export class CostTrackingService {
   private static instance: CostTrackingService | null = null;
   private costEntries: CostEntry[] = [];
+  private timeEntries: TimeEntry[] = [];
+  private timeSessions: TimeSession[] = [];
+  private currentSession: TimeSession | null = null;
+  private lastActivity: Date = new Date();
+  private activityTimer: number | null = null;
   private settings: CostSettings = { ...DEFAULT_COST_SETTINGS };
   private readonly COST_DATA_FILE = 'cost-tracking.json';
+  private readonly TIME_DATA_FILE = 'time-tracking.json';
+  private readonly TIME_SESSION_FILE = 'time-sessions.json';
   private readonly COST_SETTINGS_FILE = 'cost-settings.json';
   private changeCallbacks: (() => void)[] = [];
   private currentProjectRoot: string | null = null;
   
   constructor() {
     // We'll load data when setProjectRoot is called
+    this.startActivityTracking();
   }
   
   /**
@@ -118,6 +129,262 @@ export class CostTrackingService {
   }
   
   /**
+   * Start tracking user activity and automation time
+   */
+  private startActivityTracking(): void {
+    // Start a new session when the service is initialized
+    this.startNewSession();
+    
+    // Set up activity detection
+    if (typeof window !== 'undefined') {
+      // Track mouse movement, keyboard input, and clicks as user interaction
+      ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(event => {
+        document.addEventListener(event, () => this.recordUserActivity(), { passive: true });
+      });
+      
+      // Track page visibility changes
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          this.recordIdleActivity();
+        } else {
+          this.recordUserActivity();
+        }
+      });
+      
+      // Set up idle detection timer (after 30 seconds of inactivity)
+      this.resetIdleTimer();
+    }
+  }
+  
+  /**
+   * Start a new time tracking session
+   */
+  private startNewSession(): void {
+    if (this.currentSession && !this.currentSession.endTime) {
+      this.endCurrentSession();
+    }
+    
+    this.currentSession = {
+      id: this.generateTimeId(),
+      startTime: new Date(),
+      totalDuration: 0,
+      activeDuration: 0,
+      automationDuration: 0,
+      idleDuration: 0,
+      projectId: this.currentProjectRoot || undefined,
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+      entries: []
+    };
+    
+    console.log(`⏱️ Started new time tracking session: ${this.currentSession.id}`);
+  }
+  
+  /**
+   * End the current time tracking session
+   */
+  private endCurrentSession(): void {
+    if (!this.currentSession) return;
+    
+    this.currentSession.endTime = new Date();
+    this.currentSession.totalDuration = this.currentSession.endTime.getTime() - this.currentSession.startTime.getTime();
+    
+    this.timeSessions.push(this.currentSession);
+    console.log(`⏹️ Ended time tracking session: ${this.currentSession.id}, duration: ${this.formatDuration(this.currentSession.totalDuration)}`);
+    
+    this.saveTimeDataToFileSystem();
+    this.currentSession = null;
+  }
+  
+  /**
+   * Record user activity
+   */
+  private recordUserActivity(): void {
+    const now = new Date();
+    const timeSinceLastActivity = now.getTime() - this.lastActivity.getTime();
+    
+    // Only record if it's been more than 1 second since last activity to avoid spam
+    if (timeSinceLastActivity > 1000) {
+      this.trackTimeActivity('user-interaction', timeSinceLastActivity, {
+        page: this.getCurrentPage()
+      });
+    }
+    
+    this.lastActivity = now;
+    this.resetIdleTimer();
+  }
+  
+  /**
+   * Record idle activity
+   */
+  private recordIdleActivity(): void {
+    const now = new Date();
+    const timeSinceLastActivity = now.getTime() - this.lastActivity.getTime();
+    
+    if (timeSinceLastActivity > 1000) {
+      this.trackTimeActivity('idle', timeSinceLastActivity, {
+        page: this.getCurrentPage()
+      });
+    }
+    
+    this.lastActivity = now;
+  }
+  
+  /**
+   * Reset the idle detection timer
+   */
+  private resetIdleTimer(): void {
+    if (this.activityTimer) {
+      clearTimeout(this.activityTimer);
+    }
+    
+    // Set idle timeout to 30 seconds
+    this.activityTimer = setTimeout(() => {
+      this.recordIdleActivity();
+    }, 30000) as number;
+  }
+  
+  /**
+   * Get current page from URL or other context
+   */
+  private getCurrentPage(): string {
+    if (typeof window === 'undefined') return 'unknown';
+    
+    const path = window.location.pathname;
+    if (path.includes('/manuscript')) return 'manuscript';
+    if (path.includes('/casting')) return 'casting';
+    if (path.includes('/characters')) return 'characters';
+    if (path.includes('/planning') || path.includes('/orchestration')) return 'planning';
+    if (path.includes('/voice') || path.includes('/audio')) return 'voice';
+    if (path.includes('/packaging')) return 'packaging';
+    if (path.includes('/cost')) return 'cost';
+    if (path.includes('/settings')) return 'settings';
+    
+    return 'unknown';
+  }
+  
+  /**
+   * Track a time activity entry
+   */
+  trackTimeActivity(
+    activityType: TimeActivityType,
+    duration: number,
+    context: {
+      page?: string;
+      operation?: string;
+      projectId?: string;
+      chapterId?: string;
+    } = {}
+  ): TimeEntry {
+    if (!this.currentSession) {
+      this.startNewSession();
+    }
+    
+    const timeEntry: TimeEntry = {
+      id: this.generateTimeId(),
+      timestamp: new Date(),
+      sessionId: this.currentSession!.id,
+      activityType,
+      duration,
+      page: context.page,
+      operation: context.operation,
+      projectId: context.projectId || this.currentProjectRoot || undefined,
+      chapterId: context.chapterId,
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+      isActive: activityType === 'user-interaction'
+    };
+    
+    this.timeEntries.push(timeEntry);
+    this.currentSession!.entries.push(timeEntry);
+    
+    // Update session totals
+    switch (activityType) {
+      case 'user-interaction':
+        this.currentSession!.activeDuration += duration;
+        break;
+      case 'automation':
+        this.currentSession!.automationDuration += duration;
+        break;
+      case 'idle':
+        this.currentSession!.idleDuration += duration;
+        break;
+    }
+    
+    // Save periodically
+    if (this.timeEntries.length % 10 === 0) {
+      this.saveTimeDataToFileSystem();
+    }
+    
+    return timeEntry;
+  }
+  
+  /**
+   * Track automation time (called when automation starts/ends)
+   */
+  trackAutomation(operation: string, duration: number, context: {
+    page?: string;
+    projectId?: string;
+    chapterId?: string;
+  } = {}): TimeEntry {
+    console.log(`🤖 Tracking automation: ${operation} (${this.formatDuration(duration)})`);
+    
+    return this.trackTimeActivity('automation', duration, {
+      ...context,
+      operation
+    });
+  }
+  
+  /**
+   * Track an automated operation by wrapping it with timing
+   */
+  async trackAutomatedOperation<T>(
+    operation: string,
+    fn: () => Promise<T>,
+    context: {
+      page?: string;
+      projectId?: string;
+      chapterId?: string;
+    } = {}
+  ): Promise<T> {
+    const startTime = Date.now();
+    console.log(`🤖 Starting automation: ${operation}`);
+    
+    try {
+      const result = await fn();
+      const duration = Date.now() - startTime;
+      this.trackAutomation(operation, duration, context);
+      return result;
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      this.trackAutomation(operation + '_failed', duration, context);
+      throw error;
+    }
+  }
+  
+  /**
+   * Generate a unique ID for time entries
+   */
+  private generateTimeId(): string {
+    return `time_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+  
+  /**
+   * Format duration in a human-readable way
+   */
+  private formatDuration(milliseconds: number): string {
+    const seconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes % 60}m ${seconds % 60}s`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${seconds % 60}s`;
+    } else {
+      return `${seconds}s`;
+    }
+  }
+  
+  /**
    * Load data from file system
    */
   private async loadFromFileSystem(): Promise<void> {
@@ -147,6 +414,53 @@ export class CostTrackingService {
         // File doesn't exist yet, that's okay
         console.log('Cost entries file not found, starting fresh');
         this.costEntries = [];
+      }
+      
+      // Load time entries
+      try {
+        const timeEntriesResult = await window.khipu!.call('fs:read', {
+          projectRoot: this.currentProjectRoot,
+          relPath: this.TIME_DATA_FILE,
+          json: false
+        });
+        
+        if (timeEntriesResult && typeof timeEntriesResult === 'string') {
+          const entries = JSON.parse(timeEntriesResult);
+          this.timeEntries = entries.map((entry: Partial<TimeEntry>) => ({
+            ...entry,
+            timestamp: new Date(entry.timestamp || Date.now())
+          })) as TimeEntry[];
+          console.log(`Loaded ${this.timeEntries.length} time entries from file system`);
+        }
+      } catch {
+        console.log('Time entries file not found, starting fresh');
+        this.timeEntries = [];
+      }
+      
+      // Load time sessions
+      try {
+        const timeSessionsResult = await window.khipu!.call('fs:read', {
+          projectRoot: this.currentProjectRoot,
+          relPath: this.TIME_SESSION_FILE,
+          json: false
+        });
+        
+        if (timeSessionsResult && typeof timeSessionsResult === 'string') {
+          const sessions = JSON.parse(timeSessionsResult);
+          this.timeSessions = sessions.map((session: Partial<TimeSession>) => ({
+            ...session,
+            startTime: new Date(session.startTime || Date.now()),
+            endTime: session.endTime ? new Date(session.endTime) : undefined,
+            entries: (session.entries || []).map((entry: Partial<TimeEntry>) => ({
+              ...entry,
+              timestamp: new Date(entry.timestamp || Date.now())
+            }))
+          })) as TimeSession[];
+          console.log(`Loaded ${this.timeSessions.length} time sessions from file system`);
+        }
+      } catch {
+        console.log('Time sessions file not found, starting fresh');
+        this.timeSessions = [];
       }
       
       // Load settings
@@ -201,6 +515,39 @@ export class CostTrackingService {
       this.notifyDataChange();
     } catch (error) {
       console.error('Error saving cost tracking data to file system:', error);
+    }
+  }
+  
+  /**
+   * Save time tracking data to file system
+   */
+  private async saveTimeDataToFileSystem(): Promise<void> {
+    if (!this.currentProjectRoot) {
+      console.log('No project root set, skipping time data save');
+      return;
+    }
+
+    try {
+      // Save time entries
+      await window.khipu!.call('fs:write', {
+        projectRoot: this.currentProjectRoot,
+        relPath: this.TIME_DATA_FILE,
+        content: JSON.stringify(this.timeEntries, null, 2)
+      });
+      
+      // Save time sessions
+      await window.khipu!.call('fs:write', {
+        projectRoot: this.currentProjectRoot,
+        relPath: this.TIME_SESSION_FILE,
+        content: JSON.stringify(this.timeSessions, null, 2)
+      });
+      
+      console.log('Saved time tracking data to file system');
+      
+      // Notify listeners that data has changed
+      this.notifyDataChange();
+    } catch (error) {
+      console.error('Error saving time tracking data to file system:', error);
     }
   }
   
@@ -550,6 +897,33 @@ export class CostTrackingService {
       costsByPage[page] += entry.totalCost;
     }
     
+    // Time tracking calculations
+    const timeEntriesInRange = this.timeEntries.filter(entry => 
+      entry.timestamp >= start && entry.timestamp <= end
+    );
+    const timeSessionsInRange = this.timeSessions.filter(session => 
+      session.startTime >= start && (session.endTime ? session.endTime <= end : true)
+    );
+    
+    const totalActiveTime = timeEntriesInRange
+      .filter(entry => entry.activityType === 'user-interaction')
+      .reduce((sum, entry) => sum + entry.duration, 0);
+    
+    const totalAutomationTime = timeEntriesInRange
+      .filter(entry => entry.activityType === 'automation')
+      .reduce((sum, entry) => sum + entry.duration, 0);
+    
+    const totalSessionTime = timeSessionsInRange
+      .reduce((sum, session) => sum + session.totalDuration, 0);
+    
+    const activeTimePercentage = totalSessionTime > 0 
+      ? (totalActiveTime / totalSessionTime) * 100 
+      : 0;
+    
+    const averageSessionDuration = timeSessionsInRange.length > 0
+      ? totalSessionTime / timeSessionsInRange.length
+      : 0;
+    
     return {
       startDate: start,
       endDate: end,
@@ -563,6 +937,12 @@ export class CostTrackingService {
       totalLlmTokens,
       totalTtsCharacters,
       totalAudioSeconds,
+      totalActiveTime,
+      totalAutomationTime,
+      totalSessionTime,
+      activeTimePercentage,
+      averageSessionDuration,
+      totalSessions: timeSessionsInRange.length,
       totalCacheHits,
       totalCacheMisses,
       cacheHitRate,
@@ -615,6 +995,36 @@ export class CostTrackingService {
     return result;
   }
 
+  /**
+   * Get all time entries
+   */
+  getAllTimeEntries(): TimeEntry[] {
+    return [...this.timeEntries];
+  }
+  
+  /**
+   * Get all time sessions
+   */
+  getAllTimeSessions(): TimeSession[] {
+    return [...this.timeSessions];
+  }
+  
+  /**
+   * Get current active session
+   */
+  getCurrentSession(): TimeSession | null {
+    return this.currentSession;
+  }
+  
+  /**
+   * Get time entries by date range
+   */
+  getTimeEntriesByDateRange(startDate: Date, endDate: Date): TimeEntry[] {
+    return this.timeEntries.filter(entry => 
+      entry.timestamp >= startDate && entry.timestamp <= endDate
+    );
+  }
+  
   /**
    * Clear all cost entries
    */
