@@ -2975,5 +2975,121 @@
   "cost.csv.no": {
     "string": "No",
     "comment": "No value for boolean fields in CSV"
+  },
+  "packaging.title": {
+    "string": "Empaquetado",
+    "comment": "Título principal para la página de empaquetado"
+  },
+  "packaging.description": {
+    "string": "Prepara tu audiolibro para entrega a plataformas. Revisa requisitos y crea paquetes cuando esté listo.",
+    "comment": "Descripción para la página de empaquetado"
+  },
+  "packaging.markComplete": {
+    "string": "Marcar Empaquetado Completo",
+    "comment": "Texto del botón para marcar el flujo de empaquetado como completo"
+  },
+  "packaging.loadProject": {
+    "string": "Por favor carga un proyecto primero para gestionar el empaquetado.",
+    "comment": "Mensaje cuando no hay proyecto cargado"
+  },
+  "packaging.overview.platforms": {
+    "string": "Plataformas Objetivo",
+    "comment": "Encabezado para la tarjeta de resumen de plataformas"
+  },
+  "packaging.overview.platformsEnabled": {
+    "string": "plataformas habilitadas",
+    "comment": "Subtítulo para el resumen de plataformas mostrando cuántas están habilitadas"
+  },
+  "packaging.overview.ready": {
+    "string": "Listo para Empaquetar",
+    "comment": "Encabezado para la tarjeta de resumen de plataformas listas"
+  },
+  "packaging.overview.readyPlatforms": {
+    "string": "plataformas listas",
+    "comment": "Subtítulo para el resumen de plataformas listas"
+  },
+  "packaging.overview.audio": {
+    "string": "Progreso de Audio",
+    "comment": "Encabezado para la tarjeta de resumen de progreso de audio"
+  },
+  "packaging.overview.chaptersAudio": {
+    "string": "capítulos con audio",
+    "comment": "Subtítulo para el progreso de audio mostrando capítulos con audio"
+  },
+  "packaging.platforms.title": {
+    "string": "Lista de Verificación de Requisitos por Plataforma",
+    "comment": "Encabezado para la sección de lista de verificación de plataformas"
+  },
+  "packaging.platforms.noneEnabled": {
+    "string": "No hay plataformas habilitadas actualmente para exportación.",
+    "comment": "Mensaje cuando no hay plataformas habilitadas"
+  },
+  "packaging.platforms.enableInstructions": {
+    "string": "Habilita plataformas objetivo en la configuración de tu proyecto para ver los requisitos de empaquetado.",
+    "comment": "Instrucciones para habilitar plataformas"
+  },
+  "packaging.platforms.goToProject": {
+    "string": "Ir a Configuración del Proyecto",
+    "comment": "Botón para navegar a la configuración del proyecto"
+  },
+  "packaging.platforms.format": {
+    "string": "Formato",
+    "comment": "Etiqueta para información de formato de paquete"
+  },
+  "packaging.platforms.complete": {
+    "string": "completo",
+    "comment": "Etiqueta para porcentaje de finalización"
+  },
+  "packaging.platforms.createPackage": {
+    "string": "Crear Paquete para",
+    "comment": "Texto del botón para crear paquete para una plataforma"
+  },
+  "packaging.requirements.title": {
+    "string": "Título",
+    "comment": "Descripción del requisito de título"
+  },
+  "packaging.requirements.author": {
+    "string": "Información del Autor",
+    "comment": "Descripción del requisito de autor"
+  },
+  "packaging.requirements.narrator": {
+    "string": "Información del Narrador",
+    "comment": "Descripción del requisito de narrador"
+  },
+  "packaging.requirements.description": {
+    "string": "Descripción del Libro",
+    "comment": "Descripción del requisito de descripción"
+  },
+  "packaging.requirements.isbn": {
+    "string": "Número ISBN",
+    "comment": "Descripción del requisito de ISBN"
+  },
+  "packaging.requirements.keywords": {
+    "string": "Palabras Clave",
+    "comment": "Descripción del requisito de palabras clave"
+  },
+  "packaging.requirements.categories": {
+    "string": "Categorías",
+    "comment": "Descripción del requisito de categorías"
+  },
+  "packaging.requirements.cover": {
+    "string": "Imagen de Portada",
+    "comment": "Descripción del requisito de imagen de portada"
+  },
+  "packaging.requirements.chapters": {
+    "string": "Archivos de Capítulos",
+    "comment": "Descripción del requisito de archivos de capítulos"
+  },
+  "packaging.requirements.audio": {
+    "string": "Archivos de Audio",
+    "comment": "Descripción del requisito de archivos de audio"
+  },
+  "packaging.requirements.audioComplete": {
+    "string": "Audio de Todos los Capítulos Completo",
+    "comment": "Descripción del requisito de audio completo"
+  },
+  "packaging.requirements.outputDirectory": {
+    "string": "Directorio de Salida",
+    "comment": "Descripción del requisito de directorio de salida"
   }
 }

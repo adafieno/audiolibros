@@ -2523,5 +2523,121 @@
   "cost.csv.no": {
     "string": "No",
     "comment": "No value for boolean fields in CSV"
+  },
+  "packaging.title": {
+    "string": "Packaging",
+    "comment": "Main title for the packaging page"
+  },
+  "packaging.description": {
+    "string": "Prepare your audiobook for delivery to platforms. Review requirements and create packages when ready.",
+    "comment": "Description for the packaging page"
+  },
+  "packaging.markComplete": {
+    "string": "Mark Packaging Complete",
+    "comment": "Button text to mark packaging workflow as complete"
+  },
+  "packaging.loadProject": {
+    "string": "Please load a project first to manage packaging.",
+    "comment": "Message when no project is loaded"
+  },
+  "packaging.overview.platforms": {
+    "string": "Target Platforms",
+    "comment": "Header for platforms overview card"
+  },
+  "packaging.overview.platformsEnabled": {
+    "string": "platforms enabled",
+    "comment": "Subtitle for platforms overview showing how many are enabled"
+  },
+  "packaging.overview.ready": {
+    "string": "Ready to Package",
+    "comment": "Header for ready platforms overview card"
+  },
+  "packaging.overview.readyPlatforms": {
+    "string": "platforms ready",
+    "comment": "Subtitle for ready platforms overview"
+  },
+  "packaging.overview.audio": {
+    "string": "Audio Progress",
+    "comment": "Header for audio progress overview card"
+  },
+  "packaging.overview.chaptersAudio": {
+    "string": "chapters with audio",
+    "comment": "Subtitle for audio progress showing chapters with audio"
+  },
+  "packaging.platforms.title": {
+    "string": "Platform Requirements Checklist",
+    "comment": "Header for platform checklist section"
+  },
+  "packaging.platforms.noneEnabled": {
+    "string": "No platforms are currently enabled for export.",
+    "comment": "Message when no platforms are enabled"
+  },
+  "packaging.platforms.enableInstructions": {
+    "string": "Enable target platforms in your project configuration to see packaging requirements.",
+    "comment": "Instructions to enable platforms"
+  },
+  "packaging.platforms.goToProject": {
+    "string": "Go to Project Settings",
+    "comment": "Button to navigate to project settings"
+  },
+  "packaging.platforms.format": {
+    "string": "Format",
+    "comment": "Label for package format information"
+  },
+  "packaging.platforms.complete": {
+    "string": "complete",
+    "comment": "Label for completion percentage"
+  },
+  "packaging.platforms.createPackage": {
+    "string": "Create Package for",
+    "comment": "Button text to create package for a platform"
+  },
+  "packaging.requirements.title": {
+    "string": "Title",
+    "comment": "Title requirement description"
+  },
+  "packaging.requirements.author": {
+    "string": "Author Information",
+    "comment": "Author requirement description"
+  },
+  "packaging.requirements.narrator": {
+    "string": "Narrator Information",
+    "comment": "Narrator requirement description"
+  },
+  "packaging.requirements.description": {
+    "string": "Book Description",
+    "comment": "Description requirement description"
+  },
+  "packaging.requirements.isbn": {
+    "string": "ISBN Number",
+    "comment": "ISBN requirement description"
+  },
+  "packaging.requirements.keywords": {
+    "string": "Keywords",
+    "comment": "Keywords requirement description"
+  },
+  "packaging.requirements.categories": {
+    "string": "Categories",
+    "comment": "Categories requirement description"
+  },
+  "packaging.requirements.cover": {
+    "string": "Cover Image",
+    "comment": "Cover image requirement description"
+  },
+  "packaging.requirements.chapters": {
+    "string": "Chapter Files",
+    "comment": "Chapter files requirement description"
+  },
+  "packaging.requirements.audio": {
+    "string": "Audio Files",
+    "comment": "Audio files requirement description"
+  },
+  "packaging.requirements.audioComplete": {
+    "string": "All Chapters Audio Complete",
+    "comment": "Complete audio requirement description"
+  },
+  "packaging.requirements.outputDirectory": {
+    "string": "Output Directory",
+    "comment": "Output directory requirement description"
   }
 }

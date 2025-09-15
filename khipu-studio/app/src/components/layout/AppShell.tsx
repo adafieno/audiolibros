@@ -69,7 +69,7 @@ export function AppShell(props: { title?: string; pageName?: string; projectName
       { step: "characters", labelKey: "nav.characters" },
       { step: "planning", labelKey: "nav.planning" },
       { step: "voice", labelKey: "nav.voice" },
-      { step: "export", labelKey: "nav.export" },
+      { step: "export", labelKey: "nav.packaging" },
     ];
 
     const completed = steps.filter(s => isStepCompleted(s.step));

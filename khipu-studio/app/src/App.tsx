@@ -11,6 +11,7 @@ import BookPage from "./pages/Book";
 import CastingPage from "./pages/Casting";
 import CharactersPage from "./pages/Characters";
 import CostPage from "./pages/Cost";
+import PackagingPage from "./pages/Packaging";
 import { useState } from "react";
 import { t } from "i18next";
 import { useProject } from "./store/project";
@@ -44,7 +45,7 @@ export default function App() {
         <Route path="/planning" element={<PlanningPage onStatus={setStatus} />} />
         <Route path="/voice" element={<VoicePage onStatus={setStatus} />} />
         <Route path="/cost" element={<CostPage />} />
-        <Route path="/packaging" element={<Placeholder name={t("nav.packaging")} />} />
+                      <Route path="/project/:id/packaging" element={<PackagingPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Routes>
     </AppShell>

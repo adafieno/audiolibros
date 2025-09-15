@@ -467,7 +467,6 @@ function EditablePreview({
     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
       {/* Text Display Panel */}
       <div style={{ 
-        border: "1px solid var(--border)", 
         borderRadius: "6px", 
         overflow: "hidden",
         backgroundColor: "var(--panel)"
@@ -2473,10 +2472,6 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
 
             {/* Right: Preview */}
             <div style={{ display: "flex", flexDirection: "column" }}>
-              <div style={{ padding: "8px 12px", backgroundColor: "var(--panelAccent)", border: "1px solid var(--border)", borderRadius: "6px 6px 0 0", fontSize: "14px", fontWeight: 500 }}>
-                {t("planning.preview")}
-              </div>
-              
               <div style={{ flex: 1, overflow: "auto" }}>
                 {current ? (
                   <EditablePreview
