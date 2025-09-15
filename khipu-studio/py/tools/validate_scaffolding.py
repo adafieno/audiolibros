@@ -74,7 +74,7 @@ def validate_project_structure(project_path: Path) -> Dict[str, Any]:
             validation['overall_score'] += 1
     
     # Content validation
-    validation['max_score'] += 10  # 10 content checks
+    validation['max_score'] += 8  # 8 content checks
     
     # 1. project.khipu.json structure
     project_file = project_path / 'project.khipu.json'
