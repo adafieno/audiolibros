@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useProject } from '../store/project';
 import { StandardButton } from '../components/StandardButton';
-import type { CostSummary, CostSettings } from '../types/cost-tracking';
+import type { CostSummary, CostSettings, ServiceProvider } from '../types/cost-tracking';
 import { costTrackingService } from '../lib/cost-tracking-service';
 import { CostCalculator } from '../types/cost-tracking';
 
@@ -21,6 +21,7 @@ export default function Cost() {
   
   const [summary, setSummary] = useState<CostSummary | null>(null);
   const [settings, setSettings] = useState<CostSettings | null>(null);
+  const [savingsByProvider, setSavingsByProvider] = useState<Record<ServiceProvider, { savings: number; percentage: number }>>({} as Record<ServiceProvider, { savings: number; percentage: number }>);
   const [selectedTimeRange, setSelectedTimeRange] = useState<'7d' | '30d' | '90d' | 'all'>('30d');
   const [showSettings, setShowSettings] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -127,9 +128,11 @@ export default function Cost() {
       
       const summaryData = costTrackingService.generateSummary(startDate);
       const settingsData = costTrackingService.getSettings();
+      const savingsData = costTrackingService.getSavingsByProvider(startDate);
       
       setSummary(summaryData);
       setSettings(settingsData);
+      setSavingsByProvider(savingsData);
     } catch (error) {
       console.error('Error loading cost data:', error);
     } finally {
@@ -1027,6 +1030,72 @@ export default function Cost() {
                 </span>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Savings by Service */}
+        <div style={{
+          background: 'var(--panel)',
+          border: '1px solid var(--border)',
+          borderRadius: '8px',
+          padding: '14px 16px'
+        }}>
+          <h3 style={{
+            fontSize: '16px',
+            fontWeight: '600',
+            marginBottom: '16px',
+            color: 'var(--text)',
+            margin: '0 0 12px 0'
+          }}>
+            💰 {t('cost.savingsByService', 'Cache Savings by Service')}
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {Object.entries(savingsByProvider)
+              .sort(([,a], [,b]) => b.savings - a.savings)
+              .slice(0, 5)
+              .map(([provider, data]) => (
+                <div key={provider} style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '14px', color: 'var(--muted)' }}>
+                      {provider === 'openai' && '🧠 OpenAI'}
+                      {provider === 'azure-openai' && '🔵 Azure OpenAI'}
+                      {provider === 'elevenlabs' && '🔊 ElevenLabs'}
+                      {provider === 'anthropic' && '🤖 Anthropic'}
+                      {provider === 'azure-tts' && '🔊 Azure TTS'}
+                      {provider === 'google-tts' && '🔊 Google TTS'}
+                      {provider === 'aws-tts' && '🔊 AWS TTS'}
+                      {!['openai', 'azure-openai', 'elevenlabs', 'anthropic', 'azure-tts', 'google-tts', 'aws-tts'].includes(provider) && `📡 ${provider}`}
+                    </span>
+                    <span style={{ 
+                      fontSize: '12px', 
+                      color: 'var(--success)', 
+                      background: 'var(--success-bg)',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      fontWeight: '600'
+                    }}>
+                      {data.percentage.toFixed(1)}%
+                    </span>
+                  </div>
+                  <span style={{ fontWeight: '600', color: 'var(--success)' }}>
+                    {formatCost(data.savings)}
+                  </span>
+                </div>
+              ))}
+            {Object.keys(savingsByProvider).length === 0 && (
+              <div style={{
+                textAlign: 'center',
+                color: 'var(--muted)',
+                fontSize: '14px',
+                padding: '20px'
+              }}>
+                {t('cost.noSavingsData', 'No cache savings data available')}
+              </div>
+            )}
           </div>
         </div>
       </div>

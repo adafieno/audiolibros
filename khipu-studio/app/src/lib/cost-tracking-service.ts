@@ -574,6 +574,44 @@ export class CostTrackingService {
   }
   
   /**
+   * Calculate savings by provider for a time period
+   */
+  getSavingsByProvider(startDate?: Date, endDate?: Date): Record<ServiceProvider, { savings: number; percentage: number }> {
+    const now = new Date();
+    const start = startDate || new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); // 30 days ago
+    const end = endDate || now;
+    
+    const entries = this.getEntriesByDateRange(start, end);
+    const savingsByProvider: Record<ServiceProvider, number> = Object.create(null);
+    let totalSavings = 0;
+    
+    // Calculate savings for entries that were cache hits
+    for (const entry of entries) {
+      if (entry.wasCached && entry.cacheHit && entry.originalCost) {
+        const savings = entry.originalCost - entry.totalCost;
+        if (savings > 0) {
+          if (!savingsByProvider[entry.provider]) {
+            savingsByProvider[entry.provider] = 0;
+          }
+          savingsByProvider[entry.provider] += savings;
+          totalSavings += savings;
+        }
+      }
+    }
+    
+    // Calculate percentages
+    const result: Record<ServiceProvider, { savings: number; percentage: number }> = Object.create(null);
+    for (const [provider, savings] of Object.entries(savingsByProvider)) {
+      result[provider as ServiceProvider] = {
+        savings,
+        percentage: totalSavings > 0 ? (savings / totalSavings) * 100 : 0
+      };
+    }
+    
+    return result;
+  }
+
+  /**
    * Clear all cost entries
    */
   clearAllEntries(): void {
