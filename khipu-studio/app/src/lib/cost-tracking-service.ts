@@ -250,6 +250,22 @@ export class CostTrackingService {
     if (typeof window === 'undefined') return 'unknown';
     
     const path = window.location.pathname;
+    const hash = window.location.hash;
+    
+    // Debug logging
+    console.log('🔍 Page detection:', { path, hash });
+    
+    // Check hash-based routing first (if using hash routing)
+    if (hash.includes('manuscript')) return 'manuscript';
+    if (hash.includes('casting')) return 'casting';
+    if (hash.includes('characters')) return 'characters';
+    if (hash.includes('planning') || hash.includes('orchestration')) return 'planning';
+    if (hash.includes('voice') || hash.includes('audio')) return 'voice';
+    if (hash.includes('packaging')) return 'packaging';
+    if (hash.includes('cost')) return 'cost';
+    if (hash.includes('settings')) return 'settings';
+    
+    // Check path-based routing
     if (path.includes('/manuscript')) return 'manuscript';
     if (path.includes('/casting')) return 'casting';
     if (path.includes('/characters')) return 'characters';
@@ -259,6 +275,10 @@ export class CostTrackingService {
     if (path.includes('/cost')) return 'cost';
     if (path.includes('/settings')) return 'settings';
     
+    // Default cases
+    if (path === '/' || path === '/index.html' || path === '') return 'home';
+    
+    console.log('⚠️ Unrecognized page:', { path, hash });
     return 'unknown';
   }
   
@@ -1056,13 +1076,18 @@ export class CostTrackingService {
       { page: 'planning', activityType: 'user-interaction' as TimeActivityType, duration: 12000 }
     ];
     
+    console.log('🧪 Current time entries before test:', this.timeEntries.length);
+    console.log('🧪 Current session:', this.currentSession?.id);
+    
     for (const item of testData) {
       if ('operation' in item) {
+        console.log('🧪 Adding automation entry:', item);
         this.trackTimeActivity(item.activityType, item.duration, { 
           operation: item.operation,
           page: 'test' 
         });
       } else {
+        console.log('🧪 Adding user interaction entry:', item);
         this.trackTimeActivity(item.activityType, item.duration, { 
           page: item.page 
         });
@@ -1070,7 +1095,83 @@ export class CostTrackingService {
     }
     
     console.log('🧪 Test data created. Total time entries:', this.timeEntries.length);
+    
+    // Debug: Show breakdown after test data
+    const breakdown = this.getTimeBreakdownByOperation();
+    console.log('🧪 Time breakdown after test data:', breakdown);
+    
+    // Debug: Show automation vs user time
+    const automationTime = this.timeEntries
+      .filter(e => e.activityType === 'automation')
+      .reduce((sum, e) => sum + e.duration, 0);
+    const userTime = this.timeEntries
+      .filter(e => e.activityType === 'user-interaction')
+      .reduce((sum, e) => sum + e.duration, 0);
+      
+    console.log('🧪 Time totals after test:', {
+      automationTime: this.formatDuration(automationTime),
+      userTime: this.formatDuration(userTime),
+      totalEntries: this.timeEntries.length
+    });
+    
     this.notifyDataChange();
+  }
+
+  /**
+   * Debug method to show current time tracking state
+   */
+  debugTimeTrackingState(): void {
+    console.log('🔍 === TIME TRACKING DEBUG STATE ===');
+    console.log('🔍 Total time entries:', this.timeEntries.length);
+    console.log('🔍 Current session:', this.currentSession?.id);
+    
+    if (this.timeEntries.length > 0) {
+      const automationEntries = this.timeEntries.filter(e => e.activityType === 'automation');
+      const userEntries = this.timeEntries.filter(e => e.activityType === 'user-interaction');
+      
+      console.log('🔍 Automation entries:', automationEntries.length);
+      automationEntries.forEach(entry => {
+        console.log('  🤖', {
+          operation: entry.operation,
+          duration: this.formatDuration(entry.duration),
+          timestamp: entry.timestamp,
+          page: entry.page
+        });
+      });
+      
+      console.log('🔍 User interaction entries:', userEntries.length);
+      userEntries.slice(0, 5).forEach(entry => {
+        console.log('  👤', {
+          page: entry.page,
+          duration: this.formatDuration(entry.duration),
+          timestamp: entry.timestamp
+        });
+      });
+      
+      if (userEntries.length > 5) {
+        console.log(`  ... and ${userEntries.length - 5} more user entries`);
+      }
+    }
+    
+    // Show breakdown
+    const breakdown = this.getTimeBreakdownByOperation();
+    console.log('🔍 Time breakdown by operation:', breakdown);
+    
+    // Show totals
+    const totalAutomation = this.timeEntries
+      .filter(e => e.activityType === 'automation')
+      .reduce((sum, e) => sum + e.duration, 0);
+    const totalUser = this.timeEntries
+      .filter(e => e.activityType === 'user-interaction')
+      .reduce((sum, e) => sum + e.duration, 0);
+    
+    console.log('🔍 Time totals:', {
+      automation: this.formatDuration(totalAutomation),
+      userInteraction: this.formatDuration(totalUser),
+      total: this.formatDuration(totalAutomation + totalUser)
+    });
+    
+    console.log('🔍 === END DEBUG STATE ===');
   }
 
   /**

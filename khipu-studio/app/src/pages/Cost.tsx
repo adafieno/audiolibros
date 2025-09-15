@@ -415,7 +415,20 @@ export default function Cost() {
             variant="outline" 
             onClick={async () => {
               try {
+                // Create both test time data and a test automation operation
                 costTrackingService.createTestTimeData();
+                
+                // Add a test automation operation
+                await costTrackingService.trackAutomatedOperation(
+                  'test:automation',
+                  async () => {
+                    // Simulate some work
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    return 'Test automation completed';
+                  },
+                  { page: 'cost', projectId: 'test' }
+                );
+                
                 await loadData();
               } catch (error) {
                 console.error('Error creating test data:', error);
@@ -429,6 +442,23 @@ export default function Cost() {
             }}
           >
             🧪 Test Data
+          </StandardButton>
+          
+          {/* Debug State Button */}
+          <StandardButton
+            variant="outline" 
+            onClick={() => {
+              console.log('🔍 Debugging time tracking state...');
+              costTrackingService.debugTimeTrackingState();
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              marginLeft: '8px'
+            }}
+          >
+            🔍 Debug
           </StandardButton>
         </div>
       </div>
