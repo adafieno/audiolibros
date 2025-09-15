@@ -306,10 +306,10 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
           border: "1px dashed var(--border)" 
         }}>
           <p style={{ color: "var(--text)", fontSize: "18px", marginBottom: "8px" }}>
-            {t("status.noProject")}
+            {t("status.noProjectLoaded")}
           </p>
           <p style={{ color: "var(--muted)", fontSize: "14px" }}>
-            {t("packaging.loadProject")}
+            {t("packaging.description")}
           </p>
         </div>
       </div>
@@ -320,7 +320,7 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
     return (
       <div style={{ padding: "16px", maxWidth: "1200px" }}>
         <div style={{ textAlign: "center", padding: "64px 0" }}>
-          {t("loading")}
+          {t("common.loading")}
         </div>
       </div>
     );
@@ -329,11 +329,11 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
   return (
     <div style={{ maxWidth: "100%" }}>
       <PageHeader 
-        title="packaging.title"
-        description="packaging.description"
+        title={t("packaging.title")}
+        description={t("packaging.description")}
         actions={
           <WorkflowCompleteButton 
-            step="export"
+            step="characters"
             disabled={enabledPlatforms.length === 0 || readyPlatforms.length === 0}
           >
             {t("packaging.markComplete")}

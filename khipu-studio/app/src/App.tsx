@@ -45,7 +45,7 @@ export default function App() {
         <Route path="/planning" element={<PlanningPage onStatus={setStatus} />} />
         <Route path="/voice" element={<VoicePage onStatus={setStatus} />} />
         <Route path="/cost" element={<CostPage />} />
-                      <Route path="/project/:id/packaging" element={<PackagingPage />} />
+        <Route path="/packaging" element={<PackagingPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Routes>
     </AppShell>
