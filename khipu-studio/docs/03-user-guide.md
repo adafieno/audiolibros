@@ -24,15 +24,18 @@ The application is organized into 10 main modules, each designed to handle a spe
 ### Step 1: Create or Select a Project
 1. From the **🏠 Home** screen, click "New Project" to create a fresh audiobook project
 
-![Home Screen - New Project](images/user-guide/workflow/01-home-new-project.png)
+![Home Screen - New Project](images/user-guide/en-US/00-create.png)
 
 2. Or select an existing project to continue working on it
 3. The home screen shows recent projects and provides quick access to templates
 
-![Home Screen - Recent Projects](images/user-guide/workflow/01-home-recent-projects.png)
+![Home Screen - Recent Projects](images/user-guide/en-US/01-home.png)
 
 ### Step 2: Configure Book Details
 1. Navigate to the **📖 Book** tab
+
+![Book Metadata Screen](images/user-guide/en-US/02-book.png)
+
 2. Enter essential metadata:
    - Book title and subtitle
    - Author name and biography
@@ -41,53 +44,53 @@ The application is organized into 10 main modules, each designed to handle a spe
 3. Upload cover art and configure display settings
 4. Set audio format preferences and quality settings
 
+
 ### Step 3: Import Your Manuscript
 1. Go to the **📑 Manuscript** tab
+
+![Manuscript Screen](images/user-guide/en-US/04-manuscript.png)
+
 2. Import your text content:
    - Upload Word documents (.docx)
-   - Import plain text files (.txt)
-   - Paste content directly into the editor
-3. The manuscript editor provides:
+   - The application will automatically detect the book's chapters matching the Heading 1 tag
+3. The manuscript previewer provides:
    - Chapter and section organization
-   - Text formatting and cleanup tools
-   - Search and replace functionality
-   - Word count and reading time estimates
+   - Text preview
+   - The basis for the rest of the workflow to work with
 
-### Step 4: Detect Characters
+### Step 4: Assign Voices
+1. Navigate to the **🗣️ Casting** tab
+
+![Casting Tab Navigation](images/user-guide/en-US/05-casting.png)
+
+2. You will see a list of available characters provided by the selected TTS engine, as well as for the book language. You can then:
+   - Filter and select voices for your book (gender and locale)
+   - Test voice samples to check for voice fit into your story
+   - Add additional languages beyond those matching the book's main language
+
+
+### Step 5: Detect Characters
 1. Switch to the **🎭 Characters** tab
 
-![Characters Tab Navigation](images/user-guide/workflow/04-characters-tab.png)
+![Characters Tab Navigation](images/user-guide/en-US/06-characters.png)
 
 2. Run character detection:
    - Click "Detect Characters" to automatically find all speaking characters in your manuscript
-
-![Character Detection Interface](images/user-guide/workflow/04-characters-detection-start.png)
-
    - The AI analyzes dialogue patterns and speech attribution
    - Progress tracking shows detection status for each chapter
-
-![Character Detection Progress](images/user-guide/workflow/04-characters-detection-progress.png)
-
-3. Review and edit detected characters:
-
-![Detected Characters List](images/user-guide/workflow/04-characters-detected-list.png)
-
-   - Verify character names and roles
-   - Add character descriptions and notes
-   - Merge duplicate characters or split combined ones
-   - Create character profiles for voice assignment
-
-### Step 5: Assign Voices
-1. Navigate to the **🗣️ Casting** tab
-2. For each character, select:
-   - Voice provider (Azure, AWS Polly, Google Cloud)
-   - Specific voice model (gender, age, accent)
-   - Voice parameters (speed, pitch, style)
+   or each character, select:
+    -- Specific voice from the casting
+    -- Voice parameters (speed, pitch, style)
 3. Test voice samples to ensure character voices match your vision
 4. Configure narrator voice for non-dialogue content
+5. Manually add and remove characters, as needed
+
 
 ### Step 6: Plan Audio Segments
-1. Open the **🪄 Planning** tab
+1. Open the **🪄 Orchestration** tab
+
+![Orchestration Navigation](images/user-guide/en-US/07-planning.png)
+
 2. AI-powered segmentation:
    - Automatic content analysis identifies optimal segment boundaries
    - Speaker assignment based on context and character detection
@@ -98,7 +101,10 @@ The application is organized into 10 main modules, each designed to handle a spe
    - Lock approved segments to prevent accidental changes
 
 ### Step 7: Generate Audio
-1. Go to the **🎙️ Voice** tab
+1. Go to the **🎙️ Audio Production** tab
+
+![Audio Production Tab Navigation](images/user-guide/en-US/08-voice.png)
+
 2. Audio production process:
    - Select segments to generate (individual, chapter, or full book)
    - Monitor generation progress and queue status
@@ -109,16 +115,11 @@ The application is organized into 10 main modules, each designed to handle a spe
    - Fade in/out and silence padding
    - Custom audio effects and sound integration
 
-### Step 8: Monitor Costs
-1. Check the **💰 Cost** tab regularly
-2. Cost management features:
-   - Real-time tracking of TTS service usage
-   - Detailed cost breakdown by operation type
-   - Budget alerts and spending limits
-   - Cache effectiveness analysis to optimize costs
-
-### Step 9: Export Your Audiobook
+### Step 8: Export Your Audiobook
 1. Navigate to the **📦 Packaging** tab
+
+![Packaging Tab Navigation](images/user-guide/en-US/09-packaging.png)
+
 2. Final assembly:
    - Combine all audio segments into chapters
    - Add chapter markers and metadata
@@ -127,6 +128,23 @@ The application is organized into 10 main modules, each designed to handle a spe
    - High-quality audio formats (WAV, MP3, M4A)
    - Audiobook-specific formats (M4B with chapters)
    - Streaming-ready formats with embedded metadata
+
+### Step 9: Monitor Costs
+1. Check the **💰 Cost** tab regularly
+
+![Cost Tab Navigation](images/user-guide/en-US/10-cost.png)
+
+2. Cost management features:
+   - Real-time tracking of TTS service usage
+   - Detailed cost breakdown by operation type
+   - Cache effectiveness analysis to optimize costs
+
+### Application Settings
+Use the **💰 Settings** tab to change overall settings for:
+    - User interface appearance (theme)
+    - Application language. English (United States), Portuguese (Brazil), and Spanish (Peru) are currently supported
+
+![Setting Tab Navigation](images/user-guide/en-US/11-settings.png)
 
 ## Advanced Features
 

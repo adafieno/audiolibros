@@ -19,3 +19,8 @@ khipu-studio/patch-processing-chains.ps1
 khipu-studio/scan-segment-references.ps1
 /khipu-studio/node_modules
 /khipu-studio/screenshots
+khipu-studio/test-capture-1758036287270.png
+khipu-studio/test-home-position.js
+khipu-studio/test-single-click.js
+khipu-studio/debug-clicks.js
+khipu-studio/debug-windows.js
