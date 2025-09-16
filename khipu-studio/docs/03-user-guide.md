@@ -4,272 +4,197 @@
 
 Khipu Studio is a comprehensive audiobook production application that transforms your written manuscript into professional-quality audiobooks using AI-powered tools and advanced text-to-speech technology.
 
-### System Requirements
+### Navigation Overview
 
-- **Operating System:** Windows 10/11, macOS 10.15+, or Linux
-- **Memory:** 8GB RAM minimum (16GB recommended)
-- **Storage:** 500MB for application + additional space for projects
-- **Internet Connection:** Required for TTS services and AI features
-
-### First Launch
-
-1. **Install Khipu Studio** from the provided installer
-2. **Launch the application** - you'll see the Home screen
-3. **Create your first project** or open an existing one
-
----
-
-## Quick Start Workflow
-
-### 1. Create a New Project
-
-**From the Home screen:**
-1. Click **"Create New Project"**
-2. Choose a **parent directory** (e.g., `C:\audiobook-projects`)
-3. Enter your **project name** (e.g., "my-first-audiobook")
-4. Click **"Create Project"**
-
-The application will create a structured project folder with all necessary directories and configuration files.
-
-### 2. Configure Your Book
-
-**Navigate to the Book tab:**
-1. Enter your **book title** and **subtitle**
-2. Add **author names** (you can add multiple authors)
-3. Select the **primary language** for your audiobook
-4. Upload a **cover image** (optional but recommended)
-5. Add additional metadata like **description** and **keywords**
-
-### 3. Import Your Manuscript
-
-**Go to the Manuscript tab:**
-1. **Import chapter files** by clicking "Import Chapters" or dragging files
-2. **Review the chapter list** - ensure chapters are in the correct order
-3. **Refresh, as needed** - reimport your manuscript for updates
-4. **Mark manuscript as complete** when ready
-
-### 4. Set Up Characters
-
-**In the Characters tab:**
-1. **Add characters** who speak in your book
-2. **Define the narrator** (usually the main voice)
-3. **Describe each character** to help with voice assignment
-4. **Set voice preferences** for consistent casting
-
-### 5. Choose Voices (Casting)
-
-**Navigate to Casting:**
-1. **Review detected characters** from your dossier
-2. **Assign voices** to each character
-3. **Audition voices** by playing sample audio
-4. **Adjust voice settings** (speaking rate, pitch, style)
-
-### 6. Generate Audio Plan
-
-**Go to the Planning tab:**
-1. **Select a chapter** from the dropdown
-2. Click **"Generate Plan for [Chapter]"**
-3. **Review the generated segments** - the AI will detect speakers
-4. **Lock segments** you're happy with
-5. **Adjust voice assignments** if needed
-6. **Repeat for all chapters**
-
-### 7. Produce Audio
-
-**Switch to the Voice tab:**
-1. **Select a chapter** to work on
-2. **Review audio segments** in the table
-3. **Generate audio** for individual segments or entire chapters
-4. **Apply audio processing** (noise reduction, EQ, etc.)
-5. **Mark revisions** for segments that need improvement
-6. **Preview audio** with the built-in player
-
-### 8. Monitor Costs and Usage
-
-**Go to the Cost tab:**
-1. **Review TTS usage** and associated costs
-2. **Track processing time** for different operations
-3. **Set budgets and alerts** to control spending
-4. **Analyze efficiency** - see where time and money are spent
-5. **Monitor cache effectiveness** - track savings from reused audio
-
-### 9. Export Your Audiobook
-
-**Go to the Packaging tab:**
-1. **Choose export format** (M4B for iTunes/Apple Books, ZIP for Google Play)
-2. **Configure chapter titles** and metadata
-3. **Set audio quality settings**
-4. **Generate the final audiobook package**
-
----
-
-## Key Concepts
-
-### Project Structure
-
-Every Khipu Studio project follows a standardized structure:
-
-```
-your-project/
-├── analysis/chapters_txt/    # Your editable chapter text files
-├── art/                      # Cover images and artwork
-├── audio/                    # Generated audio files
-├── dossier/                  # Character and world information
-├── ssml/                     # Generated SSML (Speech Synthesis Markup)
-└── [config files]           # Project settings and metadata
-```
-
-### Workflow Stages
-
-Khipu Studio follows a **cascading workflow** where each stage unlocks the next:
-
-1. **Project Setup** → Create and configure project
-2. **Manuscript** → Import and organize your text
-3. **Pre-production** → Characters (Dossier), Voice Casting, Planning
-4. **Production** → Audio generation and processing
-5. **Post-production** → Export and packaging
-
-### The Planning System
-
-The **Planning** feature is central to Khipu Studio:
-
-- **AI Analysis:** Automatically detects speakers and segments text
-- **Segments:** Small chunks of text optimized for TTS processing
-- **Voice Mapping:** Each segment is assigned to a character's voice
-- **Locking:** Prevent segments from being changed during regeneration
-
-### Audio Processing
-
-Khipu Studio applies professional audio processing:
-
-- **Noise Reduction:** Removes background noise and artifacts
-- **Equalization:** Balances frequency response
-- **Compression:** Controls dynamic range for consistent volume
-- **Mastering:** Final polish for professional sound quality
-
----
-
-## Navigation Guide
-
-### Left Sidebar Menu
-
-The navigation menu shows available features based on your progress:
+The application is organized into 10 main modules, each designed to handle a specific aspect of audiobook production:
 
 - **🏠 Home** - Project selection and creation
 - **📖 Book** - Book metadata and configuration  
-- **📑 Manuscript** - Chapter management and editing
-- **👥 Dossier** - Character profiles and descriptions
-- **🎭 Casting** - Voice assignment to characters
-- **📋 Planning** - AI-powered content segmentation
-- **🎤 Voice** - Audio production and processing
-- **� Cost** - Usage tracking and cost management
-- **�📦 Packaging** - Export and final assembly
+- **📑 Manuscript** - Content management and editing
+- **🎭 Characters** - Character detection and profile management
+- **🗣️ Casting** - Voice assignment to characters
+- **🪄 Planning** - AI-powered content segmentation and speaker assignment
+- **🎙️ Voice** - Audio production and processing
+- **💰 Cost** - Usage tracking and cost management
+- **📦 Packaging** - Export and final assembly
 - **⚙️ Settings** - Application and project preferences
 
-### Status Indicators
+## Quick Start Workflow
 
-- **✅ Green** - Complete and ready
-- **🟡 Yellow** - In progress or needs attention
-- **⚪ Gray** - Not started or not available yet
+### Step 1: Create or Select a Project
+1. From the **🏠 Home** screen, click "New Project" to create a fresh audiobook project
+2. Or select an existing project to continue working on it
+3. The home screen shows recent projects and provides quick access to templates
 
----
+### Step 2: Configure Book Details
+1. Navigate to the **📖 Book** tab
+2. Enter essential metadata:
+   - Book title and subtitle
+   - Author name and biography
+   - Genre and category tags
+   - Publication details and ISBN (if available)
+3. Upload cover art and configure display settings
+4. Set audio format preferences and quality settings
 
-## Tips for Success
+### Step 3: Import Your Manuscript
+1. Go to the **📑 Manuscript** tab
+2. Import your text content:
+   - Upload Word documents (.docx)
+   - Import plain text files (.txt)
+   - Paste content directly into the editor
+3. The manuscript editor provides:
+   - Chapter and section organization
+   - Text formatting and cleanup tools
+   - Search and replace functionality
+   - Word count and reading time estimates
 
-### 1. Manuscript Preparation
-- **Clean text formatting** - Remove extra spaces and formatting
-- **Consistent dialogue format** - Use standard quotation marks
-- **Chapter organization** - One file per chapter for best results
+### Step 4: Detect Characters
+1. Switch to the **🎭 Characters** tab
+2. Run character detection:
+   - Click "Detect Characters" to automatically find all speaking characters in your manuscript
+   - The AI analyzes dialogue patterns and speech attribution
+   - Progress tracking shows detection status for each chapter
+3. Review and edit detected characters:
+   - Verify character names and roles
+   - Add character descriptions and notes
+   - Merge duplicate characters or split combined ones
+   - Create character profiles for voice assignment
 
-### 2. Character Setup
-- **Be specific** - Detailed character descriptions improve AI detection
-- **Define the narrator** - Usually your primary voice
-- **Consider distinctiveness** - Choose voices that are clearly different
+### Step 5: Assign Voices
+1. Navigate to the **🗣️ Casting** tab
+2. For each character, select:
+   - Voice provider (Azure, AWS Polly, Google Cloud)
+   - Specific voice model (gender, age, accent)
+   - Voice parameters (speed, pitch, style)
+3. Test voice samples to ensure character voices match your vision
+4. Configure narrator voice for non-dialogue content
 
-### 3. Voice Selection
-- **Audition thoroughly** - Test voices with actual text from your book
-- **Consider the genre** - Match voice style to your book's tone
-- **Think about fatigue** - Some voices work better for long-form content
+### Step 6: Plan Audio Segments
+1. Open the **🪄 Planning** tab
+2. AI-powered segmentation:
+   - Automatic content analysis identifies optimal segment boundaries
+   - Speaker assignment based on context and character detection
+   - Dialogue attribution and narrative flow recognition
+3. Review and adjust:
+   - Modify segment boundaries as needed
+   - Verify speaker assignments are correct
+   - Lock approved segments to prevent accidental changes
 
-### 4. Planning Review
-- **Check AI suggestions** - The AI is good but not perfect
-- **Lock good segments** - Prevent changes to segments you approve
-- **Adjust segment length** - Very long segments may hit TTS limits
+### Step 7: Generate Audio
+1. Go to the **🎙️ Voice** tab
+2. Audio production process:
+   - Select segments to generate (individual, chapter, or full book)
+   - Monitor generation progress and queue status
+   - Preview generated audio before finalizing
+3. Audio processing features:
+   - Noise reduction and audio enhancement
+   - Volume normalization across segments
+   - Fade in/out and silence padding
+   - Custom audio effects and sound integration
 
-### 5. Audio Production
-- **Process systematically** - Work chapter by chapter
-- **Use revision marking** - Mark segments that need improvement
-- **Apply processing consistently** - Use similar settings across chapters
+### Step 8: Monitor Costs
+1. Check the **💰 Cost** tab regularly
+2. Cost management features:
+   - Real-time tracking of TTS service usage
+   - Detailed cost breakdown by operation type
+   - Budget alerts and spending limits
+   - Cache effectiveness analysis to optimize costs
 
-### 6. Quality Control
-- **Listen to samples** - Don't skip the preview step
-- **Check transitions** - Ensure smooth flow between segments
-- **Validate metadata** - Ensure chapter titles and info are correct
+### Step 9: Export Your Audiobook
+1. Navigate to the **📦 Packaging** tab
+2. Final assembly:
+   - Combine all audio segments into chapters
+   - Add chapter markers and metadata
+   - Generate playlist files and track information
+3. Export options:
+   - High-quality audio formats (WAV, MP3, M4A)
+   - Audiobook-specific formats (M4B with chapters)
+   - Streaming-ready formats with embedded metadata
 
-### 7. Cost Management
-- **Monitor usage regularly** - Check the Cost tab frequently
-- **Set realistic budgets** - Use alerts to avoid overruns
-- **Leverage caching** - Reuse audio when possible to save costs
-- **Review TTS efficiency** - Optimize segments to reduce unnecessary generation
-- **Track project costs** - Keep detailed records for business planning
+## Advanced Features
 
----
+### Character Detection AI
+- Automatically analyze manuscripts to identify speaking characters
+- Parse dialogue patterns and speech attribution
+- Handle complex narrative structures and unnamed speakers
+- Progress tracking for large manuscripts with multiple chapters
+
+### Intelligent Audio Segmentation
+- AI-powered content analysis for optimal audio segment boundaries
+- Automatic speaker assignment based on context and character detection
+- Smart dialogue attribution and narrative flow recognition
+- Segment locking system to preserve approved content
+
+### Audio Processing Pipeline
+- Professional audio effects chain with noise reduction and EQ
+- Batch processing capabilities for efficiency
+- Caching system to avoid regenerating unchanged content
+- Preview system for quality control before final export
+
+### Cost Management and Analytics
+- Real-time tracking of TTS service usage and associated costs
+- Detailed breakdowns by operation type (detection, generation, processing)
+- Budget alerts and cost optimization recommendations
+- Cache effectiveness analysis to maximize savings
+
+### Sound Effects Integration
+- Insert custom sound effects at specific points in your audiobook
+- Control timing and volume precisely for professional results
+- Build and manage a library of reusable effects
+- Sync effects with narrative content and dialogue
+
+### Batch Operations and Automation
+- Process multiple chapters simultaneously for efficiency
+- Apply consistent settings across multiple segments
+- Bulk revision marking and processing workflows
+- Automated quality checks and validation
+
+## Tips for Best Results
+
+### Manuscript Preparation
+- Ensure clear dialogue attribution in your text
+- Use consistent formatting for chapter breaks and sections
+- Include speaker tags or action beats to help with character detection
+- Clean up formatting issues before importing
+
+### Voice Selection
+- Listen to voice samples for each character before committing
+- Consider character personality, age, and background when selecting voices
+- Test dialogue between characters to ensure voices work well together
+- Use distinct voices for main characters, similar voices for minor ones
+
+### Quality Control
+- Always preview generated audio segments before finalizing
+- Check for mispronunciations and adjust using phonetic spelling
+- Verify proper pacing and timing, especially for dialogue
+- Test audio levels and ensure consistency across segments
+
+### Cost Optimization
+- Use the caching system effectively by avoiding unnecessary regeneration
+- Plan your segments thoughtfully to minimize TTS service calls
+- Monitor cost tracking regularly to stay within budget
+- Take advantage of bulk processing for better efficiency
+
+### Performance Tips
+- Close unnecessary applications when processing large projects
+- Allow sufficient disk space for audio cache and temporary files
+- Use the preview system to test small sections before full generation
+- Save your project frequently to avoid losing progress
 
 ## Troubleshooting
 
 ### Common Issues
-
-**"Failed to generate plan"**
-- Check internet connection (requires AI services)
-- Verify API credentials in Settings
-- Ensure chapter text is not empty
-
-**"TTS generation failed"**
-- Check Azure TTS credentials
-- Verify voice is available for your language
-- Try reducing segment length
-
-**"No audio playback"**
-- Check system audio settings
-- Verify audio files were generated successfully
-- Try restarting the application
-
-**"Export failed"**
-- Ensure all chapters have audio generated
-- Check available disk space
-- Verify export format settings
+- **Character detection missing speakers**: Check dialogue formatting and add manual character entries
+- **Audio generation errors**: Verify TTS service credentials and network connectivity
+- **Slow processing**: Close other applications and ensure adequate system resources
+- **Export failures**: Check available disk space and file permissions
 
 ### Getting Help
-
-1. **Check the logs** - Look for error messages in the application
-2. **Verify configuration** - Ensure API keys and settings are correct
-3. **Try smaller tests** - Test with a single chapter or segment
-4. **Restart if needed** - Sometimes a fresh start helps
-
----
-
-## Advanced Features
-
-### Custom Processing Chains
-- Fine-tune audio processing for different voices
-- Save presets for consistent application
-- A/B test different settings
-
-### Sound Effects
-- Insert custom sound effects at specific points
-- Control timing and volume precisely
-- Build a library of reusable effects
-
-### Batch Operations
-- Process multiple chapters simultaneously
-- Apply settings across multiple segments
-- Bulk revision marking and processing
-
-### Cost Tracking
-- Monitor TTS usage and costs
-- Set budgets and alerts
-- Optimize for cost-effectiveness
+- Check the Settings tab for configuration options
+- Review error messages in the application console
+- Ensure all required services (TTS providers) are properly configured
+- Restart the application if experiencing persistent issues
 
 ---
 
-*This guide covers the essential workflow for creating audiobooks with Khipu Studio. For detailed feature-specific instructions, see the individual Feature Guides.*
+*This guide covers the core functionality of Khipu Studio. For detailed technical specifications and advanced configuration options, refer to the complete feature documentation.*
