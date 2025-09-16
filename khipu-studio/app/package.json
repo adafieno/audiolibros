@@ -88,5 +88,9 @@
         "linux": {
             "icon": "assets/icons/khipu.png"
         }
+    },
+    "devDependenciesOptional": {
+        "playwright": "^1.40.0",
+        "puppeteer": "^21.0.0"
     }
 }

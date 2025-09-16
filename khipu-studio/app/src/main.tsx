@@ -21,7 +21,7 @@ function pickSupported(sys: unknown): string {
     // Check if user has already set a language preference
     const savedLang = localStorage.getItem("khipu.lang");
     
-    if (savedLang && ["es-PE", "en-US"].includes(savedLang)) {
+    if (savedLang && ["es-PE", "en-US", "pt-BR"].includes(savedLang)) {
       // Use saved language preference
       await i18n.changeLanguage(savedLang);
     } else {

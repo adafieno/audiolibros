@@ -17,3 +17,5 @@ khipu-studio/app/src/locales/es-PE/common.json.backup-before-caps
 khipu-studio/patch-processing-chains-simple.ps1
 khipu-studio/patch-processing-chains.ps1
 khipu-studio/scan-segment-references.ps1
+/khipu-studio/node_modules
+/khipu-studio/screenshots
