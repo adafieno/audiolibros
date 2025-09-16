@@ -45,12 +45,12 @@ The application will create a structured project folder with all necessary direc
 **Go to the Manuscript tab:**
 1. **Import chapter files** by clicking "Import Chapters" or dragging files
 2. **Review the chapter list** - ensure chapters are in the correct order
-3. **Edit text if needed** using the built-in editor
+3. **Refresh, as needed** - reimport your manuscript for updates
 4. **Mark manuscript as complete** when ready
 
-### 4. Set Up Characters (Dossier)
+### 4. Set Up Characters
 
-**In the Dossier tab:**
+**In the Characters tab:**
 1. **Add characters** who speak in your book
 2. **Define the narrator** (usually the main voice)
 3. **Describe each character** to help with voice assignment
