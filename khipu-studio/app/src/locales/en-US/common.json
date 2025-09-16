@@ -3,6 +3,10 @@
     "string": "Khipu Studio",
     "comment": "Main application title displayed in the header and browser tab"
   },
+  "app.copyright": {
+    "string": "© 2025 Agustín Da Fieno Delucchi. All rights reserved.",
+    "comment": "Copyright notice displayed in the footer"
+  },
   "nav.home": {
     "string": "Home",
     "comment": "Navigation menu item for the home/dashboard page"

@@ -3,6 +3,10 @@
     "string": "Khipu Studio",
     "comment": ""
   },
+  "app.copyright": {
+    "string": "© 2025 Agustín Da Fieno Delucchi. Todos los derechos reservados.",
+    "comment": "Copyright notice displayed in the footer"
+  },
   "nav.home": {
     "string": "Inicio",
     "comment": ""

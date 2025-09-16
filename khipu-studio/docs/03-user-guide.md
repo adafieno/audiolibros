@@ -23,8 +23,13 @@ The application is organized into 10 main modules, each designed to handle a spe
 
 ### Step 1: Create or Select a Project
 1. From the **🏠 Home** screen, click "New Project" to create a fresh audiobook project
+
+![Home Screen - New Project](images/user-guide/workflow/01-home-new-project.png)
+
 2. Or select an existing project to continue working on it
 3. The home screen shows recent projects and provides quick access to templates
+
+![Home Screen - Recent Projects](images/user-guide/workflow/01-home-recent-projects.png)
 
 ### Step 2: Configure Book Details
 1. Navigate to the **📖 Book** tab
@@ -50,11 +55,23 @@ The application is organized into 10 main modules, each designed to handle a spe
 
 ### Step 4: Detect Characters
 1. Switch to the **🎭 Characters** tab
+
+![Characters Tab Navigation](images/user-guide/workflow/04-characters-tab.png)
+
 2. Run character detection:
    - Click "Detect Characters" to automatically find all speaking characters in your manuscript
+
+![Character Detection Interface](images/user-guide/workflow/04-characters-detection-start.png)
+
    - The AI analyzes dialogue patterns and speech attribution
    - Progress tracking shows detection status for each chapter
+
+![Character Detection Progress](images/user-guide/workflow/04-characters-detection-progress.png)
+
 3. Review and edit detected characters:
+
+![Detected Characters List](images/user-guide/workflow/04-characters-detected-list.png)
+
    - Verify character names and roles
    - Add character descriptions and notes
    - Merge duplicate characters or split combined ones

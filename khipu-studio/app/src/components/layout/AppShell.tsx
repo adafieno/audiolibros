@@ -214,11 +214,21 @@ export function AppShell(props: { title?: string; pageName?: string; projectName
           color: "var(--muted)",
           display: "flex",
           alignItems: "center",
+          justifyContent: "space-between",
           overflow: "hidden",
         }}
       >
-        <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", width: "100%" }}>
+        <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1 }}>
           {status ? status : getWorkflowStatus()}
+        </div>
+        <div style={{ 
+          whiteSpace: "nowrap", 
+          marginLeft: "16px",
+          fontSize: 11,
+          color: "var(--muted)",
+          opacity: 0.8
+        }}>
+          {t("app.copyright")}
         </div>
       </footer>
     </div>
