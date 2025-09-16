@@ -84,7 +84,16 @@ The application will create a structured project folder with all necessary direc
 5. **Mark revisions** for segments that need improvement
 6. **Preview audio** with the built-in player
 
-### 8. Export Your Audiobook
+### 8. Monitor Costs and Usage
+
+**Go to the Cost tab:**
+1. **Review TTS usage** and associated costs
+2. **Track processing time** for different operations
+3. **Set budgets and alerts** to control spending
+4. **Analyze efficiency** - see where time and money are spent
+5. **Monitor cache effectiveness** - track savings from reused audio
+
+### 9. Export Your Audiobook
 
 **Go to the Packaging tab:**
 1. **Choose export format** (M4B for iTunes/Apple Books, ZIP for Google Play)
@@ -153,7 +162,8 @@ The navigation menu shows available features based on your progress:
 - **🎭 Casting** - Voice assignment to characters
 - **📋 Planning** - AI-powered content segmentation
 - **🎤 Voice** - Audio production and processing
-- **📦 Packaging** - Export and final assembly
+- **� Cost** - Usage tracking and cost management
+- **�📦 Packaging** - Export and final assembly
 - **⚙️ Settings** - Application and project preferences
 
 ### Status Indicators
@@ -195,6 +205,13 @@ The navigation menu shows available features based on your progress:
 - **Listen to samples** - Don't skip the preview step
 - **Check transitions** - Ensure smooth flow between segments
 - **Validate metadata** - Ensure chapter titles and info are correct
+
+### 7. Cost Management
+- **Monitor usage regularly** - Check the Cost tab frequently
+- **Set realistic budgets** - Use alerts to avoid overruns
+- **Leverage caching** - Reuse audio when possible to save costs
+- **Review TTS efficiency** - Optimize segments to reduce unnecessary generation
+- **Track project costs** - Keep detailed records for business planning
 
 ---
 
