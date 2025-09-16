@@ -209,7 +209,7 @@ export default function Home() {
     setMsg("");
     const name = projName.trim();
     if (!parentDir || !name) {
-      setMsg("Selecciona una carpeta y un nombre.");
+      setMsg(t("home.validationError"));
       return;
     }
     const res = (await window.khipu!.call("project:create", {
@@ -493,7 +493,7 @@ export default function Home() {
             border: "1px dashed var(--border)"
           }}>
             <p style={{ fontSize: "16px", marginBottom: "8px" }}>{t("home.noRecents")}</p>
-            <p style={{ fontSize: "14px" }}>Create a new project or open an existing one to get started.</p>
+            <p style={{ fontSize: "14px" }}>{t("home.noRecentsDescription")}</p>
           </div>
         ) : (
           <div style={{ 

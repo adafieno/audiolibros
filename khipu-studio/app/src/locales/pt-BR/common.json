@@ -107,6 +107,10 @@
     "string": "Nenhum projeto recente.",
     "comment": "Mensagem quando não há projetos recentes"
   },
+  "home.noRecentsDescription": {
+    "string": "Crie um novo projeto ou abra um existente para começar.",
+    "comment": "Texto descritivo mostrado quando não há projetos recentes"
+  },
   "home.createError": {
     "string": "Não foi possível criar o projeto.",
     "comment": "Mensagem de erro quando a criação do projeto falha"
@@ -114,6 +118,10 @@
   "home.createSuccess": {
     "string": "Projeto criado ✔",
     "comment": "Mensagem de sucesso quando o projeto é criado"
+  },
+  "home.validationError": {
+    "string": "Por favor, selecione uma pasta e insira um nome de projeto.",
+    "comment": "Erro de validação ao criar um novo projeto sem campos obrigatórios"
   },
   "home.structurePreview": {
     "string": "Estrutura a criar",

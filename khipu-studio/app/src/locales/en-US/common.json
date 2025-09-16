@@ -108,6 +108,10 @@
     "string": "No recent projects.",
     "comment": "Message when no recent projects exist"
   },
+  "home.noRecentsDescription": {
+    "string": "Create a new project or open an existing one to get started.",
+    "comment": "Description text shown when no recent projects exist"
+  },
   "home.createError": {
     "string": "Could not create project.",
     "comment": "Error message when project creation fails"
@@ -115,6 +119,10 @@
   "home.createSuccess": {
     "string": "Project created ✔",
     "comment": "Success message when project is created"
+  },
+  "home.validationError": {
+    "string": "Please select a folder and enter a project name.",
+    "comment": "Validation error when creating a new project without required fields"
   },
   "home.structurePreview": {
     "string": "Structure to create",
