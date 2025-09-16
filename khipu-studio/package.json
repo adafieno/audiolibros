@@ -3,6 +3,7 @@
     "playwright": "^1.55.0"
   },
   "dependencies": {
-    "puppeteer": "^24.21.0"
+    "puppeteer": "^24.21.0",
+    "screenshot-desktop": "^1.15.2"
   }
 }

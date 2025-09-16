@@ -126,119 +126,73 @@ async function captureForOneLanguage(config) {
     });
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    console.log(`🎯 Phase 1 complete for ${config.name}: Empty state screenshots captured`);
-    console.log(`⚠️  MANUAL STEP REQUIRED:`);
-    console.log(`   1. Please open the test project in the browser window`); 
-    console.log(`   2. Navigate to: File → Open Project → ${TEST_PROJECT_PATH}`);
-    console.log(`   3. Wait for project to fully load (sidebar with tabs appears)`);
-    console.log(`   4. Press ENTER in this terminal to continue...`);
+    console.log(`✅ Phase 1 complete for ${config.name}: Empty state screenshots captured`);
+    console.log('');
+    console.log('🔄 Starting Phase 2: Screenshots with project data');
+    console.log('📝 Note: For populated screenshots, either:');
+    console.log('   - Use existing screenshots from Phase 1, or');
+    console.log('   - Manually open a project and run a separate script');
+    console.log('');
     
-    // Wait for user input
-    await new Promise((resolve) => {
-      process.stdin.once('data', () => resolve());
-    });
+    // Continue with navigation screenshots using empty state
+    // This will show the interface structure even without project data
     
-    console.log('📂 Continuing with populated project screenshots...');
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // === NAVIGATION TOUR (EMPTY STATE) ===
+    console.log('🧭 Section 2: Application Navigation Tour');
     
-    // === BOOK CONFIGURATION ===
-    console.log('📖 Section 2: Book Configuration');
+    // Try to navigate through available tabs to show interface structure
     
-    // 04. Navigate to Book tab
-    await page.evaluate(() => {
-      const bookLink = document.querySelector('a[href="/book"], a[href*="book"]');
-      if (bookLink) bookLink.click();
-    });
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    await takeScreenshot('book-config-page', 'Book configuration page');
+    // Try to navigate through available tabs to show interface structure
     
-    // === MANUSCRIPT MANAGEMENT ===
-    console.log('📑 Section 3: Manuscript Management');
+    // 04. Try Settings first (should always be available)
+    try {
+      await page.evaluate(() => {
+        const settingsLink = document.querySelector('a[href="/settings"], a[href*="settings"]');
+        if (settingsLink) settingsLink.click();
+      });
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      await takeScreenshot('settings-page', 'Settings and configuration page (empty state)');
+    } catch (error) {
+      console.log('   ⚠️  Could not navigate to Settings');
+    }
     
-    // 05. Navigate to Manuscript tab
-    await page.evaluate(() => {
-      const manuscriptLink = document.querySelector('a[href="/manuscript"], a[href*="manuscript"]');
-      if (manuscriptLink) manuscriptLink.click();
-    });
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    await takeScreenshot('manuscript-page', 'Manuscript management page');
+    // 05. Back to home
+    try {
+      await page.evaluate(() => {
+        const homeLink = document.querySelector('a[href="/"], a[href="/home"]');
+        if (homeLink) homeLink.click();
+      });
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      await takeScreenshot('home-after-navigation', 'Home screen after navigation tour');
+    } catch (error) {
+      console.log('   ⚠️  Could not navigate back to Home');
+    }
     
-    // === CHARACTER MANAGEMENT (DOSSIER) ===
-    console.log('👥 Section 4: Character Management');
+    // === PROJECT WORKFLOW DEMO (EMPTY STATE) ===
+    console.log('📋 Section 3: Project Workflow Interface (Empty State)');
     
-    // 06. Navigate to Dossier tab
-    await page.evaluate(() => {
-      const dossierLink = document.querySelector('a[href="/dossier"], a[href*="dossier"]');
-      if (dossierLink) dossierLink.click();
-    });
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    await takeScreenshot('dossier-page', 'Character management (Dossier) page');
+    // Note: These will show the interface structure without data
+    const workflowPages = [
+      { path: '/book', name: 'book-interface', description: 'Book configuration interface' },
+      { path: '/manuscript', name: 'manuscript-interface', description: 'Manuscript management interface' },
+      { path: '/dossier', name: 'dossier-interface', description: 'Character management interface' },
+      { path: '/casting', name: 'casting-interface', description: 'Voice casting interface' },
+      { path: '/planning', name: 'planning-interface', description: 'Content planning interface' },
+      { path: '/voice', name: 'voice-interface', description: 'Audio production interface' },
+      { path: '/packaging', name: 'packaging-interface', description: 'Export and packaging interface' }
+    ];
     
-    // === VOICE CASTING ===
-    console.log('🎭 Section 5: Voice Casting');
-    
-    // 07. Navigate to Casting tab
-    await page.evaluate(() => {
-      const castingLink = document.querySelector('a[href="/casting"], a[href*="casting"]');
-      if (castingLink) castingLink.click();
-    });
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    await takeScreenshot('casting-page', 'Voice casting page');
-    
-    // === CONTENT PLANNING ===
-    console.log('📋 Section 6: Content Planning');
-    
-    // 08. Navigate to Planning tab
-    await page.evaluate(() => {
-      const planningLink = document.querySelector('a[href="/planning"], a[href*="planning"]');
-      if (planningLink) planningLink.click();
-    });
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    await takeScreenshot('planning-page', 'Content planning page');
-    
-    // === AUDIO PRODUCTION ===
-    console.log('🎤 Section 7: Audio Production');
-    
-    // 09. Navigate to Voice/Audio tab
-    await page.evaluate(() => {
-      const voiceLink = document.querySelector('a[href="/voice"], a[href*="voice"], a[href="/audio"], a[href*="audio"]');
-      if (voiceLink) voiceLink.click();
-    });
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    await takeScreenshot('audio-production-page', 'Audio production page');
-    
-    // === EXPORT & PACKAGING ===
-    console.log('📦 Section 8: Export & Packaging');
-    
-    // 10. Navigate to Packaging tab
-    await page.evaluate(() => {
-      const packagingLink = document.querySelector('a[href="/packaging"], a[href*="packaging"]');
-      if (packagingLink) packagingLink.click();
-    });
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    await takeScreenshot('packaging-page', 'Export and packaging page');
-    
-    // === SETTINGS & CONFIGURATION ===
-    console.log('⚙️ Section 9: Settings & Configuration');
-    
-    // 11. Navigate to Settings tab
-    await page.evaluate(() => {
-      const settingsLink = document.querySelector('a[href="/settings"], a[href*="settings"]');
-      if (settingsLink) settingsLink.click();
-    });
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    await takeScreenshot('settings-page', 'Settings and configuration page');
-    
-    // === NAVIGATION & HOME WITH PROJECT ===
-    console.log('🏠 Section 10: Navigation & Home with Project');
-    
-    // 12. Navigate back to Home
-    await page.evaluate(() => {
-      const homeLink = document.querySelector('a[href="/"], a[href="/home"]');
-      if (homeLink) homeLink.click();
-    });
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    await takeScreenshot('home-with-project', 'Home screen with project loaded');
+    for (const workflowPage of workflowPages) {
+      try {
+        // Try direct navigation to URL
+        await page.goto(`http://localhost:5173${workflowPage.path}`, { waitUntil: 'networkidle2' });
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        await takeScreenshot(workflowPage.name, workflowPage.description);
+        console.log(`   ✅ Captured ${workflowPage.name}`);
+      } catch (error) {
+        console.log(`   ⚠️  Could not capture ${workflowPage.name}: ${error.message}`);
+      }
+    }
 
     console.log(`✅ ${config.name} user guide screenshots completed!`);
     
