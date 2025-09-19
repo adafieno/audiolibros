@@ -1,7 +1,6 @@
 // lib/audio-cache.ts
 import { cleanupAudioUrl, type AuditionOptions, type AuditionResult } from "./tts-audition";
 import type { AudioCacheMetadata } from "../global";
-import { CostTrackingService } from './cost-tracking-service';
 
 // Re-export types for convenience
 export type { AuditionOptions, AuditionResult } from "./tts-audition";
@@ -368,78 +367,21 @@ export async function generateCachedAudition(
     text: options.text || "default" 
   });
 
-  // Get cost tracking service instance
-  const costTrackingService = CostTrackingService.getInstance();
-  
-  // Wrap the entire audition process with automation tracking
-  return costTrackingService.trackAutomatedOperation(
-    'voice_audition',
-    async () => {
-      // If caching is disabled, generate directly
-      if (!useCache) {
-        console.log("🚫 Cache disabled, generating directly");
-        const { generateAuditionDirect } = await import('./tts-audition');
-        return generateAuditionDirect(options);
-      }
+  // If caching is disabled, generate directly
+  if (!useCache) {
+    console.log("🚫 Cache disabled, generating directly");
+    const { generateAuditionDirect } = await import('./tts-audition');
+    return generateAuditionDirect(options);
+  }
 
-      const cacheKey = generateCacheKey(options);
-      console.log("🔑 Cache key generated", { cacheKey: cacheKey.substring(0, 20) + "..." });
-      
-      // Try to get from cache first
+  const cacheKey = generateCacheKey(options);
+  console.log("🔑 Cache key generated", { cacheKey: cacheKey.substring(0, 20) + "..." });
+  
+  // Try to get from cache first
   try {
     const cachedUrl = await audioCache.get(cacheKey);
     if (cachedUrl) {
       console.log("✅ Found cached audio, playing");
-
-      // Track cost savings for cache hit
-      try {
-        const { costTrackingService } = await import('./cost-tracking-service');
-        
-        // Get project root from the global project store
-        const { useProject } = await import('../store/project');
-        const projectRoot = useProject.getState().root;
-        
-        if (projectRoot) {
-          await costTrackingService.setProjectRoot(projectRoot);
-          
-          // Get proper audition text (locale-aware)
-          const { getAuditionText } = await import('./tts-audition');
-          const segmentText = getAuditionText(options.voice.locale, options.config, options.text);
-          
-          // Determine TTS provider from voice engine
-          let provider: 'azure-tts' | 'openai-tts' = 'azure-tts';
-          switch (options.voice.engine) {
-            case 'azure':
-              provider = 'azure-tts';
-              break;
-            case 'openai':
-              provider = 'openai-tts';
-              break;
-            case 'elevenlabs':
-              provider = 'azure-tts'; // Fallback
-              break;
-            case 'google':
-              provider = 'azure-tts'; // Fallback
-              break;
-          }
-          
-          console.log(`📊 Tracking cached audition - provider: ${provider}, characters: ${segmentText.length} (SAVINGS)`);
-          
-          costTrackingService.trackTtsUsage({
-            provider: provider,
-            operation: 'voice_audition',
-            charactersProcessed: segmentText.length,
-            wasCached: true,
-            cacheHit: true,
-            page: options.page || 'unknown',
-            projectId: options.config.bookMeta?.title || 'unknown',
-            segmentId: `audition_${options.voice.id}`
-          });
-        }
-      } catch (costError) {
-        console.warn('Failed to track cached audition cost savings:', costError);
-      }
-
       return {
         success: true,
         audioUrl: cachedUrl,
@@ -464,94 +406,34 @@ export async function generateCachedAudition(
       error: result.error 
     });
 
-    // Track TTS cost for audition
-    try {
-      const { costTrackingService } = await import('./cost-tracking-service');
-      
-      // Get project root from the global project store
-      const { useProject } = await import('../store/project');
-      const projectRoot = useProject.getState().root;
-      
-      if (projectRoot && result.success) {
-        await costTrackingService.setProjectRoot(projectRoot);
-        
-        // Get proper audition text (locale-aware)
-        const { getAuditionText } = await import('./tts-audition');
-        const segmentText = getAuditionText(options.voice.locale, options.config, options.text);
-        
-        // Determine TTS provider from voice engine
-        let provider: 'azure-tts' | 'openai-tts' = 'azure-tts'; // default
-        switch (options.voice.engine) {
-          case 'azure':
-            provider = 'azure-tts';
-            break;
-          case 'openai':
-            provider = 'openai-tts';
-            break;
-          case 'elevenlabs':
-            provider = 'azure-tts'; // Fallback to azure-tts for now since elevenlabs not in types
-            break;
-          case 'google':
-            provider = 'azure-tts'; // Fallback to azure-tts for now since google not in types
-            break;
-        }
-        
-        console.log(`📊 Tracking audition TTS cost - provider: ${provider}, characters: ${segmentText.length}`);
-        
-        costTrackingService.trackTtsUsage({
-          provider: provider,
-          operation: 'voice_audition',
-          charactersProcessed: segmentText.length,
-          wasCached: false,
-          cacheHit: false,
-          page: options.page || 'unknown',
-          projectId: options.config.bookMeta?.title || 'unknown',
-          segmentId: `audition_${options.voice.id}`
-        });
-      } else if (!projectRoot) {
-        console.warn('No project root available for audition cost tracking');
-      }
-    } catch (costError) {
-      console.warn('Failed to track audition TTS cost:', costError);
-    }
-    
-    // Cache successful results only
     if (result.success && result.audioUrl) {
-      console.log("💾 Caching successful result");
-      
-      // Store in memory cache with background file system persistence
+      // Cache the result for future use
       try {
-        await audioCache.setHybrid(cacheKey, result.audioUrl, {
+        const voiceOptions = {
           engine: options.voice.engine,
           id: options.voice.id,
           locale: options.voice.locale
-        });
+        };
         
+        await audioCache.setHybrid(cacheKey, result.audioUrl, voiceOptions);
+        console.log("📝 Cached new audition for future use");
       } catch (cacheError) {
-        console.warn("⚠️ Failed to cache result:", cacheError);
-        // Continue execution even if caching fails
+        console.warn("Failed to cache audition:", cacheError);
+        // Don't fail the whole operation due to caching issues
       }
-      
-      // Mark as new generation (not cached)
-      result.wasCached = false;
-    } else {
-      console.error("❌ TTS generation failed:", result.error);
     }
-    
-    return result;
+
+    return {
+      ...result,
+      wasCached: false // Mark as fresh generation
+    };
   } catch (error) {
     console.error("❌ Error in generateCachedAudition:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error in audio generation"
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Unknown error during TTS generation"
     };
   }
-    }, // End of automation tracking wrapper
-    {
-      page: 'casting', 
-      projectId: options.text ? 'current-project' : 'unknown'
-    }
-  );
 }
 
 /**

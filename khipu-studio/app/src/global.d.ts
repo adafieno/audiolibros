@@ -58,6 +58,7 @@ export interface KhipuRequestMap {
   "fs:write":   { in: { projectRoot: string; relPath: string; json?: boolean; content: unknown }; out: boolean };
   "fs:writeBinary": { in: { projectRoot: string; relPath: string; content: number[] }; out: boolean };
   "fs:readJson":{ in: { root: string; rel: string }; out: { data: unknown; path: string; raw: string } };
+  "fs:checkFileExists": { in: { filePath: string }; out: boolean };
 
   // File operations
   "file:exists": { in: string; out: boolean };
@@ -241,6 +242,34 @@ export interface KhipuRequestMap {
       sizeBytes?: number;
       modifiedTime?: string;
       error?: string;
+    };
+  };
+
+  // Simple segment audio generation
+  "audio:generateSegmentSimple": {
+    in: {
+      projectRoot: string;
+      chapterId: string;
+      segment: {
+        chunkId: string | number;
+        text: string;
+        voice: string;
+        segmentType: string;
+        sfxFile?: {
+          path: string;
+          filename: string;
+        };
+      };
+      projectConfig: unknown;
+      characters: unknown;
+    };
+    out: {
+      success: boolean;
+      error?: string;
+      outputPath?: string;
+      sizeBytes?: number;
+      duration?: number;
+      message?: string;
     };
   };
   

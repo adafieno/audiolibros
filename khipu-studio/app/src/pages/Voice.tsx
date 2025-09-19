@@ -790,222 +790,58 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
   const handleGenerateSegmentAudio = useCallback(async (rowIndex: number) => {
     const segment = audioSegments[rowIndex];
-    if (!segment || !selectedChapter || !audioProductionService || generatingAudio.has(segment.chunkId)) return;
+    if (!segment || !selectedChapter || !audioProductionService || !root || generatingAudio.has(segment.chunkId)) return;
 
-    console.log(`🎤 Starting TTS generation for segment ${segment.chunkId} at row ${rowIndex}`);
-    console.log(`🎤 Segment details:`, {
-      chunkId: segment.chunkId,
-      voice: segment.voice,
-      textLength: segment.text.length,
-      text: segment.text.substring(0, 100) + (segment.text.length > 100 ? '...' : '')
-    });
-
+    console.log(`🎤 Simple TTS generation for segment ${segment.chunkId} (index ${rowIndex})`);
+    console.log(`🎤 Segment chunkId: "${segment.chunkId}" (type: ${typeof segment.chunkId})`);
+    
     setGeneratingAudio(prev => new Set(prev).add(segment.chunkId));
     
     try {
-      // Use the existing TTS generation system from handlePlaySegment
-      // This ensures we get the same audio that the play button would generate
-      
-      if (!root) {
-        throw new Error("Project root not available");
-      }
-
-      console.log(`🎤 Generating TTS audio for segment ${segment.chunkId} using audio preview system`);
-      
-      // Load the same data that handlePlaySegment uses
-      const [projectConfig, charactersData, planData] = await Promise.all([
-        // Load project config
+      // Load project config and characters data
+      const [projectConfigResult, charactersResult] = await Promise.all([
         window.khipu!.call("fs:read", {
           projectRoot: root,
           relPath: "project.khipu.json",
           json: true,
         }).catch(() => null),
         
-        // Load characters data
         window.khipu!.call("fs:read", {
           projectRoot: root,
-          relPath: "dossier/characters.json",
+          relPath: "dossier/characters.json", 
           json: true,
-        }).catch(() => null),
-        
-        // Load plan data to get segment details
-        selectedChapter ? window.khipu!.call("fs:read", {
-          projectRoot: root,
-          relPath: `ssml/plans/${selectedChapter}.plan.json`,
-          json: true,
-        }).catch(() => null) : null
+        }).catch(() => null)
       ]);
 
       console.log(`🎤 Data loading results:`, {
-        hasProjectConfig: !!projectConfig,
-        hasCharactersData: !!charactersData,
-        hasPlanData: !!planData,
-        selectedChapter: selectedChapter
+        hasProjectConfig: !!projectConfigResult,
+        hasCharacters: !!charactersResult,
       });
 
-      // Find the full segment data from plan
-      let segmentData = null;
-      if (planData) {
-        const chunks = Array.isArray(planData) ? planData : (planData as { chunks?: unknown[] })?.chunks;
-        console.log(`🎤 Plan data structure:`, {
-          isArray: Array.isArray(planData),
-          hasChunks: !!(planData as { chunks?: unknown[] })?.chunks,
-          chunksLength: chunks?.length,
-          chunkIds: chunks?.map((chunk: unknown) => (chunk as { id?: string }).id).slice(0, 5)
-        });
-        
-        segmentData = chunks?.find((chunk: unknown) => (chunk as { id?: string }).id === segment.chunkId);
-        console.log(`🎤 Segment data search:`, {
-          lookingFor: segment.chunkId,
-          found: !!segmentData
-        });
+      if (!projectConfigResult || !charactersResult) {
+        throw new Error("Failed to load project configuration or characters data");
       }
 
-      // Find character data
-      let characterData = null;
-      if (charactersData && segment.voice && segment.voice !== "unassigned") {
-        const characters = Array.isArray(charactersData) ? charactersData : (charactersData as { characters?: unknown[] })?.characters;
-        console.log(`🎤 Characters data structure:`, {
-          isArray: Array.isArray(charactersData),
-          hasCharacters: !!characters,
-          charactersLength: characters?.length,
-          characterNames: characters?.map((char: unknown) => (char as { name?: string }).name).slice(0, 5),
-          lookingFor: segment.voice
-        });
-        
-        characterData = characters?.find((char: unknown) => {
-          const character = char as { name?: string; id?: string };
-          return character.name === segment.voice || character.id === segment.voice;
-        });
-        
-        console.log(`🎤 Character data search:`, {
-          lookingFor: segment.voice,
-          found: !!characterData,
-          foundCharacter: characterData ? (characterData as { name?: string }).name : null
-        });
-      }
-
-      console.log(`🎤 Final data check:`, {
-        hasSegmentData: !!segmentData,
-        hasCharacterData: !!characterData,
-        hasProjectConfig: !!projectConfig
-      });
-
-      if (!segmentData || !characterData || !projectConfig) {
-        const missingData = [];
-        if (!segmentData) missingData.push('segmentData');
-        if (!characterData) missingData.push('characterData');
-        if (!projectConfig) missingData.push('projectConfig');
-        
-        throw new Error(`Missing required data for TTS generation: ${missingData.join(', ')}`);
-      }
-
-      console.log('🎤 TTS data loaded, generating audio via generateCachedAudition');
-
-      // Generate TTS using the same system as handlePlaySegment
-      const { generateCachedAudition } = await import('../lib/audio-cache');
-
-      const voiceAssignment = (characterData as { voiceAssignment?: { voiceId: string; style?: string; styledegree?: number; rate_pct?: number; pitch_pct?: number } })?.voiceAssignment;
-      if (!voiceAssignment) {
-        throw new Error(`Character ${(characterData as { name?: string })?.name} has no voice assignment`);
-      }
-
-      console.log('🎤 Audition options:', {
-        voiceId: voiceAssignment.voiceId,
-        textLength: segment.text.length,
-        text: segment.text.substring(0, 50) + (segment.text.length > 50 ? '...' : ''),
-        style: voiceAssignment.style,
-        styledegree: voiceAssignment.styledegree,
-        rate_pct: voiceAssignment.rate_pct,
-        pitch_pct: voiceAssignment.pitch_pct
-      });
-
-      const characterTraits = characterData as { traits?: { gender?: string; age?: string; accent?: string } };
-
-      const voice = {
-        id: voiceAssignment.voiceId,
-        engine: "azure" as const,
-        locale: voiceAssignment.voiceId.startsWith("es-") ? voiceAssignment.voiceId.substring(0, 5) : "es-ES",
-        gender: (characterTraits?.traits?.gender === "M" || characterTraits?.traits?.gender === "F" ? characterTraits.traits.gender : "N") as "N" | "M" | "F",
-        age_hint: (["adult", "child", "teen", "elderly"].includes(characterTraits?.traits?.age || "") ? characterTraits?.traits?.age : "adult") as "adult" | "child" | "teen" | "elderly",
-        accent_tags: characterTraits?.traits?.accent ? [characterTraits.traits.accent] : [],
-        styles: voiceAssignment.style ? [voiceAssignment.style] : [],
-        description: `Voice for ${(characterData as { name?: string })?.name || segment.chunkId}`
-      };
-
-      const auditionOptions = {
-        voice: voice,
-        config: projectConfig as ProjectConfig,
-        text: segment.text,
-        style: voiceAssignment.style,
-        styledegree: voiceAssignment.styledegree,
-        rate_pct: voiceAssignment.rate_pct,
-        pitch_pct: voiceAssignment.pitch_pct
-      };
-
-      console.log('🎤 About to call generateCachedAudition with voice:', voice.id);
-      
-      // Generate TTS audio (bypassing cache to get fresh audio)
-      const ttsResult = await generateCachedAudition(auditionOptions, false);
-      
-      console.log('🎤 generateCachedAudition result:', {
-        success: ttsResult.success,
-        hasAudioUrl: !!ttsResult.audioUrl,
-        audioUrl: ttsResult.audioUrl ? ttsResult.audioUrl.substring(0, 100) + (ttsResult.audioUrl.length > 100 ? '...' : '') : 'none',
-        error: ttsResult.error,
-        wasCached: ttsResult.wasCached
-      });
-      
-      if (!ttsResult.success || !ttsResult.audioUrl) {
-        throw new Error(ttsResult.error || 'Failed to generate TTS audio');
-      }
-
-      console.log(`✅ Generated TTS audio: ${ttsResult.audioUrl}, now saving to project directory`);
-      
-      // Read the audio data from the generated URL
-      let audioData: ArrayBuffer;
-      if (ttsResult.audioUrl.startsWith('blob:')) {
-        // Handle blob URL
-        const response = await fetch(ttsResult.audioUrl);
-        audioData = await response.arrayBuffer();
-      } else if (ttsResult.audioUrl.startsWith('file://')) {
-        // Handle file URL by reading from the file system
-        const filePath = ttsResult.audioUrl.replace('file://', '').replace(/^\/([A-Z]:)/, '$1');
-        audioData = await window.khipu!.call('fs:readAudioFile', { filePath });
-      } else {
-        throw new Error('Unsupported audio URL format');
-      }
-      
-      // Convert to base64 for IPC transmission
-      const audioBase64 = btoa(String.fromCharCode(...new Uint8Array(audioData)));
-      
-      // Save the audio to the project directory
-      const saveResult = await window.khipu!.call("audio:saveTtsToProject", {
-        projectRoot: root,
+      // Use the simple generation handler
+      const result = await window.khipu!.call("audio:generateSegmentSimple", {
+        projectRoot: root!,
         chapterId: selectedChapter,
-        chunkId: segment.chunkId,
-        audioData: audioBase64,
-        text: segment.text
+        segment: {
+          chunkId: segment.chunkId,
+          text: segment.text,
+          voice: segment.voice,
+          segmentType: segment.segmentType,
+          sfxFile: segment.sfxFile
+        },
+        projectConfig: projectConfigResult,
+        characters: (charactersResult as { characters?: unknown[] })?.characters || charactersResult
       });
-      
-      if (!(saveResult as { success?: boolean })?.success) {
-        throw new Error((saveResult as { error?: string })?.error || "Failed to save TTS audio to project");
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to generate segment audio");
       }
-      
-      console.log(`✅ Saved TTS audio to project: ${(saveResult as { outputPath?: string })?.outputPath}`);
-      
-      // Update audio production metadata
-      await audioProductionService.markSegmentAsCompleted(
-        selectedChapter,
-        segment.chunkId,
-        {
-          filename: `${segment.chunkId}.wav`,
-          duration: (saveResult as { duration?: number })?.duration || 10,
-          sampleRate: 44100,
-          bitDepth: 16,
-          fileSize: (saveResult as { sizeBytes?: number })?.sizeBytes || 1024000
-        }
-      );
+
+      console.log(`✅ Simple generation complete: ${segment.chunkId}`);
       
       // Update segment to show it has audio
       setAudioSegments(prev => {
@@ -1015,14 +851,8 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       });
 
     } catch (error) {
-      console.error("❌ Failed to generate TTS audio:", error);
-      console.error("❌ Error details:", {
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        segmentId: segment.chunkId,
-        voice: segment.voice
-      });
-
+      console.error(`❌ Simple generation failed for ${segment.chunkId}:`, error);
+      throw error;
     } finally {
       setGeneratingAudio(prev => {
         const next = new Set(prev);
@@ -1050,43 +880,63 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       console.log(`📝 Phase 1: Generating individual segments (${audioSegments.length} total)`);
       
       let segmentIndex = 0;
-      const segmentsToGenerate = audioSegments.filter(s => 
-        s.segmentType !== 'sfx' && !s.hasAudio
-      );
       
-      console.log(`🎯 Found ${segmentsToGenerate.length} segments that need audio generation`);
-      
+      // Check which segments actually need generation by verifying file existence
+      const segmentsNeedingGeneration = [];
       for (let i = 0; i < audioSegments.length; i++) {
         const segment = audioSegments[i];
         
-        // Skip SFX segments since they already have audio files
+        // Skip SFX segments since they should already have audio files
         if (segment.segmentType === 'sfx' && segment.sfxFile) {
-          console.log(`🎵 Skipping SFX segment: ${segment.chunkId} (already has audio)`);
+          console.log(`🎵 Skipping SFX segment: ${segment.chunkId} (SFX file)`);
           continue;
         }
         
-        // Generate speech segments that don't have audio
-        if (!segment.hasAudio) {
-          segmentIndex++;
-          setChapterGenerationProgress({
-            phase: 'segments',
-            currentSegment: segmentIndex,
-            totalSegments: segmentsToGenerate.length,
-            message: `Generating segment ${segmentIndex}/${segmentsToGenerate.length}: ${segment.chunkId}`
-          });
-          
-          console.log(`🎙️ Generating speech segment ${segmentIndex}/${segmentsToGenerate.length}: ${segment.chunkId}`);
-          
-          try {
-            await handleGenerateSegmentAudio(i);
-            console.log(`✅ Successfully generated: ${segment.chunkId}`);
-          } catch (segmentError) {
-            console.error(`❌ Failed to generate segment ${segment.chunkId}:`, segmentError);
-            const errorMessage = segmentError instanceof Error ? segmentError.message : String(segmentError);
-            throw new Error(`Failed to generate audio for segment ${segment.chunkId}: ${errorMessage}`);
+        // For speech segments, check if the actual audio file exists
+        const segmentFilePath = `${root}/audio/wav/${selectedChapter}/${segment.chunkId}.wav`;
+        try {
+          const fileExists = await window.khipu!.call('fs:checkFileExists', { filePath: segmentFilePath });
+          if (!fileExists) {
+            console.log(`🎙️ Segment ${segment.chunkId} needs generation (file doesn't exist)`);
+            segmentsNeedingGeneration.push({ segment, index: i });
+          } else {
+            console.log(`✅ Segment ${segment.chunkId} already has audio file`);
           }
-        } else {
-          console.log(`✅ Speech segment already has audio: ${segment.chunkId}`);
+        } catch {
+          console.log(`🎙️ Segment ${segment.chunkId} needs generation (couldn't verify file existence)`);
+          segmentsNeedingGeneration.push({ segment, index: i });
+        }
+      }
+      
+      console.log(`🎯 Found ${segmentsNeedingGeneration.length} segments that need audio generation`);
+      
+      console.log(`🎤 All segments for debugging:`, audioSegments.map((seg, idx) => ({
+        index: idx,
+        chunkId: seg.chunkId,
+        chunkIdType: typeof seg.chunkId,
+        voice: seg.voice,
+        hasAudio: seg.hasAudio,
+        segmentType: seg.segmentType
+      })));
+
+      for (const { segment, index } of segmentsNeedingGeneration) {
+        segmentIndex++;
+        setChapterGenerationProgress({
+          phase: 'segments',
+          currentSegment: segmentIndex,
+          totalSegments: segmentsNeedingGeneration.length,
+          message: `Generating segment ${segmentIndex}/${segmentsNeedingGeneration.length}: ${segment.chunkId}`
+        });
+        
+        console.log(`🎙️ Generating speech segment ${segmentIndex}/${segmentsNeedingGeneration.length}: ${segment.chunkId}`);
+        
+        try {
+          await handleGenerateSegmentAudio(index);
+          console.log(`✅ Successfully generated: ${segment.chunkId}`);
+        } catch (segmentError) {
+          console.error(`❌ Failed to generate segment ${segment.chunkId}:`, segmentError);
+          const errorMessage = segmentError instanceof Error ? segmentError.message : String(segmentError);
+          throw new Error(`Failed to generate audio for segment ${segment.chunkId}: ${errorMessage}`);
         }
       }
       

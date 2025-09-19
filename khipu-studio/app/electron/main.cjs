@@ -662,6 +662,17 @@ function createWin() {
       return { data: null, path: path.join(root, rel), raw: "" };
     }
   });
+  
+  ipcMain.handle("fs:checkFileExists", async (_e, { filePath }) => {
+    try {
+      const absPath = path.resolve(filePath);
+      return fs.existsSync(absPath);
+    } catch (error) {
+      console.error(`[fs:checkFileExists] Error checking file ${filePath}:`, error);
+      return false;
+    }
+  });
+
         // Character detection trigger (runs python script inside project root)
         ipcMain.handle("characters:detect", async (_e, { projectRoot }) => {
           if (!projectRoot) throw new Error("Missing projectRoot");
@@ -1610,9 +1621,9 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
         '-f', 'concat',
         '-safe', '0',
         '-i', tempConcatFile,
-        // Standardize output format for consistent playback
-        '-acodec', 'pcm_s16le',  // 16-bit PCM
-        '-ar', '44100',          // 44.1kHz sample rate
+        // Normalize all inputs to consistent format
+        '-c:a', 'pcm_s16le',     // 16-bit PCM codec
+        '-ar', '44100',          // Force 44.1kHz sample rate for all inputs
         '-ac', '1',              // Mono channel
         '-y',                    // Overwrite output file
         outputPath
@@ -1708,6 +1719,205 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
       return {
         success: false,
         error: error.message
+      };
+    }
+  });
+
+  // Simple segment audio generation handler
+  ipcMain.handle("audio:generateSegmentSimple", async (_e, { projectRoot, chapterId, segment, projectConfig, characters }) => {
+    try {
+      console.log(`🎙️ Simple generation for segment: ${segment.chunkId}`);
+      console.log(`🎙️ Segment data:`, {
+        chunkId: segment.chunkId,
+        text: segment.text ? `${segment.text.substring(0, 50)}...` : 'NO TEXT',
+        voice: segment.voice,
+        segmentType: segment.segmentType,
+        sfxFile: segment.sfxFile
+      });
+      
+      // Handle SFX segments - they don't need generation, just validation
+      if (segment.segmentType === 'sfx' && segment.sfxFile) {
+        const sfxPath = path.join(projectRoot, segment.sfxFile.path);
+        if (fs.existsSync(sfxPath)) {
+          console.log(`✅ SFX segment verified: ${segment.chunkId}`);
+          return { success: true, message: "SFX file already exists" };
+        } else {
+          throw new Error(`SFX file not found: ${sfxPath}`);
+        }
+      }
+      
+      // Handle TTS segments
+      if (!segment.text || !segment.voice) {
+        throw new Error("Missing text or voice for TTS generation");
+      }
+      
+      // Find character data
+      console.log(`🎤 Looking for character: "${segment.voice}" (type: ${typeof segment.voice})`);
+      const character = characters.find(c => c.id === segment.voice || c.name === segment.voice);
+      if (!character) {
+        throw new Error(`Character not found: ${segment.voice}`);
+      }
+      
+      console.log(`🎤 Found character:`, {
+        id: character.id,
+        name: character.name,
+        voiceAssignment: character.voiceAssignment,
+        hasVoiceAssignment: !!character.voiceAssignment,
+        voiceId: character.voiceAssignment?.voiceId
+      });
+      
+      // Get voice configuration from character's voice assignment
+      const voiceAssignment = character.voiceAssignment;
+      if (!voiceAssignment || !voiceAssignment.voiceId) {
+        throw new Error(`No voice assignment found for character: ${character.name}`);
+      }
+      
+      const voiceId = voiceAssignment.voiceId;
+      console.log(`🎤 Using voice ${voiceId} for character ${character.name}`);
+      
+      // Build SSML for Azure TTS
+      const credentials = projectConfig.creds?.tts?.azure;
+      if (!credentials?.key || !credentials?.region) {
+        throw new Error("Azure TTS credentials not configured");
+      }
+      
+      // Build prosody attributes using voice assignment settings
+      let prosodyAttrs = "";
+      if (voiceAssignment.rate_pct) {
+        prosodyAttrs += ` rate="${voiceAssignment.rate_pct > 0 ? '+' : ''}${voiceAssignment.rate_pct}%"`;
+      }
+      if (voiceAssignment.pitch_pct) {
+        prosodyAttrs += ` pitch="${voiceAssignment.pitch_pct > 0 ? '+' : ''}${voiceAssignment.pitch_pct}%"`;
+      }
+      
+      // Build SSML
+      let innerContent = segment.text;
+      if (prosodyAttrs) {
+        innerContent = `<prosody${prosodyAttrs}>${innerContent}</prosody>`;
+      }
+      if (voiceAssignment.style && voiceAssignment.style !== "none") {
+        const styledegree = voiceAssignment.styledegree !== undefined ? ` styledegree="${voiceAssignment.styledegree}"` : "";
+        innerContent = `<mstts:express-as style="${voiceAssignment.style}"${styledegree}>${innerContent}</mstts:express-as>`;
+      }
+      
+      // Extract locale from voice ID (e.g., "es-PE-AlexNeural" -> "es-PE")
+      const locale = voiceId.split('-').slice(0, 2).join('-');
+      
+      const ssml = `
+        <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="${locale}">
+          <voice name="${voiceId}">
+            ${innerContent}
+          </voice>
+        </speak>
+      `;
+      
+      console.log(`🎤 Generated SSML for ${segment.chunkId}, calling Azure TTS...`);
+      
+      // Get Azure token
+      const tokenResponse = await fetch(`https://${credentials.region}.api.cognitive.microsoft.com/sts/v1.0/issueToken`, {
+        method: "POST",
+        headers: {
+          "Ocp-Apim-Subscription-Key": credentials.key,
+          "Content-Length": "0",
+        },
+      });
+      
+      if (!tokenResponse.ok) {
+        throw new Error(`Failed to get Azure token: ${tokenResponse.status}`);
+      }
+      
+      const token = await tokenResponse.text();
+      
+      // Call Azure TTS
+      const ttsResponse = await fetch(`https://${credentials.region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/ssml+xml; charset=utf-8",
+          "X-Microsoft-OutputFormat": "riff-44100hz-16bit-mono-pcm", // WAV format
+          "User-Agent": "KhipuStudio/1.0",
+        },
+        body: ssml,
+      });
+      
+      if (!ttsResponse.ok) {
+        const errorText = await ttsResponse.text().catch(() => "");
+        throw new Error(`Azure TTS failed: ${ttsResponse.status} ${ttsResponse.statusText} - ${errorText}`);
+      }
+      
+      console.log(`✅ Azure TTS successful for ${segment.chunkId}, saving audio...`);
+      
+      // Get audio data and convert to proper format
+      const audioBuffer = await ttsResponse.arrayBuffer();
+      const targetPath = path.join('audio', 'wav', chapterId, `${segment.chunkId}.wav`);
+      
+      // Save directly with proper format using temporary file approach
+      const tempInputPath = path.join(__dirname, '../../temp', `tts_${segment.chunkId}_${Date.now()}.wav`);
+      await fsp.mkdir(path.dirname(tempInputPath), { recursive: true });
+      
+      // Write raw TTS data to temp file
+      await fsp.writeFile(tempInputPath, Buffer.from(audioBuffer));
+      
+      // Prepare output path
+      const targetFullPath = path.join(projectRoot, targetPath);
+      await fsp.mkdir(path.dirname(targetFullPath), { recursive: true });
+      
+      // Convert using SOX to ensure consistent format (44.1kHz mono 16-bit)
+      const processor = getAudioProcessor();
+      const { spawn } = require('child_process');
+      
+      const soxArgs = [
+        tempInputPath,
+        '-r', '44100',    // Sample rate: 44.1kHz
+        '-c', '1',        // Channels: mono
+        '-b', '16',       // Bit depth: 16-bit
+        targetFullPath
+      ];
+      
+      console.log(`🔧 Converting TTS audio: ${processor.soxPath} ${soxArgs.join(' ')}`);
+      
+      const soxProcess = spawn(processor.soxPath, soxArgs);
+      
+      let stderr = '';
+      soxProcess.stderr.on('data', (data) => {
+        stderr += data.toString();
+      });
+      
+      const exitCode = await new Promise((resolve) => {
+        soxProcess.on('close', resolve);
+        soxProcess.on('error', (error) => {
+          console.error('SOX process error:', error);
+          resolve(-1);
+        });
+      });
+      
+      // Clean up temp file
+      try {
+        await fsp.unlink(tempInputPath);
+      } catch (cleanupError) {
+        console.warn('Failed to clean up temp TTS file:', cleanupError);
+      }
+      
+      if (exitCode !== 0) {
+        console.error(`SOX stderr: ${stderr}`);
+        throw new Error(`SOX conversion failed (exit code ${exitCode}): ${stderr}`);
+      }
+      
+      const stats = await fsp.stat(targetFullPath);
+      console.log(`💾 Saved segment audio: ${path.basename(targetFullPath)} (${stats.size} bytes)`);
+      
+      return { 
+        success: true, 
+        outputPath: targetFullPath,
+        sizeBytes: stats.size,
+        duration: 10 // Rough estimate, could be calculated properly
+      };
+      
+    } catch (error) {
+      console.error(`❌ Simple generation failed for ${segment?.chunkId}:`, error);
+      return {
+        success: false,
+        error: error.message || "Unknown error during simple generation"
       };
     }
   });

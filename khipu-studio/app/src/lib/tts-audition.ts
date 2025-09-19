@@ -650,16 +650,8 @@ async function auditOpenAIVoice(voice: Voice, config: ProjectConfig, text: strin
  * Generate TTS audition for any supported engine with automatic caching
  */
 export async function generateAudition(options: AuditionOptions): Promise<AuditionResult> {
-  // Check if caching is enabled in the config (defaults to true)
-  const useCache = options.config.tts?.cache !== false;
-  
-  if (useCache) {
-    // Use the cached version for better performance
-    const { generateCachedAudition } = await import("./audio-cache");
-    return generateCachedAudition(options, true);
-  }
-  
-  // Fall back to direct generation
+  // Always use direct generation to avoid circular imports
+  // The caching will be handled at a higher level
   return generateAuditionDirect(options);
 }
 
