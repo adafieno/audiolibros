@@ -836,25 +836,68 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         }).catch(() => null) : null
       ]);
 
+      console.log(`🎤 Data loading results:`, {
+        hasProjectConfig: !!projectConfig,
+        hasCharactersData: !!charactersData,
+        hasPlanData: !!planData,
+        selectedChapter: selectedChapter
+      });
+
       // Find the full segment data from plan
       let segmentData = null;
       if (planData) {
         const chunks = Array.isArray(planData) ? planData : (planData as { chunks?: unknown[] })?.chunks;
+        console.log(`🎤 Plan data structure:`, {
+          isArray: Array.isArray(planData),
+          hasChunks: !!(planData as { chunks?: unknown[] })?.chunks,
+          chunksLength: chunks?.length,
+          chunkIds: chunks?.map((chunk: unknown) => (chunk as { id?: string }).id).slice(0, 5)
+        });
+        
         segmentData = chunks?.find((chunk: unknown) => (chunk as { id?: string }).id === segment.chunkId);
+        console.log(`🎤 Segment data search:`, {
+          lookingFor: segment.chunkId,
+          found: !!segmentData
+        });
       }
 
       // Find character data
       let characterData = null;
       if (charactersData && segment.voice && segment.voice !== "unassigned") {
         const characters = Array.isArray(charactersData) ? charactersData : (charactersData as { characters?: unknown[] })?.characters;
+        console.log(`🎤 Characters data structure:`, {
+          isArray: Array.isArray(charactersData),
+          hasCharacters: !!characters,
+          charactersLength: characters?.length,
+          characterNames: characters?.map((char: unknown) => (char as { name?: string }).name).slice(0, 5),
+          lookingFor: segment.voice
+        });
+        
         characterData = characters?.find((char: unknown) => {
           const character = char as { name?: string; id?: string };
           return character.name === segment.voice || character.id === segment.voice;
         });
+        
+        console.log(`🎤 Character data search:`, {
+          lookingFor: segment.voice,
+          found: !!characterData,
+          foundCharacter: characterData ? (characterData as { name?: string }).name : null
+        });
       }
 
+      console.log(`🎤 Final data check:`, {
+        hasSegmentData: !!segmentData,
+        hasCharacterData: !!characterData,
+        hasProjectConfig: !!projectConfig
+      });
+
       if (!segmentData || !characterData || !projectConfig) {
-        throw new Error("Missing required data for TTS generation (segment, character, or project config)");
+        const missingData = [];
+        if (!segmentData) missingData.push('segmentData');
+        if (!characterData) missingData.push('characterData');
+        if (!projectConfig) missingData.push('projectConfig');
+        
+        throw new Error(`Missing required data for TTS generation: ${missingData.join(', ')}`);
       }
 
       console.log('🎤 TTS data loaded, generating audio via generateCachedAudition');
