@@ -673,6 +673,55 @@ function createWin() {
     }
   });
 
+  ipcMain.handle("fs:cleanupChapterFiles", async (_e, { projectRoot, chapterId }) => {
+    try {
+      const chapterDir = path.join(projectRoot, 'audio', 'wav', chapterId);
+      let deletedCount = 0;
+      
+      if (fs.existsSync(chapterDir)) {
+        const files = await fsp.readdir(chapterDir);
+        console.log(`🧹 Cleaning up ${files.length} files in chapter ${chapterId}`);
+        
+        for (const file of files) {
+          if (file.endsWith('.wav')) {
+            const filePath = path.join(chapterDir, file);
+            try {
+              await fsp.unlink(filePath);
+              deletedCount++;
+              console.log(`🗑️  Deleted: ${file}`);
+            } catch (deleteError) {
+              console.warn(`Failed to delete ${file}:`, deleteError);
+            }
+          }
+        }
+        
+        // Also clean up the complete chapter file if it exists
+        const completeFile = path.join(projectRoot, 'audio', 'wav', `${chapterId}_complete.wav`);
+        if (fs.existsSync(completeFile)) {
+          try {
+            await fsp.unlink(completeFile);
+            deletedCount++;
+            console.log(`🗑️  Deleted complete file: ${chapterId}_complete.wav`);
+          } catch (deleteError) {
+            console.warn(`Failed to delete complete file:`, deleteError);
+          }
+        }
+      }
+      
+      return {
+        success: true,
+        deletedCount: deletedCount
+      };
+    } catch (error) {
+      console.error(`[fs:cleanupChapterFiles] Error cleaning up chapter ${chapterId}:`, error);
+      return {
+        success: false,
+        error: error.message,
+        deletedCount: 0
+      };
+    }
+  });
+
         // Character detection trigger (runs python script inside project root)
         ipcMain.handle("characters:detect", async (_e, { projectRoot }) => {
           if (!projectRoot) throw new Error("Missing projectRoot");
@@ -1855,81 +1904,86 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
       // Write raw TTS data to temp file
       await fsp.writeFile(tempInputPath, Buffer.from(audioBuffer));
       
-      // Create a default processing chain for TTS audio
-      const processingChain = {
-        noiseCleanup: {
-          highPassFilter: {
-            enabled: true,
-            frequency: "80"
+      // Use the segment's processing chain or create a default one
+      let processingChain = segment.processingChain;
+      if (!processingChain) {
+        // Fallback to a basic TTS-optimized processing chain
+        processingChain = {
+          noiseCleanup: {
+            highPassFilter: {
+              enabled: true,
+              frequency: "80"
+            },
+            deClickDeEss: {
+              enabled: false,
+              intensity: "medium"
+            }
           },
-          deClickDeEss: {
-            enabled: false,
-            intensity: "medium"
+          dynamicControl: {
+            compression: {
+              enabled: true,
+              ratio: "2.5:1",
+              threshold: -12
+            },
+            limiter: {
+              enabled: true,
+              ceiling: -1
+            }
+          },
+          eqShaping: {
+            lowMidCut: {
+              enabled: false,
+              frequency: "200",
+              gain: -2
+            },
+            presenceBoost: {
+              enabled: true,
+              frequency: "3",
+              gain: 2
+            },
+            airLift: {
+              enabled: false,
+              frequency: "10",
+              gain: 1
+            }
+          },
+          spatialEnhancement: {
+            reverb: {
+              enabled: true,
+              type: "room_0.4",
+              wetMix: 8
+            },
+            stereoEnhancer: {
+              enabled: false,
+              width: 10
+            }
+          },
+          mastering: {
+            normalization: {
+              enabled: true,
+              targetLUFS: "-21"
+            },
+            peakLimiting: {
+              enabled: true,
+              maxPeak: -3
+            },
+            dithering: {
+              enabled: false,
+              bitDepth: "16"
+            }
           }
-        },
-        dynamicControl: {
-          compression: {
-            enabled: true,
-            ratio: "2.5:1",
-            threshold: -12
-          },
-          limiter: {
-            enabled: true,
-            ceiling: -1
-          }
-        },
-        eqShaping: {
-          lowMidCut: {
-            enabled: false,
-            frequency: "200",
-            gain: -2
-          },
-          presenceBoost: {
-            enabled: true,
-            frequency: "3",
-            gain: 2
-          },
-          airLift: {
-            enabled: false,
-            frequency: "10",
-            gain: 1
-          }
-        },
-        spatialEnhancement: {
-          reverb: {
-            enabled: true,
-            type: "room_0.4",
-            wetMix: 8
-          },
-          stereoEnhancer: {
-            enabled: false,
-            width: 10
-          }
-        },
-        mastering: {
-          normalization: {
-            enabled: true,
-            targetLUFS: "-21"
-          },
-          peakLimiting: {
-            enabled: true,
-            maxPeak: -3
-          },
-          dithering: {
-            enabled: false,
-            bitDepth: "16"
-          }
-        }
-      };
+        };
+      }
       
       // Use the audio processor to apply the full processing chain
       const targetPath = path.join('audio', 'wav', chapterId, `${segment.chunkId}.wav`);
       const targetFullPath = path.join(projectRoot, targetPath);
       await fsp.mkdir(path.dirname(targetFullPath), { recursive: true });
       
-      // Generate cache key for processed audio
+      // Generate cache key for processed audio with TTS version identifier
       const processor = getAudioProcessor();
-      const cacheKey = processor.generateCacheKey(tempInputPath, processingChain);
+      const baseCacheKey = processor.generateCacheKey(tempInputPath, processingChain);
+      const cacheKey = `tts_v2_${baseCacheKey}`; // v2 indicates full processing chain
       
       console.log(`🎛️  Applying full audio processing chain to segment ${segment.chunkId}...`);
       

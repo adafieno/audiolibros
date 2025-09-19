@@ -831,7 +831,8 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           text: segment.text,
           voice: segment.voice,
           segmentType: segment.segmentType,
-          sfxFile: segment.sfxFile
+          sfxFile: segment.sfxFile,
+          processingChain: segment.processingChain || getCleanPolishedPreset()
         },
         projectConfig: projectConfigResult,
         characters: (charactersResult as { characters?: unknown[] })?.characters || charactersResult
@@ -860,7 +861,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         return next;
       });
     }
-  }, [audioSegments, selectedChapter, audioProductionService, generatingAudio, root]);
+  }, [audioSegments, selectedChapter, audioProductionService, generatingAudio, root, getCleanPolishedPreset]);
 
   const handleGenerateChapterAudio = useCallback(async () => {
     if (!selectedChapter || audioSegments.length === 0 || !root) return;
@@ -876,12 +877,41 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     try {
       console.log(`🎬 Starting chapter audio generation for: ${selectedChapter}`);
       
-      // Phase 1: Generate all missing individual segments
+      // Step 0: Clean up existing chapter files to ensure fresh generation
+      console.log(`🧹 Step 0: Cleaning up existing chapter files`);
+      setChapterGenerationProgress({
+        phase: 'segments',
+        currentSegment: 0,
+        totalSegments: audioSegments.filter(s => s.segmentType !== 'sfx' || !s.hasAudio).length,
+        message: 'Cleaning up existing chapter files...'
+      });
+      
+      try {
+        // Clean up individual segment files
+        const cleanupResult = await window.khipu!.call('fs:cleanupChapterFiles', {
+          projectRoot: root,
+          chapterId: selectedChapter
+        });
+        
+        if (cleanupResult.success) {
+          console.log(`🗑️  Cleaned up ${cleanupResult.deletedCount} existing files`);
+        }
+      } catch (cleanupError) {
+        console.warn('Failed to cleanup existing files (continuing anyway):', cleanupError);
+      }
+      
+      // Phase 1: Generate all individual segments
       console.log(`📝 Phase 1: Generating individual segments (${audioSegments.length} total)`);
+      setChapterGenerationProgress({
+        phase: 'segments',
+        currentSegment: 0,
+        totalSegments: audioSegments.filter(s => s.segmentType !== 'sfx' || !s.hasAudio).length,
+        message: 'Preparing to generate individual segments...'
+      });
       
       let segmentIndex = 0;
       
-      // Check which segments actually need generation by verifying file existence
+      // Force generation of all speech segments (after cleanup, all need regeneration)
       const segmentsNeedingGeneration = [];
       for (let i = 0; i < audioSegments.length; i++) {
         const segment = audioSegments[i];
@@ -892,23 +922,12 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           continue;
         }
         
-        // For speech segments, check if the actual audio file exists
-        const segmentFilePath = `${root}/audio/wav/${selectedChapter}/${segment.chunkId}.wav`;
-        try {
-          const fileExists = await window.khipu!.call('fs:checkFileExists', { filePath: segmentFilePath });
-          if (!fileExists) {
-            console.log(`🎙️ Segment ${segment.chunkId} needs generation (file doesn't exist)`);
-            segmentsNeedingGeneration.push({ segment, index: i });
-          } else {
-            console.log(`✅ Segment ${segment.chunkId} already has audio file`);
-          }
-        } catch {
-          console.log(`🎙️ Segment ${segment.chunkId} needs generation (couldn't verify file existence)`);
-          segmentsNeedingGeneration.push({ segment, index: i });
-        }
+        // All speech segments need regeneration after cleanup
+        console.log(`🎙️ Segment ${segment.chunkId} will be generated (forced regeneration)`);
+        segmentsNeedingGeneration.push({ segment, index: i });
       }
       
-      console.log(`🎯 Found ${segmentsNeedingGeneration.length} segments that need audio generation`);
+      console.log(`🎯 Regenerating ${segmentsNeedingGeneration.length} segments`);
       
       console.log(`🎤 All segments for debugging:`, audioSegments.map((seg, idx) => ({
         index: idx,

@@ -59,6 +59,7 @@ export interface KhipuRequestMap {
   "fs:writeBinary": { in: { projectRoot: string; relPath: string; content: number[] }; out: boolean };
   "fs:readJson":{ in: { root: string; rel: string }; out: { data: unknown; path: string; raw: string } };
   "fs:checkFileExists": { in: { filePath: string }; out: boolean };
+  "fs:cleanupChapterFiles": { in: { projectRoot: string; chapterId: string }; out: { success: boolean; deletedCount: number; error?: string } };
 
   // File operations
   "file:exists": { in: string; out: boolean };
