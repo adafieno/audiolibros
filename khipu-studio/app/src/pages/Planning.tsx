@@ -1137,14 +1137,18 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
     if (!root || !projectConfig || chapters.length === 0) return;
 
     try {
-      // Check completion status of all chapters
-      const allStatuses = await Promise.all(
-        chapters.map(chapter => checkChapterStatus(chapter.id))
-      );
+      // Use existing chapter status from state to avoid redundant API calls
+      const allComplete = chapters.every(chapter => {
+        const status = chapterStatus.get(chapter.id);
+        return status?.isComplete === true;
+      });
       
-      const allComplete = allStatuses.every(status => status.isComplete);
+      // Only proceed if we have status for all chapters and they're all complete
+      const hasAllStatuses = chapters.every(chapter => chapterStatus.has(chapter.id));
       
-      if (allComplete) {
+      if (hasAllStatuses && allComplete && !projectConfig.workflow?.planning?.complete) {
+        console.log('🎯 All chapters complete - marking global planning as complete');
+        
         // Mark global planning step as complete
         const updatedConfig = {
           ...projectConfig,
@@ -1173,11 +1177,15 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
         
         onStatus(t("planning.status.allChaptersCompleted"));
         setMessage(t("planning.status.allChaptersCompleted"));
+      } else if (hasAllStatuses && !allComplete) {
+        console.log('🎯 Not all chapters complete yet:', chapters.map(ch => ({ id: ch.id, complete: chapterStatus.get(ch.id)?.isComplete })));
+      } else if (!hasAllStatuses) {
+        console.log('🎯 Still waiting for chapter status data...');
       }
     } catch (error) {
       console.error("Failed to check global planning completion:", error);
     }
-  }, [root, projectConfig, chapters, checkChapterStatus, onStatus, t]);
+  }, [root, projectConfig, chapters, chapterStatus, onStatus, t]);
 
   // Load plan and text for selected chapter
   const loadChapterData = useCallback(async (chapterId: string) => {
@@ -1327,9 +1335,15 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
   }, [loadChapters]);
 
   // Auto-check global planning completion when chapter status changes
+  // Use a ref to prevent infinite loops during completion checking
+  const isCheckingGlobalCompletion = useRef(false);
+  
   useEffect(() => {
-    if (chapterStatus.size > 0 && chapters.length > 0) {
-      checkAndMarkGlobalPlanningComplete();
+    if (chapterStatus.size > 0 && chapters.length > 0 && !isCheckingGlobalCompletion.current) {
+      isCheckingGlobalCompletion.current = true;
+      checkAndMarkGlobalPlanningComplete().finally(() => {
+        isCheckingGlobalCompletion.current = false;
+      });
     }
   }, [chapterStatus, chapters.length, checkAndMarkGlobalPlanningComplete]);
 
@@ -1620,9 +1634,18 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
         });
         console.log(`💾 Auto-saved plan for chapter ${selectedChapter}`);
         
-        // Update chapter status
-        const status = await checkChapterStatus(selectedChapter);
-        setChapterStatus(prev => new Map(prev).set(selectedChapter, status));
+        // Update chapter status, but only if it would actually change
+        const currentStatus = chapterStatus.get(selectedChapter);
+        const newStatus = await checkChapterStatus(selectedChapter);
+        
+        // Only update state if the status actually changed to prevent loops
+        if (!currentStatus || 
+            currentStatus.hasText !== newStatus.hasText || 
+            currentStatus.hasPlan !== newStatus.hasPlan || 
+            currentStatus.isComplete !== newStatus.isComplete) {
+          console.log(`📊 Chapter status changed for ${selectedChapter}:`, { old: currentStatus, new: newStatus });
+          setChapterStatus(prev => new Map(prev).set(selectedChapter, newStatus));
+        }
       } catch (error) {
         console.warn('Auto-save failed:', error);
         // Don't show error to user for auto-save failures, just log them
@@ -1630,7 +1653,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
     }, 2000); // Debounce: save 2 seconds after last change
 
     return () => clearTimeout(timeoutId);
-  }, [segments, root, selectedChapter, checkChapterStatus]);
+  }, [segments, root, selectedChapter, checkChapterStatus, chapterStatus]);
 
   // Mark current chapter as complete
   const handleMarkChapterComplete = async () => {
