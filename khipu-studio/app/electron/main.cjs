@@ -1465,9 +1465,10 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
   });
 
   // Generate placeholder audio file for testing
-  ipcMain.handle("audio:generateSegmentPlaceholder", async (_e, { projectRoot, chapterId, chunkId, text, voice }) => {
+  // Handler to save TTS audio from renderer to project directory
+  ipcMain.handle("audio:saveTtsToProject", async (_e, { projectRoot, chapterId, chunkId, audioData, text }) => {
     try {
-      console.log(`🎤 Generating TTS audio for segment: ${chapterId}/${chunkId} with voice: ${voice}`);
+      console.log(`💾 Saving TTS audio for segment: ${chapterId}/${chunkId}`);
       
       // Ensure audio directory exists
       const audioDir = path.join(projectRoot, 'audio', 'wav', chapterId);
@@ -1475,95 +1476,47 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
       
       const outputPath = path.join(audioDir, `${chunkId}.wav`);
       
-      // Create SSML XML from text and voice
-      const ssmlXml = `<?xml version="1.0" encoding="UTF-8"?>
-<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US">
-  <voice name="${voice || 'en-US-AriaNeural'}">
-    ${text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}
-  </voice>
-</speak>`;
-
-      // Call Python TTS using azure_client.py
-      const pythonDir = path.join(path.dirname(projectRoot), 'py');
-      const scriptPath = path.join(pythonDir, 'tts', 'azure_client.py');
+      // Convert base64 audio data to buffer and save
+      const audioBuffer = Buffer.from(audioData, 'base64');
+      await fsp.writeFile(outputPath, audioBuffer);
       
-      console.log(`🐍 Calling Python TTS: ${scriptPath}`);
-      console.log(`📝 Text length: ${text.length} chars`);
+      console.log(`✅ Saved TTS audio: ${path.basename(outputPath)} (${audioBuffer.length} bytes)`);
       
-      return new Promise((resolve, reject) => {
-        // Create temporary SSML file
-        const tempSsmlPath = path.join(audioDir, `${chunkId}_temp.ssml.xml`);
-        
-        const callPython = async () => {
-          try {
-            // Write SSML to temp file
-            await fsp.writeFile(tempSsmlPath, ssmlXml, 'utf-8');
-            
-            // Call Python script
-            const { spawn } = require('child_process');
-            const pythonProcess = spawn('python', [scriptPath, '--in', tempSsmlPath, '--out', outputPath], {
-              cwd: pythonDir,
-              stdio: ['pipe', 'pipe', 'pipe']
-            });
-            
-            let stdout = '';
-            let stderr = '';
-            
-            pythonProcess.stdout.on('data', (data) => {
-              stdout += data.toString();
-            });
-            
-            pythonProcess.stderr.on('data', (data) => {
-              stderr += data.toString();
-            });
-            
-            pythonProcess.on('close', async (code) => {
-              try {
-                // Clean up temp SSML file
-                await fsp.unlink(tempSsmlPath).catch(() => {});
-                
-                if (code !== 0) {
-                  console.error(`🚫 Python TTS failed (exit code ${code}):`, stderr);
-                  reject(new Error(`TTS synthesis failed: ${stderr || 'Unknown error'}`));
-                  return;
-                }
-                
-                // Check if output file exists
-                try {
-                  const stats = await fsp.stat(outputPath);
-                  console.log(`✅ Generated TTS audio: ${path.basename(outputPath)} (${stats.size} bytes)`);
-                  
-                  resolve({
-                    success: true,
-                    outputPath: path.relative(projectRoot, outputPath),
-                    duration: Math.max(1, text.length * 0.08), // Rough estimate
-                    sizeBytes: stats.size
-                  });
-                } catch (statError) {
-                  console.error('🚫 TTS output file not found:', statError);
-                  reject(new Error('TTS synthesis completed but output file not found'));
-                }
-              } catch (cleanupError) {
-                console.error('Error during TTS cleanup:', cleanupError);
-                reject(cleanupError);
-              }
-            });
-            
-            pythonProcess.on('error', (error) => {
-              console.error('🚫 Failed to start Python TTS process:', error);
-              reject(new Error(`Failed to start TTS process: ${error.message}`));
-            });
-          } catch (fileError) {
-            console.error('🚫 Failed to create temp SSML file:', fileError);
-            reject(fileError);
-          }
-        };
-        
-        callPython();
-      });
+      return {
+        success: true,
+        outputPath: path.relative(projectRoot, outputPath),
+        duration: Math.max(1, text.length * 0.08), // Rough estimate
+        sizeBytes: audioBuffer.length
+      };
       
     } catch (error) {
-      console.error('Failed to generate TTS audio:', error);
+      console.error('Failed to save TTS audio:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  });
+
+  ipcMain.handle("audio:generateSegmentPlaceholder", async (_e, { projectRoot, chapterId, chunkId, text, voice }) => {
+    try {
+      console.log(`🎤 Generating TTS audio for segment: ${chapterId}/${chunkId} with voice: ${voice}`);
+      
+      // This handler now returns a signal that TTS should be generated by the renderer process
+      // The renderer will call generateCachedAudition and then use audio:saveTtsToProject
+      
+      return {
+        success: true,
+        requiresTtsGeneration: true,
+        projectRoot,
+        chapterId,
+        chunkId,
+        text,
+        voice
+      };
+      
+    } catch (error) {
+      console.error('Failed to prepare TTS generation:', error);
       return {
         success: false,
         error: error.message

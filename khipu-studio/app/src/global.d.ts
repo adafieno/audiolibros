@@ -176,6 +176,30 @@ export interface KhipuRequestMap {
       duration?: number;
       sizeBytes?: number;
       error?: string;
+      requiresTtsGeneration?: boolean;
+      projectRoot?: string;
+      chapterId?: string;
+      chunkId?: string;
+      text?: string;
+      voice?: string;
+    };
+  };
+
+  // Save TTS audio data to project directory
+  "audio:saveTtsToProject": {
+    in: {
+      projectRoot: string;
+      chapterId: string;
+      chunkId: string;
+      audioData: string; // base64 encoded audio data
+      text: string;
+    };
+    out: {
+      success: boolean;
+      outputPath?: string;
+      duration?: number;
+      sizeBytes?: number;
+      error?: string;
     };
   };
   
