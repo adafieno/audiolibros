@@ -1463,6 +1463,213 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
       };
     }
   });
+
+  // Audio Chapter Concatenation Handler
+  ipcMain.handle("audio:concatenateChapter", async (_e, { projectRoot, chapterId, segments, outputFileName }) => {
+    try {
+      console.log(`🎬 Starting chapter audio concatenation for: ${chapterId}`);
+      
+      if (!segments || segments.length === 0) {
+        throw new Error("No segments provided for concatenation");
+      }
+      
+      // Prepare file paths for concatenation
+      const audioFiles = [];
+      const tempConcatFile = path.join(__dirname, '../../temp', `concat_${Date.now()}.txt`);
+      
+      // Ensure temp directory exists
+      await fsp.mkdir(path.dirname(tempConcatFile), { recursive: true });
+      
+      // Build concatenation list for ffmpeg
+      let concatContent = '';
+      
+      for (const segment of segments) {
+        let filePath;
+        let segmentInfo = '';
+        
+        if (segment.segmentType === 'sfx' && segment.sfxFile) {
+          // SFX segment - use the imported file
+          filePath = path.join(projectRoot, segment.sfxFile.path);
+          segmentInfo = `SFX: ${segment.sfxFile.filename}`;
+        } else {
+          // Plan/speech segment - look for generated audio file
+          const segmentAudioPath = path.join(projectRoot, 'audio', 'wav', chapterId, `${segment.chunkId}.wav`);
+          segmentInfo = `Speech: ${segment.chunkId}`;
+          
+          if (!fs.existsSync(segmentAudioPath)) {
+            throw new Error(`Missing audio file for segment ${segment.chunkId}: ${segmentAudioPath}`);
+          }
+          
+          filePath = segmentAudioPath;
+        }
+        
+        // Verify file exists
+        if (!fs.existsSync(filePath)) {
+          throw new Error(`Audio file does not exist: ${filePath} (${segmentInfo})`);
+        }
+        
+        // Escape file path for ffmpeg concat format
+        const escapedPath = filePath.replace(/\\/g, '/').replace(/'/g, "\\'");
+        concatContent += `file '${escapedPath}'\n`;
+        
+        audioFiles.push(filePath);
+        console.log(`📁 Added to concatenation: ${path.basename(filePath)} (${segmentInfo})`);
+      }
+      
+      // Write concatenation file
+      await fsp.writeFile(tempConcatFile, concatContent);
+      
+      // Prepare output path
+      const outputDir = path.join(projectRoot, 'audio', 'wav');
+      await fsp.mkdir(outputDir, { recursive: true });
+      
+      const outputPath = path.join(outputDir, outputFileName || `${chapterId}_complete.wav`);
+      
+      // Use ffmpeg for concatenation (more reliable than SOX for this use case)
+      const ffmpegPath = path.join(__dirname, '../../bin/ffmpeg/ffmpeg.exe');
+      
+      // Check if ffmpeg exists, fallback to system PATH
+      let ffmpegCmd = ffmpegPath;
+      if (!fs.existsSync(ffmpegPath)) {
+        ffmpegCmd = 'ffmpeg';
+        console.log('🔧 Using system ffmpeg (bundled not found)');
+      } else {
+        console.log('🔧 Using bundled ffmpeg');
+      }
+      
+      const ffmpegArgs = [
+        '-f', 'concat',
+        '-safe', '0',
+        '-i', tempConcatFile,
+        // Standardize output format for consistent playback
+        '-acodec', 'pcm_s16le',  // 16-bit PCM
+        '-ar', '44100',          // 44.1kHz sample rate
+        '-ac', '1',              // Mono channel
+        '-y',                    // Overwrite output file
+        outputPath
+      ];
+      
+      console.log(`🎬 Running ffmpeg concatenation: "${ffmpegCmd}" ${ffmpegArgs.join(' ')}`);
+      
+      const { spawn } = require('child_process');
+      const ffmpegProcess = spawn(ffmpegCmd, ffmpegArgs);
+      
+      let stderr = '';
+      let stdout = '';
+      ffmpegProcess.stderr.on('data', (data) => {
+        stderr += data.toString();
+      });
+      ffmpegProcess.stdout.on('data', (data) => {
+        stdout += data.toString();
+      });
+      
+      const exitCode = await new Promise((resolve) => {
+        ffmpegProcess.on('close', resolve);
+        ffmpegProcess.on('error', (error) => {
+          console.error('FFmpeg process error:', error);
+          resolve(-1);
+        });
+      });
+      
+      // Clean up temp files
+      try {
+        await fsp.unlink(tempConcatFile);
+      } catch (cleanupError) {
+        console.warn('Failed to clean up temp concat file:', cleanupError);
+      }
+      
+      if (exitCode !== 0) {
+        console.error(`FFmpeg stderr: ${stderr}`);
+        console.error(`FFmpeg stdout: ${stdout}`);
+        throw new Error(`FFmpeg concatenation failed (exit code ${exitCode}): ${stderr || 'Unknown FFmpeg error'}`);
+      }
+      
+      // Verify the output file exists and get its info
+      if (fs.existsSync(outputPath)) {
+        const stats = await fsp.stat(outputPath);
+        console.log(`✅ Successfully created chapter audio: ${path.basename(outputPath)} (${stats.size} bytes)`);
+        
+        // Get audio duration using ffprobe if available
+        let duration = null;
+        try {
+          const ffprobePath = path.join(__dirname, '../../bin/ffmpeg/ffprobe.exe');
+          const ffprobeCmd = fs.existsSync(ffprobePath) ? ffprobePath : 'ffprobe';
+          
+          const ffprobeArgs = [
+            '-v', 'quiet',
+            '-show_entries', 'format=duration',
+            '-of', 'default=noprint_wrappers=1:nokey=1',
+            outputPath
+          ];
+          
+          const ffprobeProcess = spawn(ffprobeCmd, ffprobeArgs);
+          let durationStr = '';
+          
+          ffprobeProcess.stdout.on('data', (data) => {
+            durationStr += data.toString();
+          });
+          
+          const probeExitCode = await new Promise((resolve) => {
+            ffprobeProcess.on('close', resolve);
+            ffprobeProcess.on('error', () => resolve(-1));
+          });
+          
+          if (probeExitCode === 0) {
+            duration = parseFloat(durationStr.trim()) || null;
+            console.log(`⏱️  Chapter duration: ${duration}s`);
+          }
+        } catch (probeError) {
+          console.warn('Failed to get audio duration:', probeError);
+        }
+        
+        return {
+          success: true,
+          outputPath: path.relative(projectRoot, outputPath),
+          fullPath: outputPath,
+          sizeBytes: stats.size,
+          duration: duration,
+          segmentCount: segments.length
+        };
+      } else {
+        throw new Error('Output file was not created');
+      }
+      
+    } catch (error) {
+      console.error('Chapter audio concatenation failed:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  });
+
+  // Check if complete chapter audio file exists
+  ipcMain.handle("audio:checkChapterComplete", async (_e, { projectRoot, chapterId }) => {
+    try {
+      const chapterFileName = `${chapterId}_complete.wav`;
+      const chapterFilePath = path.join(projectRoot, 'audio', 'wav', chapterFileName);
+      
+      if (fs.existsSync(chapterFilePath)) {
+        const stats = await fsp.stat(chapterFilePath);
+        return {
+          exists: true,
+          filePath: path.join('audio', 'wav', chapterFileName),
+          sizeBytes: stats.size,
+          modifiedTime: stats.mtime.toISOString()
+        };
+      } else {
+        return {
+          exists: false
+        };
+      }
+    } catch (error) {
+      console.error('Failed to check chapter complete file:', error);
+      return {
+        exists: false,
+        error: error.message
+      };
+    }
+  });
 }
 
 app.whenReady().then(createWin);

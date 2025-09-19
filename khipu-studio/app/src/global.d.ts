@@ -161,6 +161,47 @@ export interface KhipuRequestMap {
     };
   };
   
+  // Audio chapter concatenation
+  "audio:concatenateChapter": {
+    in: {
+      projectRoot: string;
+      chapterId: string;
+      segments: Array<{
+        chunkId: string;
+        segmentType: 'plan' | 'sfx';
+        sfxFile?: {
+          path: string;
+          filename: string;
+        };
+      }>;
+      outputFileName?: string;
+    };
+    out: {
+      success: boolean;
+      outputPath?: string;
+      fullPath?: string;
+      sizeBytes?: number;
+      duration?: number;
+      segmentCount?: number;
+      error?: string;
+    };
+  };
+  
+  // Check if complete chapter audio file exists
+  "audio:checkChapterComplete": {
+    in: {
+      projectRoot: string;
+      chapterId: string;
+    };
+    out: {
+      exists: boolean;
+      filePath?: string;
+      sizeBytes?: number;
+      modifiedTime?: string;
+      error?: string;
+    };
+  };
+  
   // SoX Audio Processing
   "audioProcessor:processAudio": {
     in: {

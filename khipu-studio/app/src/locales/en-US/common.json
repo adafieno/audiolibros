@@ -1642,6 +1642,10 @@
     "string": "Generate Chapter Audio",
     "comment": "Button text to generate audio for entire chapter"
   },
+  "audioProduction.regenerateChapterAudio": {
+    "string": "Regenerate Chapter Audio",
+    "comment": "Button text to regenerate audio for chapter that already has complete file"
+  },
   "audioProduction.play": {
     "string": "Play",
     "comment": "Button text to play audio segment"

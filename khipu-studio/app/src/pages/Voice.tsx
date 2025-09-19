@@ -55,6 +55,14 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   const [selectedChapter, setSelectedChapter] = useState<string>("");
   const [audioSegments, setAudioSegments] = useState<AudioSegmentRow[]>([]);
   const [generatingAudio, setGeneratingAudio] = useState<Set<string>>(new Set());
+  const [generatingChapterAudio, setGeneratingChapterAudio] = useState(false);
+  const [chapterGenerationProgress, setChapterGenerationProgress] = useState<{
+    phase: 'segments' | 'concatenating' | 'completed';
+    currentSegment: number;
+    totalSegments: number;
+    message: string;
+  } | null>(null);
+  const [chapterCompleteFiles, setChapterCompleteFiles] = useState<Set<string>>(new Set());
   const [selectedRowIndex, setSelectedRowIndex] = useState(0);
   const [selectedPresetId, setSelectedPresetId] = useState<string>('clean_polished');
   const [revisionMarks, setRevisionMarks] = useState<Set<string>>(new Set()); // Track segments marked for revision
@@ -733,6 +741,25 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       if (chapterList) {
         setChapters(chapterList);
         
+        // Check for complete chapter files
+        const completeFiles = new Set<string>();
+        for (const chapter of chapterList) {
+          try {
+            const result = await window.khipu!.call("audio:checkChapterComplete", {
+              projectRoot: root,
+              chapterId: chapter.id
+            });
+            
+            if (result.exists) {
+              completeFiles.add(chapter.id);
+              console.log(`✅ Complete chapter file exists for: ${chapter.id} (${result.sizeBytes} bytes)`);
+            }
+          } catch (error) {
+            console.error(`Failed to check complete file for chapter ${chapter.id}:`, error);
+          }
+        }
+        setChapterCompleteFiles(completeFiles);
+        
         // Check status for each chapter
         const statusMap = new Map<string, ChapterStatus>();
         
@@ -817,18 +844,109 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   }, [audioSegments, selectedChapter, audioProductionService, generatingAudio]);
 
   const handleGenerateChapterAudio = useCallback(async () => {
-    if (!selectedChapter || audioSegments.length === 0) return;
+    if (!selectedChapter || audioSegments.length === 0 || !root) return;
 
-
+    setGeneratingChapterAudio(true);
+    setChapterGenerationProgress({
+      phase: 'segments',
+      currentSegment: 0,
+      totalSegments: audioSegments.filter(s => s.segmentType !== 'sfx' || !s.hasAudio).length,
+      message: 'Preparing to generate individual segments...'
+    });
     
-    for (let i = 0; i < audioSegments.length; i++) {
-      if (!audioSegments[i].hasAudio) {
-        await handleGenerateSegmentAudio(i);
+    try {
+      console.log(`🎬 Starting chapter audio generation for: ${selectedChapter}`);
+      
+      // Phase 1: Generate all missing individual segments
+      console.log(`📝 Phase 1: Generating individual segments (${audioSegments.length} total)`);
+      
+      let segmentIndex = 0;
+      const segmentsToGenerate = audioSegments.filter(s => 
+        s.segmentType !== 'sfx' && !s.hasAudio
+      );
+      
+      for (let i = 0; i < audioSegments.length; i++) {
+        const segment = audioSegments[i];
+        
+        // Skip SFX segments since they already have audio files
+        if (segment.segmentType === 'sfx' && segment.sfxFile) {
+          console.log(`🎵 Skipping SFX segment: ${segment.chunkId} (already has audio)`);
+          continue;
+        }
+        
+        // Generate speech segments that don't have audio
+        if (!segment.hasAudio) {
+          segmentIndex++;
+          setChapterGenerationProgress({
+            phase: 'segments',
+            currentSegment: segmentIndex,
+            totalSegments: segmentsToGenerate.length,
+            message: `Generating segment ${segmentIndex}/${segmentsToGenerate.length}: ${segment.chunkId}`
+          });
+          
+          console.log(`🎙️ Generating speech segment: ${segment.chunkId}`);
+          await handleGenerateSegmentAudio(i);
+        } else {
+          console.log(`✅ Speech segment already has audio: ${segment.chunkId}`);
+        }
       }
+      
+      console.log(`✅ Phase 1 complete: All individual segments ready`);
+      
+      // Phase 2: Concatenate all segments into complete chapter
+      console.log(`🎬 Phase 2: Concatenating chapter audio`);
+      setChapterGenerationProgress({
+        phase: 'concatenating',
+        currentSegment: audioSegments.length,
+        totalSegments: audioSegments.length,
+        message: 'Concatenating all segments into complete chapter file...'
+      });
+      
+      const concatenationResult = await window.khipu!.call("audio:concatenateChapter", {
+        projectRoot: root,
+        chapterId: selectedChapter,
+        segments: audioSegments,
+        outputFileName: `${selectedChapter}_complete.wav`
+      });
+      
+      if (!concatenationResult.success) {
+        throw new Error(concatenationResult.error || "Failed to concatenate chapter audio");
+      }
+      
+      console.log(`🎉 Successfully created complete chapter audio!`);
+      console.log(`📁 Output: ${concatenationResult.outputPath}`);
+      console.log(`📊 Size: ${concatenationResult.sizeBytes} bytes`);
+      console.log(`⏱️  Duration: ${concatenationResult.duration}s`);
+      console.log(`🔢 Segments: ${concatenationResult.segmentCount}`);
+      
+      // Show completion status
+      setChapterGenerationProgress({
+        phase: 'completed',
+        currentSegment: audioSegments.length,
+        totalSegments: audioSegments.length,
+        message: `Chapter audio generated successfully! (${concatenationResult.sizeBytes} bytes, ${concatenationResult.duration}s)`
+      });
+      
+      // Update complete files list
+      setChapterCompleteFiles(prev => new Set([...prev, selectedChapter]));
+      
+      console.log(`✨ Chapter audio generation completed successfully!`);
+      
+    } catch (error) {
+      console.error("Failed to generate chapter audio:", error);
+      // TODO: Add proper error handling UI
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      alert(`Failed to generate chapter audio: ${errorMessage}`);
+      
+      setChapterGenerationProgress(null);
+    } finally {
+      setGeneratingChapterAudio(false);
+      // Clear progress after a short delay to show completion
+      setTimeout(() => {
+        setChapterGenerationProgress(null);
+      }, 3000);
     }
-    
-
-  }, [selectedChapter, audioSegments, handleGenerateSegmentAudio]);
+  }, [selectedChapter, audioSegments, handleGenerateSegmentAudio, root]);
 
   // Audio preview handlers
   const handlePlaySegment = useCallback(async (segmentIndex?: number) => {
@@ -1244,7 +1362,57 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         title={t("audioProduction.pageTitle")}
         description={t("audioProduction.pageDescription")}
         actions={
-          <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px", alignItems: "flex-end" }}>
+            {/* Progress indicator for chapter generation */}
+            {chapterGenerationProgress && (
+              <div style={{
+                padding: "8px 12px",
+                backgroundColor: "var(--panel)",
+                border: "1px solid var(--border)",
+                borderRadius: "6px",
+                fontSize: "12px",
+                color: "var(--text)",
+                minWidth: "250px"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                  <div style={{
+                    width: "12px",
+                    height: "12px",
+                    borderRadius: "50%",
+                    backgroundColor: chapterGenerationProgress.phase === 'completed' ? 'var(--success)' : 'var(--accent)',
+                    animation: chapterGenerationProgress.phase !== 'completed' ? 'pulse 2s infinite' : 'none'
+                  }}></div>
+                  <span style={{ fontWeight: "500" }}>
+                    {chapterGenerationProgress.phase === 'segments' && 'Generating Segments'}
+                    {chapterGenerationProgress.phase === 'concatenating' && 'Stitching Audio'}
+                    {chapterGenerationProgress.phase === 'completed' && 'Complete'}
+                  </span>
+                  <span style={{ marginLeft: "auto" }}>
+                    {chapterGenerationProgress.currentSegment}/{chapterGenerationProgress.totalSegments}
+                  </span>
+                </div>
+                <div style={{ fontSize: "11px", opacity: 0.8 }}>
+                  {chapterGenerationProgress.message}
+                </div>
+                <div style={{
+                  width: "100%",
+                  height: "3px",
+                  backgroundColor: "var(--border)",
+                  borderRadius: "2px",
+                  overflow: "hidden",
+                  marginTop: "6px"
+                }}>
+                  <div style={{
+                    width: `${(chapterGenerationProgress.currentSegment / chapterGenerationProgress.totalSegments) * 100}%`,
+                    height: "100%",
+                    backgroundColor: chapterGenerationProgress.phase === 'completed' ? 'var(--success)' : 'var(--accent)',
+                    transition: "width 0.3s ease"
+                  }}></div>
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
             {/* Chapter Selector */}
             <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
               <label style={{ fontSize: "14px", fontWeight: "500", color: "var(--text)", whiteSpace: "nowrap" }}>
@@ -1273,19 +1441,22 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                 <option value="" style={{ backgroundColor: "var(--panel)", color: "var(--text)" }}>
                   {t("audioProduction.selectChapter")}
                 </option>
-                {getChaptersWithPlans().map((chapter) => (
-                  <option 
-                    key={chapter.id} 
-                    value={chapter.id}
-                    style={{ 
-                      backgroundColor: "var(--panel)", 
-                      color: "var(--text)",
-                      padding: "4px 8px"
-                    }}
-                  >
-                    📝 {chapter.id} {chapter.title ? `- ${chapter.title}` : ""}
-                  </option>
-                ))}
+                {getChaptersWithPlans().map((chapter) => {
+                  const hasCompleteFile = chapterCompleteFiles.has(chapter.id);
+                  return (
+                    <option 
+                      key={chapter.id} 
+                      value={chapter.id}
+                      style={{ 
+                        backgroundColor: "var(--panel)", 
+                        color: "var(--text)",
+                        padding: "4px 8px"
+                      }}
+                    >
+                      {hasCompleteFile ? '🎵' : '📝'} {chapter.id} {chapter.title ? `- ${chapter.title}` : ""} {hasCompleteFile ? '(Complete)' : ''}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 
@@ -1314,14 +1485,33 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
             {/* Main Action Button */}
             {selectedChapter && (
-              <StandardButton
-                variant="primary"
-                onClick={handleGenerateChapterAudio}
-                disabled={audioSegments.length === 0}
-              >
-                {t("audioProduction.generateChapterAudio")}
-              </StandardButton>
+              <>
+                <StandardButton
+                  variant="primary"
+                  onClick={handleGenerateChapterAudio}
+                  disabled={audioSegments.length === 0 || generatingChapterAudio}
+                >
+                  {generatingChapterAudio 
+                    ? t("audioProduction.generatingChapterAudio")
+                    : chapterCompleteFiles.has(selectedChapter) 
+                      ? t("audioProduction.regenerateChapterAudio")
+                      : t("audioProduction.generateChapterAudio")}
+                </StandardButton>
+                
+                {chapterCompleteFiles.has(selectedChapter) && (
+                  <div style={{
+                    fontSize: "12px",
+                    color: "var(--success)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px"
+                  }}>
+                    ✅ Complete chapter audio file exists
+                  </div>
+                )}
+              </>
             )}
+            </div>
           </div>
         }
       />
