@@ -5,6 +5,7 @@ import { WorkflowCompleteButton } from "../components/WorkflowCompleteButton";
 import { PageHeader } from "../components/PageHeader";
 import { StandardButton } from "../components/StandardButton";
 import { costTrackingService } from "../lib/cost-tracking-service";
+import { sanitizeTextForTTS, previewSanitization, hasProblematicCharacters } from "../lib/text-sanitizer";
 
 type ChapterItem = {
   id: string;
@@ -13,6 +14,13 @@ type ChapterItem = {
   words: number;
 };
 
+interface SanitizationPreview {
+  hasProblems: boolean;
+  changes: number;
+  preview: string;
+  appliedRules: string[];
+}
+
 export default function ManuscriptPage() {
   const { t } = useTranslation();
   const root = useProject((s) => s.root);
@@ -20,6 +28,9 @@ export default function ManuscriptPage() {
   const [selected, setSelected] = useState<ChapterItem | null>(null);
   const [text, setText] = useState("");
   const [msg, setMsg] = useState<string>("");
+  const [showSanitization, setShowSanitization] = useState(false);
+  const [sanitizationPreview, setSanitizationPreview] = useState<SanitizationPreview | null>(null);
+  const [applySanitization, setApplySanitization] = useState(true);
 
   async function refreshList() {
     if (!root) return;
@@ -56,6 +67,7 @@ export default function ManuscriptPage() {
         return await window.khipu.call("manuscript:parse", {
           projectRoot: root,
           docxPath: picked,
+          // Note: applySanitization will be handled client-side for now
         });
       },
       {
@@ -95,6 +107,57 @@ export default function ManuscriptPage() {
     }
   }
 
+  async function checkTextSanitization() {
+    if (!selected || !text) return;
+    
+    setMsg("Analizando texto…");
+    const problemCheck = hasProblematicCharacters(text, 'es');
+    
+    if (problemCheck.hasProblems) {
+      const preview = previewSanitization(text, { language: 'es', preserveFormatting: true });
+      setSanitizationPreview({
+        hasProblems: true,
+        changes: preview.changes,
+        preview: preview.preview,
+        appliedRules: preview.appliedRules
+      });
+      setShowSanitization(true);
+      // Removed confusing status message - the sanitization preview shows the details
+    } else {
+      setMsg("El texto no tiene problemas para TTS ✔");
+      setSanitizationPreview(null);
+      setShowSanitization(false);
+    }
+  }
+
+  async function applySanitizationToChapter() {
+    if (!selected || !root || !sanitizationPreview) return;
+    
+    setMsg("Aplicando sanitización…");
+    
+    try {
+      // Apply sanitization to the current chapter
+      const result = sanitizeTextForTTS(text, { language: 'es', preserveFormatting: true });
+      
+      // Save the sanitized text back to the chapter file
+      await window.khipu!.call("chapter:write", {
+        projectRoot: root,
+        relPath: selected.relPath,
+        text: result.sanitized
+      });
+      
+      // Update the displayed text
+      setText(result.sanitized);
+      setMsg(`Aplicada sanitización (${result.changes} cambios) ✔`);
+      setSanitizationPreview(null);
+      setShowSanitization(false);
+      
+    } catch (error) {
+      console.error("Error applying sanitization:", error);
+      setMsg("Error al aplicar sanitización");
+    }
+  }
+
   async function handleSelect(ch: ChapterItem) {
     if (!root) return;
     setSelected(ch);
@@ -120,12 +183,31 @@ export default function ManuscriptPage() {
           description={t("manu.description")}
           actions={
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "14px" }}>
+                <input
+                  type="checkbox"
+                  checked={applySanitization}
+                  onChange={(e) => setApplySanitization(e.target.checked)}
+                />
+                {t("manuscript.applySanitization")}
+              </label>
+              
               <StandardButton 
                 onClick={chooseDocxAndParse}
                 variant="primary"
               >
                 {t("manuscript.importDocx")}
               </StandardButton>
+              
+              {selected && text && (
+                <StandardButton 
+                  onClick={checkTextSanitization}
+                  variant="secondary"
+                >
+                  {t("manuscript.checkTTS")}
+                </StandardButton>
+              )}
+              
               <WorkflowCompleteButton 
                 step="manuscript" 
                 disabled={chapters.length === 0}
@@ -219,9 +301,64 @@ export default function ManuscriptPage() {
             
             <div style={{ flex: 1, padding: "12px", overflow: "auto" }}>
               {selected ? (
-                <div style={{ fontSize: "14px", lineHeight: "1.6", color: "var(--text)", whiteSpace: "pre-wrap", fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" }}>
-                  {text || "Contenido del capítulo…"}
-                </div>
+                <>
+                  {/* Sanitization Preview */}
+                  {showSanitization && sanitizationPreview && (
+                    <div style={{ 
+                      marginBottom: "16px", 
+                      padding: "12px", 
+                      backgroundColor: "var(--panelAccent)", 
+                      border: "1px solid var(--border)", 
+                      borderRadius: "6px" 
+                    }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                        <h4 style={{ margin: 0, fontSize: "14px", fontWeight: "600" }}>
+                          {t("manuscript.sanitizationPreview")}
+                        </h4>
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          <StandardButton
+                            onClick={applySanitizationToChapter}
+                            variant="success"
+                            size="compact"
+                          >
+                            {t("manuscript.applySanitizationBtn")}
+                          </StandardButton>
+                          <StandardButton
+                            onClick={() => setShowSanitization(false)}
+                            variant="secondary"
+                            size="compact"
+                          >
+                            {t("common.dismiss")}
+                          </StandardButton>
+                        </div>
+                      </div>
+                      
+                      <div style={{ fontSize: "12px", marginBottom: "8px", color: "var(--muted)" }}>
+                        {t("manuscript.sanitizationSummary", { changes: sanitizationPreview.changes })}
+                      </div>
+                      
+                      {sanitizationPreview.appliedRules.length > 0 && (
+                        <details style={{ fontSize: "12px", marginBottom: "8px" }}>
+                          <summary style={{ cursor: "pointer", fontWeight: "500" }}>
+                            {t("manuscript.sanitizationRules")}
+                          </summary>
+                          <ul style={{ margin: "4px 0 0 16px", padding: 0 }}>
+                            {sanitizationPreview.appliedRules.map((rule, index) => (
+                              <li key={index} style={{ marginBottom: "2px" }}>
+                                {rule}
+                              </li>
+                            ))}
+                          </ul>
+                        </details>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Chapter Content */}
+                  <div style={{ fontSize: "14px", lineHeight: "1.6", color: "var(--text)", whiteSpace: "pre-wrap", fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" }}>
+                    {(showSanitization && sanitizationPreview) ? sanitizationPreview.preview : (text || "Contenido del capítulo…")}
+                  </div>
+                </>
               ) : (
                 <div style={{ color: "var(--muted)", fontStyle: "italic" }}>
                   Selecciona un capítulo para ver su contenido

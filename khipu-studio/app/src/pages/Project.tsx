@@ -143,6 +143,93 @@ export default function Project() {
   const isLocalTTS = (engine: TtsEngine): engine is Extract<TtsEngine, { name: "local" }> => 
     engine.name === "local";
 
+  // Validation functions for project completion
+  const validateTTSConfiguration = (): { isValid: boolean; errors: string[] } => {
+    const errors: string[] = [];
+    
+    if (!tts?.engine) {
+      errors.push(t("project.validation.tts.engineRequired"));
+      return { isValid: false, errors };
+    }
+    
+    // Check engine-specific requirements
+    if (isAzureTTS(tts.engine)) {
+      if (!tts.engine.voice?.trim()) {
+        errors.push(t("project.validation.tts.azureVoiceRequired"));
+      }
+      // Check credentials if Azure TTS is selected
+      if (!cfg?.creds?.tts?.azure?.key?.trim()) {
+        errors.push(t("project.validation.tts.azureKeyRequired"));
+      }
+      if (!cfg?.creds?.tts?.azure?.region?.trim()) {
+        errors.push(t("project.validation.tts.azureRegionRequired"));
+      }
+    } else if (is11LabsTTS(tts.engine)) {
+      if (!tts.engine.voiceId?.trim()) {
+        errors.push(t("project.validation.tts.elevenLabsVoiceRequired"));
+      }
+    } else if (isLocalTTS(tts.engine)) {
+      if (!tts.engine.model?.trim()) {
+        errors.push(t("project.validation.tts.localModelRequired"));
+      }
+    }
+    
+    return { isValid: errors.length === 0, errors };
+  };
+
+  const validateLLMConfiguration = (): { isValid: boolean; errors: string[] } => {
+    const errors: string[] = [];
+    
+    if (!llm?.engine) {
+      errors.push(t("project.validation.llm.engineRequired"));
+      return { isValid: false, errors };
+    }
+    
+    // Check engine-specific requirements
+    if (isOpenAI(llm.engine)) {
+      if (!llm.engine.model?.trim()) {
+        errors.push(t("project.validation.llm.openaiModelRequired"));
+      }
+      // Check credentials
+      if (!cfg?.creds?.llm?.openai?.apiKey?.trim()) {
+        errors.push(t("project.validation.llm.openaiKeyRequired"));
+      }
+    } else if (isAzureOpenAI(llm.engine)) {
+      if (!llm.engine.model?.trim()) {
+        errors.push(t("project.validation.llm.azureModelRequired"));
+      }
+      if (!llm.engine.endpoint?.trim()) {
+        errors.push(t("project.validation.llm.azureEndpointRequired"));
+      }
+      // Check credentials
+      if (!cfg?.creds?.llm?.azureOpenAI?.apiKey?.trim()) {
+        errors.push(t("project.validation.llm.azureKeyRequired"));
+      }
+    } else if (isLocalLLM(llm.engine)) {
+      if (!llm.engine.model?.trim()) {
+        errors.push(t("project.validation.llm.localModelRequired"));
+      }
+      if (!llm.engine.endpoint?.trim()) {
+        errors.push(t("project.validation.llm.localEndpointRequired"));
+      }
+    }
+    
+    return { isValid: errors.length === 0, errors };
+  };
+
+  // Overall project validation
+  const getProjectValidation = (): { isValid: boolean; errors: string[] } => {
+    const ttsValidation = validateTTSConfiguration();
+    const llmValidation = validateLLMConfiguration();
+    
+    return {
+      isValid: ttsValidation.isValid && llmValidation.isValid,
+      errors: [...ttsValidation.errors, ...llmValidation.errors]
+    };
+  };
+
+  const projectValidation = getProjectValidation();
+
   async function browseOutputFolder() {
     const folder = await window.khipu!.call("project:browseForParent", undefined);
     if (folder) {
@@ -159,9 +246,31 @@ export default function Project() {
         title="project.title"
         description="project.description"
         actions={
-          <WorkflowCompleteButton step="project">
-            {t("project.markComplete")}
-          </WorkflowCompleteButton>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px" }}>
+            <WorkflowCompleteButton 
+              step="project" 
+              disabled={!projectValidation.isValid}
+            >
+              {t("project.markComplete")}
+            </WorkflowCompleteButton>
+            {!projectValidation.isValid && (
+              <div style={{ 
+                fontSize: "12px", 
+                color: "var(--error)", 
+                textAlign: "right",
+                maxWidth: "300px"
+              }}>
+                <div style={{ fontWeight: "500", marginBottom: "4px" }}>
+                  {t("project.validation.configurationIncomplete")}:
+                </div>
+                <ul style={{ margin: 0, paddingLeft: "16px" }}>
+                  {projectValidation.errors.map((error, index) => (
+                    <li key={index} style={{ marginBottom: "2px" }}>{error}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         }
       />
       

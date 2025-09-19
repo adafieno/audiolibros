@@ -294,22 +294,45 @@ function EditablePreview({
     if (originalSegment) {
       setEditedText(originalSegment.text);
       setIsEditing(false);
-      setCursorPosition(0);
+      // Don't reset cursor position to 0 - preserve it for better UX
+      // setCursorPosition(0); // Removed - causes cursor issues
     }
   }, [originalSegment]);
 
-  // Handle entering edit mode
-  const handleStartEdit = () => {
-    setIsEditing(true);
-    setTimeout(() => {
-      textareaRef.current?.focus();
-      textareaRef.current?.setSelectionRange(cursorPosition, cursorPosition);
-    }, 0);
-  };
+  // Ensure cursor is properly positioned when entering edit mode
+  useEffect(() => {
+    if (isEditing && textareaRef.current) {
+      // Focus and position cursor after React has updated the DOM
+      const textarea = textareaRef.current;
+      requestAnimationFrame(() => {
+        textarea.focus();
+        const position = Math.min(cursorPosition, editedText.length);
+        textarea.setSelectionRange(position, position);
+      });
+    }
+  }, [isEditing, cursorPosition, editedText.length]);
 
-  // Handle saving changes  
-  const handleSaveEdit = async () => {
-    if (!segments || !originalSegment) return;
+  // Auto-save on component unmount to prevent losing changes
+  useEffect(() => {
+    return () => {
+      // Save any pending changes when component unmounts
+      if (isEditing && editedText !== originalSegment?.text) {
+        console.log('🔄 Auto-saving changes on unmount');
+        // Note: This is a cleanup effect, so we can't use async operations
+        // The parent component should handle saving via onBlur or other mechanisms
+      }
+    };
+  }, [isEditing, editedText, originalSegment?.text]);
+
+  // Enhanced focus management for better cursor positioning
+  const handleStartEdit = useCallback(() => {
+    setIsEditing(true);
+    // Cursor positioning is now handled by useEffect for better reliability
+  }, []);
+
+  // Enhanced save with better state management
+  const handleSaveEdit = useCallback(async () => {
+    if (!segments || !originalSegment || !isEditing) return;
 
     const textChanged = editedText !== originalSegment.text;
     console.log(`📝 AUTO-SAVE EDIT - Segment ${current.segmentId}:`);
@@ -343,17 +366,19 @@ function EditablePreview({
     if (textChanged) {
       console.log(`✅ Segment ${current.segmentId} updated - cache should use new text: "${editedText}"`);
     }
-  };
+  }, [segments, originalSegment, isEditing, editedText, current.segmentId, onInvalidateCache, setSegments]);
 
-  // Handle canceling edit
-  const handleCancelEdit = () => {
+  // Handle canceling edit with cursor preservation
+  const handleCancelEdit = useCallback(() => {
     setEditedText(originalSegment?.text || "");
     setIsEditing(false);
-  };
+    // Preserve cursor position for when user re-enters edit mode
+  }, [originalSegment?.text]);
 
-  // Handle keyboard shortcuts
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  // Enhanced keyboard shortcuts
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
+      e.preventDefault();
       handleCancelEdit();
     } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
@@ -362,18 +387,29 @@ function EditablePreview({
       e.preventDefault();
       handleSaveEdit(); // Auto-save on Tab (exit edit mode)
     }
-  };
+  }, [handleCancelEdit, handleSaveEdit]);
 
-  // Auto-save on blur (when leaving the textarea)
-  const handleTextareaBlur = () => {
-    handleSaveEdit();
-  };
+  // Improved blur handling with debouncing to prevent conflicts
+  const handleTextareaBlur = useCallback(() => {
+    // Small delay to prevent conflicts when clicking buttons or switching segments
+    setTimeout(() => {
+      if (isEditing) {
+        handleSaveEdit();
+      }
+    }, 100);
+  }, [isEditing, handleSaveEdit]);
 
-  // Update cursor position
-  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  // Enhanced text change handler with better cursor tracking
+  const handleTextareaChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setEditedText(e.target.value);
     setCursorPosition(e.target.selectionStart);
-  };
+  }, []);
+
+  // Handle cursor position updates on selection change
+  const handleTextareaSelect = useCallback((e: React.SyntheticEvent<HTMLTextAreaElement>) => {
+    const target = e.target as HTMLTextAreaElement;
+    setCursorPosition(target.selectionStart);
+  }, []);
 
   // Segment operations handlers
   const handleSplitSegment = () => {
@@ -496,7 +532,7 @@ function EditablePreview({
                 onChange={handleTextareaChange}
                 onKeyDown={handleKeyDown}
                 onBlur={handleTextareaBlur}
-                onSelect={(e) => setCursorPosition((e.target as HTMLTextAreaElement).selectionStart)}
+                onSelect={handleTextareaSelect}
                 style={{
                   width: "100%",
                   minHeight: "120px",

@@ -375,6 +375,10 @@
     "string": "Cancel",
     "comment": "Generic cancel button text"
   },
+  "common.dismiss": {
+    "string": "Dismiss",
+    "comment": "Button text to dismiss/close a notification or dialog"
+  },
 
   "status.completed": {
     "string": "Completed",
@@ -429,6 +433,30 @@
   "manuscript.completeButton": {
     "string": "Mark manuscript as complete",
     "comment": "Button text for marking manuscript workflow step as complete"
+  },
+  "manuscript.applySanitization": {
+    "string": "Apply TTS sanitization during import",
+    "comment": "Checkbox label to enable text sanitization during manuscript import"
+  },
+  "manuscript.checkTTS": {
+    "string": "Check TTS Compatibility",
+    "comment": "Button to check text for TTS compatibility issues"
+  },
+  "manuscript.sanitizationPreview": {
+    "string": "Text Sanitization Preview",
+    "comment": "Header for sanitization preview section"
+  },
+  "manuscript.applySanitizationBtn": {
+    "string": "Apply Changes",
+    "comment": "Button to apply sanitization changes to text"
+  },
+  "manuscript.sanitizationSummary": {
+    "string": "{{changes}} changes will be applied to improve TTS compatibility",
+    "comment": "Summary of sanitization changes to be applied"
+  },
+  "manuscript.sanitizationRules": {
+    "string": "Applied Rules",
+    "comment": "Header for list of sanitization rules applied"
   },
 
   "plan.noPlanToShow": {
@@ -762,6 +790,66 @@
     "string": "Mark configuration as complete",
     "comment": "Button text to complete project configuration"
   },
+  "project.validation.configurationIncomplete": {
+    "string": "Configuration incomplete",
+    "comment": "Error message header when project configuration is incomplete"
+  },
+  "project.validation.tts.engineRequired": {
+    "string": "TTS engine must be selected",
+    "comment": "Validation error when no TTS engine is selected"
+  },
+  "project.validation.tts.azureVoiceRequired": {
+    "string": "Azure voice must be specified",
+    "comment": "Validation error when Azure TTS voice is missing"
+  },
+  "project.validation.tts.azureKeyRequired": {
+    "string": "Azure TTS API key is required",
+    "comment": "Validation error when Azure TTS API key is missing"
+  },
+  "project.validation.tts.azureRegionRequired": {
+    "string": "Azure region is required",
+    "comment": "Validation error when Azure region is missing"
+  },
+  "project.validation.tts.elevenLabsVoiceRequired": {
+    "string": "ElevenLabs voice ID must be specified",
+    "comment": "Validation error when ElevenLabs voice ID is missing"
+  },
+  "project.validation.tts.localModelRequired": {
+    "string": "Local TTS model must be specified",
+    "comment": "Validation error when local TTS model is missing"
+  },
+  "project.validation.llm.engineRequired": {
+    "string": "LLM engine must be selected",
+    "comment": "Validation error when no LLM engine is selected"
+  },
+  "project.validation.llm.openaiModelRequired": {
+    "string": "OpenAI model must be specified",
+    "comment": "Validation error when OpenAI model is missing"
+  },
+  "project.validation.llm.openaiKeyRequired": {
+    "string": "OpenAI API key is required",
+    "comment": "Validation error when OpenAI API key is missing"
+  },
+  "project.validation.llm.azureModelRequired": {
+    "string": "Azure OpenAI model must be specified",
+    "comment": "Validation error when Azure OpenAI model is missing"
+  },
+  "project.validation.llm.azureEndpointRequired": {
+    "string": "Azure OpenAI endpoint is required",
+    "comment": "Validation error when Azure OpenAI endpoint is missing"
+  },
+  "project.validation.llm.azureKeyRequired": {
+    "string": "Azure OpenAI API key is required",
+    "comment": "Validation error when Azure OpenAI API key is missing"
+  },
+  "project.validation.llm.localModelRequired": {
+    "string": "Local LLM model must be specified",
+    "comment": "Validation error when local LLM model is missing"
+  },
+  "project.validation.llm.localEndpointRequired": {
+    "string": "Local LLM endpoint is required",
+    "comment": "Validation error when local LLM endpoint is missing"
+  },
   "project.general": {
     "string": "General Configuration",
     "comment": "Section header for general configuration"
@@ -976,6 +1064,10 @@
   "characters.voiceAssignment": {
     "string": "Voice Assignment",
     "comment": "Label for voice assignment section"
+  },
+  "characters.selectVoice": {
+    "string": "Select Voice",
+    "comment": "Placeholder text for voice selection dropdown"
   },
   "characters.detecting": {
     "string": "Detecting...",

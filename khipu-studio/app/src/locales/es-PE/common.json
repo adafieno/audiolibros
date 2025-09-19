@@ -95,6 +95,10 @@
     "string": "Cancelar",
     "comment": "Texto genérico de botón cancelar"
   },
+  "common.dismiss": {
+    "string": "Descartar",
+    "comment": "Texto del botón para descartar/cerrar una notificación o diálogo"
+  },
   "image.errors.failedToCopy": {
     "string": "Error al copiar imagen",
     "comment": ""
@@ -322,6 +326,66 @@
   "project.markComplete": {
     "string": "Marcar configuración como completa",
     "comment": ""
+  },
+  "project.validation.configurationIncomplete": {
+    "string": "Configuración incompleta",
+    "comment": "Mensaje de error cuando la configuración del proyecto está incompleta"
+  },
+  "project.validation.tts.engineRequired": {
+    "string": "Debe seleccionar un motor TTS",
+    "comment": "Error de validación cuando no se ha seleccionado motor TTS"
+  },
+  "project.validation.tts.azureVoiceRequired": {
+    "string": "Debe especificar una voz de Azure",
+    "comment": "Error de validación cuando falta la voz de Azure TTS"
+  },
+  "project.validation.tts.azureKeyRequired": {
+    "string": "Se requiere la clave API de Azure TTS",
+    "comment": "Error de validación cuando falta la clave API de Azure TTS"
+  },
+  "project.validation.tts.azureRegionRequired": {
+    "string": "Se requiere la región de Azure",
+    "comment": "Error de validación cuando falta la región de Azure"
+  },
+  "project.validation.tts.elevenLabsVoiceRequired": {
+    "string": "Debe especificar el ID de voz de ElevenLabs",
+    "comment": "Error de validación cuando falta el ID de voz de ElevenLabs"
+  },
+  "project.validation.tts.localModelRequired": {
+    "string": "Debe especificar el modelo TTS local",
+    "comment": "Error de validación cuando falta el modelo TTS local"
+  },
+  "project.validation.llm.engineRequired": {
+    "string": "Debe seleccionar un motor LLM",
+    "comment": "Error de validación cuando no se ha seleccionado motor LLM"
+  },
+  "project.validation.llm.openaiModelRequired": {
+    "string": "Debe especificar un modelo de OpenAI",
+    "comment": "Error de validación cuando falta el modelo de OpenAI"
+  },
+  "project.validation.llm.openaiKeyRequired": {
+    "string": "Se requiere la clave API de OpenAI",
+    "comment": "Error de validación cuando falta la clave API de OpenAI"
+  },
+  "project.validation.llm.azureModelRequired": {
+    "string": "Debe especificar un modelo de Azure OpenAI",
+    "comment": "Error de validación cuando falta el modelo de Azure OpenAI"
+  },
+  "project.validation.llm.azureEndpointRequired": {
+    "string": "Se requiere el endpoint de Azure OpenAI",
+    "comment": "Error de validación cuando falta el endpoint de Azure OpenAI"
+  },
+  "project.validation.llm.azureKeyRequired": {
+    "string": "Se requiere la clave API de Azure OpenAI",
+    "comment": "Error de validación cuando falta la clave API de Azure OpenAI"
+  },
+  "project.validation.llm.localModelRequired": {
+    "string": "Debe especificar el modelo LLM local",
+    "comment": "Error de validación cuando falta el modelo LLM local"
+  },
+  "project.validation.llm.localEndpointRequired": {
+    "string": "Se requiere el endpoint del LLM local",
+    "comment": "Error de validación cuando falta el endpoint del LLM local"
   },
   "project.general": {
     "string": "Configuración general",
@@ -594,6 +658,30 @@
   "manuscript.completeButton": {
     "string": "Marcar manuscrito como completo",
     "comment": ""
+  },
+  "manuscript.applySanitization": {
+    "string": "Aplicar sanitización TTS durante importación",
+    "comment": "Etiqueta de checkbox para habilitar sanitización de texto durante importación de manuscrito"
+  },
+  "manuscript.checkTTS": {
+    "string": "Verificar compatibilidad TTS",
+    "comment": "Botón para verificar problemas de compatibilidad TTS en el texto"
+  },
+  "manuscript.sanitizationPreview": {
+    "string": "Vista previa de sanitización de texto",
+    "comment": "Encabezado para la sección de vista previa de sanitización"
+  },
+  "manuscript.applySanitizationBtn": {
+    "string": "Aplicar cambios",
+    "comment": "Botón para aplicar cambios de sanitización al texto"
+  },
+  "manuscript.sanitizationSummary": {
+    "string": "Se aplicarán {{changes}} cambios para mejorar la compatibilidad TTS",
+    "comment": "Resumen de cambios de sanitización que se aplicarán"
+  },
+  "manuscript.sanitizationRules": {
+    "string": "Reglas aplicadas",
+    "comment": "Encabezado para lista de reglas de sanitización aplicadas"
   },
   "home.existingProjects": {
     "string": "Proyectos recientes",

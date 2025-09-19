@@ -575,24 +575,54 @@ function CharactersPage() {
                     </div>
                   )}
 
-                  {/* Voice Assignment */}
-                  {c.voiceAssignment && (
-                    <div style={{ 
-                      marginTop: "12px", 
-                      padding: "8px", 
-                      backgroundColor: "var(--panelAccent)", 
-                      borderRadius: "4px",
-                      border: "1px solid var(--border)"
-                    }}>
-                      <div style={{ fontSize: "12px", fontWeight: "500", color: "var(--text)", marginBottom: "6px" }}>
-                        {t("characters.voiceAssignment")}
-                      </div>
-                      
-                      {/* Voice Selection */}
+                  {/* Voice Assignment - Always visible for manual assignment */}
+                  <div style={{ 
+                    marginTop: "12px", 
+                    padding: "8px", 
+                    backgroundColor: "var(--panelAccent)", 
+                    borderRadius: "4px",
+                    border: "1px solid var(--border)"
+                  }}>
+                    <div style={{ fontSize: "12px", fontWeight: "500", color: "var(--text)", marginBottom: "6px" }}>
+                      {t("characters.voiceAssignment")}
+                    </div>
+                    
+                    {/* Voice Selection */}
+                    <div style={{ marginBottom: "6px" }}>
+                      <select
+                        value={c.voiceAssignment?.voiceId || ""}
+                        onChange={(e) => updateVoiceAssignment(c.id, e.target.value, c.voiceAssignment?.style)}
+                        style={{
+                          width: "100%",
+                          padding: "4px 6px",
+                          fontSize: "11px",
+                          backgroundColor: "var(--panel)",
+                          color: "var(--text)",
+                          border: "1px solid var(--border)",
+                          borderRadius: "3px"
+                        }}
+                      >
+                        <option value="">{t("characters.selectVoice", { defaultValue: "Select Voice" })}</option>
+                        {availableVoices.map(voice => (
+                          <option key={voice.id} value={voice.id}>
+                            {voice.id} ({voice.gender}, {voice.locale})
+                          </option>
+                        ))}
+                        {/* Debug: Show assigned voice if not in available list */}
+                        {c.voiceAssignment?.voiceId && !availableVoices.find(v => v.id === c.voiceAssignment?.voiceId) && (
+                          <option key={c.voiceAssignment.voiceId} value={c.voiceAssignment.voiceId} style={{color: 'red'}}>
+                            {c.voiceAssignment.voiceId} (Missing from inventory)
+                          </option>
+                        )}
+                      </select>
+                    </div>
+
+                    {/* Style Selection */}
+                    {c.voiceAssignment?.voiceId && availableVoices.find(v => v.id === c.voiceAssignment?.voiceId)?.styles && (
                       <div style={{ marginBottom: "6px" }}>
                         <select
-                          value={c.voiceAssignment.voiceId}
-                          onChange={(e) => updateVoiceAssignment(c.id, e.target.value, c.voiceAssignment?.style)}
+                          value={c.voiceAssignment.style || ""}
+                          onChange={(e) => updateVoiceAssignment(c.id, c.voiceAssignment!.voiceId, e.target.value || undefined)}
                           style={{
                             width: "100%",
                             padding: "4px 6px",
@@ -603,102 +633,74 @@ function CharactersPage() {
                             borderRadius: "3px"
                           }}
                         >
-                          <option value="">Select Voice</option>
-                          {availableVoices.map(voice => (
-                            <option key={voice.id} value={voice.id}>
-                              {voice.id} ({voice.gender}, {voice.locale})
+                          <option value="">{t("characters.defaultStyle")}</option>
+                          {availableVoices.find(v => v.id === c.voiceAssignment?.voiceId)?.styles.map(style => (
+                            <option key={style} value={style}>
+                              {t(`characters.style${style.charAt(0).toUpperCase()}${style.slice(1)}`, { defaultValue: style })}
                             </option>
                           ))}
-                          {/* Debug: Show assigned voice if not in available list */}
-                          {c.voiceAssignment?.voiceId && !availableVoices.find(v => v.id === c.voiceAssignment?.voiceId) && (
-                            <option key={c.voiceAssignment.voiceId} value={c.voiceAssignment.voiceId} style={{color: 'red'}}>
-                              {c.voiceAssignment.voiceId} (Missing from inventory)
-                            </option>
-                          )}
                         </select>
                       </div>
+                    )}
 
-                      {/* Style Selection */}
-                      {c.voiceAssignment.voiceId && availableVoices.find(v => v.id === c.voiceAssignment?.voiceId)?.styles && (
-                        <div style={{ marginBottom: "6px" }}>
-                          <select
-                            value={c.voiceAssignment.style || ""}
-                            onChange={(e) => updateVoiceAssignment(c.id, c.voiceAssignment!.voiceId, e.target.value || undefined)}
-                            style={{
-                              width: "100%",
-                              padding: "4px 6px",
-                              fontSize: "11px",
-                              backgroundColor: "var(--panel)",
-                              color: "var(--text)",
-                              border: "1px solid var(--border)",
-                              borderRadius: "3px"
-                            }}
-                          >
-                            <option value="">{t("characters.defaultStyle")}</option>
-                            {availableVoices.find(v => v.id === c.voiceAssignment?.voiceId)?.styles.map(style => (
-                              <option key={style} value={style}>
-                                {t(`characters.style${style.charAt(0).toUpperCase()}${style.slice(1)}`, { defaultValue: style })}
-                              </option>
-                            ))}
-                          </select>
+                    {/* Prosody Controls - only show if voice is selected */}
+                    {c.voiceAssignment?.voiceId && (
+                      <>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px", fontSize: "10px" }}>
+                          <div>
+                            <label style={{ color: "var(--muted)" }}>{t("characters.rate")}: {c.voiceAssignment?.rate_pct || 0}%</label>
+                            <input
+                              type="range"
+                              min="-50"
+                              max="50"
+                              value={c.voiceAssignment?.rate_pct || 0}
+                              onChange={(e) => updateVoiceAssignment(c.id, c.voiceAssignment!.voiceId, c.voiceAssignment?.style, {
+                                ...c.voiceAssignment,
+                                rate_pct: parseInt(e.target.value)
+                              })}
+                              style={{ width: "100%" }}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ color: "var(--muted)" }}>{t("characters.pitch")}: {c.voiceAssignment?.pitch_pct || 0}%</label>
+                            <input
+                              type="range"
+                              min="-50"
+                              max="50"
+                              value={c.voiceAssignment?.pitch_pct || 0}
+                              onChange={(e) => updateVoiceAssignment(c.id, c.voiceAssignment!.voiceId, c.voiceAssignment?.style, {
+                                ...c.voiceAssignment,
+                                pitch_pct: parseInt(e.target.value)
+                              })}
+                              style={{ width: "100%" }}
+                            />
+                          </div>
                         </div>
-                      )}
 
-                      {/* Prosody Controls */}
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px", fontSize: "10px" }}>
-                        <div>
-                          <label style={{ color: "var(--muted)" }}>{t("characters.rate")}: {c.voiceAssignment.rate_pct || 0}%</label>
-                          <input
-                            type="range"
-                            min="-50"
-                            max="50"
-                            value={c.voiceAssignment.rate_pct || 0}
-                            onChange={(e) => updateVoiceAssignment(c.id, c.voiceAssignment!.voiceId, c.voiceAssignment?.style, {
-                              ...c.voiceAssignment,
-                              rate_pct: parseInt(e.target.value)
-                            })}
-                            style={{ width: "100%" }}
-                          />
-                        </div>
-                        <div>
-                          <label style={{ color: "var(--muted)" }}>{t("characters.pitch")}: {c.voiceAssignment.pitch_pct || 0}%</label>
-                          <input
-                            type="range"
-                            min="-50"
-                            max="50"
-                            value={c.voiceAssignment.pitch_pct || 0}
-                            onChange={(e) => updateVoiceAssignment(c.id, c.voiceAssignment!.voiceId, c.voiceAssignment?.style, {
-                              ...c.voiceAssignment,
-                              pitch_pct: parseInt(e.target.value)
-                            })}
-                            style={{ width: "100%" }}
-                          />
-                        </div>
-                      </div>
+                        {/* Style Degree */}
+                        {c.voiceAssignment?.style && (
+                          <div style={{ marginTop: "4px", fontSize: "10px" }}>
+                            <label style={{ color: "var(--muted)" }}>{t("characters.intensity")}: {Math.round((c.voiceAssignment?.styledegree || 0.6) * 100)}%</label>
+                            <input
+                              type="range"
+                              min="10"
+                              max="100"
+                              value={Math.round((c.voiceAssignment?.styledegree || 0.6) * 100)}
+                              onChange={(e) => updateVoiceAssignment(c.id, c.voiceAssignment!.voiceId, c.voiceAssignment?.style, {
+                                ...c.voiceAssignment,
+                                styledegree: parseInt(e.target.value) / 100
+                              })}
+                              style={{ width: "100%" }}
+                            />
+                          </div>
+                        )}
 
-                      {/* Style Degree */}
-                      {c.voiceAssignment.style && (
-                        <div style={{ marginTop: "4px", fontSize: "10px" }}>
-                          <label style={{ color: "var(--muted)" }}>{t("characters.intensity")}: {Math.round((c.voiceAssignment.styledegree || 0.6) * 100)}%</label>
-                          <input
-                            type="range"
-                            min="10"
-                            max="100"
-                            value={Math.round((c.voiceAssignment.styledegree || 0.6) * 100)}
-                            onChange={(e) => updateVoiceAssignment(c.id, c.voiceAssignment!.voiceId, c.voiceAssignment?.style, {
-                              ...c.voiceAssignment,
-                              styledegree: parseInt(e.target.value) / 100
-                            })}
-                            style={{ width: "100%" }}
-                          />
+                        <div style={{ fontSize: "10px", color: "var(--muted)", marginTop: "4px" }}>
+                          {t("characters.method")}: {c.voiceAssignment?.method === "llm_auto" ? t("characters.methodAutoAssigned") : t("characters.methodManual")}
                         </div>
-                      )}
-
-                      <div style={{ fontSize: "10px", color: "var(--muted)", marginTop: "4px" }}>
-                        {t("characters.method")}: {c.voiceAssignment.method === "llm_auto" ? t("characters.methodAutoAssigned") : t("characters.methodManual")}
-                      </div>
-                    </div>
-                  )}
+                      </>
+                    )}
+                  </div>
                   
                   {/* Action buttons */}
                   <div style={{ marginTop: "8px", display: "flex", gap: "8px" }}>
