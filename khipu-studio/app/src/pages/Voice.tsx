@@ -792,6 +792,14 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     const segment = audioSegments[rowIndex];
     if (!segment || !selectedChapter || !audioProductionService || generatingAudio.has(segment.chunkId)) return;
 
+    console.log(`🎤 Starting TTS generation for segment ${segment.chunkId} at row ${rowIndex}`);
+    console.log(`🎤 Segment details:`, {
+      chunkId: segment.chunkId,
+      voice: segment.voice,
+      textLength: segment.text.length,
+      text: segment.text.substring(0, 100) + (segment.text.length > 100 ? '...' : '')
+    });
+
     setGeneratingAudio(prev => new Set(prev).add(segment.chunkId));
     
     try {
@@ -859,6 +867,16 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         throw new Error(`Character ${(characterData as { name?: string })?.name} has no voice assignment`);
       }
 
+      console.log('🎤 Audition options:', {
+        voiceId: voiceAssignment.voiceId,
+        textLength: segment.text.length,
+        text: segment.text.substring(0, 50) + (segment.text.length > 50 ? '...' : ''),
+        style: voiceAssignment.style,
+        styledegree: voiceAssignment.styledegree,
+        rate_pct: voiceAssignment.rate_pct,
+        pitch_pct: voiceAssignment.pitch_pct
+      });
+
       const characterTraits = characterData as { traits?: { gender?: string; age?: string; accent?: string } };
 
       const voice = {
@@ -882,8 +900,18 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         pitch_pct: voiceAssignment.pitch_pct
       };
 
+      console.log('🎤 About to call generateCachedAudition with voice:', voice.id);
+      
       // Generate TTS audio (bypassing cache to get fresh audio)
       const ttsResult = await generateCachedAudition(auditionOptions, false);
+      
+      console.log('🎤 generateCachedAudition result:', {
+        success: ttsResult.success,
+        hasAudioUrl: !!ttsResult.audioUrl,
+        audioUrl: ttsResult.audioUrl ? ttsResult.audioUrl.substring(0, 100) + (ttsResult.audioUrl.length > 100 ? '...' : '') : 'none',
+        error: ttsResult.error,
+        wasCached: ttsResult.wasCached
+      });
       
       if (!ttsResult.success || !ttsResult.audioUrl) {
         throw new Error(ttsResult.error || 'Failed to generate TTS audio');
@@ -944,7 +972,13 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       });
 
     } catch (error) {
-      console.error("Failed to generate TTS audio:", error);
+      console.error("❌ Failed to generate TTS audio:", error);
+      console.error("❌ Error details:", {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        segmentId: segment.chunkId,
+        voice: segment.voice
+      });
 
     } finally {
       setGeneratingAudio(prev => {
