@@ -795,20 +795,22 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     setGeneratingAudio(prev => new Set(prev).add(segment.chunkId));
     
     try {
-
+      // TODO: Call actual TTS audio generation API
+      // For now, create a placeholder audio file for testing
       
-      // TODO: Call audio generation API
-      // await window.khipu!.call("audio:generate", {
-      //   projectRoot: root,
-      //   chapterId: selectedChapter,
-      //   chunkId: segment.chunkId,
-      //   text: segment.text,
-      //   voice: segment.voice,
-      //   sfx: segment.sfxAfter
-      // });
-      
-      // For now, simulate generation
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      if (root) {
+        const result = await window.khipu!.call("audio:generateSegmentPlaceholder", {
+          projectRoot: root,
+          chapterId: selectedChapter,
+          chunkId: segment.chunkId,
+          text: segment.text,
+          voice: segment.voice
+        });
+        
+        if (!result.success) {
+          throw new Error(result.error || "Failed to generate segment audio");
+        }
+      }
       
       // Update audio production metadata
       await audioProductionService.markSegmentAsCompleted(
@@ -841,7 +843,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         return next;
       });
     }
-  }, [audioSegments, selectedChapter, audioProductionService, generatingAudio]);
+  }, [audioSegments, selectedChapter, audioProductionService, generatingAudio, root]);
 
   const handleGenerateChapterAudio = useCallback(async () => {
     if (!selectedChapter || audioSegments.length === 0 || !root) return;
@@ -865,6 +867,8 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         s.segmentType !== 'sfx' && !s.hasAudio
       );
       
+      console.log(`🎯 Found ${segmentsToGenerate.length} segments that need audio generation`);
+      
       for (let i = 0; i < audioSegments.length; i++) {
         const segment = audioSegments[i];
         
@@ -884,8 +888,16 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             message: `Generating segment ${segmentIndex}/${segmentsToGenerate.length}: ${segment.chunkId}`
           });
           
-          console.log(`🎙️ Generating speech segment: ${segment.chunkId}`);
-          await handleGenerateSegmentAudio(i);
+          console.log(`🎙️ Generating speech segment ${segmentIndex}/${segmentsToGenerate.length}: ${segment.chunkId}`);
+          
+          try {
+            await handleGenerateSegmentAudio(i);
+            console.log(`✅ Successfully generated: ${segment.chunkId}`);
+          } catch (segmentError) {
+            console.error(`❌ Failed to generate segment ${segment.chunkId}:`, segmentError);
+            const errorMessage = segmentError instanceof Error ? segmentError.message : String(segmentError);
+            throw new Error(`Failed to generate audio for segment ${segment.chunkId}: ${errorMessage}`);
+          }
         } else {
           console.log(`✅ Speech segment already has audio: ${segment.chunkId}`);
         }

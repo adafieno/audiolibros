@@ -1464,6 +1464,63 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
     }
   });
 
+  // Generate placeholder audio file for testing
+  ipcMain.handle("audio:generateSegmentPlaceholder", async (_e, { projectRoot, chapterId, chunkId, text, voice }) => {
+    try {
+      console.log(`🎤 Generating placeholder audio for segment: ${chapterId}/${chunkId}`);
+      
+      // Ensure audio directory exists
+      const audioDir = path.join(projectRoot, 'audio', 'wav', chapterId);
+      await fsp.mkdir(audioDir, { recursive: true });
+      
+      // Create a simple placeholder WAV file (1 second of silence at 44.1kHz mono 16-bit)
+      const outputPath = path.join(audioDir, `${chunkId}.wav`);
+      
+      // Generate 1 second of silence as a placeholder
+      const sampleRate = 44100;
+      const duration = Math.max(1, text.length * 0.1); // Rough estimate: 0.1 seconds per character
+      const samples = Math.floor(sampleRate * duration);
+      
+      // Create WAV header (44 bytes) + PCM data
+      const buffer = Buffer.alloc(44 + samples * 2); // 16-bit = 2 bytes per sample
+      
+      // WAV header
+      buffer.write('RIFF', 0);
+      buffer.writeUInt32LE(36 + samples * 2, 4);
+      buffer.write('WAVE', 8);
+      buffer.write('fmt ', 12);
+      buffer.writeUInt32LE(16, 16); // PCM format chunk size
+      buffer.writeUInt16LE(1, 20);  // PCM format
+      buffer.writeUInt16LE(1, 22);  // Mono
+      buffer.writeUInt32LE(sampleRate, 24);
+      buffer.writeUInt32LE(sampleRate * 2, 28); // Byte rate
+      buffer.writeUInt16LE(2, 32);  // Block align
+      buffer.writeUInt16LE(16, 34); // Bits per sample
+      buffer.write('data', 36);
+      buffer.writeUInt32LE(samples * 2, 40);
+      
+      // PCM data is already zeros (silence)
+      
+      await fsp.writeFile(outputPath, buffer);
+      
+      console.log(`✅ Generated placeholder audio: ${path.basename(outputPath)} (${duration.toFixed(1)}s, ${buffer.length} bytes)`);
+      
+      return {
+        success: true,
+        outputPath: path.relative(projectRoot, outputPath),
+        duration: duration,
+        sizeBytes: buffer.length
+      };
+      
+    } catch (error) {
+      console.error('Failed to generate placeholder audio:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  });
+
   // Audio Chapter Concatenation Handler
   ipcMain.handle("audio:concatenateChapter", async (_e, { projectRoot, chapterId, segments, outputFileName }) => {
     try {
@@ -1482,6 +1539,9 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
       
       // Build concatenation list for ffmpeg
       let concatContent = '';
+      const missingFiles = [];
+      
+      console.log(`🔍 Checking ${segments.length} segments for concatenation:`);
       
       for (const segment of segments) {
         let filePath;
@@ -1495,26 +1555,32 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
           // Plan/speech segment - look for generated audio file
           const segmentAudioPath = path.join(projectRoot, 'audio', 'wav', chapterId, `${segment.chunkId}.wav`);
           segmentInfo = `Speech: ${segment.chunkId}`;
-          
-          if (!fs.existsSync(segmentAudioPath)) {
-            throw new Error(`Missing audio file for segment ${segment.chunkId}: ${segmentAudioPath}`);
-          }
-          
           filePath = segmentAudioPath;
         }
         
-        // Verify file exists
+        // Check if file exists
         if (!fs.existsSync(filePath)) {
-          throw new Error(`Audio file does not exist: ${filePath} (${segmentInfo})`);
+          missingFiles.push(`${segment.chunkId} (${segmentInfo}) -> ${filePath}`);
+          console.error(`❌ Missing: ${segmentInfo} at ${filePath}`);
+        } else {
+          console.log(`✅ Found: ${segmentInfo} at ${path.basename(filePath)}`);
+          
+          // Escape file path for ffmpeg concat format
+          const escapedPath = filePath.replace(/\\/g, '/').replace(/'/g, "\\'");
+          concatContent += `file '${escapedPath}'\n`;
+          
+          audioFiles.push(filePath);
         }
-        
-        // Escape file path for ffmpeg concat format
-        const escapedPath = filePath.replace(/\\/g, '/').replace(/'/g, "\\'");
-        concatContent += `file '${escapedPath}'\n`;
-        
-        audioFiles.push(filePath);
-        console.log(`📁 Added to concatenation: ${path.basename(filePath)} (${segmentInfo})`);
       }
+      
+      // If there are missing files, provide a detailed error
+      if (missingFiles.length > 0) {
+        const errorMsg = `Missing ${missingFiles.length} audio file(s) for concatenation:\n${missingFiles.map(f => `  - ${f}`).join('\n')}`;
+        console.error(errorMsg);
+        throw new Error(errorMsg);
+      }
+      
+      console.log(`📝 Prepared ${audioFiles.length} files for concatenation`);
       
       // Write concatenation file
       await fsp.writeFile(tempConcatFile, concatContent);

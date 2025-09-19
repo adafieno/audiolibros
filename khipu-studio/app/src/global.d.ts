@@ -161,6 +161,24 @@ export interface KhipuRequestMap {
     };
   };
   
+  // Generate placeholder audio for testing
+  "audio:generateSegmentPlaceholder": {
+    in: {
+      projectRoot: string;
+      chapterId: string;
+      chunkId: string;
+      text: string;
+      voice: string;
+    };
+    out: {
+      success: boolean;
+      outputPath?: string;
+      duration?: number;
+      sizeBytes?: number;
+      error?: string;
+    };
+  };
+  
   // Audio chapter concatenation
   "audio:concatenateChapter": {
     in: {
