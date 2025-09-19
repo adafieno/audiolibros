@@ -375,29 +375,22 @@ function EditablePreview({
     // Preserve cursor position for when user re-enters edit mode
   }, [originalSegment?.text]);
 
-  // Enhanced keyboard shortcuts
+  // Enhanced keyboard shortcuts - removed auto-save behavior
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
       e.preventDefault();
       handleCancelEdit();
     } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
-      handleSaveEdit(); // Auto-save on Ctrl+Enter
-    } else if (e.key === 'Tab') {
-      e.preventDefault();
-      handleSaveEdit(); // Auto-save on Tab (exit edit mode)
+      handleSaveEdit(); // Explicit save with Ctrl+Enter
     }
+    // Removed Tab auto-save - users must explicitly save
   }, [handleCancelEdit, handleSaveEdit]);
 
-  // Improved blur handling with debouncing to prevent conflicts
+  // Remove auto-save on blur to prevent conflicts
   const handleTextareaBlur = useCallback(() => {
-    // Small delay to prevent conflicts when clicking buttons or switching segments
-    setTimeout(() => {
-      if (isEditing) {
-        handleSaveEdit();
-      }
-    }, 100);
-  }, [isEditing, handleSaveEdit]);
+    // No automatic saving - users must click Save button
+  }, []);
 
   // Enhanced text change handler with better cursor tracking
   const handleTextareaChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -552,7 +545,6 @@ function EditablePreview({
             ) : (
               <div 
                 ref={previewRef}
-                onClick={handleStartEdit}
                 style={{ 
                   fontSize: "16px", 
                   lineHeight: "1.6", 
@@ -562,10 +554,8 @@ function EditablePreview({
                   padding: "12px",
                   border: "1px solid var(--border)",
                   borderRadius: "4px",
-                  cursor: "text",
                   backgroundColor: "var(--background)"
                 }}
-                title={t("planning.clickToEdit")}
               >
                 {renderTextWithCursor(displayText, cursorPosition)}
               </div>
@@ -639,12 +629,12 @@ function EditablePreview({
                 onClick={handleStartEdit}
                 variant="secondary"
                 size="compact"
-                title={t("planning.tooltips.clickToEdit")}
+                title={t("planning.tooltips.editSegment")}
                 style={{
                   padding: "6px 12px"
                 }}
               >
-                ✏️ Editar
+                ✏️ {t("planning.edit")}
               </StandardButton>
               
               <StandardButton
@@ -702,16 +692,15 @@ function EditablePreview({
           ) : (
             <>
               <StandardButton
-                onClick={handleSplitSegment}
-                disabled={!canSplit}
-                variant="secondary"
+                onClick={handleSaveEdit}
+                variant="primary"
                 size="compact"
-                title={t("planning.splitAtCursor")}
+                title={t("planning.tooltips.saveEdit")}
                 style={{
                   padding: "6px 12px"
                 }}
               >
-                ✂️ {t("planning.splitAtCursor")}
+                💾 {t("planning.save")}
               </StandardButton>
               
               <StandardButton
@@ -724,6 +713,19 @@ function EditablePreview({
                 }}
               >
                 ❌ {t("planning.cancel")}
+              </StandardButton>
+              
+              <StandardButton
+                onClick={handleSplitSegment}
+                disabled={!canSplit}
+                variant="secondary"
+                size="compact"
+                title={t("planning.splitAtCursor")}
+                style={{
+                  padding: "6px 12px"
+                }}
+              >
+                ✂️ {t("planning.splitAtCursor")}
               </StandardButton>
             </>
           )}
