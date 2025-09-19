@@ -795,141 +795,133 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     setGeneratingAudio(prev => new Set(prev).add(segment.chunkId));
     
     try {
-      // TODO: Call actual TTS audio generation API
-      // For now, create a placeholder audio file for testing
+      // Use the existing TTS generation system from handlePlaySegment
+      // This ensures we get the same audio that the play button would generate
       
-      if (root) {
-        const result = await window.khipu!.call("audio:generateSegmentPlaceholder", {
-          projectRoot: root,
-          chapterId: selectedChapter,
-          chunkId: segment.chunkId,
-          text: segment.text,
-          voice: segment.voice
-        });
-        
-        if (!result.success) {
-          throw new Error(result.error || "Failed to generate segment audio");
-        }
-        
-        // Check if TTS generation is required (new two-step process)
-        if (result.requiresTtsGeneration) {
-          console.log(`🎤 TTS generation required for segment ${segment.chunkId}, using audio preview system`);
-          
-          // Use the same TTS generation system as the play functionality
-          const [projectConfig, charactersData, planData] = await Promise.all([
-            // Load project config
-            window.khipu!.call("fs:read", {
-              projectRoot: root,
-              relPath: "project.khipu.json",
-              json: true,
-            }).catch(() => null),
-            
-            // Load characters data
-            window.khipu!.call("fs:read", {
-              projectRoot: root,
-              relPath: "dossier/characters.json",
-              json: true,
-            }).catch(() => null),
-            
-            // Load plan data to get segment details
-            selectedChapter ? window.khipu!.call("fs:read", {
-              projectRoot: root,
-              relPath: `ssml/plans/${selectedChapter}.plan.json`,
-              json: true,
-            }).catch(() => null) : null
-          ]);
-
-          // Find the full segment data from plan
-          let segmentData = null;
-          if (planData) {
-            const chunks = Array.isArray(planData) ? planData : (planData as { chunks?: unknown[] })?.chunks;
-            segmentData = chunks?.find((chunk: unknown) => (chunk as { id?: string }).id === segment.chunkId);
-          }
-
-          // Find character data
-          let characterData = null;
-          if (charactersData && segment.voice && segment.voice !== "unassigned") {
-            const characters = Array.isArray(charactersData) ? charactersData : (charactersData as { characters?: unknown[] })?.characters;
-            characterData = characters?.find((char: unknown) => {
-              const character = char as { name?: string; id?: string };
-              return character.name === segment.voice || character.id === segment.voice;
-            });
-          }
-
-          if (!segmentData || !characterData || !projectConfig) {
-            throw new Error("Missing required data for TTS generation (segment, character, or project config)");
-          }
-
-          // Generate TTS using the audio cache system (same as play functionality)
-          const { generateCachedAudition } = await import('../lib/audio-cache');
-
-          const voiceAssignment = (characterData as any)?.voiceAssignment;
-          if (!voiceAssignment) {
-            throw new Error(`Character ${(characterData as any)?.name} has no voice assignment`);
-          }
-
-          const voice = {
-            id: voiceAssignment.voiceId,
-            engine: "azure" as const,
-            locale: voiceAssignment.voiceId.startsWith("es-") ? voiceAssignment.voiceId.substring(0, 5) : "es-ES",
-            gender: (characterData as any)?.traits?.gender || "N" as const,
-            age_hint: (characterData as any)?.traits?.age || "adult",
-            accent_tags: (characterData as any)?.traits?.accent ? [(characterData as any).traits.accent] : [],
-            styles: voiceAssignment.style ? [voiceAssignment.style] : [],
-            description: `Voice for ${(characterData as any)?.name || segment.chunkId}`
-          };
-
-          const auditionOptions = {
-            voice: voice,
-            config: projectConfig as any,
-            text: segment.text,
-            style: voiceAssignment.style,
-            styledegree: voiceAssignment.styledegree,
-            rate_pct: voiceAssignment.rate_pct,
-            pitch_pct: voiceAssignment.pitch_pct
-          };
-
-          // Generate TTS audio (bypassing cache to get fresh audio)
-          const ttsResult = await generateCachedAudition(auditionOptions, false);
-          
-          if (!ttsResult.success || !ttsResult.audioUrl) {
-            throw new Error(ttsResult.error || 'Failed to generate TTS audio');
-          }
-
-          console.log(`✅ Generated TTS audio, now saving to project directory`);
-          
-          // Read the audio data from the generated URL
-          let audioData: ArrayBuffer;
-          if (ttsResult.audioUrl.startsWith('blob:')) {
-            // Handle blob URL
-            const response = await fetch(ttsResult.audioUrl);
-            audioData = await response.arrayBuffer();
-          } else if (ttsResult.audioUrl.startsWith('file://')) {
-            // Handle file URL by reading from the file system
-            audioData = await window.khipu!.call('fs:readAudioFile', { filePath: ttsResult.audioUrl });
-          } else {
-            throw new Error('Unsupported audio URL format');
-          }
-          
-          // Convert to base64 for IPC transmission
-          const audioBase64 = btoa(String.fromCharCode(...new Uint8Array(audioData)));
-          
-          // Save the audio to the project directory
-          const saveResult = await window.khipu!.call("audio:saveTtsToProject", {
-            projectRoot: root,
-            chapterId: selectedChapter,
-            chunkId: segment.chunkId,
-            audioData: audioBase64,
-            text: segment.text
-          });
-          
-          if (!saveResult.success) {
-            throw new Error(saveResult.error || "Failed to save TTS audio to project");
-          }
-          
-          console.log(`✅ Saved TTS audio to project: ${saveResult.outputPath}`);
-        }
+      if (!root) {
+        throw new Error("Project root not available");
       }
+
+      console.log(`🎤 Generating TTS audio for segment ${segment.chunkId} using audio preview system`);
+      
+      // Load the same data that handlePlaySegment uses
+      const [projectConfig, charactersData, planData] = await Promise.all([
+        // Load project config
+        window.khipu!.call("fs:read", {
+          projectRoot: root,
+          relPath: "project.khipu.json",
+          json: true,
+        }).catch(() => null),
+        
+        // Load characters data
+        window.khipu!.call("fs:read", {
+          projectRoot: root,
+          relPath: "dossier/characters.json",
+          json: true,
+        }).catch(() => null),
+        
+        // Load plan data to get segment details
+        selectedChapter ? window.khipu!.call("fs:read", {
+          projectRoot: root,
+          relPath: `ssml/plans/${selectedChapter}.plan.json`,
+          json: true,
+        }).catch(() => null) : null
+      ]);
+
+      // Find the full segment data from plan
+      let segmentData = null;
+      if (planData) {
+        const chunks = Array.isArray(planData) ? planData : (planData as { chunks?: unknown[] })?.chunks;
+        segmentData = chunks?.find((chunk: unknown) => (chunk as { id?: string }).id === segment.chunkId);
+      }
+
+      // Find character data
+      let characterData = null;
+      if (charactersData && segment.voice && segment.voice !== "unassigned") {
+        const characters = Array.isArray(charactersData) ? charactersData : (charactersData as { characters?: unknown[] })?.characters;
+        characterData = characters?.find((char: unknown) => {
+          const character = char as { name?: string; id?: string };
+          return character.name === segment.voice || character.id === segment.voice;
+        });
+      }
+
+      if (!segmentData || !characterData || !projectConfig) {
+        throw new Error("Missing required data for TTS generation (segment, character, or project config)");
+      }
+
+      console.log('🎤 TTS data loaded, generating audio via generateCachedAudition');
+
+      // Generate TTS using the same system as handlePlaySegment
+      const { generateCachedAudition } = await import('../lib/audio-cache');
+
+      const voiceAssignment = (characterData as { voiceAssignment?: { voiceId: string; style?: string; styledegree?: number; rate_pct?: number; pitch_pct?: number } })?.voiceAssignment;
+      if (!voiceAssignment) {
+        throw new Error(`Character ${(characterData as { name?: string })?.name} has no voice assignment`);
+      }
+
+      const characterTraits = characterData as { traits?: { gender?: string; age?: string; accent?: string } };
+
+      const voice = {
+        id: voiceAssignment.voiceId,
+        engine: "azure" as const,
+        locale: voiceAssignment.voiceId.startsWith("es-") ? voiceAssignment.voiceId.substring(0, 5) : "es-ES",
+        gender: (characterTraits?.traits?.gender === "M" || characterTraits?.traits?.gender === "F" ? characterTraits.traits.gender : "N") as "N" | "M" | "F",
+        age_hint: (["adult", "child", "teen", "elderly"].includes(characterTraits?.traits?.age || "") ? characterTraits?.traits?.age : "adult") as "adult" | "child" | "teen" | "elderly",
+        accent_tags: characterTraits?.traits?.accent ? [characterTraits.traits.accent] : [],
+        styles: voiceAssignment.style ? [voiceAssignment.style] : [],
+        description: `Voice for ${(characterData as { name?: string })?.name || segment.chunkId}`
+      };
+
+      const auditionOptions = {
+        voice: voice,
+        config: projectConfig as ProjectConfig,
+        text: segment.text,
+        style: voiceAssignment.style,
+        styledegree: voiceAssignment.styledegree,
+        rate_pct: voiceAssignment.rate_pct,
+        pitch_pct: voiceAssignment.pitch_pct
+      };
+
+      // Generate TTS audio (bypassing cache to get fresh audio)
+      const ttsResult = await generateCachedAudition(auditionOptions, false);
+      
+      if (!ttsResult.success || !ttsResult.audioUrl) {
+        throw new Error(ttsResult.error || 'Failed to generate TTS audio');
+      }
+
+      console.log(`✅ Generated TTS audio: ${ttsResult.audioUrl}, now saving to project directory`);
+      
+      // Read the audio data from the generated URL
+      let audioData: ArrayBuffer;
+      if (ttsResult.audioUrl.startsWith('blob:')) {
+        // Handle blob URL
+        const response = await fetch(ttsResult.audioUrl);
+        audioData = await response.arrayBuffer();
+      } else if (ttsResult.audioUrl.startsWith('file://')) {
+        // Handle file URL by reading from the file system
+        const filePath = ttsResult.audioUrl.replace('file://', '').replace(/^\/([A-Z]:)/, '$1');
+        audioData = await window.khipu!.call('fs:readAudioFile', { filePath });
+      } else {
+        throw new Error('Unsupported audio URL format');
+      }
+      
+      // Convert to base64 for IPC transmission
+      const audioBase64 = btoa(String.fromCharCode(...new Uint8Array(audioData)));
+      
+      // Save the audio to the project directory
+      const saveResult = await window.khipu!.call("audio:saveTtsToProject", {
+        projectRoot: root,
+        chapterId: selectedChapter,
+        chunkId: segment.chunkId,
+        audioData: audioBase64,
+        text: segment.text
+      });
+      
+      if (!(saveResult as { success?: boolean })?.success) {
+        throw new Error((saveResult as { error?: string })?.error || "Failed to save TTS audio to project");
+      }
+      
+      console.log(`✅ Saved TTS audio to project: ${(saveResult as { outputPath?: string })?.outputPath}`);
       
       // Update audio production metadata
       await audioProductionService.markSegmentAsCompleted(
@@ -937,10 +929,10 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         segment.chunkId,
         {
           filename: `${segment.chunkId}.wav`,
-          duration: 10, // TODO: Get actual duration from generated file
-          sampleRate: 22050,
+          duration: (saveResult as { duration?: number })?.duration || 10,
+          sampleRate: 44100,
           bitDepth: 16,
-          fileSize: 1024000 // TODO: Get actual file size
+          fileSize: (saveResult as { sizeBytes?: number })?.sizeBytes || 1024000
         }
       );
       
@@ -950,10 +942,9 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
         updated[rowIndex] = { ...updated[rowIndex], hasAudio: true };
         return updated;
       });
-      
 
     } catch (error) {
-      console.error("Failed to generate audio:", error);
+      console.error("Failed to generate TTS audio:", error);
 
     } finally {
       setGeneratingAudio(prev => {
