@@ -1467,53 +1467,103 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
   // Generate placeholder audio file for testing
   ipcMain.handle("audio:generateSegmentPlaceholder", async (_e, { projectRoot, chapterId, chunkId, text, voice }) => {
     try {
-      console.log(`🎤 Generating placeholder audio for segment: ${chapterId}/${chunkId}`);
+      console.log(`🎤 Generating TTS audio for segment: ${chapterId}/${chunkId} with voice: ${voice}`);
       
       // Ensure audio directory exists
       const audioDir = path.join(projectRoot, 'audio', 'wav', chapterId);
       await fsp.mkdir(audioDir, { recursive: true });
       
-      // Create a simple placeholder WAV file (1 second of silence at 44.1kHz mono 16-bit)
       const outputPath = path.join(audioDir, `${chunkId}.wav`);
       
-      // Generate 1 second of silence as a placeholder
-      const sampleRate = 44100;
-      const duration = Math.max(1, text.length * 0.1); // Rough estimate: 0.1 seconds per character
-      const samples = Math.floor(sampleRate * duration);
+      // Create SSML XML from text and voice
+      const ssmlXml = `<?xml version="1.0" encoding="UTF-8"?>
+<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US">
+  <voice name="${voice || 'en-US-AriaNeural'}">
+    ${text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+  </voice>
+</speak>`;
+
+      // Call Python TTS using azure_client.py
+      const pythonDir = path.join(path.dirname(projectRoot), 'py');
+      const scriptPath = path.join(pythonDir, 'tts', 'azure_client.py');
       
-      // Create WAV header (44 bytes) + PCM data
-      const buffer = Buffer.alloc(44 + samples * 2); // 16-bit = 2 bytes per sample
+      console.log(`🐍 Calling Python TTS: ${scriptPath}`);
+      console.log(`📝 Text length: ${text.length} chars`);
       
-      // WAV header
-      buffer.write('RIFF', 0);
-      buffer.writeUInt32LE(36 + samples * 2, 4);
-      buffer.write('WAVE', 8);
-      buffer.write('fmt ', 12);
-      buffer.writeUInt32LE(16, 16); // PCM format chunk size
-      buffer.writeUInt16LE(1, 20);  // PCM format
-      buffer.writeUInt16LE(1, 22);  // Mono
-      buffer.writeUInt32LE(sampleRate, 24);
-      buffer.writeUInt32LE(sampleRate * 2, 28); // Byte rate
-      buffer.writeUInt16LE(2, 32);  // Block align
-      buffer.writeUInt16LE(16, 34); // Bits per sample
-      buffer.write('data', 36);
-      buffer.writeUInt32LE(samples * 2, 40);
-      
-      // PCM data is already zeros (silence)
-      
-      await fsp.writeFile(outputPath, buffer);
-      
-      console.log(`✅ Generated placeholder audio: ${path.basename(outputPath)} (${duration.toFixed(1)}s, ${buffer.length} bytes)`);
-      
-      return {
-        success: true,
-        outputPath: path.relative(projectRoot, outputPath),
-        duration: duration,
-        sizeBytes: buffer.length
-      };
+      return new Promise((resolve, reject) => {
+        // Create temporary SSML file
+        const tempSsmlPath = path.join(audioDir, `${chunkId}_temp.ssml.xml`);
+        
+        const callPython = async () => {
+          try {
+            // Write SSML to temp file
+            await fsp.writeFile(tempSsmlPath, ssmlXml, 'utf-8');
+            
+            // Call Python script
+            const { spawn } = require('child_process');
+            const pythonProcess = spawn('python', [scriptPath, '--in', tempSsmlPath, '--out', outputPath], {
+              cwd: pythonDir,
+              stdio: ['pipe', 'pipe', 'pipe']
+            });
+            
+            let stdout = '';
+            let stderr = '';
+            
+            pythonProcess.stdout.on('data', (data) => {
+              stdout += data.toString();
+            });
+            
+            pythonProcess.stderr.on('data', (data) => {
+              stderr += data.toString();
+            });
+            
+            pythonProcess.on('close', async (code) => {
+              try {
+                // Clean up temp SSML file
+                await fsp.unlink(tempSsmlPath).catch(() => {});
+                
+                if (code !== 0) {
+                  console.error(`🚫 Python TTS failed (exit code ${code}):`, stderr);
+                  reject(new Error(`TTS synthesis failed: ${stderr || 'Unknown error'}`));
+                  return;
+                }
+                
+                // Check if output file exists
+                try {
+                  const stats = await fsp.stat(outputPath);
+                  console.log(`✅ Generated TTS audio: ${path.basename(outputPath)} (${stats.size} bytes)`);
+                  
+                  resolve({
+                    success: true,
+                    outputPath: path.relative(projectRoot, outputPath),
+                    duration: Math.max(1, text.length * 0.08), // Rough estimate
+                    sizeBytes: stats.size
+                  });
+                } catch (statError) {
+                  console.error('🚫 TTS output file not found:', statError);
+                  reject(new Error('TTS synthesis completed but output file not found'));
+                }
+              } catch (cleanupError) {
+                console.error('Error during TTS cleanup:', cleanupError);
+                reject(cleanupError);
+              }
+            });
+            
+            pythonProcess.on('error', (error) => {
+              console.error('🚫 Failed to start Python TTS process:', error);
+              reject(new Error(`Failed to start TTS process: ${error.message}`));
+            });
+          } catch (fileError) {
+            console.error('🚫 Failed to create temp SSML file:', fileError);
+            reject(fileError);
+          }
+        };
+        
+        callPython();
+      });
       
     } catch (error) {
-      console.error('Failed to generate placeholder audio:', error);
+      console.error('Failed to generate TTS audio:', error);
       return {
         success: false,
         error: error.message
