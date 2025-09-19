@@ -1847,49 +1847,105 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
       
       console.log(`✅ Azure TTS successful for ${segment.chunkId}, saving audio...`);
       
-      // Get audio data and convert to proper format
+      // Get audio data and process with full audio processing chain
       const audioBuffer = await ttsResponse.arrayBuffer();
-      const targetPath = path.join('audio', 'wav', chapterId, `${segment.chunkId}.wav`);
-      
-      // Save directly with proper format using temporary file approach
       const tempInputPath = path.join(__dirname, '../../temp', `tts_${segment.chunkId}_${Date.now()}.wav`);
       await fsp.mkdir(path.dirname(tempInputPath), { recursive: true });
       
       // Write raw TTS data to temp file
       await fsp.writeFile(tempInputPath, Buffer.from(audioBuffer));
       
-      // Prepare output path
+      // Create a default processing chain for TTS audio
+      const processingChain = {
+        noiseCleanup: {
+          highPassFilter: {
+            enabled: true,
+            frequency: "80"
+          },
+          deClickDeEss: {
+            enabled: false,
+            intensity: "medium"
+          }
+        },
+        dynamicControl: {
+          compression: {
+            enabled: true,
+            ratio: "2.5:1",
+            threshold: -12
+          },
+          limiter: {
+            enabled: true,
+            ceiling: -1
+          }
+        },
+        eqShaping: {
+          lowMidCut: {
+            enabled: false,
+            frequency: "200",
+            gain: -2
+          },
+          presenceBoost: {
+            enabled: true,
+            frequency: "3",
+            gain: 2
+          },
+          airLift: {
+            enabled: false,
+            frequency: "10",
+            gain: 1
+          }
+        },
+        spatialEnhancement: {
+          reverb: {
+            enabled: true,
+            type: "room_0.4",
+            wetMix: 8
+          },
+          stereoEnhancer: {
+            enabled: false,
+            width: 10
+          }
+        },
+        mastering: {
+          normalization: {
+            enabled: true,
+            targetLUFS: "-21"
+          },
+          peakLimiting: {
+            enabled: true,
+            maxPeak: -3
+          },
+          dithering: {
+            enabled: false,
+            bitDepth: "16"
+          }
+        }
+      };
+      
+      // Use the audio processor to apply the full processing chain
+      const targetPath = path.join('audio', 'wav', chapterId, `${segment.chunkId}.wav`);
       const targetFullPath = path.join(projectRoot, targetPath);
       await fsp.mkdir(path.dirname(targetFullPath), { recursive: true });
       
-      // Convert using SOX to ensure consistent format (44.1kHz mono 16-bit)
+      // Generate cache key for processed audio
       const processor = getAudioProcessor();
-      const { spawn } = require('child_process');
+      const cacheKey = processor.generateCacheKey(tempInputPath, processingChain);
       
-      const soxArgs = [
-        tempInputPath,
-        '-r', '44100',    // Sample rate: 44.1kHz
-        '-c', '1',        // Channels: mono
-        '-b', '16',       // Bit depth: 16-bit
-        targetFullPath
-      ];
+      console.log(`🎛️  Applying full audio processing chain to segment ${segment.chunkId}...`);
       
-      console.log(`🔧 Converting TTS audio: ${processor.soxPath} ${soxArgs.join(' ')}`);
-      
-      const soxProcess = spawn(processor.soxPath, soxArgs);
-      
-      let stderr = '';
-      soxProcess.stderr.on('data', (data) => {
-        stderr += data.toString();
+      const processResult = await processor.processAudio({
+        id: segment.chunkId,
+        inputPath: tempInputPath,
+        processingChain: processingChain,
+        cacheKey: cacheKey
       });
       
-      const exitCode = await new Promise((resolve) => {
-        soxProcess.on('close', resolve);
-        soxProcess.on('error', (error) => {
-          console.error('SOX process error:', error);
-          resolve(-1);
-        });
-      });
+      if (!processResult.success) {
+        throw new Error(`Audio processing failed: ${processResult.error}`);
+      }
+      
+      // Copy processed audio to final location
+      await fsp.copyFile(processResult.outputPath, targetFullPath);
       
       // Clean up temp file
       try {
@@ -1898,13 +1954,8 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
         console.warn('Failed to clean up temp TTS file:', cleanupError);
       }
       
-      if (exitCode !== 0) {
-        console.error(`SOX stderr: ${stderr}`);
-        throw new Error(`SOX conversion failed (exit code ${exitCode}): ${stderr}`);
-      }
-      
       const stats = await fsp.stat(targetFullPath);
-      console.log(`💾 Saved segment audio: ${path.basename(targetFullPath)} (${stats.size} bytes)`);
+      console.log(`💾 Saved processed segment audio: ${path.basename(targetFullPath)} (${stats.size} bytes)`);
       
       return { 
         success: true, 
