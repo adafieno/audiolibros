@@ -5,6 +5,7 @@ import { WorkflowCompleteButton } from "../components/WorkflowCompleteButton";
 import { PageHeader } from "../components/PageHeader";
 import { StandardButton } from "../components/StandardButton";
 import { loadProjectConfig } from "../lib/config";
+import { injectPhonemes } from "../lib/ssml";
 import { loadVoiceInventory, saveVoiceInventory } from "../lib/voice";
 import { 
   getAvailableLanguages,
@@ -103,12 +104,24 @@ export default function CastingPage() {
       });
       
       await Promise.race([
-        playAudition({
-          voice,
-          config,
-          text: undefined, // Will use locale-appropriate default audition text
-          page: 'casting'
-        }, useCache),
+        // Inject phonemes into the default audition text if the project defines replacements
+        (async () => {
+          const defaultText = undefined; // let generateAudition pick locale default
+          // If we have a pronunciation map, we need to resolve the exact audition text first
+          let auditionText: string | undefined = defaultText;
+          if (config.pronunciationMap && Object.keys(config.pronunciationMap).length > 0) {
+            // Resolve locale-appropriate default via tts helper by calling getAuditionText indirectly
+            // But to avoid importing internals, use a small placeholder and let auditors handle SSML wrapping.
+            auditionText = injectPhonemes(getAuditionPlaceholder(voice.locale), config.pronunciationMap);
+          }
+
+          return playAudition({
+            voice,
+            config,
+            text: auditionText,
+            page: 'casting'
+          }, useCache);
+        })(),
         timeoutPromise
       ]);
       
@@ -549,4 +562,13 @@ export default function CastingPage() {
       </section>
     </div>
   );
+}
+
+// Small helper to provide a locale-appropriate default audition text when casting page needs it.
+function getAuditionPlaceholder(locale: string): string {
+  // Keep this minimal and aligned with tts-audition defaults
+  if (!locale) return "Hello, this is a voice audition sample for your audiobook project.";
+  if (locale.startsWith('es')) return "Hola, soy una voz que puedes usar para tu audiolibro. Esta es una muestra de cómo sueno cuando leo tu contenido.";
+  if (locale.startsWith('fr')) return "Bonjour, je suis une voix que vous pouvez utiliser pour votre livre audio. Ceci est un échantillon de la façon dont je sonne quand je lis votre contenu.";
+  return "Hello, this is a voice audition sample for your audiobook project.";
 }

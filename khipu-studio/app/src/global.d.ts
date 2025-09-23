@@ -68,10 +68,6 @@ export interface KhipuRequestMap {
     in: { filePath: string; projectRoot: string }; 
     out: { success: boolean; fileName?: string; dimensions?: { width: number; height: number }; error?: string; warning?: string } 
   };
-  "file:getImageDataUrl": {
-    in: { projectRoot: string; fileName: string };
-    out: { success: boolean; dataUrl?: string; error?: string }
-  };
 
   // Audio Cache
   "audioCache:read": { 
@@ -291,6 +287,12 @@ export interface KhipuRequestMap {
     };
   };
   "audioProcessor:getCachedAudioPath": { in: string; out: string | null };
+
+  // Pronunciation
+  "pronunciation:suggestIpa": {
+    in: { projectRoot: string; word: string; force?: boolean };
+    out: { success: boolean; ipa?: string; error?: string; examples?: string[]; source?: string };
+  };
 }
 
 export interface Khipu {
@@ -339,3 +341,4 @@ declare global {
 }
 
 export {};
+

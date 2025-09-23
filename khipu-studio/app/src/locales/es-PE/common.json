@@ -693,8 +693,66 @@
   },
   "home.createNew": {
     "string": "Crear nuevo proyecto",
-    "comment": ""
+    "comment": "Botón para crear un nuevo proyecto"
   },
+
+  "pronunciation.map.title": {
+    "string": "Mapa de pronunciación",
+    "comment": "Título de la sección del mapa de pronunciación en la configuración del proyecto"
+  },
+  "pronunciation.map.description": {
+    "string": "Personaliza cómo se pronuncian las palabras usando IPA y etiquetas SSML phoneme.",
+    "comment": "Descripción de la sección del mapa de pronunciación"
+  },
+  "pronunciation.map.word": {
+    "string": "Palabra",
+    "comment": "Etiqueta para la columna de palabra en la tabla de mapa de pronunciación"
+  },
+  "pronunciation.map.ipa": {
+    "string": "IPA",
+    "comment": "Etiqueta para la columna IPA en la tabla de mapa de pronunciación"
+  },
+  "pronunciation.map.add": {
+    "string": "Agregar palabra",
+    "comment": "Botón para agregar una nueva palabra al mapa de pronunciación"
+  },
+  "pronunciation.map.remove": {
+    "string": "Eliminar",
+    "comment": "Botón para eliminar una palabra del mapa de pronunciación"
+  },
+  "pronunciation.map.suggest": {
+    "string": "Sugerir IPA",
+    "comment": "Botón para sugerir IPA usando LLM"
+  },
+  "pronunciation.map.edit": {
+    "string": "Editar",
+    "comment": "Botón para editar una palabra o valor IPA"
+  },
+  "pronunciation.map.save": {
+    "string": "Guardar",
+    "comment": "Botón para guardar cambios en el mapa de pronunciación"
+  },
+  "pronunciation.map.cancel": {
+    "string": "Cancelar",
+    "comment": "Botón para cancelar la edición"
+  },
+  "pronunciation.map.empty": {
+    "string": "No se han agregado palabras todavía.",
+    "comment": "Mensaje mostrado cuando el mapa de pronunciación está vacío"
+  },
+  "pronunciation.map.error": {
+    "string": "Error al sugerir IPA. Por favor, inténtalo de nuevo.",
+    "comment": "Mensaje de error para sugerencia de IPA fallida"
+  },
+  "project.pronunciationMap": { "string": "Mapa de pronunciación", "comment": "Título de la sección del mapa de pronunciación (alias)" },
+  "project.pronunciationMapInfo": { "string": "Personaliza las pronunciaciones usando IPA. Usa 'Sugerir IPA' para sugerencias automáticas.", "comment": "Texto informativo para mapa de pronunciación (alias)" },
+  "project.wordPlaceholder": { "string": "Palabra", "comment": "Placeholder para la entrada de nueva palabra (alias)" },
+  "project.ipaPlaceholder": { "string": "IPA (p. ej. /fəˈnɛtɪk/)", "comment": "Placeholder para la entrada de IPA (alias)" },
+  "project.suggestIPA": { "string": "Sugerir IPA", "comment": "Texto del botón para solicitar sugerencia de IPA (alias)" },
+  "project.removeWord": { "string": "Eliminar", "comment": "Texto del botón para eliminar palabra (alias)" },
+  "project.addWord": { "string": "Agregar palabra", "comment": "Texto del botón para agregar nueva palabra (alias)" },
+  "project.suggestIpaConfirm": { "string": "Ejemplos sugeridos:", "comment": "Prompt header showing examples before accepting IPA suggestion (es)" },
+  "project.suggestIpaAccept": { "string": "¿Aceptar IPA sugerida?", "comment": "Confirm accept suggested IPA (es)" },
   "home.baseFolder": {
     "string": "Carpeta base",
     "comment": ""

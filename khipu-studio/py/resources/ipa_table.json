@@ -1,0 +1,7 @@
+{
+  "test": { "ipa": "tɛst", "examples": ["test"] },
+  "el": { "ipa": "el", "examples": ["el"] },
+  "hello": { "ipa": "həˈloʊ", "examples": ["hello"] },
+  "hola": { "ipa": "ˈola", "examples": ["hola"] },
+  "adiós": { "ipa": "aˈðjos", "examples": ["adiós"] }
+}

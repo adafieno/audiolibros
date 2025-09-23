@@ -64,6 +64,7 @@ export const projectConfigSchema = z.object({
     outputDir: z.string().default("exports"),
     platforms: z.object({ apple: z.boolean().optional(), google: z.boolean().optional(), spotify: z.boolean().optional() }).default({}),
   }),
+  pronunciationMap: z.record(z.string(), z.string()).default({}),
   creds: z.object({
     tts: z.object({
       azure: z.object({ key: z.string().optional(), region: z.string().optional() }).optional(),

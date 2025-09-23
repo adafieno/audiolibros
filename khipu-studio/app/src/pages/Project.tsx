@@ -650,6 +650,106 @@ export default function Project() {
             </div>
           )}
         </section>
+
+        {/* Pronunciation Map Settings */}
+        <section>
+          <h3 style={{ fontSize: '1.1rem' }}>{t("project.pronunciationMap")}</h3>
+          <div style={{ fontSize: "14px", color: "var(--muted)", marginBottom: "12px" }}>
+            {t("project.pronunciationMapInfo")}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {Object.entries(cfg.pronunciationMap || {}).map(([word, ipa]) => (
+              <div key={word} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input
+                  value={word}
+                  disabled
+                  style={{ width: "120px", background: "var(--panel)", color: "var(--text)", border: "1px solid var(--border)", borderRadius: "4px", padding: "4px 8px" }}
+                />
+                <input
+                  value={ipa}
+                  placeholder={t("project.ipaPlaceholder")}
+                  onChange={async e => {
+                    const current = cfg.pronunciationMap || {};
+                    const newMap = { ...current, [word]: e.target.value };
+                    update("pronunciationMap", newMap);
+                    try {
+                      await saveProjectConfig(root, { ...cfg, pronunciationMap: newMap });
+                      console.log("Project config saved (pronunciation edit)");
+                    } catch (err) {
+                      console.warn("Failed to save project config after pronunciation edit:", err);
+                    }
+                  }}
+                  style={{ width: "180px", background: "var(--panel)", color: "var(--text)", border: "1px solid var(--border)", borderRadius: "4px", padding: "4px 8px" }}
+                />
+                <StandardButton onClick={async () => {
+                  try {
+                    const result = await window.khipu!.call("pronunciation:suggestIpa", { projectRoot: root, word, force: true });
+                    if (result && result.success && result.ipa) {
+                      // Save suggested IPA immediately (no confirmation required)
+                      const current = cfg.pronunciationMap || {};
+                      const newMap = { ...current, [word]: result.ipa };
+                      update("pronunciationMap", newMap);
+                      try {
+                        await saveProjectConfig(root, { ...cfg, pronunciationMap: newMap });
+                        console.log("Project config saved (pronunciation suggest)");
+                      } catch (err) {
+                        console.warn("Failed to save project config after pronunciation suggest:", err);
+                        window.alert(t("project.suggestIpaSaveFailed") + ": " + String(err));
+                      }
+                    } else {
+                      const msg = result?.error || "No IPA returned";
+                      console.warn("Suggest IPA failed:", msg);
+                      window.alert(t("project.suggestIpaFailed") + ": " + String(msg));
+                    }
+                  } catch (err: unknown) {
+                    // Common case while developing: main process handler not registered
+                    console.error("Suggest IPA error:", err);
+                    const em = String((err as (Error & { message?: string }))?.message ?? err);
+                    if (em.includes("No handler registered") || em.includes("pronunciation:suggestIpa")) {
+                      window.alert(t("project.suggestIpaNoHandler"));
+                    } else {
+                      window.alert(t("project.suggestIpaFailed") + ": " + em);
+                    }
+                  }
+                }}>{t("project.suggestIPA")}</StandardButton>
+                <StandardButton onClick={async () => {
+                  const current = cfg.pronunciationMap || {};
+                  const newMap = { ...current };
+                  delete newMap[word];
+                  update("pronunciationMap", newMap);
+                  try {
+                    await saveProjectConfig(root, { ...cfg, pronunciationMap: newMap });
+                    console.log("Project config saved (pronunciation remove)");
+                  } catch (err) {
+                    console.warn("Failed to save project config after pronunciation remove:", err);
+                  }
+                }} style={{ background: "var(--errorBg)", color: "var(--error)" }}>{t("project.removeWord")}</StandardButton>
+              </div>
+            ))}
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input
+                id="newPronWord"
+                placeholder={t("project.wordPlaceholder")}
+                style={{ width: "120px", background: "var(--panel)", color: "var(--text)", border: "1px solid var(--border)", borderRadius: "4px", padding: "4px 8px" }}
+              />
+              <StandardButton onClick={async () => {
+                const word = (document.getElementById("newPronWord") as HTMLInputElement)?.value?.trim();
+                if (word && !(cfg.pronunciationMap || {})[word]) {
+                  const current = cfg.pronunciationMap || {};
+                  const newMap = { ...current, [word]: "" };
+                  update("pronunciationMap", newMap);
+                  (document.getElementById("newPronWord") as HTMLInputElement).value = "";
+                  try {
+                    await saveProjectConfig(root, { ...cfg, pronunciationMap: newMap });
+                    console.log("Project config saved (pronunciation add)");
+                  } catch (err) {
+                    console.warn("Failed to save project config after pronunciation add:", err);
+                  }
+                }
+              }}>{t("project.addWord")}</StandardButton>
+            </div>
+          </div>
+        </section>
         
         </div>
       </div>

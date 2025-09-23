@@ -302,7 +302,9 @@ export class AudioPreviewService {
       // Generate cache key for processed audio using centralized method
       const segmentText = options.segment.text;
       const characterVoice = options.character.voiceAssignment?.voiceId || 'default';
-      const cacheKey = `sox_${this.generateCacheKey(segmentText, characterVoice, options.processingChain)}`;
+  const cacheKey = `sox_${this.generateCacheKey(segmentText, characterVoice, options.processingChain)}`;
+  // Ensure we pass a key without extension to the main process
+  const normalizedCacheKey = cacheKey.endsWith('.wav') ? cacheKey.replace(/\.wav$/, '') : cacheKey;
       
       console.log(`🔍 Generated cache key for segment ${options.segmentId}: ${cacheKey}`);
       console.log(`🎛️ Processing chain includes: ${Object.keys(options.processingChain).join(', ')}`);
@@ -314,7 +316,7 @@ export class AudioPreviewService {
       if (!options.forceRegenerate) {
         try {
           // Try to get cached processed audio path
-          processedAudioPath = await window.khipu!.call('audioProcessor:getCachedAudioPath', cacheKey);
+          processedAudioPath = await window.khipu!.call('audioProcessor:getCachedAudioPath', normalizedCacheKey);
           if (processedAudioPath) {
             console.log(`🎵 Found cached processed audio: ${processedAudioPath}`);
             
@@ -478,7 +480,7 @@ export class AudioPreviewService {
               return await window.khipu!.call('audioProcessor:processAudio', {
                 audioUrl: ttsAudioPath, // Pass the actual cached file path
                 processingChain: options.processingChain,
-                cacheKey: cacheKey
+                cacheKey: normalizedCacheKey
               });
             },
             {
@@ -822,6 +824,7 @@ export class AudioPreviewService {
     const segmentText = segmentData.segment.text;
     const characterVoice = segmentData.character.voiceAssignment?.voiceId || 'default';
     const cacheKey = `sox_${this.generateCacheKey(segmentText, characterVoice, segmentData.processingChain)}`;
+    const normalizedCacheKey = cacheKey.endsWith('.wav') ? cacheKey.replace(/\.wav$/, '') : cacheKey;
     
     console.log(`🎵 [Playlist] Cache key for segment ${segmentData.segmentId}: ${cacheKey}`);
     
@@ -829,7 +832,7 @@ export class AudioPreviewService {
     let processedAudioPath: string | null = null;
     
     try {
-      processedAudioPath = await window.khipu!.call('audioProcessor:getCachedAudioPath', cacheKey);
+  processedAudioPath = await window.khipu!.call('audioProcessor:getCachedAudioPath', normalizedCacheKey);
       if (processedAudioPath) {
         console.log(`🎵 [Playlist] Found cached processed audio - COST SAVINGS!`);
       }
@@ -946,7 +949,7 @@ export class AudioPreviewService {
           return await window.khipu!.call('audioProcessor:processAudio', {
             audioUrl: ttsAudioPath,
             processingChain: segmentData.processingChain,
-            cacheKey: cacheKey
+            cacheKey: normalizedCacheKey
           });
         },
         {

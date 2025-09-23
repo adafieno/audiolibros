@@ -207,40 +207,69 @@ async function getAzureToken(region: string, key: string, timeout: number = 1000
     return azureTokenCache.token;
   }
   
-  // Fetch new token
-  const tokenUrl = `https://${region}.api.cognitive.microsoft.com/sts/v1.0/issueToken`;
-  
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-  
-  try {
-    const response = await fetch(tokenUrl, {
-      method: "POST",
-      headers: {
-        "Ocp-Apim-Subscription-Key": key,
-        "Content-Length": "0",
-      },
-      signal: controller.signal,
-    });
-    
-    clearTimeout(timeoutId);
-    
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => '');
-      throw new Error(`Failed to get Azure token: ${response.status} ${response.statusText}${errorText ? ` - ${errorText}` : ''}`);
+    // Try a few likely token endpoint variants to help users who paste either a region
+    // (e.g. "eastus") or a full resource hostname (e.g. "my-resource.cognitiveservices.azure.com").
+    const candidates: string[] = [];
+
+    // If region looks like a full URL, use it as base
+    try {
+      if (region.startsWith("http://") || region.startsWith("https://")) {
+        const base = region.replace(/\/$/, "");
+        candidates.push(`${base}/sts/v1.0/issueToken`);
+      } else if (region.includes(".")) {
+        // Looks like a hostname (example: my-resource.cognitiveservices.azure.com)
+        const base = region.replace(/\/$/, "");
+        candidates.push(`https://${base}/sts/v1.0/issueToken`);
+      } else {
+        // Common DNS forms
+        candidates.push(`https://${region}.api.cognitive.microsoft.com/sts/v1.0/issueToken`);
+        candidates.push(`https://${region}.cognitiveservices.azure.com/sts/v1.0/issueToken`);
+        candidates.push(`https://${region}.tts.speech.microsoft.com/sts/v1.0/issueToken`);
+      }
+    } catch {
+      // Fallback - construct the usual candidate
+      candidates.push(`https://${region}.api.cognitive.microsoft.com/sts/v1.0/issueToken`);
     }
-    
-    const token = await response.text();
-    
-    // Cache token with 9-minute expiration (following Python implementation)
-    azureTokenCache.token = token.trim();
-    azureTokenCache.region = region;
-    azureTokenCache.expiresAt = now + (9 * 60 * 1000); // 9 minutes
-    
-    return azureTokenCache.token;
-  } finally {
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    let lastErr: Error | null = null;
+    for (const tokenUrl of candidates) {
+      try {
+        const response = await fetch(tokenUrl, {
+          method: "POST",
+          headers: {
+            "Ocp-Apim-Subscription-Key": key,
+            "Content-Length": "0",
+          },
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text().catch(() => "");
+          lastErr = new Error(`Failed to get Azure token from ${tokenUrl}: ${response.status} ${response.statusText}${errorText ? ` - ${errorText}` : ''}`);
+          // Try next candidate
+          continue;
+        }
+
+        const token = await response.text();
+        // Cache token with 9-minute expiration (following Python implementation)
+        azureTokenCache.token = token.trim();
+        azureTokenCache.region = region;
+        azureTokenCache.expiresAt = now + (9 * 60 * 1000); // 9 minutes
+
+        clearTimeout(timeoutId);
+        return azureTokenCache.token;
+      } catch (err) {
+        if (err instanceof Error) lastErr = err;
+        // try the next candidate
+        continue;
+      }
+    }
+
     clearTimeout(timeoutId);
-  }
+    throw lastErr || new Error(`Failed to get Azure token for region "${region}"`);
 }
 
 /**

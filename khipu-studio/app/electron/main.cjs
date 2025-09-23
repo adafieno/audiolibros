@@ -418,6 +418,7 @@ async function createScaffold(root) {
     tts: { engine: { name: "azure", voice: "es-PE-CamilaNeural" }, cache: true },
     llm: { engine: { name: "openai", model: "gpt-4o" } },
     export: { outputDir: "exports", platforms: { apple: false, google: false, spotify: false } },
+  pronunciationMap: {},
     creds: {
       tts: {
         azure: { key: "", region: "" }
@@ -1160,6 +1161,74 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
   return true;
 });
 
+  // IPC: Suggest IPA for a single word using project's LLM config (calls Python helper)
+  ipcMain.handle("pronunciation:suggestIpa", async (_e, { projectRoot, word, force }) => {
+    try {
+      if (!projectRoot) return { success: false, error: "Missing projectRoot" };
+      if (!word || !String(word).trim()) return { success: false, error: "Missing word" };
+      const root = path.resolve(projectRoot);
+      const script = path.join(repoRoot, "py", "tools", "suggest_ipa.py");
+      try { await fsp.access(script); } catch { return { success: false, error: "Suggest script missing" }; }
+
+  const args = [script, "--project-root", root, "--word", String(word)];
+  if (force) args.push('--force');
+      let captured = "";
+      const code = await runPy(args, (line) => {
+        try { captured = JSON.stringify(line); } catch { captured = String(line); }
+      });
+      console.log(`[pronunciation] runPy exit code: ${code}, captured: ${captured}`);
+
+      // If the Python process printed JSON to stdout, try to parse it from 'captured' or from a raw file read
+      try {
+        // runPy attempts to JSON.parse lines; if it passed an object to onLine, captured is a JSON string of that object
+        let parsed = null;
+        try { parsed = JSON.parse(captured); } catch { parsed = null; }
+        if (!parsed) {
+          console.warn("[pronunciation] parsed output empty, capturing raw stdout/stderr for diagnosis");
+          // Spawn a direct Python run to capture raw output for debugging
+          try {
+            const { spawnSync } = require('child_process');
+            const exe = getPythonExe();
+            const full = spawnSync(exe, args, { cwd: repoRoot, encoding: 'utf8' });
+            const rawStdout = full.stdout || "";
+            const rawStderr = full.stderr || "";
+            console.warn("[pronunciation] raw stdout:", rawStdout.trim());
+            console.warn("[pronunciation] raw stderr:", rawStderr.trim());
+            try { parsed = JSON.parse(rawStdout.split(/\r?\n/)[0] || ""); } catch { parsed = null; }
+          } catch (e) {
+            console.error("[pronunciation] fallback spawn failed:", e);
+          }
+        }
+        if (parsed) {
+          // If ipa exists and is non-empty, return success and forward metadata
+          if (parsed.ipa !== undefined && String(parsed.ipa || "").trim()) {
+            const out = { success: true, ipa: String(parsed.ipa) };
+            if (parsed.source) out.source = String(parsed.source);
+            if (parsed.examples) out.examples = parsed.examples;
+            if (parsed.raw) out.raw = parsed.raw;
+            return out;
+          }
+          // Otherwise, return as failure with any provided error/raw for debugging
+          const errMsg = parsed.error || "no_ipa_returned";
+          const failOut = { success: false, error: String(errMsg), ipa: String(parsed.ipa || "") };
+          if (parsed.source) failOut.source = String(parsed.source);
+          if (parsed.examples) failOut.examples = parsed.examples;
+          if (parsed.raw) failOut.raw = parsed.raw;
+          return failOut;
+        }
+      } catch (e) {
+        console.warn("Failed to parse suggest_ipa output:", e);
+      }
+
+      return { success: false, error: "No IPA returned" };
+    } catch (e) {
+      console.error("pronunciation:suggestIpa failed:", e);
+      return { success: false, error: String(e?.message || e) };
+    }
+  });
+  // Debug: confirm handler registration in main process logs
+  try { console.log('[ipc] handler registered: pronunciation:suggestIpa'); } catch (e) {}
+
   /* Audio processing handlers */
   ipcMain.handle("audio:process", async (_e, options) => {
     try {
@@ -1227,9 +1296,24 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
   ipcMain.handle("audioProcessor:processAudio", async (_e, { audioUrl, processingChain, cacheKey }) => {
     try {
       const processor = getAudioProcessor();
-      
+      // Normalize cacheKey: strip extension if provided
+      let normalizedKey = cacheKey;
+      try {
+        if (typeof normalizedKey === 'string' && path.extname(normalizedKey)) {
+          normalizedKey = path.basename(normalizedKey, path.extname(normalizedKey));
+        }
+      } catch (e) {
+        normalizedKey = cacheKey;
+      }
+
+      // If no cacheKey provided, let processor generate one based on inputPath + processingChain
+      // (processor.generateCacheKey expects inputPath and chain)
+      if (!normalizedKey) {
+        normalizedKey = processor.generateCacheKey(audioUrl, processingChain);
+      }
+
       // Check cache first
-      const cachedPath = processor.getCachedPath(cacheKey);
+      const cachedPath = processor.getCachedPath(normalizedKey);
       if (cachedPath && fs.existsSync(cachedPath)) {
         return {
           success: true,
@@ -1253,7 +1337,7 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
         id: `preview_${Date.now()}`,
         inputPath: tempInputPath,
         processingChain: processingChain,
-        cacheKey: cacheKey
+        cacheKey: normalizedKey
       });
       
       return result;
@@ -1862,23 +1946,53 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
       
       console.log(`🎤 Generated SSML for ${segment.chunkId}, calling Azure TTS...`);
       
-      // Get Azure token
-      const tokenResponse = await fetch(`https://${credentials.region}.api.cognitive.microsoft.com/sts/v1.0/issueToken`, {
-        method: "POST",
-        headers: {
-          "Ocp-Apim-Subscription-Key": credentials.key,
-          "Content-Length": "0",
-        },
-      });
-      
-      if (!tokenResponse.ok) {
-        throw new Error(`Failed to get Azure token: ${tokenResponse.status}`);
+      // Get Azure token - try a few candidate endpoints to support region or full-host input
+      const tokenCandidates = [];
+      if (credentials.region.startsWith("http://") || credentials.region.startsWith("https://")) {
+        const base = credentials.region.replace(/\/$/, "");
+        tokenCandidates.push(`${base}/sts/v1.0/issueToken`);
+      } else if (credentials.region.includes('.')) {
+        tokenCandidates.push(`https://${credentials.region.replace(/\/$/, '')}/sts/v1.0/issueToken`);
+      } else {
+        tokenCandidates.push(`https://${credentials.region}.api.cognitive.microsoft.com/sts/v1.0/issueToken`);
+        tokenCandidates.push(`https://${credentials.region}.cognitiveservices.azure.com/sts/v1.0/issueToken`);
+        tokenCandidates.push(`https://${credentials.region}.tts.speech.microsoft.com/sts/v1.0/issueToken`);
+      }
+
+      let token = null;
+      let lastTokenErr = null;
+      for (const tokenUrl of tokenCandidates) {
+        try {
+          const tokenResponse = await fetch(tokenUrl, {
+            method: "POST",
+            headers: {
+              "Ocp-Apim-Subscription-Key": credentials.key,
+              "Content-Length": "0",
+            },
+          });
+
+          if (!tokenResponse.ok) {
+            const body = await tokenResponse.text().catch(() => "");
+            lastTokenErr = new Error(`Failed to get Azure token from ${tokenUrl}: ${tokenResponse.status} ${tokenResponse.statusText}${body ? ` - ${body}` : ''}`);
+            // try next candidate
+            continue;
+          }
+
+          token = await tokenResponse.text();
+          break; // success
+        } catch (err) {
+          lastTokenErr = err;
+          continue;
+        }
+      }
+
+      if (!token) {
+        throw lastTokenErr || new Error(`Failed to get Azure token for region ${credentials.region}`);
       }
       
-      const token = await tokenResponse.text();
-      
       // Call Azure TTS
-      const ttsResponse = await fetch(`https://${credentials.region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
+      const ttsEndpoint = `https://${credentials.region}.tts.speech.microsoft.com/cognitiveservices/v1`;
+      const ttsResponse = await fetch(ttsEndpoint, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,

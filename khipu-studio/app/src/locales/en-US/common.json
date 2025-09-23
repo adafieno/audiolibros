@@ -77,9 +77,68 @@
     "comment": "Button text to open an existing project"
   },
   "home.createNew": {
-    "string": "Create New Project",
-    "comment": "Header for creating a new project"
+  "string": "Create New Project",
+  "comment": "Button text to create a new project"
   },
+
+  
+  "pronunciation.map.title": {
+    "string": "Pronunciation Map",
+    "comment": "Section title for the pronunciation map in project settings"
+  },
+  "pronunciation.map.description": {
+    "string": "Customize how words are pronounced using IPA and SSML phoneme tags.",
+    "comment": "Description for the pronunciation map section"
+  },
+  "pronunciation.map.word": {
+    "string": "Word",
+    "comment": "Label for the word column in the pronunciation map table"
+  },
+  "pronunciation.map.ipa": {
+    "string": "IPA",
+    "comment": "Label for the IPA column in the pronunciation map table"
+  },
+  "pronunciation.map.add": {
+    "string": "Add Word",
+    "comment": "Button to add a new word to the pronunciation map"
+  },
+  "pronunciation.map.remove": {
+    "string": "Remove",
+    "comment": "Button to remove a word from the pronunciation map"
+  },
+  "pronunciation.map.suggest": {
+    "string": "Suggest IPA",
+    "comment": "Button to suggest IPA using LLM"
+  },
+  "pronunciation.map.edit": {
+    "string": "Edit",
+    "comment": "Button to edit a word or IPA value"
+  },
+  "pronunciation.map.save": {
+    "string": "Save",
+    "comment": "Button to save changes to the pronunciation map"
+  },
+  "pronunciation.map.cancel": {
+    "string": "Cancel",
+    "comment": "Button to cancel editing"
+  },
+  "pronunciation.map.empty": {
+    "string": "No words added yet.",
+    "comment": "Message shown when the pronunciation map is empty"
+  },
+  "pronunciation.map.error": {
+    "string": "Error suggesting IPA. Please try again.",
+    "comment": "Error message for failed IPA suggestion"
+  },
+  "project.pronunciationMap": { "string": "Pronunciation Map", "comment": "Section title for pronunciation map (alias)" },
+  "project.pronunciationMapInfo": { "string": "Customize pronunciations using IPA. Use 'Suggest IPA' for automated suggestions.", "comment": "Info text for pronunciation map (alias)" },
+  "project.wordPlaceholder": { "string": "Word", "comment": "Placeholder for new pronunciation word input (alias)" },
+  "project.ipaPlaceholder": { "string": "IPA (e.g. /fəˈnɛtɪk/)", "comment": "Placeholder for IPA input (alias)" },
+  "project.suggestIPA": { "string": "Suggest IPA", "comment": "Button text to request IPA suggestion (alias)" },
+  "project.removeWord": { "string": "Remove", "comment": "Button text to remove word (alias)" },
+  "project.addWord": { "string": "Add Word", "comment": "Button text to add a new word (alias)" },
+  "project.suggestIpaConfirm": { "string": "Suggested examples:", "comment": "Prompt header showing examples before accepting IPA suggestion" },
+  "project.suggestIpaAccept": { "string": "Accept suggested IPA?", "comment": "Confirm accept suggested IPA" },
   "home.baseFolder": {
     "string": "Base folder",
     "comment": "Label for base folder selection"

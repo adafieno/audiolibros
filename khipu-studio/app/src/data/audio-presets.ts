@@ -17,8 +17,10 @@ export const AUDIO_PRESETS: AudioPreset[] = [
     category: 'clean',
     processingChain: {
       noiseCleanup: {
-        highPassFilter: { enabled: true, frequency: "80" },
-        deClickDeEss: { enabled: true, intensity: "light" }
+        // slightly higher HPF to reduce low-frequency pops/rumble
+        highPassFilter: { enabled: true, frequency: "90" },
+        // mild de-essing/de-clicking to tame sibilance while keeping natural tone
+        deClickDeEss: { enabled: true, intensity: "medium" }
       },
       dynamicControl: {
         compression: { enabled: false, ratio: "2:1", threshold: -18 },
@@ -47,17 +49,21 @@ export const AUDIO_PRESETS: AudioPreset[] = [
     category: 'clean',
     processingChain: {
       noiseCleanup: {
-        highPassFilter: { enabled: true, frequency: "70" },
-        deClickDeEss: { enabled: true, intensity: "medium" }
+        // raise HPF slightly to reduce low-frequency pops and rumble
+        highPassFilter: { enabled: true, frequency: "80" },
+        // increase de-essing/de-clicking to better tame sibilance and mouth noises
+        deClickDeEss: { enabled: true, intensity: "heavy" }
       },
       dynamicControl: {
-        compression: { enabled: true, ratio: "2.5:1", threshold: -20 },
+        // slightly gentler compression to avoid bringing up sibilant content
+        compression: { enabled: true, ratio: "2:1", threshold: -20 },
         limiter: { enabled: true, ceiling: -1 }
       },
       eqShaping: {
         lowMidCut: { enabled: true, frequency: "150", gain: -1 },
-        presenceBoost: { enabled: true, frequency: "3", gain: 2.0 },
-        airLift: { enabled: true, frequency: "10", gain: 0.5 }
+        // reduce presence and air lift to avoid exaggerated sibilance
+        presenceBoost: { enabled: true, frequency: "3", gain: 1.0 },
+        airLift: { enabled: true, frequency: "10", gain: 0.2 }
       },
       spatialEnhancement: {
         reverb: { enabled: false, type: "room_0.3", wetMix: 10 },

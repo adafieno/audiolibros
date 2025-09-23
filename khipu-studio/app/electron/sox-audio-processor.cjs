@@ -63,23 +63,24 @@ class SoxAudioProcessor {
       hash = hash & hash;
     }
     
-    return `sox_audio_${Math.abs(hash).toString(36)}.wav`;
+    // Return a stable base filename (without extension). Caller will append .wav
+    return `sox_audio_${Math.abs(hash).toString(36)}`;
   }
 
   /**
    * Check if cached processed audio exists
    */
   hasCachedAudio(cacheKey) {
-    const cachePath = path.join(this.cacheDir, cacheKey);
-    return fs.existsSync(cachePath);
+    const resolved = this._resolveCachedFile(cacheKey);
+    return resolved !== null;
   }
 
   /**
    * Get path to cached processed audio
    */
   getCachedAudioPath(cacheKey) {
-    const cachePath = path.join(this.cacheDir, cacheKey);
-    return fs.existsSync(cachePath) ? cachePath : null;
+    const resolved = this._resolveCachedFile(cacheKey);
+    return resolved;
   }
 
   /**
@@ -87,6 +88,42 @@ class SoxAudioProcessor {
    */
   getCachedPath(cacheKey) {
     return this.getCachedAudioPath(cacheKey);
+  }
+
+  /**
+   * Internal helper: resolve a cache key to an existing file in cacheDir
+   * Tries several candidate filenames (raw, with .wav, with sox_audio_ prefix)
+   */
+  _resolveCachedFile(cacheKey) {
+    if (!cacheKey) return null;
+
+    const candidates = [];
+
+    // If key already looks like a full filename (has extension), check as-is
+    if (path.extname(cacheKey)) {
+      candidates.push(cacheKey);
+    } else {
+      // Try raw key and key + .wav
+      candidates.push(cacheKey);
+      candidates.push(`${cacheKey}.wav`);
+    }
+
+    // Also try with legacy "sox_audio_" prefix if missing
+    if (!cacheKey.startsWith('sox_audio_')) {
+      candidates.push(`sox_audio_${cacheKey}`);
+      candidates.push(`sox_audio_${cacheKey}.wav`);
+    }
+
+    for (const name of candidates) {
+      const p = path.join(this.cacheDir, name);
+      try {
+        if (fs.existsSync(p)) return p;
+      } catch (e) {
+        // ignore and continue
+      }
+    }
+
+    return null;
   }
 
   /**

@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useProject } from "../store/project";
 import { loadProjectConfig } from "../lib/config";
+import { injectPhonemes } from "../lib/ssml";
 import type { ProjectConfig } from "../types/config";
 import type { Segment, PlanRow, AzureCaps, PlanFile } from "../types/plan";
 import type { JobEvent, PlanBuildPayload } from "../global";
@@ -2073,7 +2074,9 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
 
     try {
       // Use override text if provided (during editing), otherwise use current text
-      const auditionText = overrideText || segment.text || "No text available";
+  const auditionText = overrideText || segment.text || "No text available";
+  // Inject phoneme SSML using project-level pronunciation map
+  const finalText = injectPhonemes(auditionText, projectConfig?.pronunciationMap);
       console.log("🎤 Generating audition with parameters:", {
         segmentId: segmentId,
         voice: voice,
@@ -2090,7 +2093,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       });
 
       // Use caching unless explicitly disabled in config OR during editing
-      const useCache = (projectConfig?.tts?.cache !== false) && !disableCache;
+  const useCache = (projectConfig?.tts?.cache !== false) && !disableCache;
       console.log(`🎤 Starting segment audition for: ${segmentId}`, { 
         voice: voice.id, 
         config: !!projectConfig, 
@@ -2103,7 +2106,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
       await playAudition({
         voice: voice,
         config: projectConfig,
-        text: auditionText,
+        text: finalText,
         style: character.voiceAssignment.style,
         styledegree: character.voiceAssignment.styledegree,
         rate_pct: character.voiceAssignment.rate_pct,

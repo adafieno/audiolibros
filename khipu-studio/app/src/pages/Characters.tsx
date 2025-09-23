@@ -4,6 +4,7 @@ import { useCharacters } from "../hooks/useCharacters";
 import { useProject } from "../store/project";
 import { useAudioCache } from "../hooks/useAudioCache";
 import { loadProjectConfig } from "../lib/config";
+import { injectPhonemes } from "../lib/ssml";
 import { WorkflowCompleteButton } from "../components/WorkflowCompleteButton";
 import { PageHeader } from "../components/PageHeader";
 import StandardButton from "../components/StandardButton";
@@ -159,10 +160,12 @@ function CharactersPage() {
       const useCache = projectConfig?.tts?.cache !== false;
       console.log(`🎤 Starting audition for character: ${character.name}`, { voice, config: !!projectConfig, useCache });
       
+      const finalText = injectPhonemes(character.quotes?.[0] || character.description || `Hello, my name is ${character.name}.`, projectConfig?.pronunciationMap);
+
       await playAudition({
         voice: voice,
         config: projectConfig!,
-        text: character.quotes?.[0] || character.description || `Hello, my name is ${character.name}.`,
+        text: finalText,
         style: character.voiceAssignment.style,
         styledegree: character.voiceAssignment.styledegree,
         rate_pct: character.voiceAssignment.rate_pct,

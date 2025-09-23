@@ -42,6 +42,7 @@ export interface ProjectConfig {
   tts: { engine: TtsEngine; cache: boolean };
   llm: { engine: LlmEngine };
   export: { outputDir: string; platforms: { apple?: boolean; google?: boolean; spotify?: boolean } };
+  pronunciationMap?: Record<string, string>; // word -> IPA
   // Credentials organized by service
   creds?: {
     tts?: {
