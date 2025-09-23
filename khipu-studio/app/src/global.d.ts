@@ -260,6 +260,7 @@ export interface KhipuRequestMap {
           path: string;
           filename: string;
         };
+        processingChain?: import("./types/audio-production").AudioProcessingChain;
       };
       projectConfig: unknown;
       characters: unknown;
