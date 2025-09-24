@@ -393,6 +393,26 @@
     "string": "Save",
     "comment": "Save button text for settings"
   },
+  "packaging.status.noChapters": {
+    "string": "No chapters",
+    "comment": "Audio status when no chapters exist"
+  },
+  "packaging.status.partial": {
+    "string": "Partial",
+    "comment": "Audio status when some chapters have audio"
+  },
+  "packaging.status.allPresent": {
+    "string": "All audio present",
+    "comment": "Audio status when every chapter has audio"
+  },
+  "packaging.actions.refresh": {
+    "string": "Refresh",
+    "comment": "Button text to refresh chapter audio counts"
+  },
+  "packaging.status.exportMarked": {
+    "string": "Packaging: export marked ready",
+    "comment": "Status message when packaging export step is auto-marked complete"
+  },
   "settings.saving": {
     "string": "Saving…",
     "comment": "Status message when saving settings"
@@ -2923,13 +2943,9 @@
     "string": "Cover Image",
     "comment": "Cover image requirement description"
   },
-  "packaging.requirements.chapters": {
-    "string": "Chapter Files",
-    "comment": "Chapter files requirement description"
-  },
-  "packaging.requirements.audio": {
-    "string": "Audio Files",
-    "comment": "Audio files requirement description"
+  "packaging.requirements.chapterAudio": {
+    "string": "Chapter Audio Files",
+    "comment": "Combined chapter and audio requirement description"
   },
   "packaging.requirements.audioComplete": {
     "string": "All Chapters Audio Complete",

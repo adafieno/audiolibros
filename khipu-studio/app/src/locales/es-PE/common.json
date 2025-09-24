@@ -191,6 +191,26 @@
     "string": "Guardar capítulo",
     "comment": ""
   },
+  "packaging.status.noChapters": {
+    "string": "Sin capítulos",
+    "comment": "Estado de audio cuando no hay capítulos"
+  },
+  "packaging.status.partial": {
+    "string": "Parcial",
+    "comment": "Estado de audio cuando algunos capítulos tienen audio"
+  },
+  "packaging.status.allPresent": {
+    "string": "Todo el audio presente",
+    "comment": "Estado de audio cuando todos los capítulos tienen audio"
+  },
+  "packaging.actions.refresh": {
+    "string": "Actualizar",
+    "comment": "Texto del botón para actualizar conteo de capítulos con audio"
+  },
+  "packaging.status.exportMarked": {
+    "string": "Empaquetado: exportación marcada como lista",
+    "comment": "Mensaje cuando la exportación de empaquetado se marca automáticamente"
+  },
   "manu.saving": {
     "string": "Guardando…",
     "comment": ""

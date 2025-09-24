@@ -135,6 +135,7 @@ export interface KhipuRequestMap {
       format: string;
     };
   };
+  "audio:chaptersInfo": { in: { projectRoot: string }; out: { count: number; hasAudio: number; presentIds: string[]; missingIds: string[] } };
   "audio:cache:has": { in: string; out: boolean };
   "audio:cache:path": { in: string; out: string | null };
   "audio:cancel": { in: string; out: boolean };
@@ -308,6 +309,7 @@ export interface Khipu {
     onLog(callback: (log: string) => void): void;
     onAssignmentProgress(callback: (progress: {current: number, total?: string}) => void): void;
   };
+  onAudioChaptersUpdated?: (cb: (info: { chapterId?: string; outputPath?: string }) => void) => void;
   fileExists(filePath: string): Promise<boolean>;
 }
 

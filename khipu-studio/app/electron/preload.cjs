@@ -10,5 +10,6 @@ contextBridge.exposeInMainWorld('khipu', {
     onLog: (cb) => ipcRenderer.on('characters:detection:log', (_e, data) => cb?.(data)),
     onAssignmentProgress: (cb) => ipcRenderer.on('characters:assignment:progress', (_e, data) => cb?.(data)),
   },
+  onAudioChaptersUpdated: (cb) => ipcRenderer.on('audio:chapters:updated', (_e, data) => cb?.(data)),
   fileExists: (filePath) => ipcRenderer.invoke("file:exists", filePath),
 });

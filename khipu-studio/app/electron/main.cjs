@@ -1147,6 +1147,64 @@ ipcMain.handle("chapters:list", async (_e, { projectRoot }) => {
   return items;
 });
 
+  // IPC: compute chapters audio info (count + how many have audio)
+  ipcMain.handle("audio:chaptersInfo", async (_e, { projectRoot }) => {
+    try {
+      const root = path.resolve(projectRoot);
+      const chaptersDir = path.join(root, "analysis", "chapters_txt");
+
+      let ids = [];
+      try {
+        const files = await fsp.readdir(chaptersDir);
+        for (const name of files) {
+          if (!/^ch\d+\.txt$/i.test(name)) continue;
+          const id = name.replace(/\.txt$/i, "");
+          ids.push(id);
+        }
+      } catch (e) {
+        // no chapters dir or unreadable
+      }
+
+  let hasAudioCount = 0;
+  const presentIds = [];
+  const missingIds = [];
+  for (const id of ids) {
+        // candidate locations
+        const candidates = [
+          path.join(root, 'audio', 'chapters', `${id}.wav`),
+          path.join(root, 'audio', 'chapters', `${id}_complete.wav`),
+          path.join(root, 'audio', 'wav', `${id}.wav`),
+          path.join(root, 'audio', 'wav', `${id}_complete.wav`),
+          path.join(root, 'audio', 'book', `${id}.wav`),
+          path.join(root, 'audio', `${id}.wav`),
+        ];
+
+        let found = false;
+        for (const c of candidates) {
+          try {
+            const stat = await fsp.stat(c);
+            if (stat.isFile() && stat.size > 100) { // non-empty file
+              found = true;
+              break;
+            }
+          } catch {}
+        }
+
+        if (found) {
+          hasAudioCount++;
+          presentIds.push(id);
+        } else {
+          missingIds.push(id);
+        }
+      }
+      return { count: ids.length, hasAudio: hasAudioCount, presentIds, missingIds };
+      return { count: ids.length, hasAudio: hasAudioCount };
+    } catch (err) {
+      console.error('[audio:chaptersInfo] error', err);
+      return { count: 0, hasAudio: 0 };
+    }
+  });
+
 // ---- IPC: chapter read/write ----
 ipcMain.handle("chapter:read", async (_e, { projectRoot, relPath }) => {
   const abs = resolveUnder(path.resolve(projectRoot), relPath);
@@ -1835,6 +1893,9 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
           console.warn('Failed to get audio duration:', probeError);
         }
         
+        // Notify renderer windows that chapter audio was updated
+        try { BrowserWindow.getAllWindows().forEach(w => w.webContents.send('audio:chapters:updated', { chapterId, outputPath: path.relative(projectRoot, outputPath) })); } catch (e) { console.warn('Failed to notify windows about chapter update', e); }
+
         return {
           success: true,
           outputPath: path.relative(projectRoot, outputPath),

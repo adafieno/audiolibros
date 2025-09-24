@@ -1,6 +1,6 @@
 import { useProject } from "../store/project";
 import { useTranslation } from "react-i18next";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import type { BookMeta, ProjectConfig, ProductionSettings } from "../types/config";
 import { PageHeader } from "../components/PageHeader";
 import { WorkflowCompleteButton } from "../components/WorkflowCompleteButton";
@@ -31,15 +31,28 @@ interface PlatformConfig {
 
 export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => void }) {
   const { t } = useTranslation();
-  const { root } = useProject();
+  const { root, markStepCompleted, isStepCompleted } = useProject();
   
   const [cfg, setCfg] = useState<ProjectConfig | null>(null);
   const [bookMeta, setBookMeta] = useState<BookMeta | null>(null);
   const [productionSettings, setProductionSettings] = useState<ProductionSettings | null>(null);
   const [loading, setLoading] = useState(true);
-  const [chaptersInfo, setChaptersInfo] = useState<{ count: number; hasAudio: number }>({ count: 0, hasAudio: 0 });
+  const [chaptersInfo, setChaptersInfo] = useState<{ count: number; hasAudio: number; missingIds?: string[] }>({ count: 0, hasAudio: 0 });
 
   // Load project data
+  // Helper to (re)query chapters audio info from main
+  const refreshChaptersInfo = useCallback(async () => {
+    if (!root) return;
+    try {
+      const info = await window.khipu!.call("audio:chaptersInfo", { projectRoot: root });
+      if (info && typeof info.count === 'number') {
+        setChaptersInfo({ count: info.count, hasAudio: info.hasAudio, missingIds: Array.isArray(info.missingIds) ? info.missingIds : undefined });
+      }
+    } catch {
+      // ignore
+    }
+  }, [root]);
+
   useEffect(() => {
     if (!root) {
       setLoading(false);
@@ -83,19 +96,19 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
           if (Array.isArray(chapterList)) {
             const chapterCount = chapterList.length;
             
-            // Try to check for audio files in audio/chapters directory
-            let audioCount = 0;
-            try {
-              // For now, we'll estimate audio completion as 0 since we can't easily list directory
-              // In a real implementation, you'd implement a proper directory listing IPC call
-              audioCount = 0;
-            } catch {
-              audioCount = 0;
-            }
+              // Query main process for chapter audio info (counts)
+              try {
+                await refreshChaptersInfo();
+                setLoading(false);
+                return;
+              } catch (e) {
+                console.warn('Failed to get audio chapter info:', e);
+              }
 
+            // If refresh failed, fall back to chapter list count
             setChaptersInfo({
               count: chapterCount,
-              hasAudio: audioCount
+              hasAudio: 0
             });
           } else {
             setChaptersInfo({ count: 0, hasAudio: 0 });
@@ -114,7 +127,28 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
     };
 
     loadData();
+
+    // subscribe to audio chapter updates so UI refreshes automatically
+    const onUpdated = async () => { await refreshChaptersInfo(); };
+    window.khipu?.onAudioChaptersUpdated?.(onUpdated);
+
+    // cleanup is optional (preload just forwards ipcRenderer.on). We won't remove listener here.
   }, [root, onStatus]);
+
+  // When chapters reach full audio coverage, mark export workflow as complete (persist to project.khipu.json)
+  useEffect(() => {
+    if (!root) return;
+    if (chaptersInfo.count > 0 && chaptersInfo.hasAudio === chaptersInfo.count) {
+      try {
+        if (!isStepCompleted('export')) {
+          markStepCompleted('export');
+          onStatus?.(t('packaging.status.exportMarked') || 'Packaging: export marked ready');
+        }
+      } catch (e) {
+        console.warn('Failed to mark export complete:', e);
+      }
+    }
+  }, [chaptersInfo, root, markStepCompleted, isStepCompleted, onStatus, t]);
 
   // Define platform configurations
   const platforms: PlatformConfig[] = useMemo(() => [
@@ -231,30 +265,15 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
         return Boolean(bookMeta?.coverImage);
       }
     },
-    {
-      id: "chapters",
-      key: "packaging.requirements.chapters",
-      category: "files",
-      required: true,
-      platforms: ["apple", "google", "spotify"],
-      validator: () => chaptersInfo.count > 0
-    },
     
     // Audio requirements
-    {
-      id: "audio",
-      key: "packaging.requirements.audio",
-      category: "audio",
-      required: true,
-      platforms: ["apple", "google", "spotify"],
-      validator: () => chaptersInfo.hasAudio > 0
-    },
     {
       id: "audioComplete",
       key: "packaging.requirements.audioComplete",
       category: "audio",
       required: true,
       platforms: ["apple", "google", "spotify"],
+      // complete only when every chapter has audio
       validator: () => chaptersInfo.hasAudio === chaptersInfo.count && chaptersInfo.count > 0
     },
     
@@ -409,12 +428,27 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
             }}>
               {t("packaging.overview.audio")}
             </h3>
-            <div style={{ fontSize: "24px", fontWeight: "700", color: chaptersInfo.hasAudio === chaptersInfo.count ? "var(--success)" : "var(--warning)" }}>
-              {chaptersInfo.hasAudio}/{chaptersInfo.count}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ fontSize: "24px", fontWeight: "700", color: chaptersInfo.hasAudio === chaptersInfo.count ? "var(--success)" : "var(--warning)" }}>
+                {chaptersInfo.hasAudio}/{chaptersInfo.count}
+              </div>
+              <div style={{ fontSize: '13px', padding: '6px 10px', borderRadius: 6, backgroundColor: chaptersInfo.count === 0 ? 'var(--error-bg)' : (chaptersInfo.hasAudio === chaptersInfo.count ? 'var(--success-bg)' : 'var(--warning-bg)'), color: 'var(--text)' }}>
+                {chaptersInfo.count === 0 ? t('packaging.status.noChapters') : (chaptersInfo.hasAudio === chaptersInfo.count ? t('packaging.status.allPresent') : t('packaging.status.partial'))}
+              </div>
+              <div style={{ marginLeft: 'auto' }}>
+                <StandardButton variant="secondary" onClick={() => refreshChaptersInfo()}>
+                  {t('packaging.actions.refresh')}
+                </StandardButton>
+              </div>
             </div>
             <div style={{ fontSize: "14px", color: "var(--muted)" }}>
               {t("packaging.overview.chaptersAudio")}
             </div>
+                  {chaptersInfo.missingIds && chaptersInfo.missingIds.length > 0 && (
+                    <div style={{ marginTop: "8px", fontSize: "12px", color: "var(--muted)" }}>
+                      <strong>Missing audio for:</strong> {chaptersInfo.missingIds.join(", ")}
+                    </div>
+                  )}
           </div>
         </div>
       </section>
@@ -504,7 +538,25 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
                     {requirements
                       .filter(req => req.platforms.includes(platform.id) && req.required)
                       .map(req => {
+                        // default satisfied boolean
                         const satisfied = req.validator();
+
+                        // Special-case audioComplete: show red when none, partial (warning) when some, ok when all
+                        let status: 'ok' | 'partial' | 'error' = satisfied ? 'ok' : 'error';
+                        if (req.id === 'audioComplete') {
+                          if (chaptersInfo.count === 0 || chaptersInfo.hasAudio === 0) {
+                            status = 'error';
+                          } else if (chaptersInfo.hasAudio > 0 && chaptersInfo.hasAudio < chaptersInfo.count) {
+                            status = 'partial';
+                          } else if (chaptersInfo.hasAudio === chaptersInfo.count) {
+                            status = 'ok';
+                          }
+                        }
+
+                        const bg = status === 'ok' ? 'var(--success-bg)' : (status === 'partial' ? 'var(--warning-bg)' : 'var(--error-bg)');
+                        const border = status === 'ok' ? 'var(--success)' : (status === 'partial' ? 'var(--warning)' : 'var(--error)');
+                        const icon = status === 'ok' ? '✅' : (status === 'partial' ? '⚠️' : '❌');
+
                         return (
                           <div
                             key={req.id}
@@ -512,13 +564,13 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
                               display: "flex",
                               alignItems: "center",
                               padding: "8px 12px",
-                              backgroundColor: satisfied ? "var(--success-bg)" : "var(--error-bg)",
-                              border: `1px solid ${satisfied ? "var(--success)" : "var(--error)"}`,
+                              backgroundColor: bg,
+                              border: `1px solid ${border}`,
                               borderRadius: "4px"
                             }}
                           >
                             <span style={{ marginRight: "8px", fontSize: "16px" }}>
-                              {satisfied ? "✅" : "❌"}
+                              {icon}
                             </span>
                             <span style={{ flex: 1, color: "var(--text)" }}>
                               {t(req.key)}
