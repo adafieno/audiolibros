@@ -169,7 +169,7 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
       id: "google",
       name: "Google Play Books",
       enabled: cfg?.export?.platforms?.google || false,
-      requirements: ["title", "author", "narrator", "cover", "audio", "chapters", "isbn"],
+      requirements: ["title", "author", "narrator", "cover", "audio", "chapters"],
       packageFormat: "ZIP with MP3",
       audioSpec: {
         format: "MP3",
@@ -228,14 +228,7 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
       platforms: ["apple", "google", "spotify"],
       validator: () => Boolean(bookMeta?.description?.trim())
     },
-    {
-      id: "isbn",
-      key: "packaging.requirements.isbn",
-      category: "metadata",
-      required: true,
-      platforms: ["google"],
-      validator: () => Boolean(bookMeta?.isbn?.trim())
-    },
+    // ISBN field remains in book metadata but is no longer required for packaging
     {
       id: "keywords",
       key: "packaging.requirements.keywords",
