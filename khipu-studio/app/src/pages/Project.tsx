@@ -78,9 +78,12 @@ export default function Project() {
       setCfg(null);
       return;
     }
-    
+
     loadProjectConfig(root)
-      .then(setCfg)
+      .then(config => {
+        console.log("Loaded project config:", config);
+        setCfg(config);
+      })
       .catch(err => {
         console.error("Failed to load project config:", err);
       });
@@ -107,6 +110,7 @@ export default function Project() {
     
     const timeoutId = setTimeout(async () => {
       try {
+        console.log("Saving project config:", cfg);
         await saveProjectConfig(root, cfg);
         console.log("Project config auto-saved");
       } catch (error) {
@@ -366,10 +370,13 @@ export default function Project() {
                   <input
                     type="checkbox"
                     checked={cfg?.export?.platforms?.apple || false}
-                    onChange={(e) => update("export", {
+                    onChange={(e) => {
+                    update("export", {
                       outputDir: cfg?.export?.outputDir || "output",
                       platforms: { ...cfg?.export?.platforms, apple: e.target.checked }
-                    })}
+                    });
+                    saveProjectConfig(root, cfg);
+                  }}
                   />
                   <span>Apple Books</span>
                 </label>
@@ -377,10 +384,13 @@ export default function Project() {
                   <input
                     type="checkbox"
                     checked={cfg?.export?.platforms?.google || false}
-                    onChange={(e) => update("export", {
-                      outputDir: cfg?.export?.outputDir || "output",
-                      platforms: { ...cfg?.export?.platforms, google: e.target.checked }
-                    })}
+                    onChange={(e) => {
+                      update("export", {
+                        outputDir: cfg?.export?.outputDir || "output",
+                        platforms: { ...cfg?.export?.platforms, google: e.target.checked }
+                      });
+                      saveProjectConfig(root, cfg);
+                    }}
                   />
                   <span>Google Play</span>
                 </label>
@@ -388,12 +398,43 @@ export default function Project() {
                   <input
                     type="checkbox"
                     checked={cfg?.export?.platforms?.spotify || false}
-                    onChange={(e) => update("export", {
-                      outputDir: cfg?.export?.outputDir || "output",
-                      platforms: { ...cfg?.export?.platforms, spotify: e.target.checked }
-                    })}
+                    onChange={(e) => {
+                      update("export", {
+                        outputDir: cfg?.export?.outputDir || "output",
+                        platforms: { ...cfg?.export?.platforms, spotify: e.target.checked }
+                      });
+                      saveProjectConfig(root, cfg);
+                    }}
                   />
                   <span>Spotify</span>
+                </label>
+                <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <input
+                    type="checkbox"
+                    checked={cfg?.export?.platforms?.acx || false}
+                    onChange={(e) => {
+                      update("export", {
+                        outputDir: cfg?.export?.outputDir || "output",
+                        platforms: { ...cfg?.export?.platforms, acx: e.target.checked }
+                      });
+                      saveProjectConfig(root, cfg);
+                    }}
+                  />
+                  <span>ACX</span>
+                </label>
+                <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <input
+                    type="checkbox"
+                    checked={cfg?.export?.platforms?.kobo || false}
+                    onChange={(e) => {
+                      update("export", {
+                        outputDir: cfg?.export?.outputDir || "output",
+                        platforms: { ...cfg?.export?.platforms, kobo: e.target.checked }
+                      });
+                      saveProjectConfig(root, cfg);
+                    }}
+                  />
+                  <span>Kobo</span>
                 </label>
               </div>
             </div>

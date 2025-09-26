@@ -26,11 +26,23 @@ contextBridge.exposeInMainWorld('khipu', {
       return () => ipcRenderer.removeListener('characters:assignment:progress', listener);
     },
   },
+  fileExists: (filePath) => ipcRenderer.invoke("file:exists", filePath),
   onAudioChaptersUpdated: (cb) => {
+    if (audioChaptersListener) {
+      audioChaptersListener(); // Remove the previous listener
+      console.log('Previous listener removed for audio:chapters:updated');
+    }
+
     const listener = (_e, data) => cb?.(data);
     ipcRenderer.on('audio:chapters:updated', listener);
-    // return an unsubscribe function
-    return () => ipcRenderer.removeListener('audio:chapters:updated', listener);
+    console.log('Listener added for audio:chapters:updated');
+
+    // Store the unsubscribe function
+    audioChaptersListener = () => {
+      ipcRenderer.removeListener('audio:chapters:updated', listener);
+      console.log('Listener removed for audio:chapters:updated');
+    };
+
+    return audioChaptersListener;
   },
-  fileExists: (filePath) => ipcRenderer.invoke("file:exists", filePath),
 });

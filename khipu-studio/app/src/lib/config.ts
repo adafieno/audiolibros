@@ -61,7 +61,15 @@ export async function loadProjectConfig(projectRoot: string): Promise<ProjectCon
     relPath: "project.khipu.json",
     json: true,
   });
-  return parseProjectConfig(raw ?? {});
+
+  // Ensure platforms field is preserved
+  const parsedConfig = parseProjectConfig(raw ?? {});
+  const rawConfig = raw as Partial<ProjectConfig>;
+  if (rawConfig.export?.platforms) {
+    parsedConfig.export.platforms = rawConfig.export.platforms;
+  }
+
+  return parsedConfig;
 }
 export async function saveProjectConfig(projectRoot: string, cfg: ProjectConfig): Promise<boolean> {
   return window.khipu!.call("fs:write", {
