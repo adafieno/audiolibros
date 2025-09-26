@@ -319,20 +319,28 @@ class SoxAudioProcessor {
 
       process.on('close', () => {
         try {
-          // Parse SoX info output
+          // Parse SoX info output for duration, channels, sample rate and bit rate (when present)
           const durationMatch = stderr.match(/Duration\s+:\s+(\d{2}):(\d{2}):(\d{2}\.\d{2})/);
           const channelsMatch = stderr.match(/Channels\s+:\s+(\d+)/);
           const sampleRateMatch = stderr.match(/Sample Rate\s+:\s+(\d+)/);
-          
+          const bitRateMatch = stderr.match(/Bit Rate\s+:\s+(\d+)\s*k?b?p?s?/i) || stderr.match(/Overall bit rate\s+:\s+(\d+)\s*k?b?p?s?/i) || stderr.match(/Rate\s+:\s+(\d+)\s*kbps/i);
+
           if (durationMatch) {
             const [, hours, minutes, seconds] = durationMatch;
             const duration = parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseFloat(seconds);
-            
+
+            // Determine format from extension
+            let fmt = 'unknown';
+            try { fmt = (filePath || '').split('.').pop().toLowerCase() || 'unknown'; } catch { fmt = 'unknown'; }
+
+            const bitRateKbps = bitRateMatch ? parseInt(bitRateMatch[1]) : null;
+
             resolve({
               duration,
               channels: channelsMatch ? parseInt(channelsMatch[1]) : 2,
               sampleRate: sampleRateMatch ? parseInt(sampleRateMatch[1]) : 44100,
-              format: 'wav'
+              format: fmt,
+              bitRateKbps
             });
           } else {
             reject(new Error('Could not parse audio information from SoX'));

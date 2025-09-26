@@ -273,3 +273,176 @@ Use one JSON manifest your pipeline emits; map it to each store’s UI/API on up
 ---
 
 *This spec is designed to be stable across minor platform updates. When stores update constraints (e.g., cover sizes, description limits), adjust field validation in your exporter and keep `manifest.json` as your single source of truth.*
+
+| Platform                          | Audio Format & Quality                                                                                | File / Chapter Constraints                                                                                                                                                 | Packaging & Manifest                                                                                                                                         | Metadata & Identifiers                                                                                                                                             | Cover Art                                                                             | Submission Notes                                                                                                                                             |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Apple Books**                   | MP3, **256 kbps CBR**, 44.1 kHz, Stereo                                                               | • One file per chapter/section <br>• Max 700 MB per file <br>• Max ~2h per file (recommended shorter) <br>• Start with 0.5–1s silence <br>• LUFS –18 to –23, peaks ≤ –3 dB | Delivered as **ZIP** with audio + cover + metadata <br>• Metadata via **ONIX 3.0 feed** (from aggregator) <br>• Sequence/order controlled in manifest (ONIX) | • ISBN required (Apple does not assign free ISBNs) <br>• Title, Subtitle, Author(s), Narrator(s), Publisher, Language, BISAC subject, Date                         | JPEG, RGB <br>• Min 2400×2400 px <br>• Max 10 MB <br>• Square, 1:1 ratio              | • Must distribute via **approved aggregator** (Findaway, Ingram, Draft2Digital) <br>• No direct upload <br>• Global distribution, no exclusivity             |
+| **Google Play Books**             | MP3, AAC, FLAC, WAV <br>• MP3/AAC: ≥128 kbps mono, ≥256 kbps stereo <br>• FLAC/WAV: 16-bit, ≥44.1 kHz | • Each file < 2 GB <br>• Audiobook min 5 min, max 100 h <br>• Naming: `ID_XofY.ext` (e.g. ISBN_1of10.mp3) <br>• ZIP option for bulk                                        | **ZIP container** accepted <br>• Implicit manifest via file naming/ordering <br>• Partner portal metadata entry                                              | • ISBN strongly encouraged (required in most markets) <br>• Title, Author(s), Narrator(s), Language, Rights, Description <br>• Optional supplemental PDF (<100 MB) | JPG/PNG <br>• Min 1024×1024 px <br>• Max 7200 px <br>• Square, 1:1 ratio              | • Upload via Google Books Partner Center <br>• Supports **auto-narrated audiobooks** (TTS) <br>• Distribution rights controlled per territory                |
+| **Spotify (Spotify for Authors)** | MP3, WAV, FLAC (not as rigidly specified)                                                             | • One file per chapter recommended <br>• Preview/sample file required <br>• Duration/file size limits not publicly specified                                               | Delivered via **Spotify for Authors** UI <br>• Internal manifest mapping handled by Spotify <br>• Optional cross-distribution via INaudio partner            | • Title, Author, Narrator, Description entered at upload <br>• ISBN not required (Spotify does not enforce)                                                        | PNG/JPEG <br>• 3000×3000 px recommended <br>• Square, 1:1 ratio                       | • Upload free via Spotify for Authors <br>• New uploads take up to 72h to go live <br>• Non-exclusive rights <br>• Linked distribution available via INaudio |
+| **ACX / Audible / Amazon**        | MP3, **192 kbps CBR**, 44.1 kHz (mono or stereo)                                                      | • One file per chapter/section <br>• Max ~120 min per file <br>• RMS –23 to –18 dB <br>• Noise floor ≤ –60 dB RMS <br>• Peaks ≤ –3 dB <br>• 0.5–1s room tone head/tail     | Files uploaded individually to ACX portal <br>• ACX validates automatically + human QA                                                                       | • ISBN optional (Audible assigns ASIN if none) <br>• Title, Subtitle, Author(s), Narrator(s), Publisher, Rights                                                    | JPG <br>• Min 2400×2400 px <br>• Max 10 MB <br>• Square, 1:1 ratio                    | • Upload directly via ACX portal <br>• Global distribution via Audible, Amazon, iTunes <br>• Optional **exclusive contract** with higher royalties           |
+| **Kobo Writing Life**             | MP3 only <br>• Standard retail quality (≥192 kbps CBR, 44.1 kHz)                                      | • One file per chapter/section <br>• Max file size 200 MB <br>• Total audiobook size ≤ 2 GB <br>• Max ~1500 files per audiobook                                            | Requires **manifest file** (JSON or Excel sheet) that lists chapter order and metadata <br>• Delivered with audio + cover + metadata                         | • ISBN required <br>• Title, Subtitle, Author(s), Narrator(s), Language, Publisher, Description                                                                    | JPG/PNG <br>• Square, 1:1 ratio <br>• Min 1400×1400 px <br>• Recommended 2400×2400 px | • Upload directly via Kobo Writing Life portal <br>• Manifest maps chapter files to metadata <br>• Distribution global via Kobo + partners                   |
+
+📝 Special Notes
+
+Apple Books
+
+Requires ISBN. Apple never assigns one.
+
+Delivery is via aggregators; ONIX feed acts as the “manifest.”
+
+Google Play Books
+
+Implicit manifest: ordering is derived from naming conventions (ID_XofY).
+
+Supports both human- and auto-narrated audiobooks.
+
+Spotify
+
+Specs are less strict; most distribution still happens via aggregators.
+
+Preview/sample file is mandatory.
+
+ISBN is not required.
+
+ACX / Audible
+
+The strictest audio quality standards (RMS, noise floor, peaks).
+
+ISBN is optional — if you don’t provide one, Amazon generates an ASIN.
+
+Kobo Writing Life
+
+Requires a manifest file (JSON or Excel) to map audio files to book structure.
+
+ISBN is mandatory.
+
+File size limits are tighter (200 MB/file, 2 GB total).
+
+
+
+Excellent. Here’s a **universal audiobook manifest template** you can adopt as your **single source of truth**, built on the **W3C Audiobooks JSON-LD** schema. Then, I’ll show you how to transform it for **Apple (ONIX), Kobo (JSON/Excel), Google (naming/ZIP), ACX (portal), and Spotify (portal)**.
+
+---
+
+# 📖 Universal Audiobook Manifest (JSON-LD, W3C)
+
+```json
+{
+  "@context": ["https://www.w3.org/ns/pub-context"],
+  "type": "Audiobook",
+  "id": "urn:isbn:9780000000001",
+  "name": "Sample Audiobook Title",
+  "author": [
+    { "type": "Person", "name": "Jane Doe" }
+  ],
+  "narrator": [
+    { "type": "Person", "name": "John Smith" }
+  ],
+  "publisher": { "type": "Organization", "name": "Example Publishing" },
+  "inLanguage": "en",
+  "datePublished": "2025-01-01",
+  "duration": "PT8H30M",  
+  "readingOrder": [
+    { "url": "chapter01.mp3", "name": "Chapter 1", "duration": "PT12M30S" },
+    { "url": "chapter02.mp3", "name": "Chapter 2", "duration": "PT15M45S" }
+  ],
+  "resources": [
+    { "url": "cover.jpg", "rel": "cover" },
+    { "url": "booklet.pdf", "rel": "supplemental" }
+  ],
+  "links": [
+    { "url": "https://publisher.com/sample", "rel": "preview" }
+  ]
+}
+```
+
+---
+
+# 🔄 Platform-Specific Adaptations
+
+## 1. **Apple Books (via ONIX 3.0)**
+
+* Transform JSON → ONIX `<Product>` entry.
+* Mapping:
+
+  * `id` → `<ProductIdentifier><ProductIDType>15</ProductIDType><IDValue>` (ISBN)
+  * `name` → `<TitleDetail><TitleElement><TitleText>`
+  * `author` → `<Contributor><ContributorRole>A01</ContributorRole>`
+  * `narrator` → `<Contributor><ContributorRole>A06</ContributorRole>`
+  * `readingOrder` → `<SupportingResource>` with `<ResourceVersionFeature>` listing tracks.
+  * `resources.cover` → `<SupportingResource><ResourceContentType>01</ResourceContentType>` (cover).
+
+👉 Output: **ONIX XML package** submitted via aggregator.
+
+---
+
+## 2. **Kobo Writing Life**
+
+* Kobo accepts JSON or Excel manifest.
+* Example (Excel equivalent):
+
+| File Name     | Chapter Title | Duration | Order |
+| ------------- | ------------- | -------- | ----- |
+| chapter01.mp3 | Chapter 1     | 00:12:30 | 1     |
+| chapter02.mp3 | Chapter 2     | 00:15:45 | 2     |
+
+👉 Transformation: export the `readingOrder` array into this tabular manifest.
+👉 ISBN, metadata, and cover embedded in metadata form + manifest file.
+
+---
+
+## 3. **Google Play Books**
+
+* Google uses **implicit ordering** via file naming.
+* Transformation rules:
+
+  * `readingOrder[0]` → `9780000000001_1of2.mp3`
+  * `readingOrder[1]` → `9780000000001_2of2.mp3`
+* Package all files + cover in `9780000000001.zip`.
+* Metadata fields (title, author, narrator, ISBN) → filled in Partner Center.
+
+👉 No explicit manifest; JSON → **naming convention + ZIP**.
+
+---
+
+## 4. **ACX / Audible**
+
+* No manifest upload; requires **manual portal entry**.
+* Transformation: export JSON fields into upload form:
+
+  * `id` → ISBN (optional; if missing Amazon assigns ASIN)
+  * `name` → Book Title
+  * `author`, `narrator`, `publisher` → typed into portal fields
+  * `readingOrder` → sequential file uploads (chapters)
+  * Cover → uploaded separately (JPEG, 2400×2400)
+
+👉 ACX is **form-driven**; manifest helps you prefill.
+
+---
+
+## 5. **Spotify (Spotify for Authors)**
+
+* Metadata minimal; requires upload order.
+* Transformation:
+
+  * `name`, `author`, `narrator`, `publisher`, `description` → portal fields
+  * `readingOrder` → file upload order (chapter01.mp3, chapter02.mp3, etc.)
+  * Cover → uploaded (JPEG/PNG 3000×3000)
+  * Preview → select one chapter or sample clip
+
+👉 Manifest → **internal checklist** to ensure order/metadata consistency.
+
+---
+
+# 📝 Special Notes on Alignment
+
+* **Kobo** is closest to W3C spec (explicit manifest).
+* **Apple** uses **ONIX XML**, richer than W3C but more complex.
+* **Google & ACX** rely on **implicit ordering** (naming or portal UI).
+* **Spotify** is the loosest — basically metadata form + file order.
+
+---
+
+
+
+

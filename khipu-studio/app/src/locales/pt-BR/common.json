@@ -79,6 +79,22 @@
     "string": "Criar novo projeto",
     "comment": "Botão para criar um novo projeto"
   },
+  "packaging.status.packageCreated": {
+    "string": "Pacote criado para {{platform}}: {{out}}",
+    "comment": "Mensagem de estado quando o pacote é criado com sucesso"
+  },
+  "packaging.status.packageFailed": {
+    "string": "Falha ao criar pacote para {{platform}}",
+    "comment": "Mensagem de estado quando a criação do pacote falha"
+  },
+  "packaging.status.packageCreatedAlert": {
+    "string": "Pacote para {{platform}} criado em: {{out}}",
+    "comment": "Alerta quando o pacote é criado"
+  },
+  "packaging.status.packageFailedAlert": {
+    "string": "Não foi possível criar o pacote para {{platform}}. Erro: {{error}}",
+    "comment": "Alerta quando a criação falha"
+  },
 
   "pronunciation.map.title": {
     "string": "Mapa de pronúncia",

@@ -680,9 +680,41 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
                     <div style={{ marginTop: "16px", textAlign: "center" }}>
                       <StandardButton
                         variant="primary"
-                        onClick={() => {
-                          onStatus?.(`Creating package for ${platform.name}...`);
-                          // TODO: Implement package creation
+                        onClick={async () => {
+                          try {
+                            onStatus?.(`Creating package for ${platform.name}...`);
+                            const resUnknown: unknown = await window.khipu!.call('packaging:create', { projectRoot: root!, platformId: platform.id });
+
+                            // Structured report handling (main process may return { success, outDir, errors:[], warnings:[], details:{}})
+                            const res = (resUnknown && typeof resUnknown === 'object') ? (resUnknown as { success?: boolean; outDir?: string; errors?: string[]; warnings?: string[]; error?: string }) : { success: false };
+
+                            if (res && res.success) {
+                              const outDir = res.outDir;
+                              onStatus?.(t('packaging.status.packageCreated', { platform: platform.name, out: outDir }));
+
+                              // If there are warnings, show them along with success
+                              if (Array.isArray(res.warnings) && res.warnings.length > 0) {
+                                const msg = `${t('packaging.status.packageCreatedAlert', { platform: platform.name, out: outDir })}\n\nWarnings:\n- ${res.warnings.join('\n- ')}`;
+                                alert(msg);
+                              } else {
+                                alert(t('packaging.status.packageCreatedAlert', { platform: platform.name, out: outDir }));
+                              }
+                            } else {
+                              // Try to surface structured errors or fallback to error string
+                              let errMsg = 'Unknown error';
+                              if (res) {
+                                if (Array.isArray(res.errors) && res.errors.length > 0) errMsg = res.errors.join('\n');
+                                else if (res.error) errMsg = String(res.error);
+                                else errMsg = JSON.stringify(res);
+                              }
+                              onStatus?.(t('packaging.status.packageFailed', { platform: platform.name }));
+                              alert(`${t('packaging.status.packageFailedAlert', { platform: platform.name, error: errMsg })}`);
+                            }
+                          } catch (e) {
+                            console.error('Packaging failed:', e);
+                            onStatus?.(t('packaging.status.packageFailed', { platform: platform.name }));
+                            alert(t('packaging.status.packageFailedAlert', { platform: platform.name, error: String(e) }));
+                          }
                         }}
                       >
                         {t("packaging.platforms.createPackage")} {platform.name}

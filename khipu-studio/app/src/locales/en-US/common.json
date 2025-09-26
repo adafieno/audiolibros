@@ -433,6 +433,22 @@
     "string": "Missing",
     "comment": "Status indicating required manifest data is missing"
   },
+  "packaging.status.packageCreated": {
+    "string": "Package created for {{platform}}: {{out}}",
+    "comment": "Status message when package creation succeeds"
+  },
+  "packaging.status.packageFailed": {
+    "string": "Package creation failed for {{platform}}",
+    "comment": "Status message when package creation fails"
+  },
+  "packaging.status.packageCreatedAlert": {
+    "string": "Package for {{platform}} created at: {{out}}",
+    "comment": "Alert text shown when package creation succeeds"
+  },
+  "packaging.status.packageFailedAlert": {
+    "string": "Failed to create package for {{platform}}. Error: {{error}}",
+    "comment": "Alert text shown when package creation fails"
+  },
   "packaging.actions.refresh": {
     "string": "Refresh",
     "comment": "Button text to refresh chapter audio counts"

@@ -111,6 +111,22 @@
     "string": "Error al seleccionar imagen. Inténtalo de nuevo.",
     "comment": ""
   },
+  "packaging.status.packageCreated": {
+    "string": "Paquete creado para {{platform}}: {{out}}",
+    "comment": "Mensaje de estado al crear paquete exitosamente"
+  },
+  "packaging.status.packageFailed": {
+    "string": "Fallo al crear paquete para {{platform}}",
+    "comment": "Mensaje de estado cuando falla la creación de paquete"
+  },
+  "packaging.status.packageCreatedAlert": {
+    "string": "Paquete para {{platform}} creado en: {{out}}",
+    "comment": "Alerta cuando el paquete se creó"
+  },
+  "packaging.status.packageFailedAlert": {
+    "string": "No se pudo crear el paquete para {{platform}}. Error: {{error}}",
+    "comment": "Alerta cuando la creación falló"
+  },
   "planning.merge.noNextSegment": {
     "string": "No hay segmento siguiente para fusionar",
     "comment": ""

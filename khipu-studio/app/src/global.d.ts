@@ -283,6 +283,8 @@ export interface KhipuRequestMap {
       message?: string;
     };
   };
+  // Packaging
+  "packaging:create": { in: { projectRoot: string; platformId: string }; out: { success: boolean; outDir?: string; error?: string } };
   
   // SoX Audio Processing
   "audioProcessor:processAudio": {
