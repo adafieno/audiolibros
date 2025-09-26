@@ -203,6 +203,34 @@
     "string": "Todo el audio presente",
     "comment": "Estado de audio cuando todos los capítulos tienen audio"
   },
+  "packaging.status.audioAllPresent": {
+    "string": "Todo el audio presente",
+    "comment": "Estado de audio cuando todos los capítulos tienen audio (clave explícita para badge de audio)"
+  },
+  "packaging.status.audioPartial": {
+    "string": "Parcial",
+    "comment": "Estado de audio cuando algunos capítulos tienen audio (clave explícita para badge de audio)"
+  },
+  "packaging.status.audioMissing": {
+    "string": "Faltante",
+    "comment": "Estado de audio cuando no hay capítulos con audio (clave explícita para badge de audio)"
+  },
+  "packaging.status.metaAllPresent": {
+    "string": "Metadatos OK",
+    "comment": "Estado de metadatos cuando los campos requeridos están presentes"
+  },
+  "packaging.status.metaPartial": {
+    "string": "Metadatos parciales",
+    "comment": "Estado de metadatos cuando algunos campos están presentes"
+  },
+  "packaging.status.metaMissing": {
+    "string": "Metadatos faltantes",
+    "comment": "Estado de metadatos cuando faltan campos requeridos"
+  },
+  "packaging.status.missing": {
+    "string": "Faltante",
+    "comment": "Estado que indica que faltan datos requeridos del manifiesto"
+  },
   "packaging.actions.refresh": {
     "string": "Actualizar",
     "comment": "Texto del botón para actualizar conteo de capítulos con audio"
@@ -210,6 +238,18 @@
   "packaging.status.exportMarked": {
     "string": "Empaquetado: exportación marcada como lista",
     "comment": "Mensaje cuando la exportación de empaquetado se marca automáticamente"
+  },
+  "packaging.requirements.manifest": {
+    "string": "manifest.json presente",
+    "comment": "Requisito: existe el archivo manifest.json"
+  },
+  "packaging.requirements.coverQuality": {
+    "string": "Imagen de portada cumple especificaciones",
+    "comment": "Requisito: la portada está presente y es adecuada"
+  },
+  "packaging.requirements.audioFiles": {
+    "string": "Todos los archivos de audio de capítulos presentes",
+    "comment": "Requisito: los archivos de audio listados en el manifiesto existen"
   },
   "manu.saving": {
     "string": "Guardando…",
@@ -3318,6 +3358,35 @@
     "string": "Progreso de Audio",
     "comment": "Encabezado para la tarjeta de resumen de progreso de audio"
   },
+  "packaging.overview.manifestProgress": {
+    "string": "Progreso del manifiesto",
+    "comment": "Encabezado para la tarjeta de resumen del progreso del manifiesto"
+  },
+  "packaging.overview.manifestDetails": {
+    "string": "Metadatos del manifiesto y estado de audio",
+    "comment": "Texto descriptivo debajo de la tarjeta de progreso del manifiesto"
+  },
+  "packaging.status.manifestComplete": { "string": "Completo", "comment": "Etiqueta de la tarjeta del manifiesto cuando metadatos y audio están completos" },
+  "packaging.status.manifestPartial": { "string": "Parcial", "comment": "Etiqueta de la tarjeta del manifiesto cuando metadatos o audio están parcialmente completos" },
+  "packaging.status.manifestNotFound": { "string": "No encontrado", "comment": "Etiqueta de la tarjeta del manifiesto cuando falta manifest.json" },
+  "packaging.overview.metadataCompletion": {
+    "string": "completitud de metadatos",
+    "comment": "Etiqueta que muestra la completitud de metadatos debajo del porcentaje (minúsculas)"
+  },
+  "packaging.overview.none": { "string": "Ninguno", "comment": "Etiqueta corta usada cuando no falta nada" },
+  "packaging.overview.missingItemsPrefix": {
+    "string": "Elementos faltantes:",
+    "comment": "Prefijo para listar qué elementos de metadatos faltan"
+  },
+  "packaging.overview.missingMetadataFor": {
+    "string": "Metadatos faltantes para:",
+    "comment": "Prefijo de etiqueta que lista los campos de metadatos faltantes en el manifiesto"
+  },
+  "packaging.fields.title": { "string": "Título", "comment": "Etiqueta amigable para el título del libro" },
+  "packaging.fields.authors": { "string": "Autores", "comment": "Etiqueta amigable para autores" },
+  "packaging.fields.narrators": { "string": "Narradores", "comment": "Etiqueta amigable para narradores" },
+  "packaging.fields.description": { "string": "Descripción", "comment": "Etiqueta amigable para la descripción del libro" },
+  "packaging.fields.coverImage": { "string": "Portada", "comment": "Etiqueta amigable para la imagen de portada" },
   "packaging.overview.chaptersAudio": {
     "string": "capítulos con audio",
     "comment": "Subtítulo para el progreso de audio mostrando capítulos con audio"

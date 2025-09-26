@@ -15,20 +15,24 @@ export function ImageSelector({ projectRoot, value, onChange, hideButtons = fals
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
+  const [variantUrls, setVariantUrls] = useState<string[]>([]);
+  const [variantIndex, setVariantIndex] = useState(0);
+
+  // helper for IPC calls
+  const khipuCall = <T = unknown>(channel: string, payload?: unknown): Promise<T> => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (window.khipu as any).call(channel, payload) as Promise<T>;
+  };
 
   const loadImagePreview = useCallback(async () => {
     if (!value) return;
     
     try {
-      const result = await window.khipu!.call("file:getImageDataUrl", {
-        projectRoot,
-        fileName: value
-      });
-      
-      if (result.success && result.dataUrl) {
+      const result = await khipuCall<{ success?: boolean; dataUrl?: string; error?: string }>("file:getImageDataUrl", { projectRoot, fileName: value });
+      if (result && result.success && result.dataUrl) {
         setImageDataUrl(result.dataUrl);
       } else {
-        console.error("Failed to load image preview:", result.error);
+        console.error("Failed to load image preview:", result?.error);
         setImageDataUrl(null);
       }
     } catch (err) {
@@ -81,12 +85,9 @@ export function ImageSelector({ projectRoot, value, onChange, hideButtons = fals
         return;
       }
 
-      const result2 = await window.khipu!.call("file:getImageDataUrl", {
-        projectRoot,
-        fileName: result.fileName
-      });
+      const result2 = await khipuCall<{ success?: boolean; dataUrl?: string; error?: string }>("file:getImageDataUrl", { projectRoot, fileName: result.fileName });
 
-      if (result2.success && result2.dataUrl) {
+      if (result2 && result2.success && result2.dataUrl) {
         const img = new Image();
         
         img.onload = () => {
@@ -106,14 +107,67 @@ export function ImageSelector({ projectRoot, value, onChange, hideButtons = fals
             }
 
             // Success!
-            setImageDataUrl(result2.dataUrl!);
+            // Show the uploaded image preview
+            setImageDataUrl(result2.dataUrl || null);
             onChange(result.fileName);
+
+            // Generate variants and show as carousel (3000x3000 PNG, 2400x2400 JPG)
+            try {
+              const srcImg = new Image();
+              srcImg.src = result2.dataUrl!;
+              srcImg.onload = async () => {
+                const makeDataUrl = (w: number, h: number, mime: string, quality?: number) => {
+                  const canvas = document.createElement('canvas');
+                  canvas.width = w;
+                  canvas.height = h;
+                  const ctx = canvas.getContext('2d');
+                  if (!ctx) throw new Error('Canvas not available');
+                  const srcW = srcImg.naturalWidth;
+                  const srcH = srcImg.naturalHeight;
+                  const srcSize = Math.min(srcW, srcH);
+                  const sx = Math.floor((srcW - srcSize) / 2);
+                  const sy = Math.floor((srcH - srcSize) / 2);
+                  ctx.drawImage(srcImg, sx, sy, srcSize, srcSize, 0, 0, w, h);
+                  return canvas.toDataURL(mime, quality);
+                };
+
+                const variants = [
+                  { rel: 'art/cover_3000x3000.png', w: 3000, h: 3000, mime: 'image/png', quality: undefined },
+                  { rel: 'art/cover_2400x2400.jpg', w: 2400, h: 2400, mime: 'image/jpeg', quality: 0.9 },
+                  { rel: 'art/cover_1400x1400.jpg', w: 1400, h: 1400, mime: 'image/jpeg', quality: 0.9 },
+                  { rel: 'art/cover_600x600.jpg', w: 600, h: 600, mime: 'image/jpeg', quality: 0.9 }
+                ];
+
+                const urls: string[] = [];
+                for (const v of variants) {
+                  try {
+                    const dataUrl = makeDataUrl(v.w, v.h, v.mime, v.quality as number | undefined);
+                    urls.push(dataUrl);
+
+                    // write binary to disk
+                    const base = dataUrl.replace(/^data:[^;]+;base64,/, '');
+                    const binStr = atob(base);
+                    const len = binStr.length;
+                    const arr = new Array<number>(len);
+                    for (let i = 0; i < len; i++) arr[i] = binStr.charCodeAt(i);
+                    // write binary via IPC
+                    await khipuCall('fs:writeBinary', { projectRoot, relPath: v.rel, content: arr });
+                  } catch (err) {
+                    console.warn('Failed to create variant', v.rel, err);
+                  }
+                }
+                setVariantUrls(urls);
+                setVariantIndex(0);
+              };
+            } catch (err) {
+              console.warn('Variant generation failed', err);
+            }
             setLoading(false);
             
           } catch (err) {
             console.error("Error in image validation:", err);
             // Even if validation fails, keep the image
-            setImageDataUrl(result2.dataUrl!);
+            setImageDataUrl(result2.dataUrl || null);
             onChange(result.fileName);
             setLoading(false);
           }
@@ -122,7 +176,7 @@ export function ImageSelector({ projectRoot, value, onChange, hideButtons = fals
         img.onerror = () => {
           console.error("Error loading image for validation");
           // Even if validation fails, keep the image
-          setImageDataUrl(result2.dataUrl!);
+          setImageDataUrl(result2.dataUrl || null);
           onChange(result.fileName);
           setLoading(false);
         };
@@ -151,7 +205,15 @@ export function ImageSelector({ projectRoot, value, onChange, hideButtons = fals
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       <div>{t("book.coverImage.label")}</div>
       
-      {imageDataUrl && (
+      {variantUrls.length > 0 ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button onClick={() => setVariantIndex(i => Math.max(0, i - 1))} disabled={variantIndex === 0}>◀</button>
+          <div style={{ width: 200, height: 200, border: '1px solid #ccc', borderRadius: 4, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img src={variantUrls[variantIndex]} alt={`Cover variant ${variantIndex+1}`} style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: 'var(--panel)' }} />
+          </div>
+          <button onClick={() => setVariantIndex(i => Math.min(variantUrls.length - 1, i + 1))} disabled={variantIndex === variantUrls.length - 1}>▶</button>
+        </div>
+      ) : imageDataUrl && (
         <div style={{ 
           position: "relative", 
           width: 200, 

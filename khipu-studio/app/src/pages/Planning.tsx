@@ -1291,43 +1291,59 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
 
   // Job event handling for plan generation
   useEffect(() => {
-    window.khipu?.onJob((data: JobEvent) => {
-      if (data.event === "progress" && typeof data.pct === "number") {
-        onStatus(t("status.progress", { pct: data.pct, note: data.note ?? "" }));
-        // Always update plan progress when we have percentage data
-        const current = Math.round(data.pct);
-        setPlanProgress({
-          current: current,
-          total: 100,
-          stage: data.note || t("common.processing")
-        });
-      } else if (data.event === "done") {
-        onStatus(data.ok ? t("status.completed") : t("status.failed"));
-        setRunning(false);
-        setLoading(false);
-        setPlanProgress(null);
-        
-        // If successful, reload the current chapter data and update status
-        if (data.ok && selectedChapter) {
-          loadChapterData(selectedChapter);
-          // Refresh chapter status
-          loadChapters();
+    let unsubJob: (() => void) | undefined;
+    if (window.khipu?.onJob) {
+      const maybe = window.khipu.onJob((data: JobEvent) => {
+        if (data.event === "progress" && typeof data.pct === "number") {
+          onStatus(t("status.progress", { pct: data.pct, note: data.note ?? "" }));
+          // Always update plan progress when we have percentage data
+          const current = Math.round(data.pct);
+          setPlanProgress({
+            current: current,
+            total: 100,
+            stage: data.note || t("common.processing")
+          });
+        } else if (data.event === "done") {
+          onStatus(data.ok ? t("status.completed") : t("status.failed"));
+          setRunning(false);
+          setLoading(false);
+          setPlanProgress(null);
+          
+          // If successful, reload the current chapter data and update status
+          if (data.ok && selectedChapter) {
+            loadChapterData(selectedChapter);
+            // Refresh chapter status
+            loadChapters();
+          }
         }
-      }
-    });
+      }) as unknown;
+      if (typeof maybe === 'function') unsubJob = maybe as () => void;
+    }
+
+    return () => {
+      if (typeof unsubJob === 'function') unsubJob();
+    };
   }, [onStatus, t, selectedChapter, loadChapterData, loadChapters]);
 
   // Character assignment progress listener
   useEffect(() => {
-    window.khipu?.characters.onAssignmentProgress((progress: { current: number; total?: string }) => {
-      console.log("📊 Character assignment progress:", progress);
-      const totalNum = progress.total ? parseInt(progress.total, 10) : 100;
-      setCharacterAssignmentProgress({
-        current: progress.current,
-        total: totalNum,
-        stage: t("planning.assigningCharacters")
-      });
-    });
+    let unsubAssign: (() => void) | undefined;
+    if (window.khipu?.characters?.onAssignmentProgress) {
+      const maybe = window.khipu.characters.onAssignmentProgress((progress: { current: number; total?: string }) => {
+        console.log("📊 Character assignment progress:", progress);
+        const totalNum = progress.total ? parseInt(progress.total, 10) : 100;
+        setCharacterAssignmentProgress({
+          current: progress.current,
+          total: totalNum,
+          stage: t("planning.assigningCharacters")
+        });
+      }) as unknown;
+      if (typeof maybe === 'function') unsubAssign = maybe as () => void;
+    }
+
+    return () => {
+      if (typeof unsubAssign === 'function') unsubAssign();
+    };
   }, [t]);
 
   // Load chapters on mount

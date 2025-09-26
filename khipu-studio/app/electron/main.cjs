@@ -842,6 +842,50 @@ function createWin() {
     }
   });
 
+  // IPC: generate image variants using sharp (main-process, better color/profile handling)
+  ipcMain.handle("image:generateVariants", async (_e, { projectRoot, srcRel, variants }) => {
+    try {
+      let sharp;
+      try { sharp = require('sharp'); } catch (e) {
+        console.warn('sharp not available in main process:', e?.message || e);
+        return { success: false, reason: 'sharp_missing' };
+      }
+
+      const srcAbs = path.join(projectRoot, srcRel);
+      try { await fsp.access(srcAbs); } catch { return { success: false, reason: 'src_missing' }; }
+
+      const results = [];
+      for (const v of Array.isArray(variants) ? variants : []) {
+        const destRel = v.rel;
+        const w = Number(v.width) || 0;
+        const h = Number(v.height) || 0;
+        const mime = String(v.mime || 'image/jpeg');
+        const quality = v.quality === undefined ? 90 : Math.round((v.quality || 0.9) * 100);
+
+        const destAbs = path.join(projectRoot, destRel);
+        await fsp.mkdir(path.dirname(destAbs), { recursive: true });
+
+        try {
+          const pipeline = sharp(srcAbs).resize(w, h, { fit: 'cover', position: 'centre' });
+          if (mime.includes('png')) {
+            await pipeline.png().toFile(destAbs);
+          } else {
+            await pipeline.jpeg({ quality }).toFile(destAbs);
+          }
+          results.push({ rel: destRel, ok: true });
+        } catch (err) {
+          console.warn('Failed to create variant', destRel, err);
+          results.push({ rel: destRel, ok: false, error: String(err) });
+        }
+      }
+
+      return { success: true, results };
+    } catch (err) {
+      console.error('image:generateVariants failed', err);
+      return { success: false, reason: String(err) };
+    }
+  });
+
   // ---- IPC: audio cache handlers ----
   ipcMain.handle("audioCache:read", async (_e, { key }) => {
     console.log("🎵 CACHE READ:", key);
@@ -1894,7 +1938,12 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
         }
         
         // Notify renderer windows that chapter audio was updated
-        try { BrowserWindow.getAllWindows().forEach(w => w.webContents.send('audio:chapters:updated', { chapterId, outputPath: path.relative(projectRoot, outputPath) })); } catch (e) { console.warn('Failed to notify windows about chapter update', e); }
+        try {
+          console.log(`[main] emitting audio:chapters:updated for chapter ${chapterId}`);
+          BrowserWindow.getAllWindows().forEach(w => w.webContents.send('audio:chapters:updated', { chapterId, outputPath: path.relative(projectRoot, outputPath) }));
+        } catch (e) {
+          console.warn('Failed to notify windows about chapter update', e);
+        }
 
         return {
           success: true,
@@ -2227,6 +2276,39 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
         exists: false,
         error: error.message
       };
+    }
+  });
+
+  // IPC: get audio file metadata (duration, bitrate) via ffprobe if available
+  ipcMain.handle('audio:getMetadata', async (_e, { projectRoot, relPath }) => {
+    try {
+      const abs = path.join(projectRoot, relPath);
+      if (!fs.existsSync(abs)) return { exists: false };
+
+      const ffprobePath = path.join(__dirname, '../../bin/ffmpeg/ffprobe.exe');
+      const ffprobeCmd = fs.existsSync(ffprobePath) ? ffprobePath : 'ffprobe';
+
+      const args = [
+        '-v', 'quiet',
+        '-show_entries', 'format=duration,bit_rate',
+        '-of', 'default=noprint_wrappers=1:nokey=1',
+        abs
+      ];
+
+      const proc = spawn(ffprobeCmd, args);
+      let out = '';
+      proc.stdout.on('data', (d) => { out += d.toString(); });
+
+      const exit = await new Promise((resolve) => { proc.on('close', resolve); proc.on('error', () => resolve(-1)); });
+      if (exit !== 0) return { exists: true, duration: null, bitrate: null };
+
+      const lines = out.trim().split(/\r?\n/).filter(Boolean);
+      const duration = lines.length >= 1 ? parseFloat(lines[0]) || null : null;
+      const bitrate = lines.length >= 2 ? parseInt(lines[1], 10) || null : null;
+      return { exists: true, duration, bitrate };
+    } catch (err) {
+      console.warn('audio:getMetadata failed', err);
+      return { exists: false, error: String(err) };
     }
   });
 }

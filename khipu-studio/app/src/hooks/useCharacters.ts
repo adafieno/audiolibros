@@ -909,9 +909,15 @@ export function useCharacters(): UseCharactersApi {
       setAssignmentProgress(progress);
     };
 
+    let unsub: (() => void) | undefined;
     if (window.khipu?.characters?.onAssignmentProgress) {
-      window.khipu.characters.onAssignmentProgress(handleAssignmentProgress);
+      const maybe = window.khipu.characters.onAssignmentProgress(handleAssignmentProgress) as unknown;
+      if (typeof maybe === 'function') unsub = maybe as () => void;
     }
+
+    return () => {
+      if (typeof unsub === 'function') unsub();
+    };
   }, []);
 
   return {

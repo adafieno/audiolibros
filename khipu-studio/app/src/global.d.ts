@@ -68,6 +68,7 @@ export interface KhipuRequestMap {
     in: { filePath: string; projectRoot: string }; 
     out: { success: boolean; fileName?: string; dimensions?: { width: number; height: number }; error?: string; warning?: string } 
   };
+  "file:getImageDataUrl": { in: { projectRoot: string; fileName: string }; out: { success?: boolean; dataUrl?: string; error?: string } };
 
   // Audio Cache
   "audioCache:read": { 
@@ -135,6 +136,7 @@ export interface KhipuRequestMap {
       format: string;
     };
   };
+  "audio:getMetadata": { in: { projectRoot: string; relPath: string }; out: { exists: boolean; duration?: number | null; bitrate?: number | null; error?: string } };
   "audio:chaptersInfo": { in: { projectRoot: string }; out: { count: number; hasAudio: number; presentIds: string[]; missingIds: string[] } };
   "audio:cache:has": { in: string; out: boolean };
   "audio:cache:path": { in: string; out: string | null };
@@ -241,6 +243,16 @@ export interface KhipuRequestMap {
       modifiedTime?: string;
       error?: string;
     };
+  };
+
+  // Image variant generation exposed by main (sharp-based preferred)
+  "image:generateVariants": {
+    in: {
+      projectRoot: string;
+      srcRel: string;
+      variants: Array<{ rel: string; width: number; height: number; mime?: string; quality?: number }>;
+    };
+    out: { success: boolean; reason?: string; error?: string; results?: Array<{ rel: string; ok: boolean; error?: string }> };
   };
 
   // Simple segment audio generation

@@ -31,10 +31,12 @@ interface PlatformConfig {
 
 export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => void }) {
   const { t } = useTranslation();
+  // ...existing translation function `t` from useTranslation
   const { root, markStepCompleted, isStepCompleted } = useProject();
   
   const [cfg, setCfg] = useState<ProjectConfig | null>(null);
   const [bookMeta, setBookMeta] = useState<BookMeta | null>(null);
+  const [manifest, setManifest] = useState<Record<string, unknown> | null>(null);
   const [productionSettings, setProductionSettings] = useState<ProductionSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [chaptersInfo, setChaptersInfo] = useState<{ count: number; hasAudio: number; missingIds?: string[] }>({ count: 0, hasAudio: 0 });
@@ -87,6 +89,40 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
         }) as ProductionSettings;
         setProductionSettings(prodSettings);
 
+        // Try to load manifest.json if present. If it's missing, create one from bookMeta and save it.
+        try {
+          const mf = await window.khipu!.call("fs:read", {
+            projectRoot: root,
+            relPath: "manifest.json",
+            json: true
+          });
+          setManifest(mf as Record<string, unknown>);
+        } catch (e) {
+          console.debug('manifest.json not found or failed to read:', e);
+          // If bookMeta is available, create a minimal manifest and persist it so later reads are consistent
+          if (bookData && typeof bookData === 'object') {
+            try {
+              const newManifest = {
+                metadata: bookData,
+                createdAt: new Date().toISOString()
+              } as Record<string, unknown>;
+              const wrote = await window.khipu!.call("fs:write", {
+                projectRoot: root,
+                relPath: "manifest.json",
+                json: true,
+                content: newManifest
+              });
+              if (wrote) {
+                // read it back to ensure consistent shape
+                const mf2 = await window.khipu!.call("fs:read", { projectRoot: root, relPath: 'manifest.json', json: true });
+                setManifest(mf2 as Record<string, unknown>);
+              }
+            } catch (we) {
+              console.warn('Failed to create manifest.json from book meta:', we);
+            }
+          }
+        }
+
         // Check for chapters and audio files
         try {
           const chapterList = await window.khipu!.call("chapters:list", {
@@ -133,7 +169,7 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
     window.khipu?.onAudioChaptersUpdated?.(onUpdated);
 
     // cleanup is optional (preload just forwards ipcRenderer.on). We won't remove listener here.
-  }, [root, onStatus]);
+  }, [root, onStatus, refreshChaptersInfo]);
 
   // When chapters reach full audio coverage, mark export workflow as complete (persist to project.khipu.json)
   useEffect(() => {
@@ -307,6 +343,46 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
   const enabledPlatforms = platformReadiness.filter(p => p.enabled);
   const readyPlatforms = enabledPlatforms.filter(p => p.ready);
 
+  // Compute a simple manifest progress summary (based on book metadata + audio coverage)
+  const manifestProgress = useMemo(() => {
+    const requiredFields = ["title", "authors", "narrators", "description", "coverImage"];
+
+    // Helper to map keys to friendly labels (use translations only)
+    const friendlyLabel = (k: string) => {
+      switch (k) {
+        case 'title': return t('packaging.fields.title');
+        case 'authors': return t('packaging.fields.authors');
+        case 'narrators': return t('packaging.fields.narrators');
+        case 'description': return t('packaging.fields.description');
+        case 'coverImage': return t('packaging.fields.coverImage');
+        default: return k;
+      }
+    };
+
+    // Prefer manifest metadata if present (manifest.metadata or root). If manifest is missing,
+    // fall back to project book metadata (`bookMeta`). Compute percent and missing fields from
+    // whichever source is available so UI reflects actual data.
+    const manifestMeta = manifest ? (((manifest as Record<string, unknown>).metadata ?? manifest) as Record<string, unknown>) : null;
+    const source = (manifestMeta ?? (bookMeta as Record<string, unknown> | null));
+
+    const presentCount = source ? requiredFields.reduce((acc, field) => {
+      const val = (source as Record<string, unknown>)[field] as string | string[] | undefined;
+      const has = Array.isArray(val) ? val.length > 0 : (typeof val === 'string' ? val.trim().length > 0 : Boolean(val));
+      return acc + (has ? 1 : 0);
+    }, 0) : 0;
+
+    const percent = Math.round((presentCount / requiredFields.length) * 100);
+
+    const missingFields = requiredFields.filter(f => {
+      const val = source ? (source[f as keyof typeof source] as string | string[] | undefined) : undefined;
+      const has = Array.isArray(val) ? val.length > 0 : (typeof val === 'string' ? val.trim().length > 0 : Boolean(val));
+      return !has;
+    }).map(friendlyLabel);
+
+    const status = percent === 0 ? 'empty' as const : (percent >= 100 ? 'complete' as const : 'partial' as const);
+    return { percent, status, missingFields };
+  }, [manifest, bookMeta, t]);
+
   if (!root) {
     return (
       <div style={{ padding: "16px", maxWidth: "1200px" }}>
@@ -426,12 +502,7 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
                 {chaptersInfo.hasAudio}/{chaptersInfo.count}
               </div>
               <div style={{ fontSize: '13px', padding: '6px 10px', borderRadius: 6, backgroundColor: chaptersInfo.count === 0 ? 'var(--error-bg)' : (chaptersInfo.hasAudio === chaptersInfo.count ? 'var(--success-bg)' : 'var(--warning-bg)'), color: 'var(--text)' }}>
-                {chaptersInfo.count === 0 ? t('packaging.status.noChapters') : (chaptersInfo.hasAudio === chaptersInfo.count ? t('packaging.status.allPresent') : t('packaging.status.partial'))}
-              </div>
-              <div style={{ marginLeft: 'auto' }}>
-                <StandardButton variant="secondary" onClick={() => refreshChaptersInfo()}>
-                  {t('packaging.actions.refresh')}
-                </StandardButton>
+                {chaptersInfo.count === 0 ? t('packaging.status.noChapters') : (chaptersInfo.hasAudio === chaptersInfo.count ? t('packaging.status.audioAllPresent') : t('packaging.status.audioPartial'))}
               </div>
             </div>
             <div style={{ fontSize: "14px", color: "var(--muted)" }}>
@@ -442,6 +513,38 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
                       <strong>Missing audio for:</strong> {chaptersInfo.missingIds.join(", ")}
                     </div>
                   )}
+          </div>
+          {/* Manifest Progress Card */}
+          <div style={{
+            padding: "20px",
+            backgroundColor: "var(--panel)",
+            border: "1px solid var(--border)",
+            borderRadius: "8px"
+          }}>
+            <h3 style={{
+              fontSize: "16px",
+              fontWeight: "600",
+              color: "var(--text)",
+              marginBottom: "8px"
+            }}>{t("packaging.overview.manifestProgress")}</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ fontSize: "24px", fontWeight: "700", color: manifestProgress.percent >= 100 ? "var(--success)" : "var(--warning)" }}>
+                {manifestProgress.percent}%
+              </div>
+              {/* single manifest badge: Complete / Partial / Not found */}
+              <div style={{ fontSize: '13px', padding: '6px 10px', borderRadius: 6, backgroundColor: (manifestProgress.status === 'complete' ? 'var(--success-bg)' : (manifestProgress.status === 'partial' ? 'var(--warning-bg)' : 'var(--error-bg)')), color: 'var(--text)' }}>
+                {manifestProgress.status === 'complete' ? t('packaging.status.manifestComplete') : (manifestProgress.status === 'partial' ? t('packaging.status.manifestPartial') : t('packaging.status.manifestEmpty'))}
+              </div>
+              {/* audio badge intentionally removed from manifest card; audio status is shown in the Audio Progress card above */}
+              {/* no refresh button for manifest - keep layout consistent with Audio Progress */}
+            </div>
+            <div style={{ fontSize: "14px", color: "var(--muted)" }}>
+              {t('packaging.overview.metadataCompletion')}
+            </div>
+            <div style={{ marginTop: "6px", fontSize: "12px", color: "var(--muted)" }}>
+              <strong>{t('packaging.overview.missingItemsPrefix')}</strong>{' '}
+              {manifestProgress.missingFields && manifestProgress.missingFields.length > 0 ? manifestProgress.missingFields.join(', ') : t('packaging.overview.none')}
+            </div>
           </div>
         </div>
       </section>

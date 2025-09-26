@@ -24,6 +24,7 @@
         "build:all": "npm run build:ui && electron-builder --win --mac --linux"
     },
     "dependencies": {
+        "sharp": "^0.32.1",
         "@tanstack/react-table": "^8.21.3",
         "howler": "^2.2.4",
         "i18next": "^25.5.0",

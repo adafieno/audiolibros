@@ -405,6 +405,34 @@
     "string": "All audio present",
     "comment": "Audio status when every chapter has audio"
   },
+  "packaging.status.audioAllPresent": {
+    "string": "All audio present",
+    "comment": "Audio status when every chapter has audio (explicit key for audio badge)"
+  },
+  "packaging.status.audioPartial": {
+    "string": "Partial",
+    "comment": "Audio status when some chapters have audio (explicit key for audio badge)"
+  },
+  "packaging.status.audioMissing": {
+    "string": "Missing",
+    "comment": "Audio status when no chapters have audio (explicit key for audio badge)"
+  },
+  "packaging.status.metaAllPresent": {
+    "string": "Metadata OK",
+    "comment": "Metadata status when required metadata fields are present"
+  },
+  "packaging.status.metaPartial": {
+    "string": "Metadata partial",
+    "comment": "Metadata status when some metadata fields are present"
+  },
+  "packaging.status.metaMissing": {
+    "string": "Metadata missing",
+    "comment": "Metadata status when required metadata fields are missing"
+  },
+  "packaging.status.missing": {
+    "string": "Missing",
+    "comment": "Status indicating required manifest data is missing"
+  },
   "packaging.actions.refresh": {
     "string": "Refresh",
     "comment": "Button text to refresh chapter audio counts"
@@ -412,6 +440,18 @@
   "packaging.status.exportMarked": {
     "string": "Packaging: export marked ready",
     "comment": "Status message when packaging export step is auto-marked complete"
+  },
+  "packaging.requirements.manifest": {
+    "string": "manifest.json present",
+    "comment": "Requirement: manifest.json file exists"
+  },
+  "packaging.requirements.coverQuality": {
+    "string": "Cover image meets specs",
+    "comment": "Requirement: cover image is present and acceptable"
+  },
+  "packaging.requirements.audioFiles": {
+    "string": "All chapter audio files present",
+    "comment": "Requirement: audio files listed in manifest exist"
   },
   "settings.saving": {
     "string": "Saving…",
@@ -2879,6 +2919,35 @@
     "string": "Audio Progress",
     "comment": "Header for audio progress overview card"
   },
+  "packaging.overview.manifestProgress": {
+    "string": "Manifest Progress",
+    "comment": "Header for manifest progress overview card"
+  },
+  "packaging.overview.manifestDetails": {
+    "string": "Manifest metadata and audio status",
+    "comment": "Short description under the manifest progress card"
+  },
+  "packaging.status.manifestComplete": { "string": "Complete", "comment": "Manifest card label when both metadata and audio are complete" },
+  "packaging.status.manifestPartial": { "string": "Partial", "comment": "Manifest card label when either metadata or audio is partially complete" },
+  "packaging.status.manifestNotFound": { "string": "Not found", "comment": "Manifest card label when manifest.json is missing" },
+  "packaging.overview.metadataCompletion": {
+    "string": "metadata completion",
+    "comment": "Label showing metadata completion under the percent (lowercase)"
+  },
+  "packaging.overview.none": { "string": "None", "comment": "Short label used when nothing is missing" },
+  "packaging.overview.missingItemsPrefix": {
+    "string": "Missing items:",
+    "comment": "Prefix label for listing which metadata items are missing"
+  },
+  "packaging.overview.missingMetadataFor": {
+    "string": "Missing metadata for:",
+    "comment": "Label prefix listing which metadata fields are missing in the manifest"
+  },
+  "packaging.fields.title": { "string": "Title", "comment": "Friendly label for book title" },
+  "packaging.fields.authors": { "string": "Authors", "comment": "Friendly label for authors" },
+  "packaging.fields.narrators": { "string": "Narrators", "comment": "Friendly label for narrators" },
+  "packaging.fields.description": { "string": "Description", "comment": "Friendly label for book description" },
+  "packaging.fields.coverImage": { "string": "Cover", "comment": "Friendly label for cover image" },
   "packaging.overview.chaptersAudio": {
     "string": "chapters with audio",
     "comment": "Subtitle for audio progress showing chapters with audio"

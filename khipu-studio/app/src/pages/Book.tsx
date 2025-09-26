@@ -95,14 +95,14 @@ export default function Book() {
   // Auto-save when cfg or bookMeta changes (debounced)
   useEffect(() => {
     if (!root || !cfg || !bookMeta) return;
-    
+
     const timeoutId = setTimeout(async () => {
       try {
         console.log('💾 Auto-saving book configuration and metadata');
-        
+
         // Save project config
         await saveProjectConfig(root, cfg);
-        
+
         // Save book metadata to book.meta.json
         await window.khipu!.call("fs:write", {
           projectRoot: root,
@@ -110,9 +110,24 @@ export default function Book() {
           json: true,
           content: bookMeta
         });
-        
-        console.log('💾 Auto-saved book configuration and metadata');
-        
+
+        // Update manifest.json with new metadata, preserving audio and other fields
+        const manifestExists = await window.khipu!.call('fs:checkFileExists', { filePath: `${root}/manifest.json` });
+        if (manifestExists) {
+          const manifestRaw = await window.khipu!.call('fs:read', { projectRoot: root, relPath: 'manifest.json', json: true });
+          if (manifestRaw && typeof manifestRaw === 'object') {
+            const manifest = { ...manifestRaw, metadata: bookMeta };
+            await window.khipu!.call('fs:write', {
+              projectRoot: root,
+              relPath: 'manifest.json',
+              json: true,
+              content: manifest
+            });
+          }
+        }
+
+        console.log('💾 Auto-saved book configuration, metadata, and manifest');
+
       } catch (error) {
         console.warn('Auto-save failed:', error);
         // Don't show error to user for auto-save failures, just log them

@@ -57,8 +57,11 @@ function CharactersPage() {
       setDetectionProgress(progress);
     };
 
+    let unsubProgress: (() => void) | undefined;
     if (window.khipu?.characters?.onProgress) {
-      window.khipu.characters.onProgress(handleProgress);
+      // some preload helpers return an unsubscribe function
+      const possible = window.khipu.characters.onProgress(handleProgress) as unknown;
+      if (typeof possible === 'function') unsubProgress = possible as () => void;
     }
 
     if (window.khipu) {
@@ -79,7 +82,8 @@ function CharactersPage() {
     }
 
     return () => {
-      // Cleanup would go here if needed
+      // Cleanup listener if preload provided an unsubscribe
+      if (typeof unsubProgress === 'function') unsubProgress();
       setDetectionProgress(null);
     };
   }, [root, load]);

@@ -1886,6 +1886,75 @@
     "string": "Progresso do áudio",
     "comment": "Cabeçalho do cartão de visão geral do progresso do áudio"
   },
+  "packaging.overview.manifestProgress": {
+    "string": "Progresso do manifesto",
+    "comment": "Cabeçalho para o cartão de visão geral do progresso do manifesto"
+  },
+  "packaging.overview.manifestDetails": {
+    "string": "Metadados do manifesto e status de áudio",
+    "comment": "Texto descritivo abaixo do cartão de progresso do manifesto"
+  },
+  "packaging.status.manifestComplete": { "string": "Completo", "comment": "Rótulo do cartão de manifesto quando metadados e áudio estão completos" },
+  "packaging.status.manifestPartial": { "string": "Parcial", "comment": "Rótulo do cartão de manifesto quando metadados ou áudio estão parcialmente completos" },
+  "packaging.status.manifestNotFound": { "string": "Não encontrado", "comment": "Rótulo do cartão de manifesto quando falta manifest.json" },
+  "packaging.overview.metadataCompletion": {
+    "string": "completude dos metadados",
+    "comment": "Rótulo que mostra a completude de metadados abaixo do percentual (minúsculas)"
+  },
+  "packaging.overview.none": { "string": "Nenhum", "comment": "Rótulo curto usado quando nada está faltando" },
+  "packaging.overview.missingItemsPrefix": {
+    "string": "Itens faltando:",
+    "comment": "Prefixo para listar quais itens de metadados estão faltando"
+  },
+  "packaging.overview.missingMetadataFor": {
+    "string": "Metadados faltando para:",
+    "comment": "Prefixo de rótulo que lista quais campos de metadados estão faltando no manifesto"
+  },
+  "packaging.fields.title": { "string": "Título", "comment": "Rótulo amigável para o título do livro" },
+  "packaging.fields.authors": { "string": "Autores", "comment": "Rótulo amigável para autores" },
+  "packaging.fields.narrators": { "string": "Narradores", "comment": "Rótulo amigável para narradores" },
+  "packaging.fields.description": { "string": "Descrição", "comment": "Rótulo amigável para descrição do livro" },
+  "packaging.fields.coverImage": { "string": "Capa", "comment": "Rótulo amigável para a imagem da capa" },
+  "packaging.status.noChapters": {
+    "string": "Sem capítulos",
+    "comment": "Estado de áudio quando não há capítulos"
+  },
+  "packaging.status.partial": {
+    "string": "Parcial",
+    "comment": "Estado de áudio quando alguns capítulos têm áudio"
+  },
+  "packaging.status.allPresent": {
+    "string": "Todo o áudio presente",
+    "comment": "Estado de áudio quando todos os capítulos têm áudio"
+  },
+  "packaging.status.audioAllPresent": {
+    "string": "Todo o áudio presente",
+    "comment": "Estado de áudio quando todos os capítulos têm áudio (chave explícita para badge de áudio)"
+  },
+  "packaging.status.audioPartial": {
+    "string": "Parcial",
+    "comment": "Estado de áudio quando alguns capítulos têm áudio (chave explícita para badge de áudio)"
+  },
+  "packaging.status.audioMissing": {
+    "string": "Faltando",
+    "comment": "Estado de áudio quando não há capítulos com áudio (chave explícita para badge de áudio)"
+  },
+  "packaging.status.metaAllPresent": {
+    "string": "Metadados OK",
+    "comment": "Estado de metadados quando os campos requeridos estão presentes"
+  },
+  "packaging.status.metaPartial": {
+    "string": "Metadados parciais",
+    "comment": "Estado de metadados quando alguns campos estão presentes"
+  },
+  "packaging.status.metaMissing": {
+    "string": "Metadados faltando",
+    "comment": "Estado de metadados quando faltam campos requeridos"
+  },
+  "packaging.status.missing": {
+    "string": "Faltando",
+    "comment": "Estado que indica que faltam dados obrigatórios do manifesto"
+  },
   "packaging.overview.chaptersAudio": {
     "string": "capítulos com áudio",
     "comment": "Subtítulo do progresso do áudio mostrando capítulos com áudio"
