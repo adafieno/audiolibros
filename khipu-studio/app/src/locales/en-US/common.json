@@ -2044,6 +2044,8 @@
   },
 
   "audioProduction.moduleTitle": {
+
+
     "string": "Audio Production Module",
     "comment": "Title for the audio production module panel"
   },
@@ -3039,5 +3041,49 @@
   "packaging.requirements.outputDirectory": {
     "string": "Output Directory",
     "comment": "Output directory requirement description"
+  },
+  "packaging.apple": {
+    "string": "Apple Books",
+    "comment": "Label for Apple Books platform in packaging UI"
+  },
+  "packaging.google": {
+    "string": "Google Play Books",
+    "comment": "Label for Google Play Books platform in packaging UI"
+  },
+  "packaging.spotify": {
+    "string": "Spotify",
+    "comment": "Label for Spotify platform in packaging UI"
+  },
+  "packaging.acx": {
+    "string": "ACX",
+    "comment": "Label for ACX platform in packaging UI"
+  },
+  "packaging.kobo": {
+    "string": "Kobo",
+    "comment": "Label for Kobo platform in packaging UI"
+  },
+  "packaging.ready": {
+    "string": "Ready",
+    "comment": "Indicates that the platform is ready for packaging"
+  },
+  "packaging.missing": {
+    "string": "Missing Requirements",
+    "comment": "Indicates that the platform has missing requirements"
+  },
+  "packaging.score": {
+    "string": "Score: {score}%",
+    "comment": "Displays the readiness score for the platform"
+  },
+  "packaging.selectPlatforms": {
+    "string": "Select Platforms",
+    "comment": "Prompt to select platforms for packaging"
+  },
+  "platforms.apple": {
+    "string": "Apple Books",
+    "comment": "Label for Apple Books platform"
+  },
+  "packaging.startPackaging": {
+    "string": "Start Packaging",
+    "comment": "Button label to start the packaging process"
   }
 }

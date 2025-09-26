@@ -41,7 +41,7 @@ export interface ProjectConfig {
   };
   tts: { engine: TtsEngine; cache: boolean };
   llm: { engine: LlmEngine };
-  export: { outputDir: string; platforms: { apple?: boolean; google?: boolean; spotify?: boolean } };
+  export: { outputDir: string; platforms: { apple?: boolean; google?: boolean; spotify?: boolean; acx?: boolean; kobo?: boolean } };
   pronunciationMap?: Record<string, string>; // word -> IPA
   // Credentials organized by service
   creds?: {
@@ -102,5 +102,7 @@ export interface ProductionSettings {
   packaging: {
     apple?: { aac_bitrate: string };
     gplay_spotify?: { mp3_bitrate: string; flac: boolean; sr_hz: number; channels: 1 | 2 };
+    acx?: { mp3_bitrate: string; sr_hz: number; channels: 1 | 2 };
+    kobo?: { mp3_bitrate: string; sr_hz: number; channels: 1 | 2 };
   };
 }

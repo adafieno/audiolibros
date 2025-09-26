@@ -41,6 +41,9 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
   const [loading, setLoading] = useState(true);
   const [chaptersInfo, setChaptersInfo] = useState<{ count: number; hasAudio: number; missingIds?: string[] }>({ count: 0, hasAudio: 0 });
 
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+  const [packagingProgress, setPackagingProgress] = useState<Record<string, string>>({});
+
   // Load project data
   // Helper to (re)query chapters audio info from main
   const refreshChaptersInfo = useCallback(async () => {
@@ -226,6 +229,32 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
         sampleRate: productionSettings?.packaging?.gplay_spotify?.sr_hz || 44100,
         channels: productionSettings?.packaging?.gplay_spotify?.channels || 1
       }
+    },
+    {
+      id: "acx",
+      name: "ACX",
+      enabled: cfg?.export?.platforms?.acx || false,
+      requirements: ["title", "author", "narrator", "cover", "audio", "chapters"],
+      packageFormat: "ZIP with MP3",
+      audioSpec: {
+        format: "MP3",
+        bitrate: productionSettings?.packaging?.acx?.mp3_bitrate || "192k",
+        sampleRate: productionSettings?.packaging?.acx?.sr_hz || 44100,
+        channels: productionSettings?.packaging?.acx?.channels || 1
+      }
+    },
+    {
+      id: "kobo",
+      name: "Kobo",
+      enabled: cfg?.export?.platforms?.kobo || false,
+      requirements: ["title", "author", "narrator", "cover", "audio", "chapters"],
+      packageFormat: "EPUB",
+      audioSpec: {
+        format: "MP3",
+        bitrate: productionSettings?.packaging?.kobo?.mp3_bitrate || "192k",
+        sampleRate: productionSettings?.packaging?.kobo?.sr_hz || 44100,
+        channels: productionSettings?.packaging?.kobo?.channels || 1
+      }
     }
   ], [cfg, productionSettings]);
 
@@ -237,7 +266,7 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
       key: "packaging.requirements.title",
       category: "metadata",
       required: true,
-      platforms: ["apple", "google", "spotify"],
+      platforms: ["apple", "google", "spotify", "acx", "kobo"],
       validator: () => Boolean(bookMeta?.title?.trim())
     },
     {
@@ -245,7 +274,7 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
       key: "packaging.requirements.author",
       category: "metadata",
       required: true,
-      platforms: ["apple", "google", "spotify"],
+      platforms: ["apple", "google", "spotify", "acx", "kobo"],
       validator: () => Boolean(bookMeta?.authors?.length)
     },
     {
@@ -253,7 +282,7 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
       key: "packaging.requirements.narrator",
       category: "metadata",
       required: true,
-      platforms: ["apple", "google", "spotify"],
+      platforms: ["apple", "google", "spotify", "acx", "kobo"],
       validator: () => Boolean(bookMeta?.narrators?.length)
     },
     {
@@ -261,7 +290,7 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
       key: "packaging.requirements.description",
       category: "metadata",
       required: true,
-      platforms: ["apple", "google", "spotify"],
+      platforms: ["apple", "google", "spotify", "acx", "kobo"],
       validator: () => Boolean(bookMeta?.description?.trim())
     },
     // ISBN field remains in book metadata but is no longer required for packaging
@@ -270,7 +299,7 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
       key: "packaging.requirements.keywords",
       category: "metadata",
       required: false,
-      platforms: ["apple", "google", "spotify"],
+      platforms: ["apple", "google", "spotify", "acx", "kobo"],
       validator: () => Boolean(bookMeta?.keywords?.length)
     },
     {
@@ -278,7 +307,7 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
       key: "packaging.requirements.categories",
       category: "metadata",
       required: false,
-      platforms: ["apple", "google", "spotify"],
+      platforms: ["apple", "google", "spotify", "acx", "kobo"],
       validator: () => Boolean(bookMeta?.categories?.length)
     },
     
@@ -288,7 +317,7 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
       key: "packaging.requirements.cover",
       category: "files",
       required: true,
-      platforms: ["apple", "google", "spotify"],
+      platforms: ["apple", "google", "spotify", "acx", "kobo"],
       validator: () => {
         // Check if cover image exists - for now just check if it's specified in book meta
         return Boolean(bookMeta?.coverImage);
@@ -301,7 +330,7 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
       key: "packaging.requirements.audioComplete",
       category: "audio",
       required: true,
-      platforms: ["apple", "google", "spotify"],
+      platforms: ["apple", "google", "spotify", "acx", "kobo"],
       // complete only when every chapter has audio
       validator: () => chaptersInfo.hasAudio === chaptersInfo.count && chaptersInfo.count > 0
     },
@@ -312,7 +341,7 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
       key: "packaging.requirements.outputDirectory",
       category: "technical",
       required: true,
-      platforms: ["apple", "google", "spotify"],
+      platforms: ["apple", "google", "spotify", "acx", "kobo"],
       validator: () => Boolean(cfg?.export?.outputDir?.trim())
     }
   ], [bookMeta, cfg, chaptersInfo]);
@@ -382,6 +411,35 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
     const status = percent === 0 ? 'empty' as const : (percent >= 100 ? 'complete' as const : 'partial' as const);
     return { percent, status, missingFields };
   }, [manifest, bookMeta, t]);
+
+  const handlePlatformSelection = (platformId: string) => {
+    setSelectedPlatforms((prev) => {
+      if (prev.includes(platformId)) {
+        return prev.filter((id) => id !== platformId);
+      } else {
+        return [...prev, platformId];
+      }
+    });
+  };
+
+  const startPackaging = async () => {
+    if (!root || selectedPlatforms.length === 0) return;
+
+    for (const platformId of selectedPlatforms) {
+      setPackagingProgress((prev) => ({ ...prev, [platformId]: 'in-progress' }));
+
+      try {
+        const result = await window.khipu!.call("packaging:create", { projectRoot: root, platformId });
+        if (result.success) {
+          setPackagingProgress((prev) => ({ ...prev, [platformId]: 'completed' }));
+        } else {
+          setPackagingProgress((prev) => ({ ...prev, [platformId]: 'failed' }));
+        }
+      } catch (e) {
+        setPackagingProgress((prev) => ({ ...prev, [platformId]: 'failed' }));
+      }
+    }
+  };
 
   if (!root) {
     return (
@@ -726,6 +784,199 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
             ))}
           </div>
         )}
+      </section>
+
+      {/* Platform Requirements Checklists */}
+      <section style={{ marginBottom: "32px" }}>
+        <div style={{ 
+          display: "grid", 
+          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", 
+          gap: "16px" 
+        }}>
+          {platformReadiness.map(({ id, ready, missing, score }) => (
+            <div key={id} style={{
+              padding: "20px",
+              backgroundColor: "var(--panel)",
+              border: "1px solid var(--border)",
+              borderRadius: "8px"
+            }}>
+              <h3 style={{ 
+                fontSize: "16px", 
+                fontWeight: "600", 
+                color: "var(--text)", 
+                marginBottom: "8px" 
+              }}>
+                {t(`packaging.${id}`)}
+              </h3>
+              <p style={{ fontSize: "14px", color: ready ? "var(--success)" : "var(--warning)" }}>
+                {ready ? t("packaging.ready") : t("packaging.missing")}
+              </p>
+              <ul style={{ fontSize: "14px", color: "var(--muted)" }}>
+                {missing.map((requirement, index) => (
+                  <li key={index}>{t(`packaging.requirements.${requirement}`)}</li>
+                ))}
+              </ul>
+              <p style={{ fontSize: "14px", color: "var(--text)" }}>
+                {t("packaging.score", { score: Math.round(score * 100) })}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Platform Selection and Packaging Section */}
+      <section style={{ marginTop: "32px", padding: "16px", borderRadius: "8px", backgroundColor: "var(--panel)", border: "1px solid var(--border)" }}>
+        <h2 style={{ 
+          fontSize: "20px", 
+          fontWeight: "600", 
+          color: "var(--text)", 
+          marginBottom: "16px" 
+        }}>
+          {t("packaging.selectPlatforms")}
+        </h2>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "16px", marginBottom: "16px" }}>
+          {['apple', 'google', 'spotify', 'acx', 'kobo'].map((platform) => (
+            <div key={platform} style={{ 
+              padding: "16px", 
+              borderRadius: "8px", 
+              backgroundColor: selectedPlatforms.includes(platform) ? "var(--primary-bg)" : "var(--panel)", 
+              border: `1px solid ${selectedPlatforms.includes(platform) ? 'var(--primary)' : 'var(--border)'}`,
+              cursor: "pointer",
+              transition: "background-color 0.3s, border-color 0.3s"
+            }}
+            onClick={() => handlePlatformSelection(platform)}
+            >
+              <h3 style={{ 
+                fontSize: "18px", 
+                fontWeight: "600", 
+                color: selectedPlatforms.includes(platform) ? "var(--primary)" : "var(--text)", 
+                marginBottom: "8px" 
+              }}>
+                {selectedPlatforms.includes(platform) ? "✅" : "⚙️"} {t(`platforms.${platform}`)}
+              </h3>
+              <div style={{ fontSize: "14px", color: "var(--muted)" }}>
+                {t("packaging.platforms.format")}: {platforms.find(p => p.id === platform)?.packageFormat} • {platforms.find(p => p.id === platform)?.audioSpec.format} {platforms.find(p => p.id === platform)?.audioSpec.bitrate}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ textAlign: "center" }}>
+          <StandardButton 
+            onClick={startPackaging} 
+            disabled={selectedPlatforms.length === 0}
+            style={{ 
+              padding: "12px 24px", 
+              fontSize: "16px", 
+              fontWeight: "500", 
+              borderRadius: "4px", 
+              backgroundColor: "var(--accent)", 
+              color: "var(--text)", 
+              border: "none",
+              cursor: "pointer",
+              transition: "background-color 0.3s, transform 0.3s",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              justifyContent: "center"
+            }}
+          >
+            {t("packaging.startPackaging")}
+            {selectedPlatforms.length > 0 && (
+              <span style={{ 
+                fontSize: "14px", 
+                fontWeight: "400", 
+                color: "var(--text)", 
+                backgroundColor: "var(--primary)", 
+                borderRadius: "12px", 
+                padding: "4px 8px" 
+              }}>
+                {selectedPlatforms.length}
+              </span>
+            )}
+          </StandardButton>
+        </div>
+
+        {/* Packaging Progress */}
+        <div style={{ marginTop: "24px" }}>
+          <h3 style={{ 
+            fontSize: "16px", 
+            fontWeight: "600", 
+            color: "var(--text)", 
+            marginBottom: "8px" 
+          }}>
+            {t("packaging.progress")}
+          </h3>
+          <div style={{ 
+            display: "grid", 
+            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", 
+            gap: "16px" 
+          }}>
+            {Object.entries(packagingProgress).map(([platform, status]) => (
+              <div key={platform} style={{ 
+                padding: "12px", 
+                borderRadius: "8px", 
+                backgroundColor: "var(--panel)", 
+                border: "1px solid var(--border)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "4px"
+              }}>
+                <div style={{ 
+                  fontSize: "16px", 
+                  fontWeight: "500", 
+                  color: "var(--text)", 
+                  display: "flex", 
+                  alignItems: "center", 
+                  gap: "8px" 
+                }}>
+                  <span style={{ 
+                    display: "inline-block", 
+                    width: "24px", 
+                    height: "24px", 
+                    borderRadius: "50%", 
+                    backgroundColor: status === 'completed' ? 'var(--success)' : (status === 'in-progress' ? 'var(--warning)' : 'var(--error)'),
+                    transition: "background-color 0.3s"
+                  }}></span>
+                  {t(`platforms.${platform}`)}
+                </div>
+                <div style={{ 
+                  fontSize: "14px", 
+                  color: "var(--muted)", 
+                  display: "flex", 
+                  alignItems: "center", 
+                  gap: "4px" 
+                }}>
+                  {status === 'completed' && (
+                    <span style={{ 
+                      color: "var(--success)", 
+                      fontWeight: "500" 
+                    }}>
+                      {t("packaging.status.completed")}
+                    </span>
+                  )}
+                  {status === 'in-progress' && (
+                    <span style={{ 
+                      color: "var(--warning)", 
+                      fontWeight: "500" 
+                    }}>
+                      {t("packaging.status.inProgress")}
+                    </span>
+                  )}
+                  {status === 'failed' && (
+                    <span style={{ 
+                      color: "var(--error)", 
+                      fontWeight: "500" 
+                    }}>
+                      {t("packaging.status.failed")}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
     </div>
   );

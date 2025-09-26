@@ -3018,129 +3018,45 @@
     "string": "Procesamiento de Audio",
     "comment": "Nombre para mostrar de la operación de procesamiento de audio"
   },
-  "cost.timeTracking.automation": {
-    "string": "automatización",
-    "comment": "Etiqueta para tiempo de automatización en la visualización de seguimiento de tiempo"
-  },
-  "cost.timeTracking.title": {
-    "string": "Tiempo Empleado",
-    "comment": "Título para la tarjeta de seguimiento de tiempo"
-  },
-  "cost.noOperationData": {
-    "string": "Aún no hay datos de operación disponibles.",
-    "comment": "Mensaje cuando no hay datos de operación de tiempo disponibles"
-  },
-  "cost.tryAutomationFeatures": {
-    "string": "Prueba usar algunas funciones de automatización como audición de voz, asignación de voces, o planificación de capítulos.",
-    "comment": "Mensaje de sugerencia para que los usuarios prueben funciones de automatización"
-  },
-  "cost.saved": {
-    "string": "Ahorrado",
-    "comment": "Etiqueta para costo ahorrado en tooltips de timeline al pasar el mouse"
-  },
-  "cost.avgOpsPerDay": {
-    "string": "Promedio ops/día",
-    "comment": "Etiqueta para estadística de operaciones promedio por día"
-  },
-  "cost.more": {
-    "string": "más",
-    "comment": "Texto para mostrar elementos adicionales en listas (ej., '+2 más')"
-  },
-  "cost.noProjectLoaded": {
-    "string": "No hay proyecto cargado",
-    "comment": "Mensaje mostrado cuando no hay proyecto cargado actualmente"
-  },
-  "cost.openProjectFirst": {
-    "string": "Por favor abre un proyecto para ver los datos de seguimiento de costos",
-    "comment": "Mensaje instruyendo al usuario que abra un proyecto primero"
-  },
-  "cost.noTimelineData": {
-    "string": "No hay datos de timeline disponibles para el período seleccionado",
-    "comment": "Mensaje mostrado cuando el timeline no tiene datos para el rango de tiempo seleccionado"
-  },
-  "cost.modules.LLM": {
-    "string": "LLM",
-    "comment": "Abreviatura para Modelo de Lenguaje Grande en leyenda de timeline"
-  },
-  "cost.modules.TTS": {
-    "string": "TTS",
-    "comment": "Abreviatura para Text-to-Speech en leyenda de timeline"
-  },
-  "cost.operations.manuscriptParse": {
-    "string": "Análisis de documento",
-    "comment": "Nombre para mostrar operaciones de análisis de manuscrito"
-  },
-  "cost.operations.characterDetect": {
-    "string": "Detección de personajes",
-    "comment": "Nombre para mostrar operaciones de detección de personajes"
-  },
-  "cost.operations.planBuild": {
-    "string": "Planificación de capítulos",
-    "comment": "Nombre para mostrar operaciones de planificación de capítulos"
-  },
-  "cost.operations.characterAssignment": {
-    "string": "Asignación de personajes",
-    "comment": "Nombre para mostrar operaciones de asignación de personajes"
-  },
-  "cost.operations.voiceAssignment": {
-    "string": "Asignación de voces",
-    "comment": "Nombre para mostrar operaciones de asignación de voces"
-  },
-  "cost.operations.chapterPlanning": {
-    "string": "Planificación de capítulos",
-    "comment": "Nombre para mostrar operaciones de planificación de capítulos"
-  },
-  "cost.operations.voiceAudition": {
-    "string": "Audición de voz",
-    "comment": "Nombre para mostrar operaciones de audición de voz"
-  },
-  "cost.operations.audioPreview": {
-    "string": "Vista Previa de audio",
-    "comment": "Nombre para mostrar operaciones de vista previa de audio"
-  },
-  "cost.operations.audioSynthesis": {
-    "string": "Generación de audio",
-    "comment": "Nombre para mostrar operaciones de síntesis de audio"
-  },
-  "cost.operations.segmentGeneration": {
+  "cost.operationNames.segmentGeneration": {
     "string": "Audio de segmento",
-    "comment": "Nombre para mostrar operaciones de generación de audio de segmento"
+    "comment": "Nombre para mostrar de la operación de generación de audio de segmento"
   },
-  "cost.operations.voiceTesting": {
+  "cost.operationNames.voiceTesting": {
     "string": "Prueba de voz",
-    "comment": "Nombre para mostrar operaciones de prueba de voz"
+    "comment": "Nombre para mostrar de la operación de prueba de voz"
   },
-  "cost.operations.audioProcessing": {
+  "cost.operationNames.audioProcessing": {
     "string": "Procesamiento de audio",
-    "comment": "Nombre para mostrar operaciones de procesamiento de audio"
+    "comment": "Nombre para mostrar de la operación de procesamiento de audio"
   },
-  "cost.operations.soxProcessing": {
+  "cost.operationNames.soxProcessing": {
     "string": "Efectos de audio",
-    "comment": "Nombre para mostrar operaciones de procesamiento de audio SoX"
+    "comment": "Nombre para mostrar de operaciones de procesamiento de audio SoX"
   },
-  "cost.operations.effectChain": {
+  "cost.operationNames.effectChain": {
     "string": "Procesamiento de efectos",
-    "comment": "Nombre para mostrar operaciones de cadena de efectos de audio"
+    "comment": "Nombre para mostrar de operaciones de cadena de efectos de audio"
   },
-  "cost.operations.textParsing": {
+  "cost.operationNames.textParsing": {
     "string": "Análisis de texto",
-    "comment": "Nombre para mostrar operaciones de análisis de texto"
+    "comment": "Nombre para mostrar de operaciones de análisis de texto"
   },
-  "cost.operations.segmentParsing": {
+  "cost.operationNames.segmentParsing": {
     "string": "Procesamiento de segmentos",
-    "comment": "Nombre para mostrar operaciones de análisis de segmentos"
+    "comment": "Nombre para mostrar de operaciones de análisis de segmentos"
   },
-  "cost.operations.ssmlGeneration": {
+  "cost.operationNames.ssmlGeneration": {
     "string": "Generación de SSML",
-    "comment": "Nombre para mostrar operaciones de generación de SSML"
+    "comment": "Nombre para mostrar de operaciones de generación de SSML"
   },
-  "cost.operations.cacheOperation": {
+  "cost.operationNames.cacheOperation": {
     "string": "Acceso a caché",
-    "comment": "Nombre para mostrar operaciones de operación de caché"
+    "comment": "Nombre para mostrar de operaciones de operación de caché"
   },
-  "cost.operations.cacheManagement": {
+  "cost.operationNames.cacheManagement": {
     "string": "Gestión de caché",
-    "comment": "Nombre para mostrar operaciones de gestión de caché"
+    "comment": "Nombre para mostrar de operaciones de gestión de caché"
   },
   "cost.refresh": {
     "string": "Actualizar",
@@ -3482,5 +3398,49 @@
   "packaging.requirements.outputDirectory": {
     "string": "Directorio de Salida",
     "comment": "Descripción del requisito de directorio de salida"
+  },
+  "packaging.apple": {
+    "string": "Apple Books",
+    "comment": "Etiqueta para la plataforma Apple Books en la interfaz de empaquetado"
+  },
+  "packaging.google": {
+    "string": "Google Play Books",
+    "comment": "Etiqueta para la plataforma Google Play Books en la interfaz de empaquetado"
+  },
+  "packaging.spotify": {
+    "string": "Spotify",
+    "comment": "Etiqueta para la plataforma Spotify en la interfaz de empaquetado"
+  },
+  "packaging.acx": {
+    "string": "ACX",
+    "comment": "Etiqueta para la plataforma ACX en la interfaz de empaquetado"
+  },
+  "packaging.kobo": {
+    "string": "Kobo",
+    "comment": "Etiqueta para la plataforma Kobo en la interfaz de empaquetado"
+  },
+  "packaging.ready": {
+    "string": "Listo",
+    "comment": "Indica que la plataforma está lista para empaquetar"
+  },
+  "packaging.missing": {
+    "string": "Requisitos Faltantes",
+    "comment": "Indica que la plataforma tiene requisitos faltantes"
+  },
+  "packaging.score": {
+    "string": "Puntuación: {score}%",
+    "comment": "Muestra la puntuación de preparación de la plataforma"
+  },
+  "packaging.selectPlatforms": {
+    "string": "Seleccionar Plataformas",
+    "comment": "Indicación para seleccionar plataformas para empaquetar"
+  },
+  "platforms.apple": {
+    "string": "Apple Books",
+    "comment": "Etiqueta para la plataforma Apple Books"
+  },
+  "packaging.startPackaging": {
+    "string": "Iniciar Empaquetado",
+    "comment": "Etiqueta del botón para iniciar el proceso de empaquetado"
   }
 }

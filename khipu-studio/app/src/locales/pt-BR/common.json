@@ -2050,5 +2050,45 @@
   "packaging.requirements.outputDirectory": {
     "string": "Diretório de saída",
     "comment": "Descrição do requisito de diretório de saída"
+  },
+  "packaging.apple": {
+    "string": "Apple Books",
+    "comment": "Rótulo para a plataforma Apple Books na interface de empacotamento"
+  },
+  "packaging.google": {
+    "string": "Google Play Books",
+    "comment": "Rótulo para a plataforma Google Play Books na interface de empacotamento"
+  },
+  "packaging.spotify": {
+    "string": "Spotify",
+    "comment": "Rótulo para a plataforma Spotify na interface de empacotamento"
+  },
+  "packaging.acx": {
+    "string": "ACX",
+    "comment": "Rótulo para a plataforma ACX na interface de empacotamento"
+  },
+  "packaging.kobo": {
+    "string": "Kobo",
+    "comment": "Rótulo para a plataforma Kobo na interface de empacotamento"
+  },
+  "packaging.ready": {
+    "string": "Pronto",
+    "comment": "Indica que a plataforma está pronta para empacotamento"
+  },
+  "packaging.missing": {
+    "string": "Requisitos Faltantes",
+    "comment": "Indica que a plataforma tem requisitos faltantes"
+  },
+  "packaging.score": {
+    "string": "Pontuação: {score}%",
+    "comment": "Exibe a pontuação de prontidão da plataforma"
+  },
+  "packaging.selectPlatforms": {
+    "string": "Selecionar Plataformas",
+    "comment": "Indicação para selecionar plataformas para empacotamento"
+  },
+  "packaging.startPackaging": {
+    "string": "Iniciar Empacotamento",
+    "comment": "Rótulo do botão para iniciar o processo de empacotamento"
   }
 }
