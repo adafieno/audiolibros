@@ -3266,6 +3266,22 @@
     "string": "Marcar Empaquetado Completo",
     "comment": "Texto del botón para marcar el flujo de empaquetado como completo"
   },
+  "packaging.prepare": {
+    "string": "Preparar",
+    "comment": "Etiqueta del botón para preparar paquete para una plataforma"
+  },
+  "packaging.status.preparing": {
+    "string": "Preparando...",
+    "comment": "Texto de estado mostrado mientras se prepara un paquete"
+  },
+  "packaging.status.prepared": {
+    "string": "Paquete preparado",
+    "comment": "Texto de estado mostrado cuando la preparación del paquete finaliza"
+  },
+  "packaging.status.prepareFailed": {
+    "string": "Error al preparar paquete",
+    "comment": "Texto de estado mostrado cuando falla la preparación del paquete"
+  },
   "packaging.loadProject": {
     "string": "Por favor carga un proyecto primero para gestionar el empaquetado.",
     "comment": "Mensaje cuando no hay proyecto cargado"

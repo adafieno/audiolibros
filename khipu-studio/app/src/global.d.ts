@@ -323,7 +323,11 @@ export interface Khipu {
     onLog(callback: (log: string) => void): void;
     onAssignmentProgress(callback: (progress: {current: number, total?: string}) => void): void;
   };
-  onAudioChaptersUpdated?: (cb: (info: { chapterId?: string; outputPath?: string }) => void) => void;
+  /**
+   * Register a callback for when audio chapters are updated. Returns an optional
+   * unsubscribe function that removes the listener when called.
+   */
+  onAudioChaptersUpdated?: (cb: (info: { chapterId?: string; outputPath?: string }) => void) => (() => void) | void;
   fileExists(filePath: string): Promise<boolean>;
 }
 

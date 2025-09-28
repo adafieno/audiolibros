@@ -1,5 +1,7 @@
 ﻿// electron/preload.cjs
 const { contextBridge, ipcRenderer } = require('electron');
+// Keep a reference to the audio chapters listener so we can remove it when asked
+let audioChaptersListener;
 contextBridge.exposeInMainWorld('khipu', {
   call: (ch, payload) => ipcRenderer.invoke(ch, payload),
   onJob: (cb) => {

@@ -2913,6 +2913,22 @@
     "string": "Mark Packaging Complete",
     "comment": "Button text to mark packaging workflow as complete"
   },
+  "packaging.prepare": {
+    "string": "Prepare",
+    "comment": "Button label to prepare package for a platform"
+  },
+  "packaging.status.preparing": {
+    "string": "Preparing...",
+    "comment": "Status text shown while preparing a package"
+  },
+  "packaging.status.prepared": {
+    "string": "Package prepared",
+    "comment": "Status text shown when package preparation completes"
+  },
+  "packaging.status.prepareFailed": {
+    "string": "Failed to prepare package",
+    "comment": "Status text shown when package preparation fails"
+  },
   "packaging.loadProject": {
     "string": "Please load a project first to manage packaging.",
     "comment": "Message when no project is loaded"
@@ -3033,6 +3049,14 @@
   "packaging.requirements.chapterAudio": {
     "string": "Chapter Audio Files",
     "comment": "Combined chapter and audio requirement description"
+  },
+  "packaging.requirements.audio": {
+    "string": "Audio Files",
+    "comment": "Description for audio files requirement"
+  },
+  "packaging.requirements.chapters": {
+    "string": "Chapter Files",
+    "comment": "Description for chapter files requirement"
   },
   "packaging.requirements.audioComplete": {
     "string": "All Chapters Audio Complete",
