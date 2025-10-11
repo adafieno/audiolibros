@@ -1,6 +1,6 @@
-# Guía Integral del Flujo de Trabajo de Producción y Publicación de Audiolibros con Voces Sintéticas 
+# Guía Integral del Flujo de Trabajo de Producción y Publicación de Audiolibros con Voces Sintéticas
 
-**Contexto:** Esta guía actualiza el proceso para producir y publicar un audiolibro con Azure TTS, integrando el nuevo concepto de **Dossier** (antes “biblia”) y los **módulos de código** que automatizan cada fase. Plataformas objetivo: **Apple Books, Google Play Books, Spotify** y (opcional) **Audible** vía **KDP Virtual Voice**.
+**Contexto:** Esta guía describe el proceso completo para producir y publicar un audiolibro con Azure TTS usando **Khipu Studio**, la interfaz gráfica unificada que gestiona todo el flujo de trabajo desde la ingesta del manuscrito hasta el empaquetado final. Plataformas objetivo: **Apple Books, Google Play Books, Spotify, ACX** y **Kobo**.
 
 ---
 
