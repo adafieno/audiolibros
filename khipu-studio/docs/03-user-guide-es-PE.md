@@ -13,8 +13,8 @@ La aplicación está organizada en 10 módulos principales, cada uno diseñado p
 - **📑 Manuscrito** - Gestión y edición de contenido
 - **🎭 Personajes** - Detección de personajes y gestión de perfiles
 - **🗣️ Casting** - Asignación de voces a personajes
-- **🪄 Planificación** - Segmentación de contenido y asignación de hablantes con IA
-- **🎙️ Voz** - Producción y procesamiento de audio
+- **🪄 Orquestación** - Segmentación de contenido y asignación de hablantes con IA
+- **🎙️ Producción de Audio** - Producción y procesamiento de audio
 - **💰 Costo** - Seguimiento de uso y gestión de costos
 - **📦 Empaquetado** - Exportación y ensamblaje final
 - **⚙️ Configuración** - Preferencias de aplicación y proyecto
@@ -44,7 +44,24 @@ La aplicación está organizada en 10 módulos principales, cada uno diseñado p
 3. Sube la portada y configura las opciones de visualización
 4. Establece preferencias de formato de audio y configuraciones de calidad
 
-### Paso 3: Importar tu manuscrito
+### Paso 3: Configurar proyecto
+1. Navega a la pestaña **📄 Proyecto**
+
+![Pantalla de configuración del proyecto](images/user-guide/es-PE/03-project.png)
+
+2. Configura los ajustes técnicos del proyecto:
+   - **Orquestación:** Ajusta las pausas de puntuación (oración, párrafo, capítulo, coma, dos puntos, punto y coma)
+   - **Motor LLM:** Selecciona y configura el proveedor de IA (OpenAI con credenciales API)
+   - **Motor TTS:** Configura el servicio de texto a voz (Azure TTS con credenciales y región)
+   - **Empaquetado:** Selecciona plataformas objetivo (Apple Books, Google Play, Spotify, ACX, Kobo)
+3. Personaliza pronunciaciones:
+   - **Mapa de pronunciación:** Agrega palabras específicas con notación IPA
+   - Usa "Sugerir IPA" para obtener pronunciaciones automáticas
+   - Elimina entradas incorrectas según sea necesario
+4. Guarda la configuración para aplicar los cambios al proyecto
+
+
+### Paso 4: Importar tu manuscrito
 1. Ve a la pestaña **📑 Manuscrito**
 
 ![Pantalla de manuscrito](images/user-guide/es-PE/04-manuscript.png)
@@ -57,7 +74,7 @@ La aplicación está organizada en 10 módulos principales, cada uno diseñado p
    - Vista previa del texto
    - La base para que el resto del flujo de trabajo funcione
 
-### Paso 4: Asignar voces
+### Paso 5: Asignar voces
 1. Navega a la pestaña **🗣️ Casting**
 
 ![Navegación de la pestaña de casting](images/user-guide/es-PE/05-casting.png)
@@ -67,7 +84,7 @@ La aplicación está organizada en 10 módulos principales, cada uno diseñado p
    - Probar muestras de voz para verificar que se ajusten a tu historia
    - Agregar idiomas adicionales más allá de los que coinciden con el idioma principal del libro
 
-### Paso 5: Detectar personajes
+### Paso 6: Detectar personajes
 1. Cambia a la pestaña **🎭 Personajes**
 
 ![Navegación de la pestaña de personajes](images/user-guide/es-PE/06-characters.png)
@@ -83,7 +100,7 @@ La aplicación está organizada en 10 módulos principales, cada uno diseñado p
 4. Configura la voz del narrador para contenido que no es diálogo
 5. Agrega y elimina personajes manualmente, según sea necesario
 
-### Paso 6: Planificar segmentos de audio
+### Paso 7: Planificar segmentos de audio
 1. Abre la pestaña **🪄 Orquestación**
 
 ![Navegación de orquestación](images/user-guide/es-PE/07-planning.png)
@@ -97,7 +114,7 @@ La aplicación está organizada en 10 módulos principales, cada uno diseñado p
    - Verificar que las asignaciones de hablantes sean correctas
    - Bloquear segmentos aprobados para prevenir cambios accidentales
 
-### Paso 7: Generar audio
+### Paso 8: Generar audio
 1. Ve a la pestaña **🎙️ Producción de audio**
 
 ![Navegación de la pestaña de producción de audio](images/user-guide/es-PE/08-voice.png)
@@ -112,7 +129,7 @@ La aplicación está organizada en 10 módulos principales, cada uno diseñado p
    - Fundido de entrada/salida y relleno de silencio
    - Efectos de audio personalizados e integración de sonido
 
-### Paso 8: Exportar tu audiolibro
+### Paso 9: Exportar tu audiolibro
 1. Navega a la pestaña **📦 Empaquetado**
 
 ![Navegación de la pestaña de empaquetado](images/user-guide/es-PE/09-packaging.png)
@@ -126,7 +143,7 @@ La aplicación está organizada en 10 módulos principales, cada uno diseñado p
    - Formatos específicos de audiolibro (M4B con capítulos)
    - Formatos listos para streaming con metadatos incorporados
 
-### Paso 9: Monitorear costos
+### Paso 10: Monitorear costos
 1. Revisa la pestaña **💰 Costo** regularmente
 
 ![Navegación de la pestaña de costos](images/user-guide/es-PE/10-cost.png)

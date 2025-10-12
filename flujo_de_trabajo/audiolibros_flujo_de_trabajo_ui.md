@@ -43,50 +43,7 @@
 * **Control de Costos** — monitoreo y optimización de gastos de servicios
 * **Empaquetado Final** — preparación de entregas por plataforma
 
-```mermaid
-flowchart LR
-    %% Main workflow stages
-    A[Gestión de<br/>Proyecto] --> B[Preparación<br/>Editorial]
-    B --> C[Procesamiento del<br/>Manuscrito]
-    C --> D[Casting de<br/>Voces]
-    D --> E[Desarrollo de<br/>Personajes]
-    
-    E --> F[Planificación<br/>Avanzada]
-    F --> G[Orquestación<br/>de Contenido]
-    G --> H[Producción<br/>de Audio]
-    H --> I[Control de<br/>Costos]
-    I --> J[Empaquetado<br/>Final]
-    
-    %% Quality control flow
-    H --> K{¿Calidad<br/>Aceptable?}
-    K -->|No| F
-    K -->|Sí| I
-    
-    %% Budget control flow
-    I --> L{¿Presupuesto<br/>Controlado?}
-    L -->|No| F
-    L -->|Sí| J
-    
-    J --> M[Entrega<br/>Final]
-    
-    %% Common iteration paths
-    C -.->|Revisiones<br/>Técnicas| F
-    D -.->|Ajustes de<br/>Casting| F
-    E -.->|Refinamiento<br/>de Personajes| F
-    
-    %% Accessible color scheme with high contrast
-    classDef startEnd fill:#1565C0,stroke:#0D47A1,stroke-width:3px,color:#FFFFFF
-    classDef process fill:#2E7D32,stroke:#1B5E20,stroke-width:2px,color:#FFFFFF
-    classDef decision fill:#E65100,stroke:#BF360C,stroke-width:2px,color:#FFFFFF
-    classDef critical fill:#B71C1C,stroke:#7F0000,stroke-width:3px,color:#FFFFFF
-    classDef planning fill:#4A148C,stroke:#311B92,stroke-width:2px,color:#FFFFFF
-    
-    class A,M startEnd
-    class B,C,D,E,G,H,J process
-    class K,L decision
-    class I critical
-    class F planning
-```
+![diagrama de flujo de trabajo](workflow.png)
 
 **Filosofía de la Planificación:** El núcleo del proceso es la **Planificación** sistemática, que centraliza todas las decisiones creativas y técnicas del proyecto. Esta planificación permite la repetibilidad, el control de versiones y la optimización continua del flujo de trabajo, manteniendo la coherencia artística a lo largo de todo el proceso de producción.
 
