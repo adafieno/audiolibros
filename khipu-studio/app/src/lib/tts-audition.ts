@@ -121,6 +121,7 @@ export interface AuditionOptions {
   rate_pct?: number;
   pitch_pct?: number;
   page?: string; // Which page initiated this audition
+  projectRoot?: string; // Project root for loading lexicon
 }
 
 export interface AuditionResult {
@@ -128,6 +129,69 @@ export interface AuditionResult {
   audioUrl?: string;
   error?: string;
   wasCached?: boolean; // Indicates if result came from cache
+}
+
+/**
+ * Load pronunciation lexicon from project dossier
+ * Merges lexicon.json and pronunciations.sensitive.json
+ */
+export async function loadPronunciationLexicon(projectRoot: string): Promise<Record<string, string>> {
+  try {
+    const lexicon: Record<string, string> = {};
+
+    // Load lexicon.json
+    try {
+      const lexiconData = await window.khipu!.call("fs:read", {
+        projectRoot,
+        relPath: "dossier/lexicon.json",
+        json: true,
+      });
+      if (lexiconData && typeof lexiconData === 'object') {
+        Object.assign(lexicon, lexiconData);
+      }
+    } catch (e) {
+      // lexicon.json doesn't exist or can't be read - that's okay
+    }
+
+    // Load pronunciations.sensitive.json
+    try {
+      const sensitiveData = await window.khipu!.call("fs:read", {
+        projectRoot,
+        relPath: "dossier/pronunciations.sensitive.json",
+        json: true,
+      });
+      if (sensitiveData && typeof sensitiveData === 'object') {
+        Object.assign(lexicon, sensitiveData);
+      }
+    } catch (e) {
+      // pronunciations.sensitive.json doesn't exist - that's okay
+    }
+
+    return lexicon;
+  } catch (error) {
+    console.warn("Failed to load pronunciation lexicon:", error);
+    return {};
+  }
+}
+
+/**
+ * Generate a hash of lexicon content for cache key
+ */
+export function hashLexicon(lexicon: Record<string, string>): string {
+  if (Object.keys(lexicon).length === 0) return "no-lexicon";
+  
+  // Create stable string representation
+  const entries = Object.entries(lexicon).sort(([a], [b]) => a.localeCompare(b));
+  const content = entries.map(([k, v]) => `${k}:${v}`).join('|');
+  
+  // Simple hash function
+  let hash = 0;
+  for (let i = 0; i < content.length; i++) {
+    const char = content.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash).toString(36);
 }
 
 /**
@@ -329,7 +393,7 @@ export function getAuditionText(locale: string, config: ProjectConfig, customTex
 /**
  * Generate TTS audition for Azure Speech Services (enhanced following Python implementation)
  */
-async function auditAzureVoice(voice: Voice, config: ProjectConfig, text: string, options?: { style?: string; styledegree?: number; rate_pct?: number; pitch_pct?: number }): Promise<AuditionResult> {
+async function auditAzureVoice(voice: Voice, config: ProjectConfig, text: string, options?: { style?: string; styledegree?: number; rate_pct?: number; pitch_pct?: number; projectRoot?: string }): Promise<AuditionResult> {
   // Use TTS-specific credentials
   const credentials = config.creds?.tts?.azure;
   
@@ -353,8 +417,21 @@ async function auditAzureVoice(voice: Voice, config: ProjectConfig, text: string
   const timeoutMs = 30000;
   const retryStatuses = new Set([408, 429, 500, 502, 503, 504]);
   
+  // Load pronunciation lexicon if projectRoot provided
+  let lexicon: Record<string, string> = {};
+  if (options?.projectRoot) {
+    lexicon = await loadPronunciationLexicon(options.projectRoot);
+    if (Object.keys(lexicon).length > 0) {
+      console.log(`📖 Loaded ${Object.keys(lexicon).length} pronunciation overrides`);
+    }
+  }
+  
+  // Apply phoneme injection before SSML processing
+  const { injectPhonemes } = await import('./ssml');
+  const textWithPhonemes = injectPhonemes(text, lexicon);
+  
   // Preprocess SSML
-  const ssmlText = preflightSsml(text);
+  const ssmlText = preflightSsml(textWithPhonemes);
   
   // Build prosody attributes
   let prosodyAttrs = "";
@@ -696,7 +773,8 @@ export async function generateAuditionDirect(options: AuditionOptions): Promise<
     style: options.style,
     styledegree: options.styledegree,
     rate_pct: options.rate_pct,
-    pitch_pct: options.pitch_pct
+    pitch_pct: options.pitch_pct,
+    projectRoot: options.projectRoot
   };
 
   switch (voice.engine) {

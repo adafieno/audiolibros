@@ -25,6 +25,7 @@ export interface UseAudioPreviewResult {
       segment?: Segment;
       character?: Character;
       projectConfig?: ProjectConfig;
+      projectRoot?: string;
     },
     forceRegenerate?: boolean
   ) => Promise<void>;
@@ -37,6 +38,7 @@ export interface UseAudioPreviewResult {
       segment?: Segment;
       character?: Character;
       projectConfig?: ProjectConfig;
+      projectRoot?: string;
     }
   ) => Promise<void>;
   playAllAsPlaylist: (segments: Array<{
@@ -114,6 +116,7 @@ export function useAudioPreview(): UseAudioPreviewResult {
       segment?: Segment;
       character?: Character;
       projectConfig?: ProjectConfig;
+      projectRoot?: string;
     },
     forceRegenerate?: boolean
   ) => {
@@ -139,6 +142,7 @@ export function useAudioPreview(): UseAudioPreviewResult {
         segment: ttsData.segment,
         character: ttsData.character,
         projectConfig: ttsData.projectConfig,
+        projectRoot: ttsData.projectRoot,
         forceRegenerate
       };
 

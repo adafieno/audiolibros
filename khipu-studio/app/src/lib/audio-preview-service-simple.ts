@@ -31,6 +31,7 @@ export interface PreviewOptions {
   segment: Segment;
   character: Character;
   projectConfig: ProjectConfig;
+  projectRoot?: string; // Project root for loading lexicon
   // Force regeneration even if cached processed audio exists
   forceRegenerate?: boolean;
 }
@@ -371,7 +372,8 @@ export class AudioPreviewService {
           style: voiceAssignment.style,
           styledegree: voiceAssignment.styledegree,
           rate_pct: voiceAssignment.rate_pct,
-          pitch_pct: voiceAssignment.pitch_pct
+          pitch_pct: voiceAssignment.pitch_pct,
+          projectRoot: options.projectRoot
         };
 
         // Generate TTS audio
@@ -420,7 +422,7 @@ export class AudioPreviewService {
         try {
           // Get the cached file path for TTS audio using the same cache key generation as TTS
           const { generateCacheKey, generateCacheHash } = await import('./audio-cache');
-          const ttsCacheKey = generateCacheKey(auditionOptions);
+          const ttsCacheKey = await generateCacheKey(auditionOptions);
           const hashedCacheKey = generateCacheHash(ttsCacheKey);
           
           // Build the expected cache file path (same as audio-cache.ts logic)
@@ -867,7 +869,8 @@ export class AudioPreviewService {
         style: voiceAssignment.style,
         styledegree: voiceAssignment.styledegree,
         rate_pct: voiceAssignment.rate_pct,
-        pitch_pct: voiceAssignment.pitch_pct
+        pitch_pct: voiceAssignment.pitch_pct,
+        projectRoot: undefined // TODO: Pass projectRoot through playlist segments
       };
 
       // Generate TTS audio
@@ -912,7 +915,7 @@ export class AudioPreviewService {
 
       // Apply SoX processing
       const { generateCacheKey, generateCacheHash } = await import('./audio-cache');
-      const ttsCacheKey = generateCacheKey(auditionOptions);
+      const ttsCacheKey = await generateCacheKey(auditionOptions);
       const hashedCacheKey = generateCacheHash(ttsCacheKey);
       
       // Retry logic for TTS cache file availability

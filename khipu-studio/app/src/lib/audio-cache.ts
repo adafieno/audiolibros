@@ -21,6 +21,7 @@ export interface CacheKey {
   styledegree?: number;
   rate_pct?: number;
   pitch_pct?: number;
+  lexiconHash?: string; // Hash of lexicon content for cache invalidation
 }
 
 /**
@@ -41,7 +42,19 @@ export function generateCacheHash(cacheKey: string): string {
   return Math.abs(hash).toString(16).padStart(8, '0');
 }
 
-export function generateCacheKey(options: AuditionOptions): string {
+export async function generateCacheKey(options: AuditionOptions): Promise<string> {
+  // Load lexicon to include in cache key
+  let lexiconHash = "no-lexicon";
+  if (options.projectRoot) {
+    try {
+      const { loadPronunciationLexicon, hashLexicon } = await import('./tts-audition');
+      const lexicon = await loadPronunciationLexicon(options.projectRoot);
+      lexiconHash = hashLexicon(lexicon);
+    } catch (error) {
+      console.warn("Failed to load lexicon for cache key:", error);
+    }
+  }
+  
   const key: CacheKey = {
     engine: options.voice.engine,
     voiceId: options.voice.id,
@@ -51,6 +64,7 @@ export function generateCacheKey(options: AuditionOptions): string {
     styledegree: options.styledegree,
     rate_pct: options.rate_pct,
     pitch_pct: options.pitch_pct,
+    lexiconHash: lexiconHash, // Include lexicon version in cache key
   };
   
   // Create a deterministic string key
@@ -58,8 +72,9 @@ export function generateCacheKey(options: AuditionOptions): string {
   
   console.log(`🔑 CACHE KEY GENERATED:`, {
     voiceId: key.voiceId,
-    text: key.text,
-    cacheKey: cacheKey
+    text: key.text.substring(0, 30) + "...",
+    lexiconHash: key.lexiconHash,
+    cacheKey: cacheKey.substring(0, 20) + "..."
   });
   
   return cacheKey;
@@ -374,7 +389,7 @@ export async function generateCachedAudition(
     return generateAuditionDirect(options);
   }
 
-  const cacheKey = generateCacheKey(options);
+  const cacheKey = await generateCacheKey(options);
   console.log("🔑 Cache key generated", { cacheKey: cacheKey.substring(0, 20) + "..." });
   
   // Try to get from cache first

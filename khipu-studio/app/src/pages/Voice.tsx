@@ -1332,7 +1332,8 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       await audioPreview.preview(segment.chunkId, currentProcessingChain, undefined, undefined, {
         segment: segmentForTTS,
         character: characterData as Character,
-        projectConfig: projectConfig as ProjectConfig
+        projectConfig: projectConfig as ProjectConfig,
+        projectRoot: root || undefined
       });
     } catch (error) {
       console.error("Playback failed:", error);
