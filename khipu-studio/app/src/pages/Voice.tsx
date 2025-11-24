@@ -16,6 +16,140 @@ import type { Segment } from "../types/plan";
 import type { Character } from "../types/character";
 import type { ProjectConfig } from "../types/config";
 
+// Hardware-style Rotary Knob Component
+const RotaryKnob = ({ value, min, max, label, color, disabled, onChange }: { value: number; min: number; max: number; label: string; color: string; disabled: boolean; onChange: (v: number) => void }) => {
+  const normalizedValue = (value - min) / (max - min);
+  const rotation = -135 + (normalizedValue * 270); // -135° to +135° range
+  
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", opacity: disabled ? 0.5 : 1 }}>
+      <div 
+        style={{ 
+          width: "48px", 
+          height: "48px", 
+          borderRadius: "50%",
+          background: `radial-gradient(circle at 30% 30%, #2a2a2a, #0d0d0d)`,
+          border: "3px solid #1a1a1a",
+          boxShadow: `inset 0 2px 4px rgba(0,0,0,0.8), 0 2px 8px ${color}40`,
+          position: "relative",
+          cursor: disabled ? "not-allowed" : "pointer",
+          transition: "all 0.2s"
+        }}
+        onClick={() => {
+          if (disabled) return;
+          const input = document.createElement('input');
+          input.type = 'range';
+          input.min = min.toString();
+          input.max = max.toString();
+          input.value = value.toString();
+          input.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60px;opacity:0.01;';
+          document.body.appendChild(input);
+          input.focus();
+          input.click();
+          input.addEventListener('input', (e) => onChange(Number((e.target as HTMLInputElement).value)));
+          input.addEventListener('blur', () => input.remove());
+        }}
+      >
+        {/* Knob indicator */}
+        <div style={{ 
+          position: "absolute", 
+          top: "6px", 
+          left: "50%", 
+          width: "3px", 
+          height: "16px", 
+          background: color,
+          boxShadow: `0 0 6px ${color}`,
+          transformOrigin: "50% 18px",
+          transform: `translateX(-50%) rotate(${rotation}deg)`,
+          transition: "transform 0.2s",
+          borderRadius: "2px"
+        }} />
+        {/* Center dot */}
+        <div style={{ 
+          position: "absolute", 
+          top: "50%", 
+          left: "50%", 
+          width: "8px", 
+          height: "8px", 
+          borderRadius: "50%",
+          background: "#0d0d0d",
+          border: `1px solid ${color}`,
+          transform: "translate(-50%, -50%)"
+        }} />
+      </div>
+      <div style={{ 
+        fontFamily: "'Courier New', monospace", 
+        fontSize: "10px", 
+        color: color,
+        textAlign: "center",
+        textTransform: "uppercase",
+        letterSpacing: "0.5px"
+      }}>
+        {label}
+      </div>
+      <div style={{ 
+        fontFamily: "'Courier New', monospace", 
+        fontSize: "11px", 
+        color: "#999",
+        background: "rgba(0,0,0,0.6)",
+        padding: "2px 6px",
+        borderRadius: "2px",
+        border: "1px solid #333",
+        minWidth: "36px",
+        textAlign: "center"
+      }}>
+        {value}
+      </div>
+    </div>
+  );
+};
+
+// Hardware-style VU Meter Component
+const VUMeter = ({ level, label, color }: { level: number; label: string; color: string }) => {
+  const segments = 12;
+  const activeSegments = Math.round((level / 100) * segments);
+  
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+      <div style={{ 
+        fontFamily: "'Courier New', monospace", 
+        fontSize: "9px", 
+        color: "#999",
+        textTransform: "uppercase",
+        letterSpacing: "0.5px"
+      }}>
+        {label}
+      </div>
+      <div style={{ 
+        display: "flex", 
+        gap: "2px", 
+        background: "#0d0d0d",
+        padding: "4px",
+        borderRadius: "3px",
+        border: "1px solid #1a1a1a"
+      }}>
+        {Array.from({ length: segments }).map((_, i) => {
+          const isActive = i < activeSegments;
+          const segmentColor = i < segments * 0.7 ? color : i < segments * 0.9 ? "#ffaa00" : "#ff3333";
+          return (
+            <div 
+              key={i}
+              style={{ 
+                width: "6px", 
+                height: "20px",
+                background: isActive ? segmentColor : "#222",
+                boxShadow: isActive ? `0 0 4px ${segmentColor}` : "none",
+                transition: "all 0.2s",
+                borderRadius: "1px"
+              }} 
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 interface Chapter {
   id: string;
   title?: string;
@@ -2227,7 +2361,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               currentProcessingChain.mastering.normalization.enabled && { label: "Norm", color: "#ff5858" },
                               currentProcessingChain.mastering.peakLimiting.enabled && { label: "Peak", color: "#ff5858" },
                               currentProcessingChain.mastering.dithering.enabled && { label: "Dither", color: "#ff5858" }
-                            ].filter(Boolean).map((item: any, idx) => (
+                            ].filter((item): item is { label: string; color: string } => Boolean(item)).map((item, idx) => (
                               <span key={idx} style={{ 
                                 display: "inline-flex", 
                                 alignItems: "center",
@@ -2317,83 +2451,116 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                             </span>
                           </h5>
                           {sectionExpanded.noiseCleanup && (
-                          <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
-                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
-                              <input 
-                                type="checkbox" 
-                                checked={currentProcessingChain.noiseCleanup.highPassFilter.enabled}
-                                disabled={!customSettingsEnabled}
-                                onChange={(e) => updateCurrentProcessingChain({
-                                  ...currentProcessingChain,
-                                  noiseCleanup: {
-                                    ...currentProcessingChain.noiseCleanup,
-                                    highPassFilter: {
-                                      ...currentProcessingChain.noiseCleanup.highPassFilter,
-                                      enabled: e.target.checked
-                                    }
-                                  }
-                                })}
-                                style={{ accentColor: "var(--accent)" }} 
-                              />
-                              <span>{t("audioProduction.highPassFilter")}</span>
-                              <select 
-                                value={currentProcessingChain.noiseCleanup.highPassFilter.frequency}
-                                disabled={!customSettingsEnabled}
-                                onChange={(e) => updateCurrentProcessingChain({
-                                  ...currentProcessingChain,
-                                  noiseCleanup: {
-                                    ...currentProcessingChain.noiseCleanup,
-                                    highPassFilter: {
-                                      ...currentProcessingChain.noiseCleanup.highPassFilter,
-                                      frequency: e.target.value as "70" | "80" | "90"
-                                    }
-                                  }
-                                })}
-                                style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}
-                              >
-                                <option value="70">70 Hz</option>
-                                <option value="80">80 Hz</option>
-                                <option value="90">90 Hz</option>
-                              </select>
-                            </label>
-                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
-                              <input 
-                                type="checkbox" 
-                                checked={currentProcessingChain.noiseCleanup.deClickDeEss.enabled}
-                                disabled={!customSettingsEnabled}
-                                onChange={(e) => updateCurrentProcessingChain({
-                                  ...currentProcessingChain,
-                                  noiseCleanup: {
-                                    ...currentProcessingChain.noiseCleanup,
-                                    deClickDeEss: {
-                                      ...currentProcessingChain.noiseCleanup.deClickDeEss,
-                                      enabled: e.target.checked
-                                    }
-                                  }
-                                })}
-                                style={{ accentColor: "var(--accent)" }} 
-                              />
-                              <span>{t("audioProduction.deClickDeEss")}</span>
-                              <select 
-                                value={currentProcessingChain.noiseCleanup.deClickDeEss.intensity}
-                                disabled={!customSettingsEnabled}
-                                onChange={(e) => updateCurrentProcessingChain({
-                                  ...currentProcessingChain,
-                                  noiseCleanup: {
-                                    ...currentProcessingChain.noiseCleanup,
-                                    deClickDeEss: {
-                                      ...currentProcessingChain.noiseCleanup.deClickDeEss,
-                                      intensity: e.target.value as "light" | "medium" | "heavy"
-                                    }
-                                  }
-                                })}
-                                style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}
-                              >
-                                <option value="light">{t("audioProduction.compressionLight")}</option>
-                                <option value="medium">{t("audioProduction.compressionMedium")}</option>
-                                <option value="heavy">{t("audioProduction.compressionHeavy")}</option>
-                              </select>
-                            </label>
+                          <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                            {/* Hardware-style control row */}
+                            <div style={{ display: "flex", gap: "20px", alignItems: "flex-start", flexWrap: "wrap" }}>
+                              {/* High Pass Filter Knob */}
+                              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: "#58a6ff", fontFamily: "'Courier New', monospace", textTransform: "uppercase" }}>
+                                  <input 
+                                    type="checkbox" 
+                                    checked={currentProcessingChain.noiseCleanup.highPassFilter.enabled}
+                                    disabled={!customSettingsEnabled}
+                                    onChange={(e) => updateCurrentProcessingChain({
+                                      ...currentProcessingChain,
+                                      noiseCleanup: {
+                                        ...currentProcessingChain.noiseCleanup,
+                                        highPassFilter: {
+                                          ...currentProcessingChain.noiseCleanup.highPassFilter,
+                                          enabled: e.target.checked
+                                        }
+                                      }
+                                    })}
+                                    style={{ accentColor: "#58a6ff" }} 
+                                  />
+                                  <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                    {currentProcessingChain.noiseCleanup.highPassFilter.enabled && <span style={{ color: "#58a6ff" }}>●</span>}
+                                    HPF
+                                  </span>
+                                </label>
+                                <RotaryKnob
+                                  value={parseInt(currentProcessingChain.noiseCleanup.highPassFilter.frequency)}
+                                  min={70}
+                                  max={90}
+                                  label="Hz"
+                                  color="#58a6ff"
+                                  disabled={!customSettingsEnabled || !currentProcessingChain.noiseCleanup.highPassFilter.enabled}
+                                  onChange={(v) => {
+                                    const freq = v <= 75 ? "70" : v <= 85 ? "80" : "90";
+                                    updateCurrentProcessingChain({
+                                      ...currentProcessingChain,
+                                      noiseCleanup: {
+                                        ...currentProcessingChain.noiseCleanup,
+                                        highPassFilter: {
+                                          ...currentProcessingChain.noiseCleanup.highPassFilter,
+                                          frequency: freq as "70" | "80" | "90"
+                                        }
+                                      }
+                                    });
+                                  }}
+                                />
+                              </div>
+
+                              {/* De-Ess Control */}
+                              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: "#58a6ff", fontFamily: "'Courier New', monospace", textTransform: "uppercase" }}>
+                                  <input 
+                                    type="checkbox" 
+                                    checked={currentProcessingChain.noiseCleanup.deClickDeEss.enabled}
+                                    disabled={!customSettingsEnabled}
+                                    onChange={(e) => updateCurrentProcessingChain({
+                                      ...currentProcessingChain,
+                                      noiseCleanup: {
+                                        ...currentProcessingChain.noiseCleanup,
+                                        deClickDeEss: {
+                                          ...currentProcessingChain.noiseCleanup.deClickDeEss,
+                                          enabled: e.target.checked
+                                        }
+                                      }
+                                    })}
+                                    style={{ accentColor: "#58a6ff" }} 
+                                  />
+                                  <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                    {currentProcessingChain.noiseCleanup.deClickDeEss.enabled && <span style={{ color: "#58a6ff" }}>●</span>}
+                                    DeEss
+                                  </span>
+                                </label>
+                                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
+                                  <VUMeter 
+                                    level={currentProcessingChain.noiseCleanup.deClickDeEss.intensity === "light" ? 33 : currentProcessingChain.noiseCleanup.deClickDeEss.intensity === "medium" ? 66 : 100}
+                                    label="INTENSITY"
+                                    color="#58a6ff"
+                                  />
+                                  <select 
+                                    value={currentProcessingChain.noiseCleanup.deClickDeEss.intensity}
+                                    disabled={!customSettingsEnabled || !currentProcessingChain.noiseCleanup.deClickDeEss.enabled}
+                                    onChange={(e) => updateCurrentProcessingChain({
+                                      ...currentProcessingChain,
+                                      noiseCleanup: {
+                                        ...currentProcessingChain.noiseCleanup,
+                                        deClickDeEss: {
+                                          ...currentProcessingChain.noiseCleanup.deClickDeEss,
+                                          intensity: e.target.value as "light" | "medium" | "heavy"
+                                        }
+                                      }
+                                    })}
+                                    style={{ 
+                                      fontFamily: "'Courier New', monospace",
+                                      fontSize: "10px", 
+                                      padding: "4px 6px", 
+                                      background: "rgba(0,0,0,0.6)", 
+                                      border: "1px solid #58a6ff40", 
+                                      borderRadius: "3px",
+                                      color: "#58a6ff"
+                                    }}
+                                  >
+                                    <option value="light">LIGHT</option>
+                                    <option value="medium">MEDIUM</option>
+                                    <option value="heavy">HEAVY</option>
+                                  </select>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                           )}
                         </div>
@@ -2447,64 +2614,99 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                             </span>
                           </h5>
                           {sectionExpanded.dynamicControl && (
-                          <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
-                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
-                              <input 
-                                type="checkbox" 
-                                checked={currentProcessingChain.dynamicControl.compression.enabled}
-                                disabled={!customSettingsEnabled}
-                                onChange={(e) => updateCurrentProcessingChain({
-                                  ...currentProcessingChain,
-                                  dynamicControl: {
-                                    ...currentProcessingChain.dynamicControl,
-                                    compression: {
-                                      ...currentProcessingChain.dynamicControl.compression,
-                                      enabled: e.target.checked
-                                    }
-                                  }
-                                })}
-                                style={{ accentColor: "var(--accent)" }} 
-                              />
-                              <span>{t("audioProduction.gentleCompression")}</span>
-                              <select 
-                                value={currentProcessingChain.dynamicControl.compression.ratio}
-                                disabled={!customSettingsEnabled}
-                                onChange={(e) => updateCurrentProcessingChain({
-                                  ...currentProcessingChain,
-                                  dynamicControl: {
-                                    ...currentProcessingChain.dynamicControl,
-                                    compression: {
-                                      ...currentProcessingChain.dynamicControl.compression,
-                                      ratio: e.target.value as "2:1" | "2.5:1" | "3:1"
-                                    }
-                                  }
-                                })}
-                                style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}
-                              >
-                                <option value="2:1">2:1</option>
-                                <option value="2.5:1">2.5:1</option>
-                                <option value="3:1">3:1</option>
-                              </select>
-                            </label>
-                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
-                              <input 
-                                type="checkbox" 
-                                checked={currentProcessingChain.dynamicControl.limiter.enabled}
-                                disabled={!customSettingsEnabled}
-                                onChange={(e) => updateCurrentProcessingChain({
-                                  ...currentProcessingChain,
-                                  dynamicControl: {
-                                    ...currentProcessingChain.dynamicControl,
-                                    limiter: {
-                                      ...currentProcessingChain.dynamicControl.limiter,
-                                      enabled: e.target.checked
-                                    }
-                                  }
-                                })}
-                                style={{ accentColor: "var(--accent)" }} 
-                              />
-                              <span>{t("audioProduction.limiterSafeguard")}</span>
-                            </label>
+                          <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                            <div style={{ display: "flex", gap: "20px", alignItems: "flex-start", flexWrap: "wrap" }}>
+                              {/* Compression Control */}
+                              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: "#ff9f58", fontFamily: "'Courier New', monospace", textTransform: "uppercase" }}>
+                                  <input 
+                                    type="checkbox" 
+                                    checked={currentProcessingChain.dynamicControl.compression.enabled}
+                                    disabled={!customSettingsEnabled}
+                                    onChange={(e) => updateCurrentProcessingChain({
+                                      ...currentProcessingChain,
+                                      dynamicControl: {
+                                        ...currentProcessingChain.dynamicControl,
+                                        compression: {
+                                          ...currentProcessingChain.dynamicControl.compression,
+                                          enabled: e.target.checked
+                                        }
+                                      }
+                                    })}
+                                    style={{ accentColor: "#ff9f58" }} 
+                                  />
+                                  <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                    {currentProcessingChain.dynamicControl.compression.enabled && <span style={{ color: "#ff9f58" }}>●</span>}
+                                    Comp
+                                  </span>
+                                </label>
+                                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
+                                  <VUMeter 
+                                    level={currentProcessingChain.dynamicControl.compression.ratio === "2:1" ? 40 : currentProcessingChain.dynamicControl.compression.ratio === "2.5:1" ? 70 : 100}
+                                    label="RATIO"
+                                    color="#ff9f58"
+                                  />
+                                  <select 
+                                    value={currentProcessingChain.dynamicControl.compression.ratio}
+                                    disabled={!customSettingsEnabled || !currentProcessingChain.dynamicControl.compression.enabled}
+                                    onChange={(e) => updateCurrentProcessingChain({
+                                      ...currentProcessingChain,
+                                      dynamicControl: {
+                                        ...currentProcessingChain.dynamicControl,
+                                        compression: {
+                                          ...currentProcessingChain.dynamicControl.compression,
+                                          ratio: e.target.value as "2:1" | "2.5:1" | "3:1"
+                                        }
+                                      }
+                                    })}
+                                    style={{ 
+                                      fontFamily: "'Courier New', monospace",
+                                      fontSize: "10px", 
+                                      padding: "4px 6px", 
+                                      background: "rgba(0,0,0,0.6)", 
+                                      border: "1px solid #ff9f5840", 
+                                      borderRadius: "3px",
+                                      color: "#ff9f58"
+                                    }}
+                                  >
+                                    <option value="2:1">2:1</option>
+                                    <option value="2.5:1">2.5:1</option>
+                                    <option value="3:1">3:1</option>
+                                  </select>
+                                </div>
+                              </div>
+
+                              {/* Limiter Control */}
+                              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: "#ff9f58", fontFamily: "'Courier New', monospace", textTransform: "uppercase" }}>
+                                  <input 
+                                    type="checkbox" 
+                                    checked={currentProcessingChain.dynamicControl.limiter.enabled}
+                                    disabled={!customSettingsEnabled}
+                                    onChange={(e) => updateCurrentProcessingChain({
+                                      ...currentProcessingChain,
+                                      dynamicControl: {
+                                        ...currentProcessingChain.dynamicControl,
+                                        limiter: {
+                                          ...currentProcessingChain.dynamicControl.limiter,
+                                          enabled: e.target.checked
+                                        }
+                                      }
+                                    })}
+                                    style={{ accentColor: "#ff9f58" }} 
+                                  />
+                                  <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                    {currentProcessingChain.dynamicControl.limiter.enabled && <span style={{ color: "#ff9f58" }}>●</span>}
+                                    Limiter
+                                  </span>
+                                </label>
+                                <VUMeter 
+                                  level={currentProcessingChain.dynamicControl.limiter.enabled ? 85 : 0}
+                                  label="CEILING"
+                                  color="#ff9f58"
+                                />
+                              </div>
+                            </div>
                           </div>
                           )}
                         </div>
@@ -2558,121 +2760,149 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                             </span>
                           </h5>
                           {sectionExpanded.eqShaping && (
-                          <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
-                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
-                              <input 
-                                type="checkbox" 
-                                checked={currentProcessingChain.eqShaping.lowMidCut.enabled}
-                                disabled={!customSettingsEnabled}
-                                onChange={(e) => updateCurrentProcessingChain({
-                                  ...currentProcessingChain,
-                                  eqShaping: {
-                                    ...currentProcessingChain.eqShaping,
-                                    lowMidCut: {
-                                      ...currentProcessingChain.eqShaping.lowMidCut,
-                                      enabled: e.target.checked
-                                    }
-                                  }
-                                })}
-                                style={{ accentColor: "var(--accent)" }} 
-                              />
-                              <span>{t("audioProduction.lowMidCut")}</span>
-                              <select 
-                                value={currentProcessingChain.eqShaping.lowMidCut.frequency}
-                                disabled={!customSettingsEnabled}
-                                onChange={(e) => updateCurrentProcessingChain({
-                                  ...currentProcessingChain,
-                                  eqShaping: {
-                                    ...currentProcessingChain.eqShaping,
-                                    lowMidCut: {
-                                      ...currentProcessingChain.eqShaping.lowMidCut,
-                                      frequency: e.target.value as "150" | "200" | "300"
-                                    }
-                                  }
-                                })}
-                                style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}
-                              >
-                                <option value="150">150 Hz</option>
-                                <option value="200">200 Hz</option>
-                                <option value="300">300 Hz</option>
-                              </select>
-                            </label>
-                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
-                              <input 
-                                type="checkbox" 
-                                checked={currentProcessingChain.eqShaping.presenceBoost.enabled}
-                                disabled={!customSettingsEnabled}
-                                onChange={(e) => updateCurrentProcessingChain({
-                                  ...currentProcessingChain,
-                                  eqShaping: {
-                                    ...currentProcessingChain.eqShaping,
-                                    presenceBoost: {
-                                      ...currentProcessingChain.eqShaping.presenceBoost,
-                                      enabled: e.target.checked
-                                    }
-                                  }
-                                })}
-                                style={{ accentColor: "var(--accent)" }} 
-                              />
-                              <span>{t("audioProduction.presenceBoost")}</span>
-                              <select 
-                                value={currentProcessingChain.eqShaping.presenceBoost.frequency}
-                                disabled={!customSettingsEnabled}
-                                onChange={(e) => updateCurrentProcessingChain({
-                                  ...currentProcessingChain,
-                                  eqShaping: {
-                                    ...currentProcessingChain.eqShaping,
-                                    presenceBoost: {
-                                      ...currentProcessingChain.eqShaping.presenceBoost,
-                                      frequency: e.target.value as "2" | "3" | "5"
-                                    }
-                                  }
-                                })}
-                                style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}
-                              >
-                                <option value="2">2 kHz</option>
-                                <option value="3">3 kHz</option>
-                                <option value="5">5 kHz</option>
-                              </select>
-                            </label>
-                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
-                              <input 
-                                type="checkbox" 
-                                checked={currentProcessingChain.eqShaping.airLift.enabled}
-                                disabled={!customSettingsEnabled}
-                                onChange={(e) => updateCurrentProcessingChain({
-                                  ...currentProcessingChain,
-                                  eqShaping: {
-                                    ...currentProcessingChain.eqShaping,
-                                    airLift: {
-                                      ...currentProcessingChain.eqShaping.airLift,
-                                      enabled: e.target.checked
-                                    }
-                                  }
-                                })}
-                                style={{ accentColor: "var(--accent)" }} 
-                              />
-                              <span>{t("audioProduction.airLift")}</span>
-                              <select 
-                                value={currentProcessingChain.eqShaping.airLift.frequency}
-                                disabled={!customSettingsEnabled}
-                                onChange={(e) => updateCurrentProcessingChain({
-                                  ...currentProcessingChain,
-                                  eqShaping: {
-                                    ...currentProcessingChain.eqShaping,
-                                    airLift: {
-                                      ...currentProcessingChain.eqShaping.airLift,
-                                      frequency: e.target.value as "8" | "10" | "12"
-                                    }
-                                  }
-                                })}
-                                style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}
-                              >
-                                <option value="8">8 kHz</option>
-                                <option value="10">10 kHz</option>
-                                <option value="12">12 kHz</option>
-                              </select>
-                            </label>
+                          <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                            <div style={{ display: "flex", gap: "20px", alignItems: "flex-start", flexWrap: "wrap", justifyContent: "space-around" }}>
+                              {/* Low-Mid Cut Knob */}
+                              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: "#5fff58", fontFamily: "'Courier New', monospace", textTransform: "uppercase" }}>
+                                  <input 
+                                    type="checkbox" 
+                                    checked={currentProcessingChain.eqShaping.lowMidCut.enabled}
+                                    disabled={!customSettingsEnabled}
+                                    onChange={(e) => updateCurrentProcessingChain({
+                                      ...currentProcessingChain,
+                                      eqShaping: {
+                                        ...currentProcessingChain.eqShaping,
+                                        lowMidCut: {
+                                          ...currentProcessingChain.eqShaping.lowMidCut,
+                                          enabled: e.target.checked
+                                        }
+                                      }
+                                    })}
+                                    style={{ accentColor: "#5fff58" }} 
+                                  />
+                                  <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                    {currentProcessingChain.eqShaping.lowMidCut.enabled && <span style={{ color: "#5fff58" }}>●</span>}
+                                    Low Cut
+                                  </span>
+                                </label>
+                                <RotaryKnob
+                                  value={parseInt(currentProcessingChain.eqShaping.lowMidCut.frequency)}
+                                  min={150}
+                                  max={300}
+                                  label="Hz"
+                                  color="#5fff58"
+                                  disabled={!customSettingsEnabled || !currentProcessingChain.eqShaping.lowMidCut.enabled}
+                                  onChange={(v) => {
+                                    const freq = v <= 175 ? "150" : v <= 250 ? "200" : "300";
+                                    updateCurrentProcessingChain({
+                                      ...currentProcessingChain,
+                                      eqShaping: {
+                                        ...currentProcessingChain.eqShaping,
+                                        lowMidCut: {
+                                          ...currentProcessingChain.eqShaping.lowMidCut,
+                                          frequency: freq as "150" | "200" | "300"
+                                        }
+                                      }
+                                    });
+                                  }}
+                                />
+                              </div>
+
+                              {/* Presence Boost Knob */}
+                              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: "#5fff58", fontFamily: "'Courier New', monospace", textTransform: "uppercase" }}>
+                                  <input 
+                                    type="checkbox" 
+                                    checked={currentProcessingChain.eqShaping.presenceBoost.enabled}
+                                    disabled={!customSettingsEnabled}
+                                    onChange={(e) => updateCurrentProcessingChain({
+                                      ...currentProcessingChain,
+                                      eqShaping: {
+                                        ...currentProcessingChain.eqShaping,
+                                        presenceBoost: {
+                                          ...currentProcessingChain.eqShaping.presenceBoost,
+                                          enabled: e.target.checked
+                                        }
+                                      }
+                                    })}
+                                    style={{ accentColor: "#5fff58" }} 
+                                  />
+                                  <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                    {currentProcessingChain.eqShaping.presenceBoost.enabled && <span style={{ color: "#5fff58" }}>●</span>}
+                                    Presence
+                                  </span>
+                                </label>
+                                <RotaryKnob
+                                  value={parseInt(currentProcessingChain.eqShaping.presenceBoost.frequency)}
+                                  min={2}
+                                  max={5}
+                                  label="kHz"
+                                  color="#5fff58"
+                                  disabled={!customSettingsEnabled || !currentProcessingChain.eqShaping.presenceBoost.enabled}
+                                  onChange={(v) => {
+                                    const freq = v <= 2.5 ? "2" : v <= 4 ? "3" : "5";
+                                    updateCurrentProcessingChain({
+                                      ...currentProcessingChain,
+                                      eqShaping: {
+                                        ...currentProcessingChain.eqShaping,
+                                        presenceBoost: {
+                                          ...currentProcessingChain.eqShaping.presenceBoost,
+                                          frequency: freq as "2" | "3" | "5"
+                                        }
+                                      }
+                                    });
+                                  }}
+                                />
+                              </div>
+
+                              {/* Air Lift Knob */}
+                              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: "#5fff58", fontFamily: "'Courier New', monospace", textTransform: "uppercase" }}>
+                                  <input 
+                                    type="checkbox" 
+                                    checked={currentProcessingChain.eqShaping.airLift.enabled}
+                                    disabled={!customSettingsEnabled}
+                                    onChange={(e) => updateCurrentProcessingChain({
+                                      ...currentProcessingChain,
+                                      eqShaping: {
+                                        ...currentProcessingChain.eqShaping,
+                                        airLift: {
+                                          ...currentProcessingChain.eqShaping.airLift,
+                                          enabled: e.target.checked
+                                        }
+                                      }
+                                    })}
+                                    style={{ accentColor: "#5fff58" }} 
+                                  />
+                                  <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                    {currentProcessingChain.eqShaping.airLift.enabled && <span style={{ color: "#5fff58" }}>●</span>}
+                                    Air
+                                  </span>
+                                </label>
+                                <RotaryKnob
+                                  value={parseInt(currentProcessingChain.eqShaping.airLift.frequency)}
+                                  min={8}
+                                  max={12}
+                                  label="kHz"
+                                  color="#5fff58"
+                                  disabled={!customSettingsEnabled || !currentProcessingChain.eqShaping.airLift.enabled}
+                                  onChange={(v) => {
+                                    const freq = v <= 9 ? "8" : v <= 11 ? "10" : "12";
+                                    updateCurrentProcessingChain({
+                                      ...currentProcessingChain,
+                                      eqShaping: {
+                                        ...currentProcessingChain.eqShaping,
+                                        airLift: {
+                                          ...currentProcessingChain.eqShaping.airLift,
+                                          frequency: freq as "8" | "10" | "12"
+                                        }
+                                      }
+                                    });
+                                  }}
+                                />
+                              </div>
+                            </div>
                           </div>
                           )}
                         </div>
@@ -2726,86 +2956,112 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                             </span>
                           </h5>
                           {sectionExpanded.spatialEnhancement && (
-                          <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
-                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
-                              <input 
-                                type="checkbox" 
-                                checked={currentProcessingChain.spatialEnhancement.reverb.enabled}
-                                disabled={!customSettingsEnabled}
-                                onChange={(e) => updateCurrentProcessingChain({
-                                  ...currentProcessingChain,
-                                  spatialEnhancement: {
-                                    ...currentProcessingChain.spatialEnhancement,
-                                    reverb: {
-                                      ...currentProcessingChain.spatialEnhancement.reverb,
-                                      enabled: e.target.checked
-                                    }
-                                  }
-                                })}
-                                style={{ accentColor: "var(--accent)" }} 
-                              />
-                              <span>{t("audioProduction.subtleReverb")}</span>
-                              <select 
-                                value={currentProcessingChain.spatialEnhancement.reverb.type}
-                                disabled={!customSettingsEnabled}
-                                onChange={(e) => updateCurrentProcessingChain({
-                                  ...currentProcessingChain,
-                                  spatialEnhancement: {
-                                    ...currentProcessingChain.spatialEnhancement,
-                                    reverb: {
-                                      ...currentProcessingChain.spatialEnhancement.reverb,
-                                      type: e.target.value as "room_0.3" | "room_0.4" | "room_0.5"
-                                    }
-                                  }
-                                })}
-                                style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}
-                              >
-                                <option value="room_0.3">{t("audioProduction.room03")}</option>
-                                <option value="room_0.4">{t("audioProduction.room04")}</option>
-                                <option value="room_0.5">{t("audioProduction.room05")}</option>
-                              </select>
-                            </label>
-                            <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "10px", color: "var(--textSecondary)", paddingLeft: "24px" }}>
-                              <span>{t("audioProduction.wetMix")}</span>
-                              <input 
-                                type="range" 
-                                min="0" 
-                                max="100" 
-                                value={currentProcessingChain.spatialEnhancement.reverb.wetMix}
-                                disabled={!customSettingsEnabled}
-                                onChange={(e) => updateCurrentProcessingChain({
-                                  ...currentProcessingChain,
-                                  spatialEnhancement: {
-                                    ...currentProcessingChain.spatialEnhancement,
-                                    reverb: {
-                                      ...currentProcessingChain.spatialEnhancement.reverb,
-                                      wetMix: parseInt(e.target.value)
-                                    }
-                                  }
-                                })}
-                                style={{ flex: 1, accentColor: "var(--accent)" }} 
-                              />
-                              <span>{currentProcessingChain.spatialEnhancement.reverb.wetMix}%</span>
+                          <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                            <div style={{ display: "flex", gap: "20px", alignItems: "flex-start", flexWrap: "wrap" }}>
+                              {/* Reverb Control */}
+                              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: "#d858ff", fontFamily: "'Courier New', monospace", textTransform: "uppercase" }}>
+                                  <input 
+                                    type="checkbox" 
+                                    checked={currentProcessingChain.spatialEnhancement.reverb.enabled}
+                                    disabled={!customSettingsEnabled}
+                                    onChange={(e) => updateCurrentProcessingChain({
+                                      ...currentProcessingChain,
+                                      spatialEnhancement: {
+                                        ...currentProcessingChain.spatialEnhancement,
+                                        reverb: {
+                                          ...currentProcessingChain.spatialEnhancement.reverb,
+                                          enabled: e.target.checked
+                                        }
+                                      }
+                                    })}
+                                    style={{ accentColor: "#d858ff" }} 
+                                  />
+                                  <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                    {currentProcessingChain.spatialEnhancement.reverb.enabled && <span style={{ color: "#d858ff" }}>●</span>}
+                                    Reverb
+                                  </span>
+                                </label>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "6px", alignItems: "center" }}>
+                                  <RotaryKnob
+                                    value={currentProcessingChain.spatialEnhancement.reverb.wetMix}
+                                    min={0}
+                                    max={100}
+                                    label="Mix %"
+                                    color="#d858ff"
+                                    disabled={!customSettingsEnabled || !currentProcessingChain.spatialEnhancement.reverb.enabled}
+                                    onChange={(v) => updateCurrentProcessingChain({
+                                      ...currentProcessingChain,
+                                      spatialEnhancement: {
+                                        ...currentProcessingChain.spatialEnhancement,
+                                        reverb: {
+                                          ...currentProcessingChain.spatialEnhancement.reverb,
+                                          wetMix: v
+                                        }
+                                      }
+                                    })}
+                                  />
+                                  <select 
+                                    value={currentProcessingChain.spatialEnhancement.reverb.type}
+                                    disabled={!customSettingsEnabled || !currentProcessingChain.spatialEnhancement.reverb.enabled}
+                                    onChange={(e) => updateCurrentProcessingChain({
+                                      ...currentProcessingChain,
+                                      spatialEnhancement: {
+                                        ...currentProcessingChain.spatialEnhancement,
+                                        reverb: {
+                                          ...currentProcessingChain.spatialEnhancement.reverb,
+                                          type: e.target.value as "room_0.3" | "room_0.4" | "room_0.5"
+                                        }
+                                      }
+                                    })}
+                                    style={{ 
+                                      fontFamily: "'Courier New', monospace",
+                                      fontSize: "10px", 
+                                      padding: "4px 6px", 
+                                      background: "rgba(0,0,0,0.6)", 
+                                      border: "1px solid #d858ff40", 
+                                      borderRadius: "3px",
+                                      color: "#d858ff"
+                                    }}
+                                  >
+                                    <option value="room_0.3">ROOM S</option>
+                                    <option value="room_0.4">ROOM M</option>
+                                    <option value="room_0.5">ROOM L</option>
+                                  </select>
+                                </div>
+                              </div>
+
+                              {/* Stereo Enhancer */}
+                              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: "#d858ff", fontFamily: "'Courier New', monospace", textTransform: "uppercase" }}>
+                                  <input 
+                                    type="checkbox" 
+                                    checked={currentProcessingChain.spatialEnhancement.stereoEnhancer.enabled}
+                                    disabled={!customSettingsEnabled}
+                                    onChange={(e) => updateCurrentProcessingChain({
+                                      ...currentProcessingChain,
+                                      spatialEnhancement: {
+                                        ...currentProcessingChain.spatialEnhancement,
+                                        stereoEnhancer: {
+                                          ...currentProcessingChain.spatialEnhancement.stereoEnhancer,
+                                          enabled: e.target.checked
+                                        }
+                                      }
+                                    })}
+                                    style={{ accentColor: "#d858ff" }} 
+                                  />
+                                  <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                    {currentProcessingChain.spatialEnhancement.stereoEnhancer.enabled && <span style={{ color: "#d858ff" }}>●</span>}
+                                    Stereo
+                                  </span>
+                                </label>
+                                <VUMeter 
+                                  level={currentProcessingChain.spatialEnhancement.stereoEnhancer.enabled ? 75 : 0}
+                                  label="WIDTH"
+                                  color="#d858ff"
+                                />
+                              </div>
                             </div>
-                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
-                              <input 
-                                type="checkbox" 
-                                checked={currentProcessingChain.spatialEnhancement.stereoEnhancer.enabled}
-                                disabled={!customSettingsEnabled}
-                                onChange={(e) => updateCurrentProcessingChain({
-                                  ...currentProcessingChain,
-                                  spatialEnhancement: {
-                                    ...currentProcessingChain.spatialEnhancement,
-                                    stereoEnhancer: {
-                                      ...currentProcessingChain.spatialEnhancement.stereoEnhancer,
-                                      enabled: e.target.checked
-                                    }
-                                  }
-                                })}
-                                style={{ accentColor: "var(--accent)" }} 
-                              />
-                              <span>{t("audioProduction.stereoEnhancerSubtle")}</span>
-                            </label>
                           </div>
                         )}
                         </div>
@@ -2859,84 +3115,130 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                             </span>
                           </h5>
                           {sectionExpanded.consistencyMastering && (
-                          <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
-                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
-                              <input 
-                                type="checkbox" 
-                                checked={currentProcessingChain.mastering.normalization.enabled}
-                                disabled={!customSettingsEnabled}
-                                onChange={(e) => updateCurrentProcessingChain({
-                                  ...currentProcessingChain,
-                                  mastering: {
-                                    ...currentProcessingChain.mastering,
-                                    normalization: {
-                                      ...currentProcessingChain.mastering.normalization,
-                                      enabled: e.target.checked
-                                    }
-                                  }
-                                })}
-                                style={{ accentColor: "var(--accent)" }} 
-                              />
-                              <span>{t("audioProduction.normalizeAudiobook")}</span>
-                              <select 
-                                value={currentProcessingChain.mastering.normalization.targetLUFS}
-                                disabled={!customSettingsEnabled}
-                                onChange={(e) => updateCurrentProcessingChain({
-                                  ...currentProcessingChain,
-                                  mastering: {
-                                    ...currentProcessingChain.mastering,
-                                    normalization: {
-                                      ...currentProcessingChain.mastering.normalization,
-                                      targetLUFS: e.target.value as "-18" | "-20" | "-21" | "-23"
-                                    }
-                                  }
-                                })}
-                                style={{ marginLeft: "auto", fontSize: "10px", padding: "1px 4px", backgroundColor: "var(--panel)", border: "1px solid var(--border)", borderRadius: "2px" }}
-                              >
-                                <option value="-18">-18 LUFS</option>
-                                <option value="-20">-20 LUFS</option>
-                                <option value="-21">-21 LUFS</option>
-                                <option value="-23">-23 LUFS</option>
-                              </select>
-                            </label>
-                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
-                              <input 
-                                type="checkbox" 
-                                checked={currentProcessingChain.mastering.peakLimiting.enabled}
-                                disabled={!customSettingsEnabled}
-                                onChange={(e) => updateCurrentProcessingChain({
-                                  ...currentProcessingChain,
-                                  mastering: {
-                                    ...currentProcessingChain.mastering,
-                                    peakLimiting: {
-                                      ...currentProcessingChain.mastering.peakLimiting,
-                                      enabled: e.target.checked
-                                    }
-                                  }
-                                })}
-                                style={{ accentColor: "var(--accent)" }} 
-                              />
-                              <span>{t("audioProduction.peakLimitMax")}</span>
-                            </label>
-                            <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
-                              <input 
-                                type="checkbox" 
-                                checked={currentProcessingChain.mastering.dithering.enabled}
-                                disabled={!customSettingsEnabled}
-                                onChange={(e) => updateCurrentProcessingChain({
-                                  ...currentProcessingChain,
-                                  mastering: {
-                                    ...currentProcessingChain.mastering,
-                                    dithering: {
-                                      ...currentProcessingChain.mastering.dithering,
-                                      enabled: e.target.checked
-                                    }
-                                  }
-                                })}
-                                style={{ accentColor: "var(--accent)" }} 
-                              />
-                              <span>{t("audioProduction.finalDither")}</span>
-                            </label>
+                          <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                            <div style={{ display: "flex", gap: "20px", alignItems: "flex-start", flexWrap: "wrap" }}>
+                              {/* Normalization Control */}
+                              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: "#ff5858", fontFamily: "'Courier New', monospace", textTransform: "uppercase" }}>
+                                  <input 
+                                    type="checkbox" 
+                                    checked={currentProcessingChain.mastering.normalization.enabled}
+                                    disabled={!customSettingsEnabled}
+                                    onChange={(e) => updateCurrentProcessingChain({
+                                      ...currentProcessingChain,
+                                      mastering: {
+                                        ...currentProcessingChain.mastering,
+                                        normalization: {
+                                          ...currentProcessingChain.mastering.normalization,
+                                          enabled: e.target.checked
+                                        }
+                                      }
+                                    })}
+                                    style={{ accentColor: "#ff5858" }} 
+                                  />
+                                  <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                    {currentProcessingChain.mastering.normalization.enabled && <span style={{ color: "#ff5858" }}>●</span>}
+                                    Normalize
+                                  </span>
+                                </label>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "6px", alignItems: "center" }}>
+                                  <RotaryKnob
+                                    value={Math.abs(parseInt(currentProcessingChain.mastering.normalization.targetLUFS))}
+                                    min={18}
+                                    max={23}
+                                    label="LUFS"
+                                    color="#ff5858"
+                                    disabled={!customSettingsEnabled || !currentProcessingChain.mastering.normalization.enabled}
+                                    onChange={(v) => {
+                                      const lufs = v <= 19 ? "-18" : v <= 20.5 ? "-20" : v <= 22 ? "-21" : "-23";
+                                      updateCurrentProcessingChain({
+                                        ...currentProcessingChain,
+                                        mastering: {
+                                          ...currentProcessingChain.mastering,
+                                          normalization: {
+                                            ...currentProcessingChain.mastering.normalization,
+                                            targetLUFS: lufs as "-18" | "-20" | "-21" | "-23"
+                                          }
+                                        }
+                                      });
+                                    }}
+                                  />
+                                  <div style={{ 
+                                    fontFamily: "'Courier New', monospace", 
+                                    fontSize: "10px", 
+                                    color: "#ff5858",
+                                    background: "rgba(0,0,0,0.6)",
+                                    padding: "3px 8px",
+                                    borderRadius: "3px",
+                                    border: "1px solid #ff585840"
+                                  }}>
+                                    {currentProcessingChain.mastering.normalization.targetLUFS} dB
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Peak Limiting */}
+                              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: "#ff5858", fontFamily: "'Courier New', monospace", textTransform: "uppercase" }}>
+                                  <input 
+                                    type="checkbox" 
+                                    checked={currentProcessingChain.mastering.peakLimiting.enabled}
+                                    disabled={!customSettingsEnabled}
+                                    onChange={(e) => updateCurrentProcessingChain({
+                                      ...currentProcessingChain,
+                                      mastering: {
+                                        ...currentProcessingChain.mastering,
+                                        peakLimiting: {
+                                          ...currentProcessingChain.mastering.peakLimiting,
+                                          enabled: e.target.checked
+                                        }
+                                      }
+                                    })}
+                                    style={{ accentColor: "#ff5858" }} 
+                                  />
+                                  <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                    {currentProcessingChain.mastering.peakLimiting.enabled && <span style={{ color: "#ff5858" }}>●</span>}
+                                    Peak Lim
+                                  </span>
+                                </label>
+                                <VUMeter 
+                                  level={currentProcessingChain.mastering.peakLimiting.enabled ? 95 : 0}
+                                  label="CEILING"
+                                  color="#ff5858"
+                                />
+                              </div>
+
+                              {/* Dithering */}
+                              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", color: "#ff5858", fontFamily: "'Courier New', monospace", textTransform: "uppercase" }}>
+                                  <input 
+                                    type="checkbox" 
+                                    checked={currentProcessingChain.mastering.dithering.enabled}
+                                    disabled={!customSettingsEnabled}
+                                    onChange={(e) => updateCurrentProcessingChain({
+                                      ...currentProcessingChain,
+                                      mastering: {
+                                        ...currentProcessingChain.mastering,
+                                        dithering: {
+                                          ...currentProcessingChain.mastering.dithering,
+                                          enabled: e.target.checked
+                                        }
+                                      }
+                                    })}
+                                    style={{ accentColor: "#ff5858" }} 
+                                  />
+                                  <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                    {currentProcessingChain.mastering.dithering.enabled && <span style={{ color: "#ff5858" }}>●</span>}
+                                    Dither
+                                  </span>
+                                </label>
+                                <VUMeter 
+                                  level={currentProcessingChain.mastering.dithering.enabled ? 60 : 0}
+                                  label="NOISE"
+                                  color="#ff5858"
+                                />
+                              </div>
+                            </div>
                           </div>
                         )}
                         </div>
