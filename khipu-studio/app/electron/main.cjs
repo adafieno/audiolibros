@@ -541,6 +541,51 @@ function createWin() {
   if (process.env.VITE_DEV) win.loadURL("http://localhost:5173");
   else win.loadFile(path.join(__dirname, "../dist/index.html"));
 
+  /* Cost tracking helper - writes tracking data from backend */
+  async function trackBackendOperation(projectRoot, trackingData) {
+    if (!projectRoot) return;
+    try {
+      const trackingTypes = {
+        tts: 'cost-tracking.json',
+        llm: 'cost-tracking.json',
+        time: 'time-tracking.json'
+      };
+      
+      const filePath = path.join(projectRoot, trackingTypes[trackingData.type] || 'cost-tracking.json');
+      
+      // Read existing data
+      let existingData = [];
+      try {
+        const content = await fsp.readFile(filePath, 'utf-8');
+        existingData = JSON.parse(content);
+      } catch {
+        // File doesn't exist yet
+      }
+      
+      // Add new entry with backend flag
+      const entry = {
+        ...trackingData.entry,
+        id: `${trackingData.type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: new Date().toISOString(),
+        source: 'backend'
+      };
+      
+      existingData.push(entry);
+      
+      // Write back
+      await fsp.writeFile(filePath, JSON.stringify(existingData, null, 2), 'utf-8');
+      console.log(`📊 Backend tracking recorded: ${trackingData.type} - ${trackingData.entry.operation}`);
+    } catch (error) {
+      console.warn('Failed to track backend operation:', error);
+    }
+  }
+
+  /* IPC handler for backend tracking */
+  ipcMain.handle("tracking:record", async (_e, { projectRoot, trackingData }) => {
+    await trackBackendOperation(projectRoot, trackingData);
+    return { success: true };
+  });
+
   /* App config + locale */
   ipcMain.handle("appConfig:get", async () => getAppConfig());
   ipcMain.handle("appConfig:set", async (_e, cfg) => { await setAppConfig(cfg); return true; });
@@ -725,6 +770,7 @@ function createWin() {
 
   // Packaging: create platform package (basic implementation)
   ipcMain.handle("packaging:create", async (_e, { projectRoot, platformId }) => {
+    const packagingStartTime = Date.now();
     try {
       console.log('[packaging:create] invoked with:', { projectRoot, platformId });
 
@@ -761,6 +807,22 @@ function createWin() {
         default:
           throw new Error(`Unsupported platform: ${platformId}`);
       }
+
+      const packagingEndTime = Date.now();
+      const packagingDuration = packagingEndTime - packagingStartTime;
+      
+      // Track packaging time
+      await trackBackendOperation(projectRoot, {
+        type: 'time',
+        entry: {
+          activityType: 'automation',
+          duration: packagingDuration,
+          operation: 'packaging_export',
+          page: 'packaging',
+          platformId: platformId,
+          isActive: false
+        }
+      });
 
       return { success: true, message: `Packaging for ${platformId} completed successfully.` };
     } catch (error) {
@@ -950,10 +1012,23 @@ function createWin() {
       
       if (!metadataExists || !audioExists) {
         console.log(`🎵 CACHE MISS for ${key}`);
+        
+        // Track cache miss
+        if (projectRoot) {
+          trackBackendOperation(projectRoot, {
+            timestamp: Date.now(),
+            operationType: 'cache',
+            subType: 'miss',
+            metadata: { cacheKey: key }
+          });
+        }
+        
         return { success: false, error: "Cache entry not found" };
       }
       
       console.log(`🎵 CACHE HIT for ${key}`);
+      
+      const cacheReadStartTime = Date.now();
       
       // Read metadata
       const metadata = JSON.parse(await fsp.readFile(cacheFile, "utf-8"));
@@ -966,6 +1041,19 @@ function createWin() {
           await fsp.unlink(cacheFile);
           await fsp.unlink(audioFile);
         } catch {}
+        
+        // Track cache miss (expired)
+        if (projectRoot) {
+          const cacheReadDuration = Date.now() - cacheReadStartTime;
+          trackBackendOperation(projectRoot, {
+            timestamp: now,
+            operationType: 'cache',
+            subType: 'miss_expired',
+            durationMs: cacheReadDuration,
+            metadata: { cacheKey: key }
+          });
+        }
+        
         return { success: false, error: "Cache entry expired" };
       }
       
@@ -976,6 +1064,21 @@ function createWin() {
       // Update access time for LRU
       metadata.accessedAt = now;
       await fsp.writeFile(cacheFile, JSON.stringify(metadata, null, 2), "utf-8");
+      
+      // Track successful cache hit
+      if (projectRoot) {
+        const cacheReadDuration = Date.now() - cacheReadStartTime;
+        trackBackendOperation(projectRoot, {
+          timestamp: now,
+          operationType: 'cache',
+          subType: 'hit',
+          durationMs: cacheReadDuration,
+          metadata: { 
+            cacheKey: key,
+            sizeBytes: audioBuffer.length
+          }
+        });
+      }
       
       return { success: true, audioData, metadata };
       
@@ -1035,6 +1138,19 @@ function createWin() {
         expiresAt: now + (7 * 24 * 60 * 60 * 1000) // 7 days
       };
       await fsp.writeFile(cacheFile, JSON.stringify(metadataWithTimestamps, null, 2), "utf-8");
+      
+      // Track cache write
+      if (metadata.projectRoot) {
+        trackBackendOperation(metadata.projectRoot, {
+          timestamp: now,
+          operationType: 'cache',
+          subType: 'write',
+          metadata: { 
+            cacheKey: key,
+            sizeBytes: audioBuffer.length
+          }
+        });
+      }
       
       return { success: true };
       
@@ -1120,7 +1236,7 @@ function createWin() {
     }
   });
 
-  ipcMain.handle("audioCache:delete", async (_e, { key }) => {
+  ipcMain.handle("audioCache:delete", async (_e, { key, projectRoot }) => {
     console.log("🎵 CACHE DELETE:", key);
     try {
       const cacheDir = path.join(app.getPath("userData"), "cache", "tts");
@@ -1128,12 +1244,25 @@ function createWin() {
       const audioFile = path.join(cacheDir, `${key}.wav`);
       
       // Delete both files if they exist
+      let deleted = false;
       try {
         await fsp.unlink(cacheFile);
+        deleted = true;
       } catch {}
       try {
         await fsp.unlink(audioFile);
+        deleted = true;
       } catch {}
+      
+      // Track cache delete
+      if (projectRoot && deleted) {
+        trackBackendOperation(projectRoot, {
+          timestamp: Date.now(),
+          operationType: 'cache',
+          subType: 'delete',
+          metadata: { cacheKey: key }
+        });
+      }
       
       return { success: true };
       
@@ -1143,15 +1272,32 @@ function createWin() {
     }
   });
 
-  ipcMain.handle("audioCache:clear", async () => {
+  ipcMain.handle("audioCache:clear", async (_e, { projectRoot } = {}) => {
     try {
       const cacheDir = path.join(app.getPath("userData"), "cache", "tts");
+      
+      // Count entries before clearing
+      let entriesCleared = 0;
+      try {
+        const files = await fsp.readdir(cacheDir);
+        entriesCleared = files.filter(f => f.endsWith('.wav')).length;
+      } catch {}
       
       // Remove entire cache directory and recreate
       try {
         await fsp.rm(cacheDir, { recursive: true, force: true });
       } catch {}
       await fsp.mkdir(cacheDir, { recursive: true });
+      
+      // Track cache clear
+      if (projectRoot) {
+        trackBackendOperation(projectRoot, {
+          timestamp: Date.now(),
+          operationType: 'cache',
+          subType: 'clear',
+          metadata: { entriesCleared }
+        });
+      }
       
       return { success: true };
       
@@ -1165,6 +1311,8 @@ function createWin() {
 ipcMain.handle("manuscript:parse", async (_e, { projectRoot, docxPath }) => {
   if (!projectRoot || !docxPath) return { code: -1 };
   const root = path.resolve(projectRoot);
+  
+  const parseStartTime = Date.now();
 
   const chaptersDir  = resolveUnder(root, path.join("analysis", "chapters_txt"));
   const structureOut = resolveUnder(root, path.join("dossier", "narrative.structure.json"));
@@ -1195,6 +1343,22 @@ ipcMain.handle("manuscript:parse", async (_e, { projectRoot, docxPath }) => {
     console.log("[PY-manuscript]", line);
   });
   try { await fsp.unlink(tmpCfgPath); } catch {}
+  
+  const parseEndTime = Date.now();
+  const parseDuration = parseEndTime - parseStartTime;
+  
+  // Track manuscript parsing time
+  await trackBackendOperation(root, {
+    type: 'time',
+    entry: {
+      activityType: 'automation',
+      duration: parseDuration,
+      operation: 'manuscript_parsing',
+      page: 'manuscript',
+      docxPath: path.basename(docxPath),
+      isActive: false
+    }
+  });
 
   return { code: Number(code ?? 0) };
 });
@@ -1318,13 +1482,31 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
       const script = path.join(repoRoot, "py", "tools", "suggest_ipa.py");
       try { await fsp.access(script); } catch { return { success: false, error: "Suggest script missing" }; }
 
-  const args = [script, "--project-root", root, "--word", String(word)];
-  if (force) args.push('--force');
+      const ipaStartTime = Date.now();
+  
+      const args = [script, "--project-root", root, "--word", String(word)];
+      if (force) args.push('--force');
       let captured = "";
       const code = await runPy(args, (line) => {
         try { captured = JSON.stringify(line); } catch { captured = String(line); }
       });
       console.log(`[pronunciation] runPy exit code: ${code}, captured: ${captured}`);
+
+      const ipaEndTime = Date.now();
+      const ipaDuration = ipaEndTime - ipaStartTime;
+
+      // Track IPA suggestion time
+      await trackBackendOperation(root, {
+        type: 'time',
+        entry: {
+          activityType: 'automation',
+          duration: ipaDuration,
+          operation: 'ipa_pronunciation_suggestion',
+          page: 'project',
+          word: word,
+          isActive: false
+        }
+      });
 
       // If the Python process printed JSON to stdout, try to parse it from 'captured' or from a raw file read
       try {
@@ -1348,6 +1530,19 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
           }
         }
         if (parsed) {
+          // Track LLM usage for IPA suggestion (estimated)
+          await trackBackendOperation(root, {
+            type: 'llm',
+            entry: {
+              operation: 'pronunciation_ipa_suggestion',
+              provider: 'openai-gpt4o',
+              inputTokens: 150, // Estimated: system prompt + word
+              outputTokens: 50, // Estimated: IPA response
+              page: 'project',
+              word: word
+            }
+          });
+          
           // If ipa exists and is non-empty, return success and forward metadata
           if (parsed.ipa !== undefined && String(parsed.ipa || "").trim()) {
             const out = { success: true, ipa: String(parsed.ipa) };
@@ -1441,7 +1636,8 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
   });
 
   // SoX Audio Processor handlers for advanced audio preview
-  ipcMain.handle("audioProcessor:processAudio", async (_e, { audioUrl, processingChain, cacheKey }) => {
+  ipcMain.handle("audioProcessor:processAudio", async (_e, { audioUrl, processingChain, cacheKey, projectRoot }) => {
+    const processStartTime = Date.now();
     try {
       const processor = getAudioProcessor();
       // Normalize cacheKey: strip extension if provided
@@ -1463,6 +1659,23 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
       // Check cache first
       const cachedPath = processor.getCachedPath(normalizedKey);
       if (cachedPath && fs.existsSync(cachedPath)) {
+        const cacheHitDuration = Date.now() - processStartTime;
+        
+        // Track cache hit
+        if (projectRoot) {
+          await trackBackendOperation(projectRoot, {
+            type: 'time',
+            entry: {
+              activityType: 'automation',
+              duration: cacheHitDuration,
+              operation: 'audio_processing_cache_hit',
+              page: 'voice',
+              cacheKey: normalizedKey,
+              isActive: false
+            }
+          });
+        }
+        
         return {
           success: true,
           outputPath: cachedPath,
@@ -1487,6 +1700,25 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
         processingChain: processingChain,
         cacheKey: normalizedKey
       });
+      
+      const processEndTime = Date.now();
+      const processDuration = processEndTime - processStartTime;
+      
+      // Track processing time (cache miss)
+      if (projectRoot && result.success) {
+        await trackBackendOperation(projectRoot, {
+          type: 'time',
+          entry: {
+            activityType: 'automation',
+            duration: processDuration,
+            operation: 'audio_processing',
+            page: 'voice',
+            cacheKey: normalizedKey,
+            cached: false,
+            isActive: false
+          }
+        });
+      }
       
       return result;
     } catch (error) {
@@ -1556,6 +1788,8 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
       if (!projectRoot || typeof projectRoot !== "string") return -1;
 
       const base = path.resolve(projectRoot);
+      const planStartTime = Date.now();
+      
       const resolveUnder = (p) => (p && !path.isAbsolute(p) ? path.join(base, p) : p);
       const inside = (p) => {
         const rel = path.relative(base, p);
@@ -1585,6 +1819,38 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
 
       console.log("[plan:build] invoking simple_plan_builder with args", args.join(" "));
       const code = await runPy(args, (line) => _e.sender.send("job:event", line));
+      
+      const planEndTime = Date.now();
+      const planDuration = planEndTime - planStartTime;
+      
+      // Track plan build time
+      await trackBackendOperation(base, {
+        type: 'time',
+        entry: {
+          activityType: 'automation',
+          duration: planDuration,
+          operation: 'plan_build',
+          page: 'planning',
+          chapterId: chapterId,
+          isActive: false
+        }
+      });
+      
+      // Track estimated LLM usage for planning (actual token counts would need Python script modification)
+      if (code === 0) {
+        await trackBackendOperation(base, {
+          type: 'llm',
+          entry: {
+            operation: 'plan_build',
+            provider: 'openai-gpt4o',
+            inputTokens: 2500, // Estimated: chapter text + instructions
+            outputTokens: 1500, // Estimated: planning output
+            page: 'planning',
+            chapterId: chapterId
+          }
+        });
+      }
+      
       try {
         // Append a sentinel note inside the saved plan (non-breaking) for debugging cache issues
         if (code === 0) {
@@ -1912,6 +2178,9 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
       
       console.log(`🎬 Running ffmpeg concatenation: "${ffmpegCmd}" ${ffmpegArgs.join(' ')}`);
       
+      // Track concatenation start time
+      const concatStartTime = Date.now();
+      
       const { spawn } = require('child_process');
       const ffmpegProcess = spawn(ffmpegCmd, ffmpegArgs);
       
@@ -1930,6 +2199,25 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
           console.error('FFmpeg process error:', error);
           resolve(-1);
         });
+      });
+      
+      const concatEndTime = Date.now();
+      const concatDuration = concatEndTime - concatStartTime;
+      
+      console.log(`⏱️ Concatenation completed in ${concatDuration}ms`);
+      
+      // Track concatenation time
+      await trackBackendOperation(projectRoot, {
+        type: 'time',
+        entry: {
+          activityType: 'automation',
+          duration: concatDuration,
+          operation: 'audio_concatenation',
+          page: 'voice',
+          chapterId: chapterId,
+          segmentCount: audioFiles.length,
+          isActive: false
+        }
       });
       
       // Clean up temp files
@@ -2146,6 +2434,9 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
         throw lastTokenErr || new Error(`Failed to get Azure token for region ${credentials.region}`);
       }
       
+      // Track TTS operation start time
+      const ttsStartTime = Date.now();
+      
       // Call Azure TTS
       const ttsEndpoint = `https://${credentials.region}.tts.speech.microsoft.com/cognitiveservices/v1`;
       const ttsResponse = await fetch(ttsEndpoint, {
@@ -2164,7 +2455,40 @@ ipcMain.handle("chapter:write", async (_e, { projectRoot, relPath, text }) => {
         throw new Error(`Azure TTS failed: ${ttsResponse.status} ${ttsResponse.statusText} - ${errorText}`);
       }
       
-      console.log(`✅ Azure TTS successful for ${segment.chunkId}, saving audio...`);
+      const ttsEndTime = Date.now();
+      const ttsDuration = ttsEndTime - ttsStartTime;
+      
+      console.log(`✅ Azure TTS successful for ${segment.chunkId} (${ttsDuration}ms), saving audio...`);
+      
+      // Track TTS cost
+      await trackBackendOperation(projectRoot, {
+        type: 'tts',
+        entry: {
+          operation: 'audio:generateSegmentSimple',
+          provider: 'azure-tts',
+          charactersProcessed: segment.text.length,
+          wasCached: false,
+          cacheHit: false,
+          chapterId: chapterId,
+          segmentId: segment.chunkId,
+          voice: voiceId,
+          page: 'voice'
+        }
+      });
+      
+      // Track automation time
+      await trackBackendOperation(projectRoot, {
+        type: 'time',
+        entry: {
+          activityType: 'automation',
+          duration: ttsDuration,
+          operation: 'tts_generation',
+          page: 'voice',
+          chapterId: chapterId,
+          segmentId: segment.chunkId,
+          isActive: false
+        }
+      });
       
       // Get audio data and process with full audio processing chain
       const audioBuffer = await ttsResponse.arrayBuffer();

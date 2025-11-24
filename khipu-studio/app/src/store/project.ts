@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { loadWorkflowState, saveWorkflowState } from "../lib/workflow";
+import { costTrackingService } from "../lib/cost-tracking-service";
 
 export type WorkflowStep = 
   | "project"      // Project configuration completed
@@ -28,9 +29,14 @@ export const useProject = create<ProjectState>()((set, get) => ({
   
   setRoot: (p) => {
     set({ root: p });
-    // Load workflow state when project changes
+    // Load workflow state and cost tracking data when project changes
     if (p) {
       get().loadWorkflowState();
+      
+      // Initialize cost tracking service for this project
+      costTrackingService.setProjectRoot(p).catch(error => {
+        console.warn('Failed to initialize cost tracking for project:', error);
+      });
     }
   },
   
