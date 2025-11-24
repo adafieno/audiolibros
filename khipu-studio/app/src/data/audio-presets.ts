@@ -61,9 +61,9 @@ export const AUDIO_PRESETS: AudioPreset[] = [
       },
       eqShaping: {
         lowMidCut: { enabled: true, frequency: "150", gain: -1 },
-        // reduce presence and air lift to avoid exaggerated sibilance
-        presenceBoost: { enabled: true, frequency: "3", gain: 1.0 },
-        airLift: { enabled: true, frequency: "10", gain: 0.2 }
+        // significantly reduce presence and air lift to avoid sibilance (reduced from 1.0 and 0.2)
+        presenceBoost: { enabled: false, frequency: "3", gain: 0.0 },
+        airLift: { enabled: false, frequency: "10", gain: 0.0 }
       },
       spatialEnhancement: {
         reverb: { enabled: false, type: "room_0.3", wetMix: 10 },

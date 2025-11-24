@@ -2146,6 +2146,51 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                               {t("audioProduction.presetsDescription")} {" "}
                               {t("audioProduction.customSettingsInstruction", { customSettings: t("audioProduction.customSettings") })}
                             </div>
+                            
+                            {/* Bulk Apply Buttons */}
+                            {!customSettingsEnabled && (
+                              <div style={{ display: "flex", gap: "8px", marginTop: "8px", flexWrap: "wrap" }}>
+                                <StandardButton
+                                  variant="primary"
+                                  size="compact"
+                                  onClick={async () => {
+                                    if (!audioProductionService || !selectedChapter) return;
+                                    
+                                    const count = audioSegments.filter(seg => !seg.sfxFile).length;
+                                    if (!confirm(`Apply "${getPresetById(selectedPresetId)?.name}" preset to all ${count} audio segments?`)) {
+                                      return;
+                                    }
+                                    
+                                    try {
+                                      const preset = getPresetById(selectedPresetId);
+                                      if (!preset) return;
+                                      
+                                      // Update all audio segments (not SFX)
+                                      setAudioSegments(prev => prev.map(seg => 
+                                        seg.sfxFile ? seg : { ...seg, processingChain: preset.processingChain }
+                                      ));
+                                      
+                                      // Save to disk
+                                      const processingChainMap: Record<string, AudioProcessingChain> = {};
+                                      audioSegments.forEach(seg => {
+                                        if (!seg.sfxFile) {
+                                          processingChainMap[seg.chunkId] = preset.processingChain;
+                                        }
+                                      });
+                                      
+                                      await audioProductionService.saveProcessingChains(selectedChapter, processingChainMap);
+                                      onStatus(`✅ Applied preset to ${count} segments`);
+                                    } catch (error) {
+                                      console.error('Failed to apply preset:', error);
+                                      onStatus('❌ Failed to apply preset');
+                                    }
+                                  }}
+                                  style={{ fontSize: "11px", padding: "4px 8px" }}
+                                >
+                                  📋 Apply to All Segments
+                                </StandardButton>
+                              </div>
+                            )}
                           </div>
                         </div>
                         
