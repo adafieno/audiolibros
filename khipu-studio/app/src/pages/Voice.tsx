@@ -1737,9 +1737,9 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
       {/* Main content grid - Two pane layout */}
       {selectedChapter && audioSegments.length > 0 ? (
-        <div style={{ display: "grid", gridTemplateColumns: "0.4fr 1.6fr", gap: "16px", flex: 1, minHeight: 0 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "0.4fr 1.6fr", gap: "16px", flex: 1, minHeight: 0, overflow: "hidden" }}>
           {/* Left: Audio Segments Grid */}
-          <div style={{ border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          <div style={{ border: "1px solid var(--border)", borderRadius: "6px", display: "flex", flexDirection: "column", overflow: "hidden" }}>
             <div style={{ padding: "8px 12px", backgroundColor: "var(--panelAccent)", borderBottom: "1px solid var(--border)", fontSize: "14px", fontWeight: 500 }}>
               {t("audioProduction.segments")} - {selectedChapter}
             </div>
@@ -1908,7 +1908,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
           </div>
 
           {/* Right: Text Display + Audio Production Module */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px", minHeight: 0 }}>
             {/* Text Display */}
             {selectedRowIndex >= 0 && selectedRowIndex < audioSegments.length && (
               <TextDisplay
@@ -2170,12 +2170,12 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
             )}
             
             {/* Audio Production Module */}
-          <div style={{ border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          <div style={{ border: "1px solid var(--border)", borderRadius: "6px", display: "flex", flexDirection: "column", minHeight: 0, flex: 1 }}>
             <div style={{ padding: "8px 12px", backgroundColor: "var(--panelAccent)", borderBottom: "1px solid var(--border)", fontSize: "14px", fontWeight: 500 }}>
               {t("audioProduction.moduleTitle")}
             </div>
             
-            <div style={{ flex: 1, padding: "12px", overflow: "auto" }}>
+            <div style={{ flex: 1, padding: "12px", overflow: "auto", minHeight: 0 }}>
               {selectedRowIndex >= 0 && selectedRowIndex < audioSegments.length ? (
                 (() => {
                   return (
