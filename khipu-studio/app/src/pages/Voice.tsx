@@ -2194,49 +2194,130 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                           </div>
                         </div>
                         
-                        {/* Processing Summary */}
-                        <div style={{ marginBottom: "12px", padding: "8px", backgroundColor: "var(--input)", color: "var(--text)", borderRadius: "3px", fontSize: "12px", border: "1px solid var(--border)" }}>
-                          <strong>{t("audioProduction.activeEffects")}</strong> {[
-                            currentProcessingChain.noiseCleanup.highPassFilter.enabled && t("audioProduction.hpFilterDynamic", { frequency: currentProcessingChain.noiseCleanup.highPassFilter.frequency }),
-                            currentProcessingChain.noiseCleanup.deClickDeEss.enabled && t("audioProduction.deEssDynamic", { intensity: currentProcessingChain.noiseCleanup.deClickDeEss.intensity }),
-                            currentProcessingChain.dynamicControl.compression.enabled && t("audioProduction.compressionDynamic", { ratio: currentProcessingChain.dynamicControl.compression.ratio }),
-                            currentProcessingChain.dynamicControl.limiter.enabled && t("audioProduction.limiterDynamic"),
-                            currentProcessingChain.eqShaping.lowMidCut.enabled && t("audioProduction.lowMidCutDynamic", { frequency: currentProcessingChain.eqShaping.lowMidCut.frequency }),
-                            currentProcessingChain.eqShaping.presenceBoost.enabled && t("audioProduction.presenceBoostDynamic", { frequency: currentProcessingChain.eqShaping.presenceBoost.frequency }),
-                            currentProcessingChain.eqShaping.airLift.enabled && t("audioProduction.airLiftDynamic", { frequency: currentProcessingChain.eqShaping.airLift.frequency }),
-                            currentProcessingChain.spatialEnhancement.reverb.enabled && t("audioProduction.reverbDynamic", { wetMix: currentProcessingChain.spatialEnhancement.reverb.wetMix }),
-                            currentProcessingChain.spatialEnhancement.stereoEnhancer.enabled && t("audioProduction.stereoEnhance"),
-                            currentProcessingChain.mastering.normalization.enabled && t("audioProduction.normalizeDynamic", { targetLUFS: currentProcessingChain.mastering.normalization.targetLUFS }),
-                            currentProcessingChain.mastering.peakLimiting.enabled && t("audioProduction.peakLimit"),
-                            currentProcessingChain.mastering.dithering.enabled && t("audioProduction.dither")
-                          ].filter(Boolean).join(', ') || t("audioProduction.activeEffectsNone")}
+                        {/* Processing Summary - Studio Display */}
+                        <div style={{ 
+                          marginBottom: "16px", 
+                          padding: "12px", 
+                          background: "linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)",
+                          border: "2px solid #2a2a2a",
+                          borderRadius: "6px",
+                          boxShadow: "inset 0 2px 4px rgba(0,0,0,0.5), 0 1px 2px rgba(255,255,255,0.1)",
+                          position: "relative"
+                        }}>
+                          {/* Rack screws */}
+                          <div style={{ position: "absolute", top: "6px", left: "6px", width: "6px", height: "6px", borderRadius: "50%", background: "radial-gradient(circle, #4a4a4a 0%, #2a2a2a 100%)", boxShadow: "inset 0 1px 2px rgba(0,0,0,0.8)" }} />
+                          <div style={{ position: "absolute", top: "6px", right: "6px", width: "6px", height: "6px", borderRadius: "50%", background: "radial-gradient(circle, #4a4a4a 0%, #2a2a2a 100%)", boxShadow: "inset 0 1px 2px rgba(0,0,0,0.8)" }} />
+                          <div style={{ position: "absolute", bottom: "6px", left: "6px", width: "6px", height: "6px", borderRadius: "50%", background: "radial-gradient(circle, #4a4a4a 0%, #2a2a2a 100%)", boxShadow: "inset 0 1px 2px rgba(0,0,0,0.8)" }} />
+                          <div style={{ position: "absolute", bottom: "6px", right: "6px", width: "6px", height: "6px", borderRadius: "50%", background: "radial-gradient(circle, #4a4a4a 0%, #2a2a2a 100%)", boxShadow: "inset 0 1px 2px rgba(0,0,0,0.8)" }} />
+                          
+                          <div style={{ fontFamily: "'Courier New', monospace", fontSize: "11px", color: "#00ff88", letterSpacing: "0.5px", marginBottom: "8px", textTransform: "uppercase" }}>
+                            ● ACTIVE PROCESSING CHAIN
+                          </div>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>{
+                            [
+                              currentProcessingChain.noiseCleanup.highPassFilter.enabled && { label: "HPF", color: "#58a6ff" },
+                              currentProcessingChain.noiseCleanup.deClickDeEss.enabled && { label: "DeEss", color: "#58a6ff" },
+                              currentProcessingChain.dynamicControl.compression.enabled && { label: "Comp", color: "#ff9f58" },
+                              currentProcessingChain.dynamicControl.limiter.enabled && { label: "Lim", color: "#ff9f58" },
+                              currentProcessingChain.eqShaping.lowMidCut.enabled && { label: "LoCut", color: "#5fff58" },
+                              currentProcessingChain.eqShaping.presenceBoost.enabled && { label: "Pres", color: "#5fff58" },
+                              currentProcessingChain.eqShaping.airLift.enabled && { label: "Air", color: "#5fff58" },
+                              currentProcessingChain.spatialEnhancement.reverb.enabled && { label: "Rev", color: "#d858ff" },
+                              currentProcessingChain.spatialEnhancement.stereoEnhancer.enabled && { label: "Stereo", color: "#d858ff" },
+                              currentProcessingChain.mastering.normalization.enabled && { label: "Norm", color: "#ff5858" },
+                              currentProcessingChain.mastering.peakLimiting.enabled && { label: "Peak", color: "#ff5858" },
+                              currentProcessingChain.mastering.dithering.enabled && { label: "Dither", color: "#ff5858" }
+                            ].filter(Boolean).map((item: any, idx) => (
+                              <span key={idx} style={{ 
+                                display: "inline-flex", 
+                                alignItems: "center",
+                                gap: "4px",
+                                padding: "3px 8px", 
+                                background: "rgba(0,0,0,0.6)",
+                                border: `1px solid ${item.color}40`,
+                                borderRadius: "3px",
+                                fontSize: "10px",
+                                fontFamily: "'Courier New', monospace",
+                                color: item.color,
+                                fontWeight: "bold",
+                                letterSpacing: "0.5px",
+                                textTransform: "uppercase",
+                                boxShadow: `0 0 6px ${item.color}40, inset 0 0 4px rgba(0,0,0,0.5)`
+                              }}>
+                                <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: item.color, boxShadow: `0 0 4px ${item.color}` }} />
+                                {item.label}
+                              </span>
+                            ))}
+                            {[
+                              currentProcessingChain.noiseCleanup.highPassFilter.enabled,
+                              currentProcessingChain.noiseCleanup.deClickDeEss.enabled,
+                              currentProcessingChain.dynamicControl.compression.enabled,
+                              currentProcessingChain.dynamicControl.limiter.enabled,
+                              currentProcessingChain.eqShaping.lowMidCut.enabled,
+                              currentProcessingChain.eqShaping.presenceBoost.enabled,
+                              currentProcessingChain.eqShaping.airLift.enabled,
+                              currentProcessingChain.spatialEnhancement.reverb.enabled,
+                              currentProcessingChain.spatialEnhancement.stereoEnhancer.enabled,
+                              currentProcessingChain.mastering.normalization.enabled,
+                              currentProcessingChain.mastering.peakLimiting.enabled,
+                              currentProcessingChain.mastering.dithering.enabled
+                            ].every(v => !v) && (
+                              <span style={{ color: "#666", fontSize: "10px", fontStyle: "italic" }}>{t("audioProduction.activeEffectsNone")}</span>
+                            )}
+                          </div>
                         </div>
                         
-                        {/* 1. Noise & Cleanup */}
-                        <div style={{ marginBottom: "16px", padding: "8px", backgroundColor: "var(--input)", borderRadius: "3px", border: "1px solid var(--border)" }}>
+                        {/* 1. Noise & Cleanup - Studio Module */}
+                        <div style={{ 
+                          marginBottom: "16px", 
+                          padding: "0",
+                          background: "linear-gradient(180deg, #1a1a2e 0%, #16162a 100%)",
+                          border: "2px solid #2a3a5a",
+                          borderRadius: "6px",
+                          boxShadow: "0 4px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(88,166,255,0.1)",
+                          position: "relative",
+                          overflow: "hidden"
+                        }}>
+                          {/* LED indicator strip */}
+                          <div style={{ position: "absolute", top: "0", left: "0", right: "0", height: "2px", background: "linear-gradient(90deg, transparent, #58a6ff, transparent)", opacity: sectionExpanded.noiseCleanup ? 1 : 0, transition: "opacity 0.3s" }} />
+                          
                           <h5 
                             style={{ 
-                              margin: "0 0 6px 0", 
-                              fontSize: "12px", 
-                              color: "var(--text)", 
-                              fontWeight: 500,
+                              margin: "0",
+                              padding: "12px 16px",
+                              fontSize: "11px", 
+                              color: "#58a6ff",
+                              fontWeight: 600,
                               cursor: "pointer",
                               display: "flex",
                               alignItems: "center",
-                              justifyContent: "space-between"
+                              gap: "8px",
+                              textTransform: "uppercase",
+                              letterSpacing: "1px",
+                              background: "rgba(88,166,255,0.05)",
+                              borderBottom: sectionExpanded.noiseCleanup ? "1px solid #2a3a5a" : "none",
+                              fontFamily: "'Segoe UI', system-ui, sans-serif"
                             }}
                             onClick={() => setSectionExpanded(prev => ({
                               ...prev,
                               noiseCleanup: !prev.noiseCleanup
                             }))}
                           >
-                            <span>{t("audioProduction.processingStep1")}</span>
-                            <span style={{ fontSize: "10px" }}>
+                            <span style={{ 
+                              width: "8px", 
+                              height: "8px", 
+                              borderRadius: "50%", 
+                              background: (currentProcessingChain.noiseCleanup.highPassFilter.enabled || currentProcessingChain.noiseCleanup.deClickDeEss.enabled) ? "#58a6ff" : "#333",
+                              boxShadow: (currentProcessingChain.noiseCleanup.highPassFilter.enabled || currentProcessingChain.noiseCleanup.deClickDeEss.enabled) ? "0 0 8px #58a6ff" : "none",
+                              transition: "all 0.3s"
+                            }} />
+                            <span style={{ flex: 1 }}>{t("audioProduction.processingStep1")}</span>
+                            <span style={{ fontSize: "10px", opacity: 0.6 }}>
                               {sectionExpanded.noiseCleanup ? "▼" : "▶"}
                             </span>
                           </h5>
                           {sectionExpanded.noiseCleanup && (
-                          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                          <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
                               <input 
                                 type="checkbox" 
@@ -2317,31 +2398,56 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                           )}
                         </div>
 
-                        {/* 2. Dynamic Control */}
-                        <div style={{ marginBottom: "16px", padding: "8px", backgroundColor: "var(--input)", borderRadius: "3px", border: "1px solid var(--border)" }}>
+                        {/* 2. Dynamic Control - Studio Module */}
+                        <div style={{ 
+                          marginBottom: "16px", 
+                          padding: "0",
+                          background: "linear-gradient(180deg, #2e1a1a 0%, #2a1616 100%)",
+                          border: "2px solid #5a3a2a",
+                          borderRadius: "6px",
+                          boxShadow: "0 4px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,159,88,0.1)",
+                          position: "relative",
+                          overflow: "hidden"
+                        }}>
+                          <div style={{ position: "absolute", top: "0", left: "0", right: "0", height: "2px", background: "linear-gradient(90deg, transparent, #ff9f58, transparent)", opacity: sectionExpanded.dynamicControl ? 1 : 0, transition: "opacity 0.3s" }} />
+                          
                           <h5 
                             style={{ 
-                              margin: "0 0 6px 0", 
-                              fontSize: "12px", 
-                              color: "var(--text)", 
-                              fontWeight: 500,
+                              margin: "0",
+                              padding: "12px 16px",
+                              fontSize: "11px", 
+                              color: "#ff9f58",
+                              fontWeight: 600,
                               cursor: "pointer",
                               display: "flex",
                               alignItems: "center",
-                              justifyContent: "space-between"
+                              gap: "8px",
+                              textTransform: "uppercase",
+                              letterSpacing: "1px",
+                              background: "rgba(255,159,88,0.05)",
+                              borderBottom: sectionExpanded.dynamicControl ? "1px solid #5a3a2a" : "none",
+                              fontFamily: "'Segoe UI', system-ui, sans-serif"
                             }}
                             onClick={() => setSectionExpanded(prev => ({
                               ...prev,
                               dynamicControl: !prev.dynamicControl
                             }))}
                           >
-                            <span>{t("audioProduction.dynamicControlTitle")}</span>
-                            <span style={{ fontSize: "10px" }}>
+                            <span style={{ 
+                              width: "8px", 
+                              height: "8px", 
+                              borderRadius: "50%", 
+                              background: (currentProcessingChain.dynamicControl.compression.enabled || currentProcessingChain.dynamicControl.limiter.enabled) ? "#ff9f58" : "#333",
+                              boxShadow: (currentProcessingChain.dynamicControl.compression.enabled || currentProcessingChain.dynamicControl.limiter.enabled) ? "0 0 8px #ff9f58" : "none",
+                              transition: "all 0.3s"
+                            }} />
+                            <span style={{ flex: 1 }}>{t("audioProduction.dynamicControlTitle")}</span>
+                            <span style={{ fontSize: "10px", opacity: 0.6 }}>
                               {sectionExpanded.dynamicControl ? "▼" : "▶"}
                             </span>
                           </h5>
                           {sectionExpanded.dynamicControl && (
-                          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                          <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
                               <input 
                                 type="checkbox" 
@@ -2403,31 +2509,56 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                           )}
                         </div>
 
-                        {/* 3. EQ Shaping */}
-                        <div style={{ marginBottom: "16px", padding: "8px", backgroundColor: "var(--input)", borderRadius: "3px", border: "1px solid var(--border)" }}>
+                        {/* 3. EQ Shaping - Studio Module */}
+                        <div style={{ 
+                          marginBottom: "16px", 
+                          padding: "0",
+                          background: "linear-gradient(180deg, #1a2e1a 0%, #162a16 100%)",
+                          border: "2px solid #2a5a3a",
+                          borderRadius: "6px",
+                          boxShadow: "0 4px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(95,255,88,0.1)",
+                          position: "relative",
+                          overflow: "hidden"
+                        }}>
+                          <div style={{ position: "absolute", top: "0", left: "0", right: "0", height: "2px", background: "linear-gradient(90deg, transparent, #5fff58, transparent)", opacity: sectionExpanded.eqShaping ? 1 : 0, transition: "opacity 0.3s" }} />
+                          
                           <h5 
                             style={{ 
-                              margin: "0 0 6px 0", 
-                              fontSize: "12px", 
-                              color: "var(--text)", 
-                              fontWeight: 500,
+                              margin: "0",
+                              padding: "12px 16px",
+                              fontSize: "11px", 
+                              color: "#5fff58",
+                              fontWeight: 600,
                               cursor: "pointer",
                               display: "flex",
                               alignItems: "center",
-                              justifyContent: "space-between"
+                              gap: "8px",
+                              textTransform: "uppercase",
+                              letterSpacing: "1px",
+                              background: "rgba(95,255,88,0.05)",
+                              borderBottom: sectionExpanded.eqShaping ? "1px solid #2a5a3a" : "none",
+                              fontFamily: "'Segoe UI', system-ui, sans-serif"
                             }}
                             onClick={() => setSectionExpanded(prev => ({
                               ...prev,
                               eqShaping: !prev.eqShaping
                             }))}
                           >
-                            <span>{t("audioProduction.eqShapingTitle")}</span>
-                            <span style={{ fontSize: "10px" }}>
+                            <span style={{ 
+                              width: "8px", 
+                              height: "8px", 
+                              borderRadius: "50%", 
+                              background: (currentProcessingChain.eqShaping.lowMidCut.enabled || currentProcessingChain.eqShaping.presenceBoost.enabled || currentProcessingChain.eqShaping.airLift.enabled) ? "#5fff58" : "#333",
+                              boxShadow: (currentProcessingChain.eqShaping.lowMidCut.enabled || currentProcessingChain.eqShaping.presenceBoost.enabled || currentProcessingChain.eqShaping.airLift.enabled) ? "0 0 8px #5fff58" : "none",
+                              transition: "all 0.3s"
+                            }} />
+                            <span style={{ flex: 1 }}>{t("audioProduction.eqShapingTitle")}</span>
+                            <span style={{ fontSize: "10px", opacity: 0.6 }}>
                               {sectionExpanded.eqShaping ? "▼" : "▶"}
                             </span>
                           </h5>
                           {sectionExpanded.eqShaping && (
-                          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                          <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
                               <input 
                                 type="checkbox" 
@@ -2546,31 +2677,56 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                           )}
                         </div>
 
-                        {/* 4. Spatial / Aesthetic Enhancements */}
-                        <div style={{ marginBottom: "16px", padding: "8px", backgroundColor: "var(--input)", borderRadius: "3px", border: "1px solid var(--border)" }}>
+                        {/* 4. Spatial / Aesthetic Enhancements - Studio Module */}
+                        <div style={{ 
+                          marginBottom: "16px", 
+                          padding: "0",
+                          background: "linear-gradient(180deg, #2e1a2e 0%, #2a162a 100%)",
+                          border: "2px solid #5a2a5a",
+                          borderRadius: "6px",
+                          boxShadow: "0 4px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(216,88,255,0.1)",
+                          position: "relative",
+                          overflow: "hidden"
+                        }}>
+                          <div style={{ position: "absolute", top: "0", left: "0", right: "0", height: "2px", background: "linear-gradient(90deg, transparent, #d858ff, transparent)", opacity: sectionExpanded.spatialEnhancement ? 1 : 0, transition: "opacity 0.3s" }} />
+                          
                           <h5 
                             style={{ 
-                              margin: "0 0 6px 0", 
-                              fontSize: "12px", 
-                              color: "var(--text)", 
-                              fontWeight: 500,
+                              margin: "0",
+                              padding: "12px 16px",
+                              fontSize: "11px", 
+                              color: "#d858ff",
+                              fontWeight: 600,
                               cursor: "pointer",
                               display: "flex",
                               alignItems: "center",
-                              justifyContent: "space-between"
+                              gap: "8px",
+                              textTransform: "uppercase",
+                              letterSpacing: "1px",
+                              background: "rgba(216,88,255,0.05)",
+                              borderBottom: sectionExpanded.spatialEnhancement ? "1px solid #5a2a5a" : "none",
+                              fontFamily: "'Segoe UI', system-ui, sans-serif"
                             }}
                             onClick={() => setSectionExpanded(prev => ({
                               ...prev,
                               spatialEnhancement: !prev.spatialEnhancement
                             }))}
                           >
-                            <span>{t("audioProduction.processingStep4")}</span>
-                            <span style={{ fontSize: "10px" }}>
+                            <span style={{ 
+                              width: "8px", 
+                              height: "8px", 
+                              borderRadius: "50%", 
+                              background: (currentProcessingChain.spatialEnhancement.reverb.enabled || currentProcessingChain.spatialEnhancement.stereoEnhancer.enabled) ? "#d858ff" : "#333",
+                              boxShadow: (currentProcessingChain.spatialEnhancement.reverb.enabled || currentProcessingChain.spatialEnhancement.stereoEnhancer.enabled) ? "0 0 8px #d858ff" : "none",
+                              transition: "all 0.3s"
+                            }} />
+                            <span style={{ flex: 1 }}>{t("audioProduction.processingStep4")}</span>
+                            <span style={{ fontSize: "10px", opacity: 0.6 }}>
                               {sectionExpanded.spatialEnhancement ? "▼" : "▶"}
                             </span>
                           </h5>
                           {sectionExpanded.spatialEnhancement && (
-                          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                          <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
                               <input 
                                 type="checkbox" 
@@ -2654,31 +2810,56 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                         )}
                         </div>
 
-                        {/* 5. Consistency & Mastering */}
-                        <div style={{ marginBottom: "12px", padding: "8px", backgroundColor: "var(--input)", borderRadius: "3px", border: "1px solid var(--border)" }}>
+                        {/* 5. Consistency & Mastering - Studio Module */}
+                        <div style={{ 
+                          marginBottom: "12px", 
+                          padding: "0",
+                          background: "linear-gradient(180deg, #2e1a1a 0%, #2a1212 100%)",
+                          border: "2px solid #5a2a2a",
+                          borderRadius: "6px",
+                          boxShadow: "0 4px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,88,88,0.1)",
+                          position: "relative",
+                          overflow: "hidden"
+                        }}>
+                          <div style={{ position: "absolute", top: "0", left: "0", right: "0", height: "2px", background: "linear-gradient(90deg, transparent, #ff5858, transparent)", opacity: sectionExpanded.consistencyMastering ? 1 : 0, transition: "opacity 0.3s" }} />
+                          
                           <h5 
                             style={{ 
-                              margin: "0 0 6px 0", 
-                              fontSize: "12px", 
-                              color: "var(--text)", 
-                              fontWeight: 500,
+                              margin: "0",
+                              padding: "12px 16px",
+                              fontSize: "11px", 
+                              color: "#ff5858",
+                              fontWeight: 600,
                               cursor: "pointer",
                               display: "flex",
                               alignItems: "center",
-                              justifyContent: "space-between"
+                              gap: "8px",
+                              textTransform: "uppercase",
+                              letterSpacing: "1px",
+                              background: "rgba(255,88,88,0.05)",
+                              borderBottom: sectionExpanded.consistencyMastering ? "1px solid #5a2a2a" : "none",
+                              fontFamily: "'Segoe UI', system-ui, sans-serif"
                             }}
                             onClick={() => setSectionExpanded(prev => ({
                               ...prev,
                               consistencyMastering: !prev.consistencyMastering
                             }))}
                           >
-                            <span>5. {t("audioProduction.consistencyMasteringTitle")}</span>
-                            <span style={{ fontSize: "10px" }}>
+                            <span style={{ 
+                              width: "8px", 
+                              height: "8px", 
+                              borderRadius: "50%", 
+                              background: (currentProcessingChain.mastering.normalization.enabled || currentProcessingChain.mastering.peakLimiting.enabled || currentProcessingChain.mastering.dithering.enabled) ? "#ff5858" : "#333",
+                              boxShadow: (currentProcessingChain.mastering.normalization.enabled || currentProcessingChain.mastering.peakLimiting.enabled || currentProcessingChain.mastering.dithering.enabled) ? "0 0 8px #ff5858" : "none",
+                              transition: "all 0.3s"
+                            }} />
+                            <span style={{ flex: 1 }}>5. {t("audioProduction.consistencyMasteringTitle")}</span>
+                            <span style={{ fontSize: "10px", opacity: 0.6 }}>
                               {sectionExpanded.consistencyMastering ? "▼" : "▶"}
                             </span>
                           </h5>
                           {sectionExpanded.consistencyMastering && (
-                          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                          <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
                             <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px" }}>
                               <input 
                                 type="checkbox" 
