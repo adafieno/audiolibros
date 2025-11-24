@@ -2401,6 +2401,9 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                           </div>
                         </div>
                         
+                        {/* Processing Modules Grid - Two columns */}
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(450px, 1fr))", gap: "16px" }}>
+                        
                         {/* 1. Noise & Cleanup - Studio Module */}
                         <div style={{ 
                           marginBottom: "16px", 
@@ -3242,6 +3245,8 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                           </div>
                         )}
                         </div>
+                        
+                        </div> {/* Close Processing Modules Grid */}
                       </div>
                     </div>
                   );
