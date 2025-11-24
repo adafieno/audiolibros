@@ -494,6 +494,78 @@
     "string": "Marcar manuscrito como completo",
     "comment": "Texto do botão para marcar etapa do manuscrito como completa"
   },
+  "manuscript.applySanitization": {
+    "string": "Aplicar sanitização TTS durante importação",
+    "comment": "Rótulo da caixa de seleção para ativar sanitização de texto durante importação"
+  },
+  "manuscript.checkTTS": {
+    "string": "Verificar Compatibilidade TTS",
+    "comment": "Botão para verificar problemas de compatibilidade TTS no texto"
+  },
+  "manuscript.sanitizationPreview": {
+    "string": "Pré-visualização de Sanitização de Texto",
+    "comment": "Cabeçalho para seção de pré-visualização de sanitização"
+  },
+  "manuscript.applySanitizationBtn": {
+    "string": "Aplicar Alterações",
+    "comment": "Botão para aplicar alterações de sanitização ao texto"
+  },
+  "manuscript.sanitizationSummary": {
+    "string": "{{changes}} alterações serão aplicadas para melhorar compatibilidade TTS",
+    "comment": "Resumo das alterações de sanitização a serem aplicadas"
+  },
+  "manuscript.sanitizationRules": {
+    "string": "Regras Aplicadas",
+    "comment": "Cabeçalho para lista de regras de sanitização aplicadas"
+  },
+  "manuscript.loadingChapters": {
+    "string": "Carregando capítulos…",
+    "comment": "Mensagem de status enquanto carrega lista de capítulos"
+  },
+  "manuscript.noChapters": {
+    "string": "Ainda não há capítulos. Importe um .docx para gerar a estrutura.",
+    "comment": "Mensagem de estado vazio quando não existem capítulos"
+  },
+  "manuscript.processingManuscript": {
+    "string": "Processando manuscrito…",
+    "comment": "Mensagem de status enquanto processa arquivo docx"
+  },
+  "manuscript.ready": {
+    "string": "Pronto ✔",
+    "comment": "Mensagem de status quando o processamento do manuscrito é concluído"
+  },
+  "manuscript.processingError": {
+    "string": "Erro ao processar (código {{code}})",
+    "comment": "Mensagem de erro quando o processamento do manuscrito falha"
+  },
+  "manuscript.analyzingText": {
+    "string": "Analisando texto…",
+    "comment": "Mensagem de status enquanto verifica compatibilidade com TTS"
+  },
+  "manuscript.textNoProblems": {
+    "string": "O texto não tem problemas para TTS ✔",
+    "comment": "Mensagem de sucesso quando o texto é compatível com TTS"
+  },
+  "manuscript.applyingSanitization": {
+    "string": "Aplicando sanitização…",
+    "comment": "Mensagem de status enquanto aplica sanitização de texto"
+  },
+  "manuscript.sanitizationApplied": {
+    "string": "Sanitização aplicada ({{changes}} alterações) ✔",
+    "comment": "Mensagem de sucesso após aplicar sanitização"
+  },
+  "manuscript.sanitizationError": {
+    "string": "Erro ao aplicar sanitização",
+    "comment": "Mensagem de erro quando a sanitização falha"
+  },
+  "manuscript.selectChapter": {
+    "string": "Selecione um capítulo",
+    "comment": "Texto placeholder quando nenhum capítulo está selecionado"
+  },
+  "manuscript.chapterWords": {
+    "string": "{{words}} palavras",
+    "comment": "Contador de palavras para capítulos"
+  },
   "plan.noPlanToShow": {
     "string": "Nenhum plano para mostrar",
     "comment": "Mensagem quando não há dados de plano disponíveis para exibir"
@@ -1465,6 +1537,46 @@
   "characters.addDescriptionPlaceholder": {
     "string": "Adicionar descrição do personagem...",
     "comment": "Texto de exemplo para entrada de descrição do personagem"
+  },
+  "characters.noCharactersYet": {
+    "string": "Ainda não há personagens",
+    "comment": "Título de estado vazio quando não existem personagens"
+  },
+  "characters.runDetection": {
+    "string": "Execute a detecção para gerar uma lista de personagens.",
+    "comment": "Descrição de estado vazio solicitando que o usuário execute a detecção"
+  },
+  "characters.listEmpty": {
+    "string": "A lista de personagens está vazia",
+    "comment": "Título de estado vazio quando a lista de personagens existe mas não tem entradas"
+  },
+  "characters.addManually": {
+    "string": "Adicione personagens manualmente ou execute a detecção novamente.",
+    "comment": "Descrição de estado vazio para lista de personagens vazia"
+  },
+  "characters.unnamedCharacter": {
+    "string": "Personagem sem nome",
+    "comment": "Nome padrão para personagens sem nome"
+  },
+  "characters.clickToAddDescription": {
+    "string": "Clique para adicionar descrição...",
+    "comment": "Texto placeholder para campo de descrição de personagem vazio"
+  },
+  "characters.missingFromInventory": {
+    "string": "Ausente do inventário",
+    "comment": "Etiqueta de aviso quando personagem não está no inventário de vozes"
+  },
+  "characters.loadingProgress": {
+    "string": "Carregando capítulo {{current}} de {{total}}",
+    "comment": "Mensagem de progresso durante detecção de personagens"
+  },
+  "characters.fallbackAssignment": {
+    "string": "Atribuição alternativa (LLM indisponível)",
+    "comment": "Mensagem de status quando usa atribuição de voz alternativa"
+  },
+  "characters.mayTakeMoment": {
+    "string": "Isso pode levar um momento...",
+    "comment": "Mensagem de espera paciente durante operações longas"
   },
   "home.baseFolderPlaceholder": {
     "string": "C:\\projetos\\audio",

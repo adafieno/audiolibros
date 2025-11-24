@@ -759,6 +759,58 @@
     "string": "Reglas aplicadas",
     "comment": "Encabezado para lista de reglas de sanitización aplicadas"
   },
+  "manuscript.loadingChapters": {
+    "string": "Cargando capítulos…",
+    "comment": "Mensaje de estado mientras se carga la lista de capítulos"
+  },
+  "manuscript.noChapters": {
+    "string": "No hay capítulos. Importa un .docx para generar la estructura.",
+    "comment": "Mensaje de estado vacío cuando no existen capítulos"
+  },
+  "manuscript.processingManuscript": {
+    "string": "Procesando manuscrito…",
+    "comment": "Mensaje de estado mientras se procesa el archivo docx"
+  },
+  "manuscript.ready": {
+    "string": "Listo ✔",
+    "comment": "Mensaje de estado cuando se completa el procesamiento del manuscrito"
+  },
+  "manuscript.processingError": {
+    "string": "Error al procesar (código {{code}})",
+    "comment": "Mensaje de error cuando falla el procesamiento del manuscrito"
+  },
+  "manuscript.analyzingText": {
+    "string": "Analizando texto…",
+    "comment": "Mensaje de estado mientras se verifica compatibilidad con TTS"
+  },
+  "manuscript.textNoProblems": {
+    "string": "El texto no tiene problemas para TTS ✔",
+    "comment": "Mensaje de éxito cuando el texto es compatible con TTS"
+  },
+  "manuscript.applyingSanitization": {
+    "string": "Aplicando sanitización…",
+    "comment": "Mensaje de estado mientras se aplica la sanitización de texto"
+  },
+  "manuscript.sanitizationApplied": {
+    "string": "Aplicada sanitización ({{changes}} cambios) ✔",
+    "comment": "Mensaje de éxito después de aplicar sanitización"
+  },
+  "manuscript.sanitizationError": {
+    "string": "Error al aplicar sanitización",
+    "comment": "Mensaje de error cuando falla la sanitización"
+  },
+  "manuscript.loadingChapter": {
+    "string": "Cargando capítulo…",
+    "comment": "Mensaje de estado mientras se carga un capítulo"
+  },
+  "manuscript.selectChapter": {
+    "string": "Selecciona un capítulo",
+    "comment": "Texto placeholder cuando no hay capítulo seleccionado"
+  },
+  "manuscript.chapterWords": {
+    "string": "{{words}} palabras",
+    "comment": "Contador de palabras para capítulos"
+  },
   "home.existingProjects": {
     "string": "Proyectos recientes",
     "comment": ""
@@ -2088,6 +2140,46 @@
   "characters.addDescriptionPlaceholder": {
     "string": "Añadir descripción del personaje...",
     "comment": "Placeholder para la descripción del personaje"
+  },
+  "characters.noCharactersYet": {
+    "string": "Aún no hay personajes",
+    "comment": "Título de estado vacío cuando no existen personajes"
+  },
+  "characters.runDetection": {
+    "string": "Ejecuta la detección para generar una lista de personajes.",
+    "comment": "Descripción de estado vacío que solicita al usuario ejecutar la detección"
+  },
+  "characters.listEmpty": {
+    "string": "La lista de personajes está vacía",
+    "comment": "Título de estado vacío cuando la lista de personajes existe pero no tiene entradas"
+  },
+  "characters.addManually": {
+    "string": "Añade personajes manualmente o ejecuta la detección nuevamente.",
+    "comment": "Descripción de estado vacío para lista de personajes vacía"
+  },
+  "characters.unnamedCharacter": {
+    "string": "Personaje sin nombre",
+    "comment": "Nombre predeterminado para personajes sin nombre"
+  },
+  "characters.clickToAddDescription": {
+    "string": "Haz clic para añadir descripción...",
+    "comment": "Texto placeholder para campo de descripción de personaje vacío"
+  },
+  "characters.missingFromInventory": {
+    "string": "Falta en el inventario",
+    "comment": "Etiqueta de advertencia cuando el personaje no está en el inventario de voces"
+  },
+  "characters.loadingProgress": {
+    "string": "Cargando capítulo {{current}} de {{total}}",
+    "comment": "Mensaje de progreso durante la detección de personajes"
+  },
+  "characters.fallbackAssignment": {
+    "string": "Asignación alternativa (LLM no disponible)",
+    "comment": "Mensaje de estado cuando se usa asignación de voz alternativa"
+  },
+  "characters.mayTakeMoment": {
+    "string": "Esto puede tomar un momento...",
+    "comment": "Mensaje de espera paciente durante operaciones largas"
   },
   "home.baseFolderPlaceholder": {
     "string": "C:\\proyectos\\audio",

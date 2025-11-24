@@ -34,7 +34,7 @@ export default function ManuscriptPage() {
 
   async function refreshList() {
     if (!root) return;
-    setMsg("Cargando capítulos…");
+    setMsg(t("manuscript.loadingChapters"));
     const items = await window.khipu!.call("chapters:list", { projectRoot: root });
     setChapters(items);
     setMsg("");
@@ -51,7 +51,7 @@ export default function ManuscriptPage() {
     if (!root) return;
     const picked = await window.khipu!.call("manuscript:chooseDocx", undefined);
     if (!picked) return;
-    setMsg("Procesando manuscrito…");
+    setMsg(t("manuscript.processingManuscript"));
     
     // Initialize cost tracking for this project
     try {
@@ -100,17 +100,17 @@ export default function ManuscriptPage() {
     }
     
     if (res.code === 0) {
-      setMsg("Listo ✔");
+      setMsg(t("manuscript.ready"));
       await refreshList();
     } else {
-      setMsg(`Error al procesar (código ${res.code})`);
+      setMsg(t("manuscript.processingError", { code: res.code }));
     }
   }
 
   async function checkTextSanitization() {
     if (!selected || !text) return;
     
-    setMsg("Analizando texto…");
+    setMsg(t("manuscript.analyzingText"));
     const problemCheck = hasProblematicCharacters(text, 'es');
     
     if (problemCheck.hasProblems) {
@@ -124,7 +124,7 @@ export default function ManuscriptPage() {
       setShowSanitization(true);
       // Removed confusing status message - the sanitization preview shows the details
     } else {
-      setMsg("El texto no tiene problemas para TTS ✔");
+      setMsg(t("manuscript.textNoProblems"));
       setSanitizationPreview(null);
       setShowSanitization(false);
     }
@@ -133,7 +133,7 @@ export default function ManuscriptPage() {
   async function applySanitizationToChapter() {
     if (!selected || !root || !sanitizationPreview) return;
     
-    setMsg("Aplicando sanitización…");
+    setMsg(t("manuscript.applyingSanitization"));
     
     try {
       // Apply sanitization to the current chapter
@@ -148,20 +148,20 @@ export default function ManuscriptPage() {
       
       // Update the displayed text
       setText(result.sanitized);
-      setMsg(`Aplicada sanitización (${result.changes} cambios) ✔`);
+      setMsg(t("manuscript.sanitizationApplied", { changes: result.changes }));
       setSanitizationPreview(null);
       setShowSanitization(false);
       
     } catch (error) {
       console.error("Error applying sanitization:", error);
-      setMsg("Error al aplicar sanitización");
+      setMsg(t("manuscript.sanitizationError"));
     }
   }
 
   async function handleSelect(ch: ChapterItem) {
     if (!root) return;
     setSelected(ch);
-    setMsg("Cargando capítulo…");
+    setMsg(t("manuscript.loadingChapter"));
     const { text } = await window.khipu!.call("chapter:read", {
       projectRoot: root,
       relPath: ch.relPath,
@@ -249,7 +249,7 @@ export default function ManuscriptPage() {
           }}>
             {chapters.length === 0 ? (
               <div style={{ color: "var(--muted)", padding: "20px 0", textAlign: "center" }}>
-                No hay capítulos. Importa un .docx para generar la estructura.
+                {t("manuscript.noChapters")}
               </div>
             ) : (
               <ul style={{ 
@@ -281,7 +281,7 @@ export default function ManuscriptPage() {
                       >
                         <div style={{ fontWeight: 600, marginBottom: 4 }}>{c.title}</div>
                         <div style={{ fontSize: "12px", color: "var(--muted)" }}>
-                          {c.id} · {c.words} palabras
+                          {c.id} · {t("manuscript.chapterWords", { words: c.words })}
                         </div>
                       </button>
                     </li>
@@ -296,7 +296,7 @@ export default function ManuscriptPage() {
         <section style={{ minHeight: 0 }}>
           <div style={{ border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden", display: "flex", flexDirection: "column", height: "100%" }}>
             <div style={{ padding: "8px 12px", backgroundColor: "var(--panelAccent)", borderBottom: "1px solid var(--border)", fontSize: "14px", fontWeight: 500 }}>
-              {selected ? `${selected.title} (${selected.id})` : "Selecciona un capítulo"}
+              {selected ? `${selected.title} (${selected.id})` : t("manuscript.selectChapter")}
             </div>
             
             <div style={{ flex: 1, padding: "12px", overflow: "auto" }}>

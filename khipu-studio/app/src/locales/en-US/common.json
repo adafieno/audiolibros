@@ -593,6 +593,58 @@
     "string": "Applied Rules",
     "comment": "Header for list of sanitization rules applied"
   },
+  "manuscript.loadingChapters": {
+    "string": "Loading chapters…",
+    "comment": "Status message while loading chapter list"
+  },
+  "manuscript.noChapters": {
+    "string": "No chapters yet. Import a .docx to generate the structure.",
+    "comment": "Empty state message when no chapters exist"
+  },
+  "manuscript.processingManuscript": {
+    "string": "Processing manuscript…",
+    "comment": "Status message while parsing docx file"
+  },
+  "manuscript.ready": {
+    "string": "Ready ✔",
+    "comment": "Status message when manuscript processing is complete"
+  },
+  "manuscript.processingError": {
+    "string": "Error processing (code {{code}})",
+    "comment": "Error message when manuscript processing fails"
+  },
+  "manuscript.analyzingText": {
+    "string": "Analyzing text…",
+    "comment": "Status message while checking TTS compatibility"
+  },
+  "manuscript.textNoProblems": {
+    "string": "Text has no TTS problems ✔",
+    "comment": "Success message when text is TTS-compatible"
+  },
+  "manuscript.applyingSanitization": {
+    "string": "Applying sanitization…",
+    "comment": "Status message while applying text sanitization"
+  },
+  "manuscript.sanitizationApplied": {
+    "string": "Sanitization applied ({{changes}} changes) ✔",
+    "comment": "Success message after applying sanitization"
+  },
+  "manuscript.sanitizationError": {
+    "string": "Error applying sanitization",
+    "comment": "Error message when sanitization fails"
+  },
+  "manuscript.loadingChapter": {
+    "string": "Loading chapter…",
+    "comment": "Status message while loading a chapter"
+  },
+  "manuscript.selectChapter": {
+    "string": "Select a chapter",
+    "comment": "Placeholder text when no chapter is selected"
+  },
+  "manuscript.chapterWords": {
+    "string": "{{words}} words",
+    "comment": "Word count display for chapters"
+  },
 
   "plan.noPlanToShow": {
     "string": "No plan to show",
@@ -1643,6 +1695,46 @@
   "characters.addDescriptionPlaceholder": {
     "string": "Add character description...",
     "comment": "Placeholder for character description input"
+  },
+  "characters.noCharactersYet": {
+    "string": "No characters yet",
+    "comment": "Empty state title when no characters exist"
+  },
+  "characters.runDetection": {
+    "string": "Run detection to generate a character list.",
+    "comment": "Empty state description prompting user to run detection"
+  },
+  "characters.listEmpty": {
+    "string": "Character list is empty",
+    "comment": "Empty state title when character list exists but has no entries"
+  },
+  "characters.addManually": {
+    "string": "Add characters manually or run detection again.",
+    "comment": "Empty state description for empty character list"
+  },
+  "characters.unnamedCharacter": {
+    "string": "Unnamed Character",
+    "comment": "Default name for characters without a name"
+  },
+  "characters.clickToAddDescription": {
+    "string": "Click to add description...",
+    "comment": "Placeholder text for empty character description field"
+  },
+  "characters.missingFromInventory": {
+    "string": "Missing from inventory",
+    "comment": "Warning label when character is not in voice inventory"
+  },
+  "characters.loadingProgress": {
+    "string": "Loading chapter {{current}} of {{total}}",
+    "comment": "Progress message during character detection"
+  },
+  "characters.fallbackAssignment": {
+    "string": "Fallback assignment (LLM unavailable)",
+    "comment": "Status message when using fallback voice assignment"
+  },
+  "characters.mayTakeMoment": {
+    "string": "This may take a moment...",
+    "comment": "Patient waiting message during long operations"
   },
   "home.baseFolderPlaceholder": {
     "string": "C:\\projects\\audio",

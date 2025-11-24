@@ -441,8 +441,8 @@ function CharactersPage() {
           
       {!hasCharacterList && !loading && characters.length === 0 && (
         <div style={{ textAlign: "center", padding: "64px 0", backgroundColor: "var(--panel)", borderRadius: "8px", border: "1px dashed var(--border)", marginBottom: "24px" }}>
-          <p style={{ color: "var(--text)", fontSize: "18px", marginBottom: "8px" }}>No characters yet</p>
-          <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "16px" }}>Run detection to generate a character list.</p>
+          <p style={{ color: "var(--text)", fontSize: "18px", marginBottom: "8px" }}>{t("characters.noCharactersYet")}</p>
+          <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "16px" }}>{t("characters.runDetection")}</p>
         </div>
       )}
 
@@ -455,8 +455,8 @@ function CharactersPage() {
         }}>
             {characters.length === 0 ? (
               <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "64px 0", backgroundColor: "var(--panel)", borderRadius: "12px", border: "1px dashed var(--border)" }}>
-                <p style={{ color: "var(--text)", fontSize: "18px", marginBottom: "8px" }}>Character list is empty</p>
-                <p style={{ color: "var(--muted)", fontSize: "14px" }}>Add characters manually or run detection again.</p>
+                <p style={{ color: "var(--text)", fontSize: "18px", marginBottom: "8px" }}>{t("characters.listEmpty")}</p>
+                <p style={{ color: "var(--muted)", fontSize: "14px" }}>{t("characters.addManually")}</p>
               </div>
             ) : (
               characters.map(c => (
@@ -496,7 +496,7 @@ function CharactersPage() {
                         style={{ cursor: "pointer", display: "inline-block", minWidth: "100px" }}
                         title="Click to edit"
                       >
-                        {c.name || "Unnamed Character"}
+                        {c.name || t("characters.unnamedCharacter")}
                       </span>
                     )}
                   </div>
@@ -563,7 +563,7 @@ function CharactersPage() {
                         }}
                         title="Click to edit"
                       >
-                        {c.description || "Click to add description..."}
+                        {c.description || t("characters.clickToAddDescription")}
                       </span>
                     )}
                   </div>
@@ -618,7 +618,7 @@ function CharactersPage() {
                         {/* Debug: Show assigned voice if not in available list */}
                         {c.voiceAssignment?.voiceId && !availableVoices.find(v => v.id === c.voiceAssignment?.voiceId) && (
                           <option key={c.voiceAssignment.voiceId} value={c.voiceAssignment.voiceId} style={{color: 'red'}}>
-                            {c.voiceAssignment.voiceId} (Missing from inventory)
+                            {c.voiceAssignment.voiceId} ({t("characters.missingFromInventory")})
                           </option>
                         )}
                       </select>
