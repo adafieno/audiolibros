@@ -1950,6 +1950,142 @@
     "string": "SALA G",
     "comment": "Opção de sala grande para reverberação"
   },
+  "audioPresets.cleanNatural.name": {
+    "string": "Natural Limpo",
+    "comment": "Nome para preset de áudio Natural Limpo"
+  },
+  "audioPresets.cleanNatural.description": {
+    "string": "Processamento mínimo para voz natural pristina",
+    "comment": "Descrição para preset de áudio Natural Limpo"
+  },
+  "audioPresets.cleanPolished.name": {
+    "string": "Polido Limpo",
+    "comment": "Nome para preset de áudio Polido Limpo"
+  },
+  "audioPresets.cleanPolished.description": {
+    "string": "Aprimoramento leve para narração profissional",
+    "comment": "Descrição para preset de áudio Polido Limpo"
+  },
+  "audioPresets.cleanIntimate.name": {
+    "string": "Íntimo Limpo",
+    "comment": "Nome para preset de áudio Íntimo Limpo"
+  },
+  "audioPresets.cleanIntimate.description": {
+    "string": "Estilo de narrativa próxima e íntima",
+    "comment": "Descrição para preset de áudio Íntimo Limpo"
+  },
+  "audioPresets.characterPhone.name": {
+    "string": "Telefone/Rádio",
+    "comment": "Nome para preset de áudio de personagem Telefone/Rádio"
+  },
+  "audioPresets.characterPhone.description": {
+    "string": "Efeito de telefone ou rádio vintage",
+    "comment": "Descrição para preset de áudio de personagem Telefone/Rádio"
+  },
+  "audioPresets.characterVintage.name": {
+    "string": "Rádio Vintage",
+    "comment": "Nome para preset de áudio de personagem Rádio Vintage"
+  },
+  "audioPresets.characterVintage.description": {
+    "string": "Som clássico de transmissão de rádio dos anos 1940",
+    "comment": "Descrição para preset de áudio de personagem Rádio Vintage"
+  },
+  "audioPresets.characterElderly.name": {
+    "string": "Voz Idosa",
+    "comment": "Nome para preset de áudio de personagem Voz Idosa"
+  },
+  "audioPresets.characterElderly.description": {
+    "string": "Personagem caloroso e envelhecido com processamento suave",
+    "comment": "Descrição para preset de áudio de personagem Voz Idosa"
+  },
+  "audioPresets.characterChild.name": {
+    "string": "Voz Infantil",
+    "comment": "Nome para preset de áudio de personagem Voz Infantil"
+  },
+  "audioPresets.characterChild.description": {
+    "string": "Processamento de personagem brilhante e jovem",
+    "comment": "Descrição para preset de áudio de personagem Voz Infantil"
+  },
+  "audioPresets.characterMonster.name": {
+    "string": "Voz de Monstro",
+    "comment": "Nome para preset de áudio de personagem Voz de Monstro"
+  },
+  "audioPresets.characterMonster.description": {
+    "string": "Efeito de personagem sombrio e ameaçador",
+    "comment": "Descrição para preset de áudio de personagem Voz de Monstro"
+  },
+  "audioPresets.broadcastRadio.name": {
+    "string": "Transmissão de Rádio",
+    "comment": "Nome para preset de áudio Transmissão de Rádio"
+  },
+  "audioPresets.broadcastRadio.description": {
+    "string": "Processamento profissional de estação de rádio",
+    "comment": "Descrição para preset de áudio Transmissão de Rádio"
+  },
+  "audioPresets.broadcastNews.name": {
+    "string": "Âncora de Notícias",
+    "comment": "Nome para preset de áudio de transmissão Âncora de Notícias"
+  },
+  "audioPresets.broadcastNews.description": {
+    "string": "Apresentação de notícias nítida e autoritária",
+    "comment": "Descrição para preset de áudio de transmissão Âncora de Notícias"
+  },
+  "audioPresets.broadcastPodcast.name": {
+    "string": "Podcast Pro",
+    "comment": "Nome para preset de áudio de transmissão Podcast Pro"
+  },
+  "audioPresets.broadcastPodcast.description": {
+    "string": "Otimizado para distribuição de podcast",
+    "comment": "Descrição para preset de áudio de transmissão Podcast Pro"
+  },
+  "audioPresets.broadcastSports.name": {
+    "string": "Comentário Esportivo",
+    "comment": "Nome para preset de áudio de transmissão Comentário Esportivo"
+  },
+  "audioPresets.broadcastSports.description": {
+    "string": "Transmissão esportiva dinâmica e energética",
+    "comment": "Descrição para preset de áudio de transmissão Comentário Esportivo"
+  },
+  "audioPresets.vintageWarm.name": {
+    "string": "Vintage Quente",
+    "comment": "Nome para preset de áudio Vintage Quente"
+  },
+  "audioPresets.vintageWarm.description": {
+    "string": "Processamento caloroso estilo analógico",
+    "comment": "Descrição para preset de áudio Vintage Quente"
+  },
+  "audioPresets.vintageGoldenAge.name": {
+    "string": "Rádio Era de Ouro",
+    "comment": "Nome para preset de áudio vintage Rádio Era de Ouro"
+  },
+  "audioPresets.vintageGoldenAge.description": {
+    "string": "Som clássico de drama de rádio dos anos 1940-50",
+    "comment": "Descrição para preset de áudio vintage Rádio Era de Ouro"
+  },
+  "audioPresets.vintageTape.name": {
+    "string": "Fita Vintage",
+    "comment": "Nome para preset de áudio Fita Vintage"
+  },
+  "audioPresets.vintageTape.description": {
+    "string": "Calor e saturação de fita analógica",
+    "comment": "Descrição para preset de áudio Fita Vintage"
+  },
+  "audioPresets.vintageLoFi.name": {
+    "string": "Lo-Fi Vintage",
+    "comment": "Nome para preset de áudio Lo-Fi Vintage"
+  },
+  "audioPresets.vintageLoFi.description": {
+    "string": "Som retrô deliberadamente degradado",
+    "comment": "Descrição para preset de áudio Lo-Fi Vintage"
+  },
+  "audioProduction.pageTitle": {
+    "string": "Produção de Áudio",
+    "comment": "Título principal da página de produção de áudio"
+  },
+  "audioProduction.wetMix": {
+    "string": "Mistura úmida:",
+    "comment": "Rótulo para controle de mistura úmida nas configurações de reverberação"
+  },
   "manuscript.loadingChapter": {
     "string": "Carregando capítulo…",
     "comment": "Mensagem de status ao carregar capítulo"
