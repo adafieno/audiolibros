@@ -2213,6 +2213,122 @@
     "string": "Generate high-quality audio from orchestrated segments - work chapter by chapter. Only chapters with plans are available.",
     "comment": "Main description text for the audio production page"
   },
+  "audioProduction.applyToAllSegments": {
+    "string": "Apply to All Segments",
+    "comment": "Button text to apply preset to all segments in chapter"
+  },
+  "audioProduction.activeProcessingChain": {
+    "string": "ACTIVE PROCESSING CHAIN",
+    "comment": "Header for active processing effects summary display"
+  },
+  "audioProduction.labelHPF": {
+    "string": "HPF",
+    "comment": "Short label for High Pass Filter"
+  },
+  "audioProduction.labelDeEss": {
+    "string": "DeEss",
+    "comment": "Short label for De-esser effect"
+  },
+  "audioProduction.labelComp": {
+    "string": "Comp",
+    "comment": "Short label for Compressor"
+  },
+  "audioProduction.labelLim": {
+    "string": "Lim",
+    "comment": "Short label for Limiter"
+  },
+  "audioProduction.labelLoCut": {
+    "string": "LoCut",
+    "comment": "Short label for Low-mid Cut"
+  },
+  "audioProduction.labelPres": {
+    "string": "Pres",
+    "comment": "Short label for Presence Boost"
+  },
+  "audioProduction.labelAir": {
+    "string": "Air",
+    "comment": "Short label for Air Lift"
+  },
+  "audioProduction.labelRev": {
+    "string": "Rev",
+    "comment": "Short label for Reverb"
+  },
+  "audioProduction.labelStereo": {
+    "string": "Stereo",
+    "comment": "Short label for Stereo Enhancement"
+  },
+  "audioProduction.labelNorm": {
+    "string": "Norm",
+    "comment": "Short label for Normalization"
+  },
+  "audioProduction.labelPeak": {
+    "string": "Peak",
+    "comment": "Short label for Peak Limiting"
+  },
+  "audioProduction.labelDither": {
+    "string": "Dither",
+    "comment": "Short label for Dithering"
+  },
+  "audioProduction.labelIntensity": {
+    "string": "INTENSITY",
+    "comment": "VU meter label for de-ess intensity"
+  },
+  "audioProduction.labelRatio": {
+    "string": "RATIO",
+    "comment": "VU meter label for compression ratio"
+  },
+  "audioProduction.labelCeiling": {
+    "string": "CEILING",
+    "comment": "VU meter label for limiter ceiling"
+  },
+  "audioProduction.labelWidth": {
+    "string": "WIDTH",
+    "comment": "VU meter label for stereo width"
+  },
+  "audioProduction.labelLUFS": {
+    "string": "LUFS",
+    "comment": "Rotary knob label for loudness units"
+  },
+  "audioProduction.labelNoise": {
+    "string": "NOISE",
+    "comment": "VU meter label for dither noise floor"
+  },
+  "audioProduction.labelMixPercent": {
+    "string": "Mix %",
+    "comment": "Rotary knob label for wet/dry mix percentage"
+  },
+  "audioProduction.labelHz": {
+    "string": "Hz",
+    "comment": "Unit label for Hertz (frequency)"
+  },
+  "audioProduction.labelKHz": {
+    "string": "kHz",
+    "comment": "Unit label for Kilohertz (frequency)"
+  },
+  "audioProduction.optionLight": {
+    "string": "LIGHT",
+    "comment": "Light intensity option for de-esser"
+  },
+  "audioProduction.optionMedium": {
+    "string": "MEDIUM",
+    "comment": "Medium intensity option for de-esser"
+  },
+  "audioProduction.optionHeavy": {
+    "string": "HEAVY",
+    "comment": "Heavy intensity option for de-esser"
+  },
+  "audioProduction.roomSizeSmall": {
+    "string": "ROOM S",
+    "comment": "Small room size option for reverb"
+  },
+  "audioProduction.roomSizeMedium": {
+    "string": "ROOM M",
+    "comment": "Medium room size option for reverb"
+  },
+  "audioProduction.roomSizeLarge": {
+    "string": "ROOM L",
+    "comment": "Large room size option for reverb"
+  },
   "audioPresets.cleanNatural.name": {
     "string": "Clean Natural",
     "comment": "Name for Clean Natural audio preset"

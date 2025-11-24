@@ -2322,7 +2322,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                   }}
                                   style={{ fontSize: "11px", padding: "4px 8px" }}
                                 >
-                                  📋 Apply to All Segments
+                                  {t("audioProduction.applyToAllSegments")}
                                 </StandardButton>
                               </div>
                             )}
@@ -2346,22 +2346,22 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                           <div style={{ position: "absolute", bottom: "6px", right: "6px", width: "6px", height: "6px", borderRadius: "50%", background: "radial-gradient(circle, #4a4a4a 0%, #2a2a2a 100%)", boxShadow: "inset 0 1px 2px rgba(0,0,0,0.8)" }} />
                           
                           <div style={{ fontFamily: "'Courier New', monospace", fontSize: "11px", color: "#00ff88", letterSpacing: "0.5px", marginBottom: "8px", textTransform: "uppercase" }}>
-                            ● ACTIVE PROCESSING CHAIN
+                            ● {t("audioProduction.activeProcessingChain")}
                           </div>
                           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>{
                             [
-                              currentProcessingChain.noiseCleanup.highPassFilter.enabled && { label: "HPF", color: "#58a6ff" },
-                              currentProcessingChain.noiseCleanup.deClickDeEss.enabled && { label: "DeEss", color: "#58a6ff" },
-                              currentProcessingChain.dynamicControl.compression.enabled && { label: "Comp", color: "#ff9f58" },
-                              currentProcessingChain.dynamicControl.limiter.enabled && { label: "Lim", color: "#ff9f58" },
-                              currentProcessingChain.eqShaping.lowMidCut.enabled && { label: "LoCut", color: "#5fff58" },
-                              currentProcessingChain.eqShaping.presenceBoost.enabled && { label: "Pres", color: "#5fff58" },
-                              currentProcessingChain.eqShaping.airLift.enabled && { label: "Air", color: "#5fff58" },
-                              currentProcessingChain.spatialEnhancement.reverb.enabled && { label: "Rev", color: "#d858ff" },
-                              currentProcessingChain.spatialEnhancement.stereoEnhancer.enabled && { label: "Stereo", color: "#d858ff" },
-                              currentProcessingChain.mastering.normalization.enabled && { label: "Norm", color: "#ff5858" },
-                              currentProcessingChain.mastering.peakLimiting.enabled && { label: "Peak", color: "#ff5858" },
-                              currentProcessingChain.mastering.dithering.enabled && { label: "Dither", color: "#ff5858" }
+                              currentProcessingChain.noiseCleanup.highPassFilter.enabled && { label: t("audioProduction.labelHPF"), color: "#58a6ff" },
+                              currentProcessingChain.noiseCleanup.deClickDeEss.enabled && { label: t("audioProduction.labelDeEss"), color: "#58a6ff" },
+                              currentProcessingChain.dynamicControl.compression.enabled && { label: t("audioProduction.labelComp"), color: "#ff9f58" },
+                              currentProcessingChain.dynamicControl.limiter.enabled && { label: t("audioProduction.labelLim"), color: "#ff9f58" },
+                              currentProcessingChain.eqShaping.lowMidCut.enabled && { label: t("audioProduction.labelLoCut"), color: "#5fff58" },
+                              currentProcessingChain.eqShaping.presenceBoost.enabled && { label: t("audioProduction.labelPres"), color: "#5fff58" },
+                              currentProcessingChain.eqShaping.airLift.enabled && { label: t("audioProduction.labelAir"), color: "#5fff58" },
+                              currentProcessingChain.spatialEnhancement.reverb.enabled && { label: t("audioProduction.labelRev"), color: "#d858ff" },
+                              currentProcessingChain.spatialEnhancement.stereoEnhancer.enabled && { label: t("audioProduction.labelStereo"), color: "#d858ff" },
+                              currentProcessingChain.mastering.normalization.enabled && { label: t("audioProduction.labelNorm"), color: "#ff5858" },
+                              currentProcessingChain.mastering.peakLimiting.enabled && { label: t("audioProduction.labelPeak"), color: "#ff5858" },
+                              currentProcessingChain.mastering.dithering.enabled && { label: t("audioProduction.labelDither"), color: "#ff5858" }
                             ].filter((item): item is { label: string; color: string } => Boolean(item)).map((item, idx) => (
                               <span key={idx} style={{ 
                                 display: "inline-flex", 
@@ -2486,7 +2486,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                   value={parseInt(currentProcessingChain.noiseCleanup.highPassFilter.frequency)}
                                   min={70}
                                   max={90}
-                                  label="Hz"
+                                  label={t("audioProduction.labelHz")}
                                   color="#58a6ff"
                                   disabled={!customSettingsEnabled || !currentProcessingChain.noiseCleanup.highPassFilter.enabled}
                                   onChange={(v) => {
@@ -2532,7 +2532,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
                                   <VUMeter 
                                     level={currentProcessingChain.noiseCleanup.deClickDeEss.intensity === "light" ? 33 : currentProcessingChain.noiseCleanup.deClickDeEss.intensity === "medium" ? 66 : 100}
-                                    label="INTENSITY"
+                                    label={t("audioProduction.labelIntensity")}
                                     color="#58a6ff"
                                   />
                                   <select 
@@ -2558,9 +2558,9 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                       color: "#58a6ff"
                                     }}
                                   >
-                                    <option value="light">LIGHT</option>
-                                    <option value="medium">MEDIUM</option>
-                                    <option value="heavy">HEAVY</option>
+                                    <option value="light">{t("audioProduction.optionLight")}</option>
+                                    <option value="medium">{t("audioProduction.optionMedium")}</option>
+                                    <option value="heavy">{t("audioProduction.optionHeavy")}</option>
                                   </select>
                                 </div>
                               </div>
@@ -2647,7 +2647,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
                                   <VUMeter 
                                     level={currentProcessingChain.dynamicControl.compression.ratio === "2:1" ? 40 : currentProcessingChain.dynamicControl.compression.ratio === "2.5:1" ? 70 : 100}
-                                    label="RATIO"
+                                    label={t("audioProduction.labelRatio")}
                                     color="#ff9f58"
                                   />
                                   <select 
@@ -2706,7 +2706,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 </label>
                                 <VUMeter 
                                   level={currentProcessingChain.dynamicControl.limiter.enabled ? 85 : 0}
-                                  label="CEILING"
+                                  label={t("audioProduction.labelCeiling")}
                                   color="#ff9f58"
                                 />
                               </div>
@@ -2794,7 +2794,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                   value={parseInt(currentProcessingChain.eqShaping.lowMidCut.frequency)}
                                   min={150}
                                   max={300}
-                                  label="Hz"
+                                  label={t("audioProduction.labelHz")}
                                   color="#5fff58"
                                   disabled={!customSettingsEnabled || !currentProcessingChain.eqShaping.lowMidCut.enabled}
                                   onChange={(v) => {
@@ -2841,7 +2841,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                   value={parseInt(currentProcessingChain.eqShaping.presenceBoost.frequency)}
                                   min={2}
                                   max={5}
-                                  label="kHz"
+                                  label={t("audioProduction.labelKHz")}
                                   color="#5fff58"
                                   disabled={!customSettingsEnabled || !currentProcessingChain.eqShaping.presenceBoost.enabled}
                                   onChange={(v) => {
@@ -2888,7 +2888,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                   value={parseInt(currentProcessingChain.eqShaping.airLift.frequency)}
                                   min={8}
                                   max={12}
-                                  label="kHz"
+                                  label={t("audioProduction.labelKHz")}
                                   color="#5fff58"
                                   disabled={!customSettingsEnabled || !currentProcessingChain.eqShaping.airLift.enabled}
                                   onChange={(v) => {
@@ -2991,7 +2991,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                     value={currentProcessingChain.spatialEnhancement.reverb.wetMix}
                                     min={0}
                                     max={100}
-                                    label="Mix %"
+                                    label={t("audioProduction.labelMixPercent")}
                                     color="#d858ff"
                                     disabled={!customSettingsEnabled || !currentProcessingChain.spatialEnhancement.reverb.enabled}
                                     onChange={(v) => updateCurrentProcessingChain({
@@ -3028,9 +3028,9 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                       color: "#d858ff"
                                     }}
                                   >
-                                    <option value="room_0.3">ROOM S</option>
-                                    <option value="room_0.4">ROOM M</option>
-                                    <option value="room_0.5">ROOM L</option>
+                                    <option value="room_0.3">{t("audioProduction.roomSizeSmall")}</option>
+                                    <option value="room_0.4">{t("audioProduction.roomSizeMedium")}</option>
+                                    <option value="room_0.5">{t("audioProduction.roomSizeLarge")}</option>
                                   </select>
                                 </div>
                               </div>
@@ -3061,7 +3061,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 </label>
                                 <VUMeter 
                                   level={currentProcessingChain.spatialEnhancement.stereoEnhancer.enabled ? 75 : 0}
-                                  label="WIDTH"
+                                  label={t("audioProduction.labelWidth")}
                                   color="#d858ff"
                                 />
                               </div>
@@ -3150,7 +3150,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                     value={Math.abs(parseInt(currentProcessingChain.mastering.normalization.targetLUFS))}
                                     min={18}
                                     max={23}
-                                    label="LUFS"
+                                    label={t("audioProduction.labelLUFS")}
                                     color="#ff5858"
                                     disabled={!customSettingsEnabled || !currentProcessingChain.mastering.normalization.enabled}
                                     onChange={(v) => {
@@ -3207,7 +3207,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 </label>
                                 <VUMeter 
                                   level={currentProcessingChain.mastering.peakLimiting.enabled ? 95 : 0}
-                                  label="CEILING"
+                                  label={t("audioProduction.labelCeiling")}
                                   color="#ff5858"
                                 />
                               </div>
@@ -3238,7 +3238,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 </label>
                                 <VUMeter 
                                   level={currentProcessingChain.mastering.dithering.enabled ? 60 : 0}
-                                  label="NOISE"
+                                  label={t("audioProduction.labelNoise")}
                                   color="#ff5858"
                                 />
                               </div>

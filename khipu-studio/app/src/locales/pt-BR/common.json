@@ -1722,6 +1722,122 @@
     "string": "Voz",
     "comment": "Cabeçalho da tabela para coluna de atribuição de voz"
   },
+  "audioProduction.applyToAllSegments": {
+    "string": "Aplicar a Todos os Segmentos",
+    "comment": "Texto do botão para aplicar preset a todos os segmentos do capítulo"
+  },
+  "audioProduction.activeProcessingChain": {
+    "string": "CADEIA DE PROCESSAMENTO ATIVA",
+    "comment": "Cabeçalho para o resumo de efeitos de processamento ativos"
+  },
+  "audioProduction.labelHPF": {
+    "string": "FPA",
+    "comment": "Etiqueta curta para Filtro Passa-Alta"
+  },
+  "audioProduction.labelDeEss": {
+    "string": "DeEss",
+    "comment": "Etiqueta curta para efeito De-esser"
+  },
+  "audioProduction.labelComp": {
+    "string": "Comp",
+    "comment": "Etiqueta curta para Compressor"
+  },
+  "audioProduction.labelLim": {
+    "string": "Lim",
+    "comment": "Etiqueta curta para Limitador"
+  },
+  "audioProduction.labelLoCut": {
+    "string": "CorteB",
+    "comment": "Etiqueta curta para Corte de Médios Baixos"
+  },
+  "audioProduction.labelPres": {
+    "string": "Pres",
+    "comment": "Etiqueta curta para Realce de Presença"
+  },
+  "audioProduction.labelAir": {
+    "string": "Ar",
+    "comment": "Etiqueta curta para Realce de Ar"
+  },
+  "audioProduction.labelRev": {
+    "string": "Rev",
+    "comment": "Etiqueta curta para Reverberação"
+  },
+  "audioProduction.labelStereo": {
+    "string": "Estéreo",
+    "comment": "Etiqueta curta para Melhoria Estéreo"
+  },
+  "audioProduction.labelNorm": {
+    "string": "Norm",
+    "comment": "Etiqueta curta para Normalização"
+  },
+  "audioProduction.labelPeak": {
+    "string": "Pico",
+    "comment": "Etiqueta curta para Limitação de Picos"
+  },
+  "audioProduction.labelDither": {
+    "string": "Dither",
+    "comment": "Etiqueta curta para Dithering"
+  },
+  "audioProduction.labelIntensity": {
+    "string": "INTENSIDADE",
+    "comment": "Etiqueta de medidor VU para intensidade do de-esser"
+  },
+  "audioProduction.labelRatio": {
+    "string": "RATIO",
+    "comment": "Etiqueta de medidor VU para ratio de compressão"
+  },
+  "audioProduction.labelCeiling": {
+    "string": "TETO",
+    "comment": "Etiqueta de medidor VU para teto do limitador"
+  },
+  "audioProduction.labelWidth": {
+    "string": "LARGURA",
+    "comment": "Etiqueta de medidor VU para largura estéreo"
+  },
+  "audioProduction.labelLUFS": {
+    "string": "LUFS",
+    "comment": "Etiqueta de botão rotativo para unidades de sonoridade"
+  },
+  "audioProduction.labelNoise": {
+    "string": "RUÍDO",
+    "comment": "Etiqueta de medidor VU para piso de ruído do dither"
+  },
+  "audioProduction.labelMixPercent": {
+    "string": "Mix %",
+    "comment": "Etiqueta de botão rotativo para porcentagem de mistura úmido/seco"
+  },
+  "audioProduction.labelHz": {
+    "string": "Hz",
+    "comment": "Etiqueta de unidade para Hertz (frequência)"
+  },
+  "audioProduction.labelKHz": {
+    "string": "kHz",
+    "comment": "Etiqueta de unidade para Kilohertz (frequência)"
+  },
+  "audioProduction.optionLight": {
+    "string": "LEVE",
+    "comment": "Opção de intensidade leve para de-esser"
+  },
+  "audioProduction.optionMedium": {
+    "string": "MÉDIO",
+    "comment": "Opção de intensidade média para de-esser"
+  },
+  "audioProduction.optionHeavy": {
+    "string": "PESADO",
+    "comment": "Opção de intensidade forte para de-esser"
+  },
+  "audioProduction.roomSizeSmall": {
+    "string": "SALA P",
+    "comment": "Opção de sala pequena para reverberação"
+  },
+  "audioProduction.roomSizeMedium": {
+    "string": "SALA M",
+    "comment": "Opção de sala média para reverberação"
+  },
+  "audioProduction.roomSizeLarge": {
+    "string": "SALA G",
+    "comment": "Opção de sala grande para reverberação"
+  },
   "manuscript.loadingChapter": {
     "string": "Carregando capítulo…",
     "comment": "Mensagem de status ao carregar capítulo"

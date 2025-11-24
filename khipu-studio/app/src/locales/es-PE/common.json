@@ -2650,6 +2650,122 @@
     "string": "Genera audio de alta calidad a partir de segmentos orquestados - trabaja capítulo por capítulo. Solo están disponibles los capítulos con planes.",
     "comment": "Texto de descripción principal para la página de producción de audio"
   },
+  "audioProduction.applyToAllSegments": {
+    "string": "Aplicar a Todos los Segmentos",
+    "comment": "Texto del botón para aplicar preset a todos los segmentos del capítulo"
+  },
+  "audioProduction.activeProcessingChain": {
+    "string": "CADENA DE PROCESAMIENTO ACTIVA",
+    "comment": "Encabezado para el resumen de efectos de procesamiento activos"
+  },
+  "audioProduction.labelHPF": {
+    "string": "FPA",
+    "comment": "Etiqueta corta para Filtro Paso Alto"
+  },
+  "audioProduction.labelDeEss": {
+    "string": "DeEss",
+    "comment": "Etiqueta corta para efecto De-esser"
+  },
+  "audioProduction.labelComp": {
+    "string": "Comp",
+    "comment": "Etiqueta corta para Compresor"
+  },
+  "audioProduction.labelLim": {
+    "string": "Lim",
+    "comment": "Etiqueta corta para Limitador"
+  },
+  "audioProduction.labelLoCut": {
+    "string": "CorteB",
+    "comment": "Etiqueta corta para Corte de Medios Bajos"
+  },
+  "audioProduction.labelPres": {
+    "string": "Pres",
+    "comment": "Etiqueta corta para Realce de Presencia"
+  },
+  "audioProduction.labelAir": {
+    "string": "Aire",
+    "comment": "Etiqueta corta para Realce de Aire"
+  },
+  "audioProduction.labelRev": {
+    "string": "Rev",
+    "comment": "Etiqueta corta para Reverberación"
+  },
+  "audioProduction.labelStereo": {
+    "string": "Estéreo",
+    "comment": "Etiqueta corta para Mejora Estéreo"
+  },
+  "audioProduction.labelNorm": {
+    "string": "Norm",
+    "comment": "Etiqueta corta para Normalización"
+  },
+  "audioProduction.labelPeak": {
+    "string": "Pico",
+    "comment": "Etiqueta corta para Limitación de Picos"
+  },
+  "audioProduction.labelDither": {
+    "string": "Dither",
+    "comment": "Etiqueta corta para Dithering"
+  },
+  "audioProduction.labelIntensity": {
+    "string": "INTENSIDAD",
+    "comment": "Etiqueta de medidor VU para intensidad de de-esser"
+  },
+  "audioProduction.labelRatio": {
+    "string": "RATIO",
+    "comment": "Etiqueta de medidor VU para ratio de compresión"
+  },
+  "audioProduction.labelCeiling": {
+    "string": "TECHO",
+    "comment": "Etiqueta de medidor VU para techo del limitador"
+  },
+  "audioProduction.labelWidth": {
+    "string": "ANCHO",
+    "comment": "Etiqueta de medidor VU para ancho estéreo"
+  },
+  "audioProduction.labelLUFS": {
+    "string": "LUFS",
+    "comment": "Etiqueta de perilla rotatoria para unidades de sonoridad"
+  },
+  "audioProduction.labelNoise": {
+    "string": "RUIDO",
+    "comment": "Etiqueta de medidor VU para piso de ruido del dither"
+  },
+  "audioProduction.labelMixPercent": {
+    "string": "Mezcla %",
+    "comment": "Etiqueta de perilla rotatoria para porcentaje de mezcla húmedo/seco"
+  },
+  "audioProduction.labelHz": {
+    "string": "Hz",
+    "comment": "Etiqueta de unidad para Hertz (frecuencia)"
+  },
+  "audioProduction.labelKHz": {
+    "string": "kHz",
+    "comment": "Etiqueta de unidad para Kilohertz (frecuencia)"
+  },
+  "audioProduction.optionLight": {
+    "string": "LIGERO",
+    "comment": "Opción de intensidad ligera para de-esser"
+  },
+  "audioProduction.optionMedium": {
+    "string": "MEDIO",
+    "comment": "Opción de intensidad media para de-esser"
+  },
+  "audioProduction.optionHeavy": {
+    "string": "PESADO",
+    "comment": "Opción de intensidad fuerte para de-esser"
+  },
+  "audioProduction.roomSizeSmall": {
+    "string": "SALA P",
+    "comment": "Opción de sala pequeña para reverberación"
+  },
+  "audioProduction.roomSizeMedium": {
+    "string": "SALA M",
+    "comment": "Opción de sala mediana para reverberación"
+  },
+  "audioProduction.roomSizeLarge": {
+    "string": "SALA G",
+    "comment": "Opción de sala grande para reverberación"
+  },
   "audioPresets.cleanNatural.name": {
     "string": "Natural limpio",
     "comment": "Nombre para el preset de audio Natural Limpio"
