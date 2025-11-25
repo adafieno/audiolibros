@@ -24,7 +24,6 @@
         "build:all": "npm run build:ui && electron-builder --win --mac --linux"
     },
     "dependencies": {
-        "sharp": "^0.32.1",
         "@tanstack/react-table": "^8.21.3",
         "howler": "^2.2.4",
         "i18next": "^25.5.0",
@@ -40,6 +39,7 @@
         "zustand": "^5.0.8"
     },
     "devDependencies": {
+        "sharp": "^0.32.1",
         "@eslint/js": "^9.33.0",
         "@types/node": "^24.3.1",
         "@types/react": "^19.1.12",
@@ -81,7 +81,6 @@
             }
         ],
         "mac": {
-            "icon": "assets/icons/khipu.icns",
             "category": "public.app-category.productivity",
             "target": [
                 {
@@ -91,17 +90,14 @@
             ]
         },
         "win": {
-            "icon": "assets/icons/khipu.ico",
             "target": [
                 {
                     "target": "nsis",
                     "arch": ["x64"]
-                },
-                {
-                    "target": "msi",
-                    "arch": ["x64"]
                 }
-            ]
+            ],
+            "signtoolOptions": null,
+            "signAndEditExecutable": false
         },
         "nsis": {
             "oneClick": false,
