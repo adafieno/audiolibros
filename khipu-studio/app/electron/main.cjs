@@ -960,6 +960,7 @@ function createWin() {
       
       // Platform-specific packaging logic
       let outputPath;
+      let cacheHit = false;  // Track if package was created from cache
       
       switch (platformId) {
         case 'apple': {
@@ -1086,6 +1087,21 @@ function createWin() {
             try {
               fs.copyFileSync(existingPackage.path, outputPath);
               console.log(`[packaging:create] ${platformId} package created by copying from ${existingPackage.platform}`);
+              cacheHit = true;
+              
+              // Track cache hit
+              await trackBackendOperation(projectRoot, {
+                type: 'count',
+                entry: {
+                  activityType: 'automation',
+                  operation: 'packaging_cache_hit',
+                  page: 'packaging',
+                  platformId: platformId,
+                  sourcePlatform: existingPackage.platform,
+                  isActive: false
+                }
+              });
+              
               break;
             } catch (err) {
               console.warn(`[packaging:create] Failed to copy existing package, will regenerate:`, err.message);
@@ -1231,7 +1247,7 @@ function createWin() {
       const packagingEndTime = Date.now();
       const packagingDuration = packagingEndTime - packagingStartTime;
       
-      // Track packaging time
+      // Track packaging time (with cache hit flag)
       await trackBackendOperation(projectRoot, {
         type: 'time',
         entry: {
@@ -1240,6 +1256,7 @@ function createWin() {
           operation: 'packaging_export',
           page: 'packaging',
           platformId: platformId,
+          cacheHit: cacheHit || false,
           isActive: false
         }
       });
@@ -1591,10 +1608,13 @@ function createWin() {
         // Track cache miss
         if (projectRoot) {
           trackBackendOperation(projectRoot, {
-            timestamp: Date.now(),
-            operationType: 'cache',
-            subType: 'miss',
-            metadata: { cacheKey: key }
+            type: 'count',
+            entry: {
+              activityType: 'tts',
+              operation: 'tts_cache_miss',
+              cacheKey: key,
+              isActive: false
+            }
           });
         }
         
@@ -1621,11 +1641,14 @@ function createWin() {
         if (projectRoot) {
           const cacheReadDuration = Date.now() - cacheReadStartTime;
           trackBackendOperation(projectRoot, {
-            timestamp: now,
-            operationType: 'cache',
-            subType: 'miss_expired',
-            durationMs: cacheReadDuration,
-            metadata: { cacheKey: key }
+            type: 'time',
+            entry: {
+              activityType: 'tts',
+              duration: cacheReadDuration,
+              operation: 'tts_cache_miss_expired',
+              cacheKey: key,
+              isActive: false
+            }
           });
         }
         
@@ -1643,14 +1666,29 @@ function createWin() {
       // Track successful cache hit
       if (projectRoot) {
         const cacheReadDuration = Date.now() - cacheReadStartTime;
+        
+        // Track count
         trackBackendOperation(projectRoot, {
-          timestamp: now,
-          operationType: 'cache',
-          subType: 'hit',
-          durationMs: cacheReadDuration,
-          metadata: { 
+          type: 'count',
+          entry: {
+            activityType: 'tts',
+            operation: 'tts_cache_hit',
             cacheKey: key,
-            sizeBytes: audioBuffer.length
+            sizeBytes: audioBuffer.length,
+            isActive: false
+          }
+        });
+        
+        // Track time
+        trackBackendOperation(projectRoot, {
+          type: 'time',
+          entry: {
+            activityType: 'tts',
+            duration: cacheReadDuration,
+            operation: 'tts_cache_read',
+            cacheKey: key,
+            sizeBytes: audioBuffer.length,
+            isActive: false
           }
         });
       }
