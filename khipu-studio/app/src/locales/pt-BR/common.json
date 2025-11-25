@@ -2423,6 +2423,66 @@
     "string": "Arquivos de capítulo",
     "comment": "Descrição do requisito de arquivos de capítulo"
   },
+  "packaging.universalManifest": {
+    "string": "Manifesto Universal",
+    "comment": "Título da seção para o manifesto universal"
+  },
+  "packaging.manifestDescription": {
+    "string": "O manifesto universal agrega todos os metadados do livro, informações dos capítulos e caminhos dos arquivos de áudio em um único arquivo necessário para empacotamento específico de cada plataforma.",
+    "comment": "Descrição do conteúdo do manifesto universal"
+  },
+  "packaging.manifestExists": {
+    "string": "Manifesto gerado",
+    "comment": "Mensagem de status quando o arquivo de manifesto existe"
+  },
+  "packaging.manifestNotGenerated": {
+    "string": "Manifesto ainda não gerado",
+    "comment": "Mensagem de status quando o arquivo de manifesto não existe"
+  },
+  "packaging.manifestExistsDesc": {
+    "string": "Pronto para empacotamento de plataforma",
+    "comment": "Descrição quando o manifesto existe"
+  },
+  "packaging.manifestNotGeneratedDesc": {
+    "string": "Gere o manifesto antes de preparar pacotes",
+    "comment": "Descrição quando o manifesto não existe"
+  },
+  "packaging.actions.generateManifest": {
+    "string": "Gerar Manifesto",
+    "comment": "Botão para gerar o manifesto universal"
+  },
+  "packaging.actions.regenerateManifest": {
+    "string": "Regenerar Manifesto",
+    "comment": "Botão para regenerar um manifesto existente"
+  },
+  "packaging.actions.generating": {
+    "string": "Gerando...",
+    "comment": "Texto do botão enquanto o manifesto está sendo gerado"
+  },
+  "packaging.status.generatingManifest": {
+    "string": "Gerando manifesto...",
+    "comment": "Mensagem de status enquanto gera o manifesto"
+  },
+  "packaging.status.manifestGenerated": {
+    "string": "Manifesto gerado com sucesso",
+    "comment": "Mensagem de sucesso após geração do manifesto"
+  },
+  "packaging.status.manifestFailed": {
+    "string": "Falha ao gerar o manifesto",
+    "comment": "Mensagem de erro quando a geração do manifesto falha"
+  },
+  "packaging.actions.viewManifest": {
+    "string": "Ver Manifesto",
+    "comment": "Botão para visualizar o arquivo de manifesto gerado"
+  },
+  "packaging.manifestLocation": {
+    "string": "manifest.json na raiz do projeto",
+    "comment": "Informação sobre a localização do arquivo de manifesto"
+  },
+  "packaging.manifestNotFound": {
+    "string": "Manifesto ainda não gerado",
+    "comment": "Mensagem quando o arquivo de manifesto ainda não existe"
+  },
   "packaging.chapterAudioStatus": {
     "string": "Status do Áudio dos Capítulos",
     "comment": "Título da seção para status de conclusão do áudio dos capítulos"

@@ -59,6 +59,7 @@ export interface KhipuRequestMap {
   "fs:writeBinary": { in: { projectRoot: string; relPath: string; content: number[] }; out: boolean };
   "fs:readJson":{ in: { root: string; rel: string }; out: { data: unknown; path: string; raw: string } };
   "fs:checkFileExists": { in: { filePath: string }; out: boolean };
+  "fs:openExternal": { in: { path: string }; out: { success: boolean; error?: string } };
   "fs:cleanupChapterFiles": { in: { projectRoot: string; chapterId: string }; out: { success: boolean; deletedCount: number; error?: string } };
 
   // File operations
@@ -284,7 +285,8 @@ export interface KhipuRequestMap {
     };
   };
   // Packaging
-  "packaging:create": { in: { projectRoot: string; platformId: string }; out: { success: boolean; outDir?: string; error?: string } };
+  "packaging:generateManifest": { in: { projectRoot: string }; out: { success: boolean; error?: string } };
+  "packaging:create": { in: { projectRoot: string; platformId: string }; out: { success: boolean; message?: string; error?: string } };
   
   // SoX Audio Processing
   "audioProcessor:processAudio": {

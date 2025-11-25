@@ -1,5 +1,5 @@
 ﻿// app/electron/main.cjs
-const { app, BrowserWindow, ipcMain, dialog } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog, shell } = require("electron");
 const { spawn } = require("node:child_process");
 const path = require("path");
 const fs = require("node:fs");
@@ -719,6 +719,20 @@ function createWin() {
     }
   });
 
+  ipcMain.handle("fs:openExternal", async (_e, { path: filePath }) => {
+    try {
+      const absPath = path.resolve(filePath);
+      if (!fs.existsSync(absPath)) {
+        throw new Error(`File does not exist: ${absPath}`);
+      }
+      await shell.openPath(absPath);
+      return { success: true };
+    } catch (error) {
+      console.error(`[fs:openExternal] Error opening file ${filePath}:`, error);
+      return { success: false, error: String(error?.message || error) };
+    }
+  });
+
   ipcMain.handle("fs:cleanupChapterFiles", async (_e, { projectRoot, chapterId }) => {
     try {
       const chapterDir = path.join(projectRoot, 'audio', 'wav', chapterId);
@@ -769,6 +783,69 @@ function createWin() {
   });
 
   // Packaging: create platform package (basic implementation)
+  // Helper function to generate universal manifest
+  async function generateUniversalManifest(projectRoot) {
+    const universalManifestPath = path.join(projectRoot, 'manifest.json');
+    console.log(`[generateUniversalManifest] Generating at ${universalManifestPath}`);
+    
+    const manifestScriptPath = path.join(__dirname, '../../py/packaging/manifest_generator.py');
+    await new Promise((resolve, reject) => {
+      const pythonExe = getPythonExe();
+      const args = [manifestScriptPath, projectRoot];
+      
+      console.log(`[generateUniversalManifest] Running: ${pythonExe} ${args.join(' ')}`);
+      
+      const proc = spawn(pythonExe, args, {
+        cwd: projectRoot,
+        shell: true,
+        stdio: ['ignore', 'pipe', 'pipe']
+      });
+      
+      let stdout = '';
+      let stderr = '';
+      
+      proc.stdout.on('data', (data) => { stdout += data.toString(); });
+      proc.stderr.on('data', (data) => { stderr += data.toString(); });
+      
+      proc.on('close', (code) => {
+        if (code === 0) {
+          console.log('[generateUniversalManifest] Complete');
+          if (stderr) console.log('[generateUniversalManifest] Output:', stderr);
+          resolve();
+        } else {
+          console.error('[generateUniversalManifest] Failed:', stderr);
+          reject(new Error(`Manifest generation failed (exit code ${code}): ${stderr}`));
+        }
+      });
+      
+      proc.on('error', (err) => {
+        console.error('[generateUniversalManifest] Failed to spawn:', err);
+        reject(err);
+      });
+    });
+    
+    // Verify manifest was created
+    if (!fs.existsSync(universalManifestPath)) {
+      throw new Error('Universal manifest file was not created');
+    }
+    
+    console.log(`[generateUniversalManifest] Success: ${universalManifestPath}`);
+    return universalManifestPath;
+  }
+
+  ipcMain.handle("packaging:generateManifest", async (_e, { projectRoot }) => {
+    try {
+      console.log('[packaging:generateManifest] invoked with:', { projectRoot });
+      if (!projectRoot) throw new Error('Missing projectRoot');
+      
+      await generateUniversalManifest(projectRoot);
+      return { success: true };
+    } catch (error) {
+      console.error('[packaging:generateManifest] failed:', error);
+      return { success: false, error: String(error?.message || error) };
+    }
+  });
+
   ipcMain.handle("packaging:create", async (_e, { projectRoot, platformId }) => {
     const packagingStartTime = Date.now();
     try {
@@ -777,10 +854,8 @@ function createWin() {
       if (!projectRoot) throw new Error('Missing projectRoot');
       if (!platformId) throw new Error('Missing platformId');
 
-      // Universal manifest generation (placeholder)
-      const universalManifestPath = path.join(projectRoot, 'manifest.json');
-      console.log(`[packaging:create] Generating universal manifest at ${universalManifestPath}`);
-      // TODO: Implement universal manifest generation logic
+      // Step 1: Generate universal manifest
+      await generateUniversalManifest(projectRoot);
 
       // Platform-specific packaging logic
       switch (platformId) {

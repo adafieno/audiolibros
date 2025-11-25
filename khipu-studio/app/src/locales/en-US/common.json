@@ -3278,6 +3278,66 @@
     "string": "Chapter Audio Files",
     "comment": "Combined chapter and audio requirement description"
   },
+  "packaging.universalManifest": {
+    "string": "Universal Manifest",
+    "comment": "Section title for universal manifest"
+  },
+  "packaging.manifestDescription": {
+    "string": "The universal manifest aggregates all book metadata, chapter information, and audio file paths into a single file needed for platform-specific packaging.",
+    "comment": "Description of what the universal manifest contains"
+  },
+  "packaging.manifestExists": {
+    "string": "Manifest generated",
+    "comment": "Status message when manifest file exists"
+  },
+  "packaging.manifestNotGenerated": {
+    "string": "Manifest not yet generated",
+    "comment": "Status message when manifest file doesn't exist"
+  },
+  "packaging.manifestExistsDesc": {
+    "string": "Ready for platform packaging",
+    "comment": "Description when manifest exists"
+  },
+  "packaging.manifestNotGeneratedDesc": {
+    "string": "Generate manifest before preparing packages",
+    "comment": "Description when manifest doesn't exist"
+  },
+  "packaging.actions.generateManifest": {
+    "string": "Generate Manifest",
+    "comment": "Button to generate the universal manifest"
+  },
+  "packaging.actions.regenerateManifest": {
+    "string": "Regenerate Manifest",
+    "comment": "Button to regenerate an existing manifest"
+  },
+  "packaging.actions.generating": {
+    "string": "Generating...",
+    "comment": "Button text while manifest is being generated"
+  },
+  "packaging.status.generatingManifest": {
+    "string": "Generating manifest...",
+    "comment": "Status message while generating manifest"
+  },
+  "packaging.status.manifestGenerated": {
+    "string": "Manifest generated successfully",
+    "comment": "Success message after manifest generation"
+  },
+  "packaging.status.manifestFailed": {
+    "string": "Failed to generate manifest",
+    "comment": "Error message when manifest generation fails"
+  },
+  "packaging.actions.viewManifest": {
+    "string": "View Manifest",
+    "comment": "Button to view the generated manifest file"
+  },
+  "packaging.manifestLocation": {
+    "string": "manifest.json in project root",
+    "comment": "Information about manifest file location"
+  },
+  "packaging.manifestNotFound": {
+    "string": "Manifest not yet generated",
+    "comment": "Message when manifest file doesn't exist yet"
+  },
   "packaging.chapterAudioStatus": {
     "string": "Chapter Audio Status",
     "comment": "Section title for chapter audio completion status"

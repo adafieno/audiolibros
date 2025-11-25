@@ -1,0 +1,33 @@
+{
+  "version": "1.0",
+  "generated": "2025-11-25T01:47:03.934715Z",
+  "project": {
+    "name": "Untitled Project",
+    "root": "sample"
+  },
+  "book": {
+    "title": "",
+    "subtitle": null,
+    "authors": [],
+    "narrators": [],
+    "description": null,
+    "language": "es-PE",
+    "publisher": null,
+    "publicationDate": null,
+    "isbn": null,
+    "genres": [],
+    "keywords": [],
+    "copyright": null
+  },
+  "cover": {
+    "image": null
+  },
+  "audio": {
+    "totalDuration": null,
+    "totalDurationFormatted": null,
+    "chapterCount": 0,
+    "completedChapters": 0,
+    "missingAudio": []
+  },
+  "chapters": []
+}

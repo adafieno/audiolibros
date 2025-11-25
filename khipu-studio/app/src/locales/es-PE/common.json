@@ -3639,6 +3639,66 @@
     "string": "Audio de Todos los Capítulos Completo",
     "comment": "Descripción del requisito de audio completo"
   },
+  "packaging.universalManifest": {
+    "string": "Manifiesto Universal",
+    "comment": "Título de sección para el manifiesto universal"
+  },
+  "packaging.manifestDescription": {
+    "string": "El manifiesto universal agrega todos los metadatos del libro, información de capítulos y rutas de archivos de audio en un solo archivo necesario para el empaquetado específico de cada plataforma.",
+    "comment": "Descripción de lo que contiene el manifiesto universal"
+  },
+  "packaging.manifestExists": {
+    "string": "Manifiesto generado",
+    "comment": "Mensaje de estado cuando existe el archivo de manifiesto"
+  },
+  "packaging.manifestNotGenerated": {
+    "string": "Manifiesto aún no generado",
+    "comment": "Mensaje de estado cuando no existe el archivo de manifiesto"
+  },
+  "packaging.manifestExistsDesc": {
+    "string": "Listo para empaquetado de plataforma",
+    "comment": "Descripción cuando existe el manifiesto"
+  },
+  "packaging.manifestNotGeneratedDesc": {
+    "string": "Genera el manifiesto antes de preparar paquetes",
+    "comment": "Descripción cuando no existe el manifiesto"
+  },
+  "packaging.actions.generateManifest": {
+    "string": "Generar Manifiesto",
+    "comment": "Botón para generar el manifiesto universal"
+  },
+  "packaging.actions.regenerateManifest": {
+    "string": "Regenerar Manifiesto",
+    "comment": "Botón para regenerar un manifiesto existente"
+  },
+  "packaging.actions.generating": {
+    "string": "Generando...",
+    "comment": "Texto del botón mientras se genera el manifiesto"
+  },
+  "packaging.status.generatingManifest": {
+    "string": "Generando manifiesto...",
+    "comment": "Mensaje de estado mientras se genera el manifiesto"
+  },
+  "packaging.status.manifestGenerated": {
+    "string": "Manifiesto generado exitosamente",
+    "comment": "Mensaje de éxito después de generar el manifiesto"
+  },
+  "packaging.status.manifestFailed": {
+    "string": "Error al generar el manifiesto",
+    "comment": "Mensaje de error cuando falla la generación del manifiesto"
+  },
+  "packaging.actions.viewManifest": {
+    "string": "Ver Manifiesto",
+    "comment": "Botón para ver el archivo de manifiesto generado"
+  },
+  "packaging.manifestLocation": {
+    "string": "manifest.json en la raíz del proyecto",
+    "comment": "Información sobre la ubicación del archivo de manifiesto"
+  },
+  "packaging.manifestNotFound": {
+    "string": "Manifiesto aún no generado",
+    "comment": "Mensaje cuando el archivo de manifiesto aún no existe"
+  },
   "packaging.chapterAudioStatus": {
     "string": "Estado del Audio de Capítulos",
     "comment": "Título de sección para estado de completitud del audio de capítulos"

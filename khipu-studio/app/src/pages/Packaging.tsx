@@ -36,6 +36,8 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
 
   const [preparing, setPreparing] = useState<Record<string, boolean>>({});
   const [jobProgress, setJobProgress] = useState<Record<string, { running: boolean; step?: string; pct?: number }>>({});
+  const [manifestExists, setManifestExists] = useState<boolean>(false);
+  const [generatingManifest, setGeneratingManifest] = useState<boolean>(false);
 
   const preparePlatform = async (platformId: string) => {
     if (!root) return;
@@ -59,12 +61,26 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
       setJobProgress(prev => ({ ...prev, [platformId]: { running: false, step: t('packaging.status.prepareFailed'), pct: 0 } }));
     } finally {
       setPreparing(prev => ({ ...prev, [platformId]: false }));
-      // Refresh chapters/audio info after packaging attempt
+      // Refresh chapters/audio info and manifest status after packaging attempt
       stableRefreshChaptersInfo().catch(() => {});
+      checkManifestExists().catch(() => {});
     }
   };
 
   // Load project data
+  // Helper to check if manifest exists
+  const checkManifestExists = useCallback(async () => {
+    if (!root) return;
+    try {
+      const manifestPath = `${root}/manifest.json`;
+      const exists = await window.khipu!.call('fs:checkFileExists', { filePath: manifestPath });
+      setManifestExists(exists);
+    } catch (err) {
+      console.error('Failed to check manifest:', err);
+      setManifestExists(false);
+    }
+  }, [root]);
+
   // Helper to (re)query chapters audio info from main
   const stableRefreshChaptersInfo = useCallback(async () => {
     if (!root) return;
@@ -78,8 +94,8 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
           presentIds: Array.isArray(info.presentIds) ? info.presentIds : undefined,
         });
       }
-    } catch {
-      console.error("Failed to refresh chapters info");
+    } catch (err) {
+      console.error("Failed to query chapters audio info:", err);
     }
   }, [root]);
 
@@ -468,6 +484,121 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
           </>
         }
       />
+
+      {/* Universal Manifest Section */}
+      <section style={{ marginBottom: "32px" }}>
+        <h2 style={{ fontSize: "18px", fontWeight: "600", marginBottom: "16px" }}>
+          {t("packaging.universalManifest", "Universal Manifest")}
+        </h2>
+        <div style={{
+          padding: "20px",
+          backgroundColor: "var(--panel)",
+          border: "1px solid var(--border)",
+          borderRadius: "8px"
+        }}>
+          <div style={{ fontSize: "14px", color: "var(--muted)", marginBottom: "16px" }}>
+            {t("packaging.manifestDescription", "The universal manifest aggregates all book metadata, chapter information, and audio file paths into a single file needed for platform-specific packaging.")}
+          </div>
+          
+          {/* Status indicator */}
+          <div style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            gap: "8px",
+            marginBottom: "16px",
+            padding: "12px",
+            backgroundColor: manifestExists ? "rgba(76, 175, 80, 0.1)" : "rgba(255, 152, 0, 0.1)",
+            borderRadius: "6px"
+          }}>
+            <span style={{ fontSize: "20px" }}>{manifestExists ? "✓" : "⚠"}</span>
+            <div>
+              <div style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)" }}>
+                {manifestExists 
+                  ? t("packaging.manifestExists", "Manifest generated")
+                  : t("packaging.manifestNotGenerated", "Manifest not yet generated")}
+              </div>
+              <div style={{ fontSize: "13px", color: "var(--muted)" }}>
+                {manifestExists
+                  ? t("packaging.manifestExistsDesc", "Ready for platform packaging")
+                  : t("packaging.manifestNotGeneratedDesc", "Generate manifest before preparing packages")}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
+            <button
+              onClick={async () => {
+                if (!root) return;
+                setGeneratingManifest(true);
+                try {
+                  onStatus?.(t('packaging.status.generatingManifest', 'Generating manifest...') || 'Generating manifest...');
+                  const res = await window.khipu!.call('packaging:generateManifest', { projectRoot: root });
+                  if (res?.success) {
+                    onStatus?.(t('packaging.status.manifestGenerated', 'Manifest generated successfully') || 'Manifest generated');
+                    await checkManifestExists();
+                  } else {
+                    onStatus?.(t('packaging.status.manifestFailed', 'Failed to generate manifest') || 'Failed to generate manifest');
+                    console.warn('Manifest generation failed:', res);
+                  }
+                } catch (err) {
+                  console.error('Failed to generate manifest:', err);
+                  onStatus?.(t('packaging.status.manifestFailed', 'Failed to generate manifest') || 'Failed to generate manifest');
+                } finally {
+                  setGeneratingManifest(false);
+                }
+              }}
+              disabled={generatingManifest}
+              style={{
+                padding: "8px 16px",
+                fontSize: "14px",
+                backgroundColor: "var(--accent)",
+                color: "var(--bg)",
+                border: "none",
+                borderRadius: "6px",
+                cursor: generatingManifest ? "not-allowed" : "pointer",
+                opacity: generatingManifest ? 0.6 : 1
+              }}
+            >
+              {generatingManifest 
+                ? t("packaging.actions.generating", "Generating...") 
+                : manifestExists
+                  ? t("packaging.actions.regenerateManifest", "Regenerate Manifest")
+                  : t("packaging.actions.generateManifest", "Generate Manifest")}
+            </button>
+            <button
+              onClick={async () => {
+                if (!root) return;
+                const manifestPath = `${root}/manifest.json`;
+                try {
+                  const exists = await window.khipu!.call('fs:checkFileExists', { filePath: manifestPath });
+                  if (exists) {
+                    await window.khipu!.call('fs:openExternal', { path: manifestPath });
+                  } else {
+                    onStatus?.(t('packaging.manifestNotFound', 'Manifest not yet generated') || 'Manifest not yet generated');
+                  }
+                } catch (err) {
+                  console.error('Failed to open manifest:', err);
+                }
+              }}
+              disabled={!manifestExists}
+              style={{
+                padding: "8px 16px",
+                fontSize: "14px",
+                backgroundColor: manifestExists ? "var(--accent)" : "var(--border)",
+                color: manifestExists ? "var(--bg)" : "var(--muted)",
+                border: "none",
+                borderRadius: "6px",
+                cursor: manifestExists ? "pointer" : "not-allowed"
+              }}
+            >
+              {t("packaging.actions.viewManifest", "View Manifest")}
+            </button>
+            <span style={{ fontSize: "13px", color: "var(--muted)" }}>
+              {t("packaging.manifestLocation", "manifest.json in project root")}
+            </span>
+          </div>
+        </div>
+      </section>
 
       {/* Chapter Audio Status Section */}
       <section style={{ marginBottom: "32px" }}>
