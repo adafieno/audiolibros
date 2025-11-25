@@ -76,6 +76,7 @@ def _probe_audio_with_ffprobe(file_path: Path) -> Optional[Dict[str, Any]]:
             cmd,
             capture_output=True,
             text=True,
+            encoding='utf-8',
             check=True
         )
         
@@ -124,6 +125,7 @@ def _check_m4b_chapters(file_path: Path) -> Optional[List[Dict[str, Any]]]:
             cmd,
             capture_output=True,
             text=True,
+            encoding='utf-8',
             check=True
         )
         
@@ -158,6 +160,7 @@ def _check_m4b_metadata(file_path: Path) -> Optional[Dict[str, str]]:
             cmd,
             capture_output=True,
             text=True,
+            encoding='utf-8',
             check=True
         )
         
@@ -346,7 +349,9 @@ def validate_m4b_package(package_path: str, expected_specs: Optional[Dict[str, A
                 details='Artist or Composer tag should contain author/narrator name'
             ))
         
-        if not metadata.get('album'):
+        # Check for album - need to verify it's not just an empty string
+        album_value = metadata.get('album', '').strip()
+        if not album_value:
             issues.append(ValidationIssue(
                 severity='warning',
                 category='metadata',

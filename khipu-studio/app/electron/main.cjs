@@ -4,6 +4,7 @@ const { spawn } = require("node:child_process");
 const path = require("path");
 const fs = require("node:fs");
 const fsp = fs.promises;
+const os = require("os");
 const { SoxAudioProcessor } = require("./sox-audio-processor.cjs");
 
 app.disableHardwareAcceleration();
@@ -1163,7 +1164,7 @@ function createWin() {
       }
 
       // Run Python validator
-      const pythonExe = await getPythonExecutable();
+      const pythonExe = getPythonExe();
       const validatorScript = path.join(__dirname, '..', '..', 'py', 'packaging', 'validator.py');
       
       const args = [
