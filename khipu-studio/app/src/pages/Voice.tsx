@@ -223,7 +223,7 @@ const AnalogVUMeter = ({ level, isPlaying }: { level: number; isPlaying: boolean
       <div style={{
         width: "164px",
         height: "85px",
-        background: "radial-gradient(ellipse at center top, #fff9e6 0%, #f5e6c8 40%, #e8d9b8 100%)",
+        background: "radial-gradient(ellipse at center top, #fffae0 0%, #f7e8c0 40%, #ead9a8 100%)",
         borderRadius: "4px",
         position: "relative",
         overflow: "hidden",
