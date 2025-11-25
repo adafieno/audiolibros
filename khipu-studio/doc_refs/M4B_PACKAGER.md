@@ -68,6 +68,8 @@ FFmpeg metadata file (`;FFMETADATA1` format):
 title=Book Title
 artist=Author Name
 album_artist=Narrator Name
+translator=Translator Name
+adaptor=Adaptor Name
 comment=Book description
 copyright=Copyright notice
 date=2025

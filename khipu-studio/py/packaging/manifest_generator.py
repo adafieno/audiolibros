@@ -212,6 +212,8 @@ def generate_universal_manifest(project_root: str | Path) -> Dict[str, Any]:
             'subtitle': book_metadata.get('subtitle', project_config.get('bookMeta', {}).get('subtitle')),
             'authors': book_metadata.get('authors', project_config.get('bookMeta', {}).get('authors', [])),
             'narrators': book_metadata.get('narrators', project_config.get('bookMeta', {}).get('narrators', [])),
+            'translators': book_metadata.get('translators', project_config.get('bookMeta', {}).get('translators', [])),
+            'adaptors': book_metadata.get('adaptors', project_config.get('bookMeta', {}).get('adaptors', [])),
             'description': book_metadata.get('description', project_config.get('bookMeta', {}).get('description')),
             'language': book_metadata.get('language', project_config.get('bookMeta', {}).get('language', 'en')),
             'publisher': book_metadata.get('publisher', project_config.get('bookMeta', {}).get('publisher')),

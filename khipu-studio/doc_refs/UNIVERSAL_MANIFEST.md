@@ -48,6 +48,8 @@ Backend: Platform-specific packager (M4B, ZIP+MP3, EPUB3)
     "subtitle": "Optional Subtitle",
     "authors": ["Author Name"],
     "narrators": ["Narrator Name"],
+    "translators": ["Translator Name"],
+    "adaptors": ["Adaptor Name"],
     "description": "Book description",
     "language": "en",
     "publisher": "Publisher Name",

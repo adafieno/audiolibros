@@ -908,6 +908,22 @@
     "string": "Narrator 1, Narrator 2",
     "comment": "Placeholder for narrators input"
   },
+  "book.translators.label": {
+    "string": "Translators",
+    "comment": "Label for book translators field"
+  },
+  "book.translators.placeholder": {
+    "string": "Translator 1, Translator 2",
+    "comment": "Placeholder for translators input"
+  },
+  "book.adaptors.label": {
+    "string": "Adaptors",
+    "comment": "Label for book adaptors field"
+  },
+  "book.adaptors.placeholder": {
+    "string": "Adaptor 1, Adaptor 2",
+    "comment": "Placeholder for adaptors input"
+  },
   "book.content": {
     "string": "Content Information",
     "comment": "Section header for content information"

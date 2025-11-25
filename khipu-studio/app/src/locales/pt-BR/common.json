@@ -822,6 +822,22 @@
     "string": "Narrador 1, Narrador 2",
     "comment": "Texto de exemplo para entrada de narradores"
   },
+  "book.translators.label": {
+    "string": "Tradutores",
+    "comment": "Rótulo para campo de tradutores do livro"
+  },
+  "book.translators.placeholder": {
+    "string": "Tradutor 1, Tradutor 2",
+    "comment": "Texto de exemplo para entrada de tradutores"
+  },
+  "book.adaptors.label": {
+    "string": "Adaptadores",
+    "comment": "Rótulo para campo de adaptadores do livro"
+  },
+  "book.adaptors.placeholder": {
+    "string": "Adaptador 1, Adaptador 2",
+    "comment": "Texto de exemplo para entrada de adaptadores"
+  },
   "book.content": {
     "string": "Informações do conteúdo",
     "comment": "Cabeçalho da seção para informações do conteúdo"

@@ -1249,6 +1249,22 @@
     "string": "Narrador 1, Narrador 2",
     "comment": ""
   },
+  "book.translators.label": {
+    "string": "Traductores",
+    "comment": ""
+  },
+  "book.translators.placeholder": {
+    "string": "Traductor 1, Traductor 2",
+    "comment": ""
+  },
+  "book.adaptors.label": {
+    "string": "Adaptadores",
+    "comment": ""
+  },
+  "book.adaptors.placeholder": {
+    "string": "Adaptador 1, Adaptador 2",
+    "comment": ""
+  },
   "book.content": {
     "string": "Información del contenido",
     "comment": ""

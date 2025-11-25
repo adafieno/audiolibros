@@ -71,6 +71,8 @@ export interface BookMeta {
   subtitle?: string;
   authors: string[];
   narrators?: string[];
+  translators?: string[];
+  adaptors?: string[];
   language: string; // e.g., "es-PE"
   description?: string;
   keywords?: string[];

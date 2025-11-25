@@ -257,6 +257,28 @@ export default function Book() {
               />
             </label>
             <label>
+              <div>{t("book.translators.label")}</div>
+              <input
+                style={{ width: "100%" }}
+                value={bookMeta?.translators?.join(", ") || ""}
+                placeholder={t("book.translators.placeholder")}
+                onChange={(e) => updateBookMeta({ 
+                  translators: e.target.value.split(",").map(t => t.trim()).filter(t => t) 
+                })}
+              />
+            </label>
+            <label>
+              <div>{t("book.adaptors.label")}</div>
+              <input
+                style={{ width: "100%" }}
+                value={bookMeta?.adaptors?.join(", ") || ""}
+                placeholder={t("book.adaptors.placeholder")}
+                onChange={(e) => updateBookMeta({ 
+                  adaptors: e.target.value.split(",").map(a => a.trim()).filter(a => a) 
+                })}
+              />
+            </label>
+            <label>
               <div>{t("book.language.label")}</div>
               <select
                 className="dark-dropdown"

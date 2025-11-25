@@ -65,6 +65,13 @@ def _create_ffmpeg_metadata(manifest: Dict[str, Any], output_path: Path) -> Path
     if book.get('narrators'):
         metadata_lines.append(f"album_artist={', '.join(book['narrators'])}")
     
+    # Add translators and adaptors if present
+    if book.get('translators'):
+        metadata_lines.append(f"translator={', '.join(book['translators'])}")
+    
+    if book.get('adaptors'):
+        metadata_lines.append(f"adaptor={', '.join(book['adaptors'])}")
+    
     if book.get('description'):
         metadata_lines.append(f"comment={book['description']}")
     
