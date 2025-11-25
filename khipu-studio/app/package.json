@@ -103,7 +103,11 @@
                 }
             ],
             "signtoolOptions": null,
-            "signAndEditExecutable": false
+            "signAndEditExecutable": false,
+            "legalTrademarks": "Khipu Studio",
+            "copyright": "Copyright © 2025 Agustín Da Fieno Delucchi",
+            "fileVersion": "1.0.0",
+            "productVersion": "1.0.0"
         },
         "linux": {
             "icon": "../assets/icons/",
