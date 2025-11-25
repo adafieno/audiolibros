@@ -1487,6 +1487,12 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't intercept keys when user is typing in input/textarea
+      const target = e.target as HTMLElement;
+      if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA') {
+        return;
+      }
+
       if (e.key === "ArrowUp" || e.key === "k") {
         e.preventDefault();
         setSelIndex(i => Math.max(0, i - 1));
