@@ -95,7 +95,7 @@
             ]
         },
         "win": {
-            "icon": "../assets/icons/khipu_studio.ico",
+            "icon": "../assets/icons/icon_256x256.png",
             "target": [
                 {
                     "target": "nsis",
