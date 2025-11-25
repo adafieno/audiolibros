@@ -288,6 +288,36 @@ export interface KhipuRequestMap {
   "packaging:generateManifest": { in: { projectRoot: string }; out: { success: boolean; error?: string } };
   "packaging:checkExisting": { in: { projectRoot: string; platformId: string }; out: { exists: boolean; packagePath?: string; fileSize?: number; createdAt?: string; error?: string } };
   "packaging:create": { in: { projectRoot: string; platformId: string }; out: { success: boolean; message?: string; outputPath?: string; error?: string } };
+  "packaging:validate": { 
+    in: { projectRoot: string; platformId: string; packagePath: string }; 
+    out: { 
+      success: boolean; 
+      error?: string;
+      result?: {
+        valid: boolean;
+        platform: string;
+        packagePath: string;
+        issues: Array<{
+          severity: 'error' | 'warning' | 'info';
+          category: string;
+          message: string;
+          details?: string;
+        }>;
+        specs: {
+          codec?: string;
+          bitrate?: number;
+          sampleRate?: number;
+          channels?: number;
+          duration?: number;
+          fileSize?: number;
+          fileSizeGB?: number;
+          durationHours?: number;
+          chapterCount?: number;
+          metadata?: Record<string, string>;
+        };
+      };
+    } 
+  };
   
   // SoX Audio Processing
   "audioProcessor:processAudio": {

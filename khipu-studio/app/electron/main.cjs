@@ -1081,6 +1081,157 @@ function createWin() {
     }
   });
 
+  ipcMain.handle("packaging:validate", async (_e, { projectRoot, platformId, packagePath }) => {
+    try {
+      console.log('[packaging:validate] invoked with:', { projectRoot, platformId, packagePath });
+
+      if (!projectRoot) throw new Error('Missing projectRoot');
+      if (!platformId) throw new Error('Missing platformId');
+      if (!packagePath) throw new Error('Missing packagePath');
+
+      // Check if package file exists
+      if (!fs.existsSync(packagePath)) {
+        return { 
+          success: false, 
+          error: 'Package file not found',
+          result: {
+            valid: false,
+            platform: platformId,
+            packagePath,
+            issues: [{
+              severity: 'error',
+              category: 'structure',
+              message: 'Package file not found',
+              details: `File does not exist: ${packagePath}`
+            }],
+            specs: {}
+          }
+        };
+      }
+
+      // Load production settings to get expected specs
+      const prodSettingsPath = path.join(projectRoot, 'production.settings.json');
+      let expectedSpecs = null;
+      if (fs.existsSync(prodSettingsPath)) {
+        const prodSettings = JSON.parse(fs.readFileSync(prodSettingsPath, 'utf-8'));
+        
+        // Map platform to settings
+        let platformSettings = null;
+        switch (platformId) {
+          case 'apple':
+            platformSettings = prodSettings.packaging?.apple;
+            if (platformSettings) {
+              expectedSpecs = {
+                bitrate: platformSettings.aac_bitrate || '128k',
+                sampleRate: 44100,
+                channels: 1
+              };
+            }
+            break;
+          case 'google':
+          case 'spotify':
+            platformSettings = prodSettings.packaging?.gplay_spotify;
+            if (platformSettings) {
+              expectedSpecs = {
+                bitrate: platformSettings.mp3_bitrate || '256k',
+                sampleRate: platformSettings.sr_hz || 44100,
+                channels: platformSettings.channels || 1
+              };
+            }
+            break;
+          case 'acx':
+            platformSettings = prodSettings.packaging?.acx;
+            if (platformSettings) {
+              expectedSpecs = {
+                bitrate: platformSettings.mp3_bitrate || '192k',
+                sampleRate: platformSettings.sr_hz || 44100,
+                channels: platformSettings.channels || 1
+              };
+            }
+            break;
+          case 'kobo':
+            platformSettings = prodSettings.packaging?.kobo;
+            if (platformSettings) {
+              expectedSpecs = {
+                bitrate: platformSettings.mp3_bitrate || '192k',
+                sampleRate: platformSettings.sr_hz || 44100,
+                channels: platformSettings.channels || 1
+              };
+            }
+            break;
+        }
+      }
+
+      // Run Python validator
+      const pythonExe = await getPythonExecutable();
+      const validatorScript = path.join(__dirname, '..', '..', 'py', 'packaging', 'validator.py');
+      
+      const args = [
+        validatorScript,
+        platformId,
+        packagePath
+      ];
+      
+      // Add expected specs if available
+      if (expectedSpecs) {
+        const specsFile = path.join(os.tmpdir(), `khipu_validation_specs_${Date.now()}.json`);
+        fs.writeFileSync(specsFile, JSON.stringify(expectedSpecs));
+        args.push('--specs', specsFile);
+      }
+
+      console.log(`[packaging:validate] Running validator: ${pythonExe} ${args.join(' ')}`);
+
+      return new Promise((resolve) => {
+        const proc = spawn(pythonExe, args);
+        let stdout = '';
+        let stderr = '';
+
+        proc.stdout.on('data', (data) => {
+          stdout += data.toString();
+        });
+
+        proc.stderr.on('data', (data) => {
+          stderr += data.toString();
+          console.log('[packaging:validate] stderr:', data.toString());
+        });
+
+        proc.on('close', (code) => {
+          try {
+            if (code === 0 || code === 1) {
+              // Code 0 = valid, code 1 = invalid (but still returns result)
+              const result = JSON.parse(stdout);
+              console.log('[packaging:validate] Validation complete:', result.valid ? '✅ VALID' : '❌ INVALID');
+              resolve({ success: true, result });
+            } else {
+              console.error('[packaging:validate] Validator failed:', stderr);
+              resolve({ 
+                success: false, 
+                error: stderr || `Validator exited with code ${code}` 
+              });
+            }
+          } catch (err) {
+            console.error('[packaging:validate] Failed to parse validator output:', err);
+            resolve({ 
+              success: false, 
+              error: `Failed to parse validator output: ${err.message}` 
+            });
+          }
+        });
+
+        proc.on('error', (err) => {
+          console.error('[packaging:validate] Failed to spawn validator:', err);
+          resolve({ 
+            success: false, 
+            error: `Failed to run validator: ${err.message}` 
+          });
+        });
+      });
+    } catch (error) {
+      console.error('[packaging:validate] failed:', error);
+      return { success: false, error: String(error?.message || error) };
+    }
+  });
+
         // Character detection trigger (runs python script inside project root)
         ipcMain.handle("characters:detect", async (_e, { projectRoot }) => {
           if (!projectRoot) throw new Error("Missing projectRoot");

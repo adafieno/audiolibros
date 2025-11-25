@@ -39,6 +39,17 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
   const [manifestExists, setManifestExists] = useState<boolean>(false);
   const [generatingManifest, setGeneratingManifest] = useState<boolean>(false);
   const [existingPackages, setExistingPackages] = useState<Record<string, { exists: boolean; fileSize?: number; createdAt?: string }>>({});
+  const [validating, setValidating] = useState<Record<string, boolean>>({});
+  const [validationResults, setValidationResults] = useState<Record<string, {
+    valid: boolean;
+    issues: Array<{
+      severity: 'error' | 'warning' | 'info';
+      category: string;
+      message: string;
+      details?: string;
+    }>;
+    specs: Record<string, unknown>;
+  }>>({});
 
   const preparePlatform = async (platformId: string) => {
     if (!root) return;
@@ -67,6 +78,52 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
       stableRefreshChaptersInfo().catch(() => {});
       checkManifestExists().catch(() => {});
       checkExistingPackages().catch(() => {});
+    }
+  };
+
+  const validatePlatform = async (platformId: string) => {
+    if (!root) return;
+    const packageInfo = existingPackages[platformId];
+    if (!packageInfo?.exists) {
+      onStatus?.('No package found to validate');
+      return;
+    }
+
+    // Get package path from backend
+    const checkResult = await window.khipu!.call('packaging:checkExisting', { projectRoot: root, platformId });
+    if (!checkResult.exists || !checkResult.packagePath) {
+      onStatus?.('Failed to locate package file');
+      return;
+    }
+
+    setValidating(prev => ({ ...prev, [platformId]: true }));
+    try {
+      onStatus?.(t('packaging.status.validating', `Validating ${platformId} package...`) || `Validating ${platformId} package...`);
+      const res = await window.khipu!.call('packaging:validate', {
+        projectRoot: root,
+        platformId,
+        packagePath: checkResult.packagePath
+      });
+
+      if (res?.success && res.result) {
+        setValidationResults(prev => ({ ...prev, [platformId]: {
+          valid: res.result!.valid,
+          issues: res.result!.issues,
+          specs: res.result!.specs
+        } }));
+        const status = res.result.valid 
+          ? t('packaging.status.validationPassed', '✅ Package validation passed')
+          : t('packaging.status.validationFailed', '❌ Package validation failed');
+        onStatus?.(status || `Validation: ${res.result.valid ? 'PASSED' : 'FAILED'}`);
+      } else {
+        onStatus?.(t('packaging.status.validationError', 'Validation error') || 'Validation failed');
+        console.warn('packaging:validate returned failure', res);
+      }
+    } catch (error) {
+      console.error('Failed to validate package:', error);
+      onStatus?.(t('packaging.status.validationError', 'Validation error') || 'Failed to validate package');
+    } finally {
+      setValidating(prev => ({ ...prev, [platformId]: false }));
     }
   };
 
@@ -777,12 +834,11 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
                 }}>
                   {name}
                 </h3>
-                <div>
+                <div style={{ display: 'flex', gap: '4px' }}>
                   <button
                     onClick={() => preparePlatform(id)}
                     // Only disable when already preparing or when there is no audio/chapters at all.
                     disabled={!!preparing[id] || chaptersInfo.count === 0 || chaptersInfo.hasAudio === 0}
-                    style={{ marginLeft: '8px' }}
                   >
                     {preparing[id] 
                       ? t('packaging.status.preparing') 
@@ -790,8 +846,19 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
                         ? t('packaging.repackage', 'Re-package') 
                         : t('packaging.prepare')}
                   </button>
-                  {/* If packaging spec checks failed, show a subtle hint but don't block Prepare */}
-                  
+                  {existingPackages[id]?.exists && (
+                    <button
+                      onClick={() => validatePlatform(id)}
+                      disabled={!!validating[id]}
+                      style={{ 
+                        fontSize: '12px',
+                        padding: '4px 8px'
+                      }}
+                      title={t('packaging.validatePackage', 'Validate package quality')}
+                    >
+                      {validating[id] ? '⏳' : '🔍'}
+                    </button>
+                  )}
                 </div>
               </div>
               <p style={{ fontSize: "14px", color: "var(--muted)" }}>
@@ -821,6 +888,58 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
                         <> • {new Date(existingPackages[id].createdAt!).toLocaleDateString()}</>
                       )}
                     </div>
+                  )}
+                </div>
+              )}
+
+              {/* Show validation results if available */}
+              {validationResults[id] && (
+                <div style={{
+                  fontSize: '12px',
+                  padding: '10px',
+                  backgroundColor: validationResults[id].valid ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)',
+                  borderRadius: '4px',
+                  marginBottom: '8px',
+                  border: `1px solid ${validationResults[id].valid ? '#4caf50' : '#f44336'}`
+                }}>
+                  <div style={{ fontWeight: '600', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '14px' }}>{validationResults[id].valid ? '✅' : '❌'}</span>
+                    {validationResults[id].valid ? t('packaging.validationPassed', 'Validation Passed') : t('packaging.validationFailed', 'Validation Failed')}
+                  </div>
+                  {validationResults[id].issues.length > 0 && (
+                    <div style={{ marginTop: '8px' }}>\n                      {validationResults[id].issues.map((issue, idx: number) => (
+                        <div key={idx} style={{ 
+                          marginBottom: '4px',
+                          padding: '4px 6px',
+                          backgroundColor: 'var(--bg)',
+                          borderRadius: '3px',
+                          fontSize: '11px'
+                        }}>
+                          <span style={{ 
+                            fontWeight: '600',
+                            color: issue.severity === 'error' ? '#f44336' : issue.severity === 'warning' ? '#ff9800' : '#2196f3'
+                          }}>
+                            {issue.severity === 'error' ? '❌' : issue.severity === 'warning' ? '⚠️' : 'ℹ️'}
+                          </span>
+                          {' '}{issue.message}
+                          {issue.details && (
+                            <div style={{ marginLeft: '16px', marginTop: '2px', color: 'var(--muted)', fontSize: '10px' }}>
+                              {issue.details}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {validationResults[id].specs && Object.keys(validationResults[id].specs).length > 0 && (
+                    <details style={{ marginTop: '8px', cursor: 'pointer' }}>
+                      <summary style={{ fontSize: '11px', fontWeight: '600' }}>Technical Specs</summary>
+                      <div style={{ marginTop: '4px', marginLeft: '12px', fontSize: '10px', color: 'var(--muted)' }}>
+                        {Object.entries(validationResults[id].specs).map(([key, value]) => (
+                          <div key={key}>{key}: {JSON.stringify(value)}</div>
+                        ))}
+                      </div>
+                    </details>
                   )}
                 </div>
               )}
