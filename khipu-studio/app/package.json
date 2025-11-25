@@ -78,6 +78,10 @@
             {
                 "from": "../bin",
                 "to": "bin"
+            },
+            {
+                "from": "../assets/icons",
+                "to": "assets/icons"
             }
         ],
         "mac": {

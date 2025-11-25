@@ -529,12 +529,17 @@ function getAudioProcessor() {
 
 /* ---------------- BrowserWindow + IPC ---------------- */
 function createWin() {
+  // Icon path - in packaged app, extraResources are in resources/ folder
+  const iconPath = app.isPackaged
+    ? path.join(process.resourcesPath, "assets", "icons", "icon_256x256.png")
+    : path.join(__dirname, "..", "..", "assets", "icons", "icon_256x256.png");
+  
   const win = new BrowserWindow({
     width: 1280,
     height: 800,
     title: "Khipu Studio",
     backgroundColor: "#111827",
-    icon: path.join(__dirname, "..", "..", "assets", "icons", "icon_256x256.png"),
+    icon: iconPath,
     webPreferences: { preload: path.join(__dirname, "preload.cjs"), contextIsolation: true },
   });
 
