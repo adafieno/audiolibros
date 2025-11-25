@@ -2397,6 +2397,18 @@
     "string": "Reproduciendo",
     "comment": "Indicador de estado cuando se reproduce audio"
   },
+  "voice.generatingSegments": {
+    "string": "Generando Segmentos",
+    "comment": "Mensaje de progreso al generar segmentos de audio"
+  },
+  "voice.stitchingAudio": {
+    "string": "Uniendo Audio",
+    "comment": "Mensaje de progreso al unir archivos de audio"
+  },
+  "voice.complete": {
+    "string": "Completo",
+    "comment": "Mensaje de estado cuando la generación de audio está completa"
+  },
   "audioProduction.segmentsLoaded": {
     "string": "{{count}} segmentos cargados",
     "comment": "Estado mostrando número de segmentos cargados"
@@ -3172,6 +3184,15 @@
   "cost.operations": {
     "string": "Operaciones",
     "comment": "Etiqueta para operaciones en tooltips de timeline al pasar el mouse"
+  },
+  "cost.operation": {
+    "string_one": "operación",
+    "string_other": "operaciones",
+    "comment": "Etiqueta plural para operaciones en desglose de tiempo"
+  },
+  "cost.dailyCostsLast30Days": {
+    "string": "Costos Diarios (Últimos 30 Días)",
+    "comment": "Título del gráfico de costos diarios"
   },
   "cost.total": {
     "string": "Total",

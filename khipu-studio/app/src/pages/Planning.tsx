@@ -653,7 +653,7 @@ function EditablePreview({
                   padding: "6px 12px"
                 }}
               >
-                ◀ Unir
+                ◀ {t('planning.merge')}
               </StandardButton>
               
               <StandardButton
@@ -666,7 +666,7 @@ function EditablePreview({
                   padding: "6px 12px"
                 }}
               >
-                Unir ▶
+                {t('planning.merge')} ▶
               </StandardButton>
               
               <StandardButton
@@ -679,7 +679,7 @@ function EditablePreview({
                   padding: "6px 12px"
                 }}
               >
-                Delete
+                {t('planning.delete')}
               </StandardButton>
               
               <StandardButton

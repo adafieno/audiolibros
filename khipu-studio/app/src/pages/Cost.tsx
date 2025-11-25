@@ -1122,7 +1122,7 @@ export default function Cost() {
                       color: 'var(--muted)',
                       marginTop: '2px'
                     }}>
-                      {item.count} {item.count === 1 ? 'operation' : 'operations'} • avg {costTrackingService.formatDuration(item.averageTime)}
+                      {item.count} {t('cost.operation', { count: item.count, defaultValue_one: 'operation', defaultValue_other: 'operations' })} • avg {costTrackingService.formatDuration(item.averageTime)}
                     </div>
                   </div>
                   <div style={{
@@ -1369,7 +1369,7 @@ export default function Cost() {
                   justifyContent: 'space-between',
                   fontSize: '12px'
                 }}>
-                  <span style={{ color: 'var(--muted)' }}>Daily Costs (Last 30 Days)</span>
+                  <span style={{ color: 'var(--muted)' }}>{t('cost.dailyCostsLast30Days', 'Daily Costs (Last 30 Days)')}</span>
                   <div style={{ display: 'flex', gap: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                       <div style={{ width: '8px', height: '8px', background: '#3b82f6', borderRadius: '2px' }}></div>

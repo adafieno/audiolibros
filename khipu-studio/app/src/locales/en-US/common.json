@@ -2169,6 +2169,18 @@
     "string": "Voice",
     "comment": "Label for voice information in text display"
   },
+  "voice.generatingSegments": {
+    "string": "Generating Segments",
+    "comment": "Progress message when generating audio segments"
+  },
+  "voice.stitchingAudio": {
+    "string": "Stitching Audio",
+    "comment": "Progress message when stitching audio files"
+  },
+  "voice.complete": {
+    "string": "Complete",
+    "comment": "Status message when audio generation is complete"
+  },
   "audioProduction.progress": {
     "string": "Progress",
     "comment": "Label for progress bar in text display"
@@ -2987,6 +2999,15 @@
   "cost.avgCostPerDay": {
     "string": "Avg Cost/Day",
     "comment": "Label for average cost per day statistic"
+  },
+  "cost.operation": {
+    "string_one": "operation",
+    "string_other": "operations",
+    "comment": "Plural label for operations in time breakdown"
+  },
+  "cost.dailyCostsLast30Days": {
+    "string": "Daily Costs (Last 30 Days)",
+    "comment": "Title for daily costs chart"
   },
   "cost.days": {
     "string": "days",

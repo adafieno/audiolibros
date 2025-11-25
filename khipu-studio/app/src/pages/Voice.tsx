@@ -1886,9 +1886,9 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                     animation: chapterGenerationProgress.phase !== 'completed' ? 'pulse 2s infinite' : 'none'
                   }}></div>
                   <span style={{ fontWeight: "500" }}>
-                    {chapterGenerationProgress.phase === 'segments' && 'Generating Segments'}
-                    {chapterGenerationProgress.phase === 'concatenating' && 'Stitching Audio'}
-                    {chapterGenerationProgress.phase === 'completed' && 'Complete'}
+                    {chapterGenerationProgress.phase === 'segments' && t('voice.generatingSegments', 'Generating Segments')}
+                    {chapterGenerationProgress.phase === 'concatenating' && t('voice.stitchingAudio', 'Stitching Audio')}
+                    {chapterGenerationProgress.phase === 'completed' && t('voice.complete', 'Complete')}
                   </span>
                   <span style={{ marginLeft: "auto" }}>
                     {chapterGenerationProgress.currentSegment}/{chapterGenerationProgress.totalSegments}
