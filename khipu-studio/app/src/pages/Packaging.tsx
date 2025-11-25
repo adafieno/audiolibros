@@ -128,6 +128,75 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
     }
   }, [root]);
 
+  // Define platform configurations (must be before useEffect that uses it)
+  const platforms: PlatformConfig[] = useMemo(() => [
+    {
+      id: "apple",
+      name: "Apple Books",
+      enabled: cfg?.export?.platforms?.apple || false,
+      requirements: ["title", "author", "narrator", "cover", "audio", "chapters"],
+      packageFormat: "M4B",
+      audioSpec: {
+        format: "AAC",
+        bitrate: productionSettings?.packaging?.apple?.aac_bitrate || "128k",
+        sampleRate: 44100,
+        channels: 1
+      }
+    },
+    {
+      id: "google",
+      name: "Google Play Books",
+      enabled: cfg?.export?.platforms?.google || false,
+      requirements: ["title", "author", "narrator", "cover", "audio", "chapters"],
+      packageFormat: "ZIP with MP3",
+      audioSpec: {
+        format: "MP3",
+        bitrate: productionSettings?.packaging?.gplay_spotify?.mp3_bitrate || "256k",
+        sampleRate: productionSettings?.packaging?.gplay_spotify?.sr_hz || 44100,
+        channels: productionSettings?.packaging?.gplay_spotify?.channels || 1
+      }
+    },
+    {
+      id: "spotify",
+      name: "Spotify",
+      enabled: cfg?.export?.platforms?.spotify || false,
+      requirements: ["title", "author", "narrator", "cover", "audio", "chapters"],
+      packageFormat: "ZIP with MP3",
+      audioSpec: {
+        format: "MP3",
+        bitrate: productionSettings?.packaging?.gplay_spotify?.mp3_bitrate || "256k",
+        sampleRate: productionSettings?.packaging?.gplay_spotify?.sr_hz || 44100,
+        channels: productionSettings?.packaging?.gplay_spotify?.channels || 1
+      }
+    },
+    {
+      id: "acx",
+      name: "ACX",
+      enabled: cfg?.export?.platforms?.acx || false,
+      requirements: ["title", "author", "narrator", "cover", "audio", "chapters"],
+      packageFormat: "ZIP with MP3",
+      audioSpec: {
+        format: "MP3",
+        bitrate: productionSettings?.packaging?.acx?.mp3_bitrate || "192k",
+        sampleRate: productionSettings?.packaging?.acx?.sr_hz || 44100,
+        channels: productionSettings?.packaging?.acx?.channels || 1
+      }
+    },
+    {
+      id: "kobo",
+      name: "Kobo",
+      enabled: cfg?.export?.platforms?.kobo || false,
+      requirements: ["title", "author", "narrator", "cover", "audio", "chapters"],
+      packageFormat: "EPUB",
+      audioSpec: {
+        format: "MP3",
+        bitrate: productionSettings?.packaging?.kobo?.mp3_bitrate || "192k",
+        sampleRate: productionSettings?.packaging?.kobo?.sr_hz || 44100,
+        channels: productionSettings?.packaging?.kobo?.channels || 1
+      }
+    }
+  ], [cfg, productionSettings]);
+
   useEffect(() => {
     if (!root) {
       setLoading(false);
@@ -252,75 +321,6 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
       }
     }
   }, [existingPackages, platforms, cfg, root, markStepCompleted, isStepCompleted, onStatus, t]);
-
-  // Define platform configurations
-  const platforms: PlatformConfig[] = useMemo(() => [
-    {
-      id: "apple",
-      name: "Apple Books",
-      enabled: cfg?.export?.platforms?.apple || false,
-      requirements: ["title", "author", "narrator", "cover", "audio", "chapters"],
-      packageFormat: "M4B",
-      audioSpec: {
-        format: "AAC",
-        bitrate: productionSettings?.packaging?.apple?.aac_bitrate || "128k",
-        sampleRate: 44100,
-        channels: 1
-      }
-    },
-    {
-      id: "google",
-      name: "Google Play Books",
-      enabled: cfg?.export?.platforms?.google || false,
-      requirements: ["title", "author", "narrator", "cover", "audio", "chapters"],
-      packageFormat: "ZIP with MP3",
-      audioSpec: {
-        format: "MP3",
-        bitrate: productionSettings?.packaging?.gplay_spotify?.mp3_bitrate || "256k",
-        sampleRate: productionSettings?.packaging?.gplay_spotify?.sr_hz || 44100,
-        channels: productionSettings?.packaging?.gplay_spotify?.channels || 1
-      }
-    },
-    {
-      id: "spotify",
-      name: "Spotify",
-      enabled: cfg?.export?.platforms?.spotify || false,
-      requirements: ["title", "author", "narrator", "cover", "audio", "chapters"],
-      packageFormat: "ZIP with MP3",
-      audioSpec: {
-        format: "MP3",
-        bitrate: productionSettings?.packaging?.gplay_spotify?.mp3_bitrate || "256k",
-        sampleRate: productionSettings?.packaging?.gplay_spotify?.sr_hz || 44100,
-        channels: productionSettings?.packaging?.gplay_spotify?.channels || 1
-      }
-    },
-    {
-      id: "acx",
-      name: "ACX",
-      enabled: cfg?.export?.platforms?.acx || false,
-      requirements: ["title", "author", "narrator", "cover", "audio", "chapters"],
-      packageFormat: "ZIP with MP3",
-      audioSpec: {
-        format: "MP3",
-        bitrate: productionSettings?.packaging?.acx?.mp3_bitrate || "192k",
-        sampleRate: productionSettings?.packaging?.acx?.sr_hz || 44100,
-        channels: productionSettings?.packaging?.acx?.channels || 1
-      }
-    },
-    {
-      id: "kobo",
-      name: "Kobo",
-      enabled: cfg?.export?.platforms?.kobo || false,
-      requirements: ["title", "author", "narrator", "cover", "audio", "chapters"],
-      packageFormat: "EPUB",
-      audioSpec: {
-        format: "MP3",
-        bitrate: productionSettings?.packaging?.kobo?.mp3_bitrate || "192k",
-        sampleRate: productionSettings?.packaging?.kobo?.sr_hz || 44100,
-        channels: productionSettings?.packaging?.kobo?.channels || 1
-      }
-    }
-  ], [cfg, productionSettings]);
 
   // Listen for job events and map updates to platforms by matching platform id in event text
   useEffect(() => {
