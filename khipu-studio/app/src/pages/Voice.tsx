@@ -461,7 +461,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
       description: translatedDescription
     };
   }, [t]);
-  const { root } = useProject();
+  const { root, markStepCompleted, isStepCompleted } = useProject();
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [chapterStatus, setChapterStatus] = useState<Map<string, ChapterStatus>>(new Map());
   const [loading, setLoading] = useState(false);
@@ -1803,6 +1803,27 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
   useEffect(() => {
     loadChapters();
   }, [loadChapters]);
+
+  // Automatically mark orchestration/voice step as complete when all chapters have audio
+  useEffect(() => {
+    if (!root || chapters.length === 0) return;
+    
+    // Check if all chapters have complete audio files
+    const allChaptersHaveAudio = chapters.length > 0 && 
+                                  chapters.every(chapter => chapterCompleteFiles.has(chapter.id));
+    
+    if (allChaptersHaveAudio) {
+      try {
+        if (!isStepCompleted('voice')) {
+          console.log('[Voice] All chapters have complete audio, marking voice step as complete');
+          markStepCompleted('voice');
+          onStatus(t('audioProduction.audioProductionComplete', 'Audio Production Complete') || 'Audio Production Complete');
+        }
+      } catch (e) {
+        console.warn('Failed to mark voice/orchestration step complete:', e);
+      }
+    }
+  }, [chapters, chapterCompleteFiles, root, markStepCompleted, isStepCompleted, onStatus, t]);
 
   // Auto-select first chapter if available and load its data
   useEffect(() => {

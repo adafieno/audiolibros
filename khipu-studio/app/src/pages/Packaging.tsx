@@ -223,20 +223,35 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
     };
   }, [stableRefreshChaptersInfo]);
 
-  // When chapters reach full audio coverage, mark export workflow as complete (persist to project.khipu.json)
+  // Mark export workflow as complete when ALL enabled platforms have packages created
   useEffect(() => {
-    if (!root) return;
-    if (chaptersInfo.count > 0 && chaptersInfo.hasAudio === chaptersInfo.count) {
+    if (!root || !cfg) return;
+    
+    // Get list of enabled platforms
+    const enabledPlatforms = platforms.filter(p => p.enabled);
+    
+    if (enabledPlatforms.length === 0) {
+      // No platforms enabled, don't mark as complete
+      return;
+    }
+    
+    // Check if all enabled platforms have packages
+    const allPlatformsPackaged = enabledPlatforms.every(platform => 
+      existingPackages[platform.id]?.exists === true
+    );
+    
+    if (allPlatformsPackaged) {
       try {
         if (!isStepCompleted('export')) {
+          console.log('[Packaging] All enabled platforms have packages, marking export step as complete');
           markStepCompleted('export');
-          onStatus?.(t('packaging.status.exportMarked') || 'Packaging: export marked ready');
+          onStatus?.(t('packaging.status.exportMarked') || 'Packaging: All platforms packaged, export marked complete');
         }
       } catch (e) {
         console.warn('Failed to mark export complete:', e);
       }
     }
-  }, [chaptersInfo, root, markStepCompleted, isStepCompleted, onStatus, t]);
+  }, [existingPackages, platforms, cfg, root, markStepCompleted, isStepCompleted, onStatus, t]);
 
   // Define platform configurations
   const platforms: PlatformConfig[] = useMemo(() => [
