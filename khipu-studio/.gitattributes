@@ -1,0 +1,47 @@
+# Git attributes for proper line ending handling
+
+# Auto detect text files and normalize line endings to LF
+* text=auto
+
+# Shell scripts should always use LF
+*.sh text eol=lf
+
+# Windows scripts should always use CRLF
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Python files should use LF
+*.py text eol=lf
+
+# JavaScript/TypeScript files should use LF
+*.js text eol=lf
+*.jsx text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.cjs text eol=lf
+*.mjs text eol=lf
+
+# JSON files should use LF
+*.json text eol=lf
+
+# Markdown files should use LF
+*.md text eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.icns binary
+*.wav binary
+*.mp3 binary
+*.m4b binary
+*.epub binary
+*.zip binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
