@@ -426,10 +426,13 @@ const AnalogVUMeter = ({ level, isPlaying }: { level: number; isPlaying: boolean
   );
 };
 
+type ChapterType = 'chapter' | 'intro' | 'prologue' | 'epilogue' | 'credits' | 'outro';
+
 interface Chapter {
   id: string;
   title?: string;
   relPath: string;
+  chapterType?: ChapterType;
 }
 
 interface ChapterStatus {

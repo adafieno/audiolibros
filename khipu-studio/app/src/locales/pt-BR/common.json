@@ -566,6 +566,26 @@
     "string": "{{words}} palavras",
     "comment": "Contador de palavras para capítulos"
   },
+  "manuscript.chapterTypes.intro": {
+    "string": "Intro",
+    "comment": "Rótulo para tipo de capítulo de introdução"
+  },
+  "manuscript.chapterTypes.prologue": {
+    "string": "Prólogo",
+    "comment": "Rótulo para tipo de capítulo de prólogo"
+  },
+  "manuscript.chapterTypes.epilogue": {
+    "string": "Epílogo",
+    "comment": "Rótulo para tipo de capítulo de epílogo"
+  },
+  "manuscript.chapterTypes.credits": {
+    "string": "Créditos",
+    "comment": "Rótulo para tipo de capítulo de créditos"
+  },
+  "manuscript.chapterTypes.outro": {
+    "string": "Final",
+    "comment": "Rótulo para tipo de capítulo de final"
+  },
   "plan.noPlanToShow": {
     "string": "Nenhum plano para mostrar",
     "comment": "Mensagem quando não há dados de plano disponíveis para exibir"

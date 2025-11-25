@@ -645,6 +645,26 @@
     "string": "{{words}} words",
     "comment": "Word count display for chapters"
   },
+  "manuscript.chapterTypes.intro": {
+    "string": "Intro",
+    "comment": "Label for introduction chapter type"
+  },
+  "manuscript.chapterTypes.prologue": {
+    "string": "Prologue",
+    "comment": "Label for prologue chapter type"
+  },
+  "manuscript.chapterTypes.epilogue": {
+    "string": "Epilogue",
+    "comment": "Label for epilogue chapter type"
+  },
+  "manuscript.chapterTypes.credits": {
+    "string": "Credits",
+    "comment": "Label for credits chapter type"
+  },
+  "manuscript.chapterTypes.outro": {
+    "string": "Outro",
+    "comment": "Label for outro chapter type"
+  },
 
   "plan.noPlanToShow": {
     "string": "No plan to show",

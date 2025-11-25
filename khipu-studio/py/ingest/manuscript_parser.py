@@ -222,6 +222,32 @@ def _build_blocks_from_txt(blocks_text: List[str]) -> List[Block]:
 
 # ----------------------- Keyword-free title heuristic ---------------------
 
+# Special chapter type detection keywords (multilingual)
+_SPECIAL_KEYWORDS = {
+    'intro': ['introducción', 'introduction', 'introdução', 'intro'],
+    'prologue': ['prólogo', 'prologue', 'prólogo'],
+    'epilogue': ['epílogo', 'epilogue', 'epílogo'],
+    'credits': ['créditos', 'credits', 'créditos', 'acknowledgments', 'agradecimientos'],
+    'outro': ['final', 'outro', 'closing', 'cierre', 'conclusión', 'conclusion']
+}
+
+def _detect_chapter_type(title: str) -> str:
+    """
+    Detect if a chapter title indicates a special chapter type.
+    Returns 'chapter' (default) or one of the special types.
+    """
+    if not title:
+        return 'chapter'
+    
+    title_lower = title.lower().strip()
+    
+    for chapter_type, keywords in _SPECIAL_KEYWORDS.items():
+        for keyword in keywords:
+            if keyword in title_lower:
+                return chapter_type
+    
+    return 'chapter'
+
 def _is_probable_title(line: str) -> bool:
     s = (line or "").strip()
 
@@ -266,6 +292,7 @@ class Chapter:
     text: str
     start_block: int
     end_block: int
+    chapter_type: str = 'chapter'  # 'chapter', 'intro', 'prologue', 'epilogue', 'credits', 'outro'
 
 def _signals_for_block(b: Block) -> Tuple[bool, bool, bool]:
     """
@@ -308,7 +335,8 @@ def _chapters_from_blocks(blocks: List[Block], min_words: int) -> List[Chapter]:
     starts = _choose_boundaries(blocks)
     if not starts:
         # single chapter fallback
-        return [Chapter(title="Inicio", text="\n\n".join(b.text for b in blocks).strip(), start_block=0, end_block=len(blocks)-1)]
+        return [Chapter(title="Inicio", text="\n\n".join(b.text for b in blocks).strip(), 
+                       start_block=0, end_block=len(blocks)-1, chapter_type='chapter')]
 
     chapters: List[Chapter] = []
     for idx, s in enumerate(starts):
@@ -316,7 +344,8 @@ def _chapters_from_blocks(blocks: List[Block], min_words: int) -> List[Chapter]:
         chunk = blocks[s:e+1]
         text = "\n\n".join(b.text for b in chunk).strip()
         title = (chunk[0].text.splitlines()[0] if chunk and chunk[0].text else f"Capítulo {len(chapters)+1}").strip()
-        chapters.append(Chapter(title=title, text=text, start_block=s, end_block=e))
+        chapter_type = _detect_chapter_type(title)
+        chapters.append(Chapter(title=title, text=text, start_block=s, end_block=e, chapter_type=chapter_type))
 
     # Merge too-short chapters forward
     def _word_count(s: str) -> int:
@@ -329,7 +358,9 @@ def _chapters_from_blocks(blocks: List[Block], min_words: int) -> List[Chapter]:
         if _word_count(ch.text) < min_words and i + 1 < len(chapters):
             nxt = chapters[i+1]
             merged_text = (ch.text + "\n\n" + nxt.text).strip()
-            merged.append(Chapter(title=ch.title, text=merged_text, start_block=ch.start_block, end_block=nxt.end_block))
+            # Preserve the first chapter's type when merging
+            merged.append(Chapter(title=ch.title, text=merged_text, start_block=ch.start_block, 
+                                end_block=nxt.end_block, chapter_type=ch.chapter_type))
             i += 2
         else:
             merged.append(ch)
@@ -355,16 +386,28 @@ def _write_chapters(out_dir: Path, chapters: List[Chapter]) -> List[str]:
 def _write_structure(out_json: Path, chapters: List[Chapter]) -> None:
     _ensure_dir(out_json.parent)
     items = []
+    chapter_number = 1  # Track actual chapter numbering (skips special types)
+    
     for i, ch in enumerate(chapters, start=1):
         words = len(re.findall(r"\w+", ch.text, flags=re.UNICODE))
-        items.append({
+        
+        item = {
             "id": f"ch{i:02d}",
             "title": ch.title,
             "words": words,
             "start_block": ch.start_block,
             "end_block": ch.end_block,
             "file": f"analysis/chapters_txt/ch{i:02d}.txt",
-        })
+            "chapterType": ch.chapter_type,
+        }
+        
+        # Add display number for regular chapters only
+        if ch.chapter_type == 'chapter':
+            item["displayNumber"] = chapter_number
+            chapter_number += 1
+        
+        items.append(item)
+    
     payload = {
         "chapters": items,
         "total_words": sum(it["words"] for it in items),

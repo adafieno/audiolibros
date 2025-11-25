@@ -7,11 +7,14 @@ import { StandardButton } from "../components/StandardButton";
 import { costTrackingService } from "../lib/cost-tracking-service";
 import { sanitizeTextForTTS, previewSanitization, hasProblematicCharacters } from "../lib/text-sanitizer";
 
+type ChapterType = 'chapter' | 'intro' | 'prologue' | 'epilogue' | 'credits' | 'outro';
+
 type ChapterItem = {
   id: string;
   title: string;
   relPath: string;
   words: number;
+  chapterType?: ChapterType;
 };
 
 interface SanitizationPreview {
@@ -19,6 +22,22 @@ interface SanitizationPreview {
   changes: number;
   preview: string;
   appliedRules: string[];
+}
+
+// Helper function to get display label for chapter type
+function getChapterTypeLabel(t: any, chapterType?: ChapterType): string {
+  if (!chapterType || chapterType === 'chapter') return '';
+  
+  const labels: Record<ChapterType, string> = {
+    chapter: '',
+    intro: t('manuscript.chapterTypes.intro', 'Intro'),
+    prologue: t('manuscript.chapterTypes.prologue', 'Prologue'),
+    epilogue: t('manuscript.chapterTypes.epilogue', 'Epilogue'),
+    credits: t('manuscript.chapterTypes.credits', 'Credits'),
+    outro: t('manuscript.chapterTypes.outro', 'Outro')
+  };
+  
+  return labels[chapterType] || '';
 }
 
 export default function ManuscriptPage() {
@@ -261,6 +280,9 @@ export default function ManuscriptPage() {
               }}>
                 {chapters.map((c) => {
                   const active = selected?.id === c.id;
+                  const typeLabel = getChapterTypeLabel(t, c.chapterType);
+                  const isSpecial = c.chapterType && c.chapterType !== 'chapter';
+                  
                   return (
                     <li key={c.id}>
                       <button
@@ -279,7 +301,27 @@ export default function ManuscriptPage() {
                           margin: "0 2px"
                         }}
                       >
-                        <div style={{ fontWeight: 600, marginBottom: 4 }}>{c.title}</div>
+                        <div style={{ 
+                          fontWeight: 600, 
+                          marginBottom: 4,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px"
+                        }}>
+                          {c.title}
+                          {isSpecial && (
+                            <span style={{
+                              fontSize: "11px",
+                              padding: "2px 6px",
+                              borderRadius: "4px",
+                              background: "var(--accent)",
+                              color: "var(--bg)",
+                              fontWeight: 500
+                            }}>
+                              {typeLabel}
+                            </span>
+                          )}
+                        </div>
                         <div style={{ fontSize: "12px", color: "var(--muted)" }}>
                           {c.id} · {t("manuscript.chapterWords", { words: c.words })}
                         </div>

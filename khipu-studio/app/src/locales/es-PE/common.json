@@ -811,6 +811,26 @@
     "string": "{{words}} palabras",
     "comment": "Contador de palabras para capítulos"
   },
+  "manuscript.chapterTypes.intro": {
+    "string": "Intro",
+    "comment": "Etiqueta para tipo de capítulo de introducción"
+  },
+  "manuscript.chapterTypes.prologue": {
+    "string": "Prólogo",
+    "comment": "Etiqueta para tipo de capítulo de prólogo"
+  },
+  "manuscript.chapterTypes.epilogue": {
+    "string": "Epílogo",
+    "comment": "Etiqueta para tipo de capítulo de epílogo"
+  },
+  "manuscript.chapterTypes.credits": {
+    "string": "Créditos",
+    "comment": "Etiqueta para tipo de capítulo de créditos"
+  },
+  "manuscript.chapterTypes.outro": {
+    "string": "Final",
+    "comment": "Etiqueta para tipo de capítulo de final"
+  },
   "home.existingProjects": {
     "string": "Proyectos recientes",
     "comment": ""
