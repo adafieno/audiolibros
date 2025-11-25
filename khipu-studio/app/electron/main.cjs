@@ -539,8 +539,16 @@ function createWin() {
 
   win.webContents.on("render-process-gone", (_e, d) => console.error("[renderer gone]", d));
 
-  if (process.env.VITE_DEV) win.loadURL("http://localhost:5173");
-  else win.loadFile(path.join(__dirname, "../dist/index.html"));
+  if (process.env.VITE_DEV) {
+    win.loadURL("http://localhost:5173");
+  } else {
+    // In production, use path.resolve to find dist folder correctly
+    const distPath = app.isPackaged
+      ? path.join(process.resourcesPath, "app.asar", "dist", "index.html")
+      : path.join(__dirname, "../dist/index.html");
+    console.log("Loading UI from:", distPath);
+    win.loadFile(distPath);
+  }
 
   /* Cost tracking helper - writes tracking data from backend */
   async function trackBackendOperation(projectRoot, trackingData) {
