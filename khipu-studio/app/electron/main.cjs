@@ -544,23 +544,26 @@ function createWin() {
     console.error("[did-fail-load]", { errorCode, errorDescription, validatedURL });
   });
   
-  // Open DevTools in production to debug
-  if (!process.env.VITE_DEV) {
+  // Open DevTools in production to debug (temporary for troubleshooting)
+  if (!process.env.VITE_DEV && process.env.DEBUG_PROD) {
     win.webContents.openDevTools();
   }
 
   if (process.env.VITE_DEV) {
     win.loadURL("http://localhost:5173");
   } else {
-    // In production/packaged mode, the dist folder is inside app.asar
-    // __dirname is inside the asar: app.asar/electron
-    // So ../dist/index.html should work correctly
+    // In production, load from the dist folder
+    // When packaged, __dirname will be inside app.asar
     const indexPath = path.join(__dirname, "..", "dist", "index.html");
     console.log("Loading UI from:", indexPath);
     console.log("app.isPackaged:", app.isPackaged);
     console.log("__dirname:", __dirname);
-    win.loadFile(indexPath).catch(err => {
-      console.error("Failed to load file:", err);
+    console.log("resourcesPath:", process.resourcesPath);
+    
+    win.loadFile(indexPath).then(() => {
+      console.log("UI loaded successfully");
+    }).catch(err => {
+      console.error("Failed to load UI:", err);
     });
   }
 
