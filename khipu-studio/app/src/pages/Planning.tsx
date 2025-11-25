@@ -517,8 +517,8 @@ function EditablePreview({
             alignItems: "center",
             gap: "8px"
           }}>
-            <span>📝 Texto del Segmento</span>
-            <span style={{ fontSize: "12px", color: "var(--muted)" }}>• Voz: {current.voice || "unassigned"}</span>
+            <span>📝 {t('planning.segmentText')}</span>
+            <span style={{ fontSize: "12px", color: "var(--muted)" }}>• {t('planning.voice')}: {current.voice || t('common.unassigned')}</span>
             <span style={{ fontSize: "12px", color: "var(--muted)" }}>• ID: {current.segmentId}</span>
           </div>
           
@@ -692,7 +692,7 @@ function EditablePreview({
                   padding: "6px 12px"
                 }}
               >
-                ↶ Deshacer
+                ↶ {t('planning.undo')}
               </StandardButton>
             </>
           ) : (
@@ -737,7 +737,7 @@ function EditablePreview({
           )}
           
           {/* Audition button - if voice is assigned */}
-          {current.voice && current.voice !== "unassigned" && (
+          {current.voice && current.voice !== t('common.unassigned') && current.voice !== "unassigned" && (
             <StandardButton
                 onClick={() => {
                   console.log(`🎵 AUDITION BUTTON CLICKED - Segment ${current.segmentId}:`);

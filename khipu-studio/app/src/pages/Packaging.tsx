@@ -908,14 +908,14 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
                   </div>
                   
                   {/* Show package creation timestamp if available */}
-                  {validationResults[id].specs?.createdAt && (
+                  {validationResults[id].specs?.createdAt ? (
                     <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '8px' }}>
                       📅 Created: {new Date(Number(validationResults[id].specs.createdAt) * 1000).toLocaleString()}
-                      {validationResults[id].specs?.fileSizeMB && (
-                        <> • {String(validationResults[id].specs.fileSizeMB) as string} MB</>
-                      )}
+                      {validationResults[id].specs?.fileSizeMB ? (
+                        <> • {String(validationResults[id].specs.fileSizeMB)} MB</>
+                      ) : null}
                     </div>
-                  )}
+                  ) : null}
                   
                   {validationResults[id].issues.length > 0 && (
                     <div style={{ marginTop: '8px' }}>\n                      {validationResults[id].issues.map((issue, idx: number) => (

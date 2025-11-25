@@ -2589,11 +2589,6 @@
     "string": "Progreso",
     "comment": "Etiqueta para la barra de progreso en la visualización de texto"
   },
-
-  "manuscript.loadingChapter": {
-    "string": "Cargando capítulo…",
-    "comment": "Mensaje de estado al cargar un capítulo"
-  },
   "manuscript.chapterLoaded": {
     "string": "Capítulo cargado",
     "comment": "Mensaje de estado cuando el capítulo se carga exitosamente"
@@ -3790,5 +3785,37 @@
   "packaging.startPackaging": {
     "string": "Iniciar Empaquetado",
     "comment": "Etiqueta del botón para iniciar el proceso de empaquetado"
+  },
+  "common.unassigned": {
+    "string": "sin asignar",
+    "comment": "Etiqueta para voz o personaje sin asignar"
+  },
+  "common.clickToEdit": {
+    "string": "Clic para editar",
+    "comment": "Tooltip para campos editables"
+  },
+  "planning.segmentText": {
+    "string": "Texto del Segmento",
+    "comment": "Etiqueta para la sección del editor de texto del segmento"
+  },
+  "planning.voice": {
+    "string": "Voz",
+    "comment": "Etiqueta para asignación de voz en información del segmento"
+  },
+  "voice.playAudioSegment": {
+    "string": "Reproducir segmento de audio",
+    "comment": "Tooltip para el botón de reproducir audio"
+  },
+  "voice.moveSfxUp": {
+    "string": "Mover SFX arriba",
+    "comment": "Tooltip para mover segmento SFX hacia arriba en la lista"
+  },
+  "voice.moveSfxDown": {
+    "string": "Mover SFX abajo",
+    "comment": "Tooltip para mover segmento SFX hacia abajo en la lista"
+  },
+  "voice.deleteSfxSegment": {
+    "string": "Eliminar segmento SFX",
+    "comment": "Tooltip para eliminar segmento SFX"
   }
 }

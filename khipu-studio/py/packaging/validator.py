@@ -357,17 +357,8 @@ def validate_m4b_package(package_path: str, expected_specs: Optional[Dict[str, A
             ))
         
         # Check for album (optional for audiobooks - used for series info)
-        # Only flag as info if it's missing, since it's not critical for audiobooks
-        album_value = metadata.get('album', '').strip()
-        if not album_value:
-            # Only mention if other metadata is present (to avoid noise)
-            if metadata.get('title') and metadata.get('artist'):
-                issues.append(ValidationIssue(
-                    severity='info',
-                    category='metadata',
-                    message='Album metadata not set',
-                    details='Album tag can be used for book series or collection name (optional for audiobooks)'
-                ))
+        # Skip album validation - not applicable for audiobooks
+        # Audiobooks use title/artist/narrator metadata, not album
     else:
         issues.append(ValidationIssue(
             severity='warning',

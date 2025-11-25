@@ -2594,5 +2594,45 @@
   "packaging.startPackaging": {
     "string": "Iniciar Empacotamento",
     "comment": "Rótulo do botão para iniciar o processo de empacotamento"
+  },
+  "common.unassigned": {
+    "string": "não atribuído",
+    "comment": "Indica que nenhuma voz foi atribuída a um segmento"
+  },
+  "common.clickToEdit": {
+    "string": "Clique para editar",
+    "comment": "Dica de ferramenta para campos editáveis"
+  },
+  "planning.segmentText": {
+    "string": "Texto do Segmento",
+    "comment": "Rótulo para a seção do editor de texto do segmento"
+  },
+  "planning.voice": {
+    "string": "Voz",
+    "comment": "Rótulo para atribuição de voz nas informações do segmento"
+  },
+  "voice.playAudioSegment": {
+    "string": "Reproduzir segmento de áudio",
+    "comment": "Dica de ferramenta para o botão de reprodução de áudio"
+  },
+  "voice.moveSfxUp": {
+    "string": "Mover SFX para cima",
+    "comment": "Dica de ferramenta para mover o segmento SFX para cima na lista"
+  },
+  "voice.moveSfxDown": {
+    "string": "Mover SFX para baixo",
+    "comment": "Dica de ferramenta para mover o segmento SFX para baixo na lista"
+  },
+  "voice.deleteSfxSegment": {
+    "string": "Excluir segmento SFX",
+    "comment": "Dica de ferramenta para excluir o segmento SFX"
+  },
+  "plan.editChapter": {
+    "string": "Editar capítulo",
+    "comment": "Texto do botão para editar detalhes do capítulo"
+  },
+  "plan.regeneratePlan": {
+    "string": "Regenerar plano",
+    "comment": "Texto do botão para regenerar o plano do capítulo"
   }
 }

@@ -132,10 +132,10 @@ export default function PlanBoard({ projectRoot, planRelPath, chapterId, onOpenC
     <div style={{ marginTop: 16 }}>
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
         <StandardButton onClick={() => onOpenChapter(chapterId)} variant="primary" size="compact">
-          Editar capítulo
+          {t('plan.editChapter', 'Edit chapter')}
         </StandardButton>
         <StandardButton onClick={regen} variant="secondary" size="compact">
-          Regenerar plan
+          {t('plan.regeneratePlan', 'Regenerate plan')}
         </StandardButton>
         <span style={{ color: "#9ca3af" }}>{msg}</span>
       </div>

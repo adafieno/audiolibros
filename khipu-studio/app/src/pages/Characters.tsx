@@ -494,7 +494,7 @@ function CharactersPage() {
                       <span 
                         onClick={() => startEditing(`${c.id}-name`)}
                         style={{ cursor: "pointer", display: "inline-block", minWidth: "100px" }}
-                        title="Click to edit"
+                        title={t('common.clickToEdit', 'Click to edit')}
                       >
                         {c.name || t("characters.unnamedCharacter")}
                       </span>

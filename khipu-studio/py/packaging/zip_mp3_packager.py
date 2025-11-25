@@ -98,7 +98,7 @@ def _convert_to_mp3(
         return output_path.exists()
     
     except subprocess.CalledProcessError as e:
-        print(f"[ERROR] FFmpeg conversion failed:")
+        print("[ERROR] FFmpeg conversion failed:")
         print(f"  Command: {' '.join(cmd)}")
         print(f"  Exit code: {e.returncode}")
         if e.stderr:

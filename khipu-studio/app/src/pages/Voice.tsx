@@ -2077,7 +2077,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                             variant="secondary"
                             size="compact"
                             onClick={(e) => handlePlayButtonClick(index, e)}
-                            title="Play audio segment"
+                            title={t('voice.playAudioSegment', 'Play audio segment')}
                             style={{
                               background: "none",
                               border: "none",
@@ -2136,7 +2136,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 moveSfxSegment(index, 'up');
                               }}
                               disabled={index === 0}
-                              title="Move SFX up"
+                              title={t('voice.moveSfxUp', 'Move SFX up')}
                               style={{
                                 background: "none",
                                 border: "none",
@@ -2158,7 +2158,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                 moveSfxSegment(index, 'down');
                               }}
                               disabled={index === audioSegments.length - 1}
-                              title="Move SFX down"
+                              title={t('voice.moveSfxDown', 'Move SFX down')}
                               style={{
                                 background: "none",
                                 border: "none",
@@ -2181,7 +2181,7 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                                   deleteSfxSegment(index);
                                 }
                               }}
-                              title="Delete SFX segment"
+                              title={t('voice.deleteSfxSegment', 'Delete SFX segment')}
                               style={{
                                 background: "none",
                                 border: "none",

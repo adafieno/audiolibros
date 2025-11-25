@@ -2149,11 +2149,6 @@
     "string": "Progress",
     "comment": "Label for progress bar in text display"
   },
-
-  "manuscript.loadingChapter": {
-    "string": "Loading chapter…",
-    "comment": "Status message when loading a chapter"
-  },
   "manuscript.chapterLoaded": {
     "string": "Chapter loaded",
     "comment": "Status message when chapter is successfully loaded"
@@ -3441,5 +3436,37 @@
   "packaging.startPackaging": {
     "string": "Start Packaging",
     "comment": "Button label to start the packaging process"
+  },
+  "common.unassigned": {
+    "string": "unassigned",
+    "comment": "Label for unassigned voice or character"
+  },
+  "common.clickToEdit": {
+    "string": "Click to edit",
+    "comment": "Tooltip hint for editable fields"
+  },
+  "planning.segmentText": {
+    "string": "Segment Text",
+    "comment": "Label for the segment text editor section"
+  },
+  "planning.voice": {
+    "string": "Voice",
+    "comment": "Label for voice assignment in segment info"
+  },
+  "voice.playAudioSegment": {
+    "string": "Play audio segment",
+    "comment": "Tooltip for play audio button"
+  },
+  "voice.moveSfxUp": {
+    "string": "Move SFX up",
+    "comment": "Tooltip for moving SFX segment up in the list"
+  },
+  "voice.moveSfxDown": {
+    "string": "Move SFX down",
+    "comment": "Tooltip for moving SFX segment down in the list"
+  },
+  "voice.deleteSfxSegment": {
+    "string": "Delete SFX segment",
+    "comment": "Tooltip for deleting SFX segment"
   }
 }
