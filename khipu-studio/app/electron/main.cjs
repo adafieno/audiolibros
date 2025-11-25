@@ -534,8 +534,14 @@ function createWin() {
     height: 800,
     title: "Khipu Studio",
     backgroundColor: "#111827",
+    icon: path.join(__dirname, "..", "..", "assets", "icons", "icon_256x256.png"),
     webPreferences: { preload: path.join(__dirname, "preload.cjs"), contextIsolation: true },
   });
+
+  // Hide menu bar in production
+  if (!process.env.VITE_DEV) {
+    win.setMenuBarVisibility(false);
+  }
 
   win.webContents.on("render-process-gone", (_e, d) => console.error("[renderer gone]", d));
   
