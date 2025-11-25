@@ -854,15 +854,35 @@ function createWin() {
       if (!projectRoot) throw new Error('Missing projectRoot');
       if (!platformId) throw new Error('Missing platformId');
 
-      // Step 1: Generate universal manifest
-      await generateUniversalManifest(projectRoot);
-
-      // Step 2: Platform-specific packaging logic
-      let outputPath;
+      // Manifest is now optional - packagers will try to use it if available,
+      // or fall back to reading source files directly
       const manifestPath = path.join(projectRoot, 'manifest.json');
-      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
-      const bookTitle = manifest.book?.title || 'audiobook';
+      let bookTitle = 'audiobook';
+      
+      if (fs.existsSync(manifestPath)) {
+        console.log('[packaging:create] Using existing manifest for metadata');
+        const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+        bookTitle = manifest.book?.title || 'audiobook';
+      } else {
+        console.log('[packaging:create] No manifest found, packagers will read source files directly');
+        // Try to get book title from book.meta.json
+        const bookMetaPaths = [
+          path.join(projectRoot, 'dossier', 'book.json'),
+          path.join(projectRoot, 'book.meta.json')
+        ];
+        for (const bookMetaPath of bookMetaPaths) {
+          if (fs.existsSync(bookMetaPath)) {
+            const bookMeta = JSON.parse(fs.readFileSync(bookMetaPath, 'utf-8'));
+            bookTitle = bookMeta.title || 'audiobook';
+            break;
+          }
+        }
+      }
+      
       const sanitizedTitle = bookTitle.replace(/[^a-z0-9]/gi, '_');
+      
+      // Platform-specific packaging logic
+      let outputPath;
       
       switch (platformId) {
         case 'apple': {

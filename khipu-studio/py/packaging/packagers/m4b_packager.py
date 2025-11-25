@@ -17,7 +17,146 @@ import subprocess
 from pathlib import Path
 from typing import Dict, Any, Optional
 import tempfile
-import shutil
+
+# Try importing audio probing for fallback mode
+try:
+    import wave
+    HAS_WAVE = True
+except ImportError:
+    HAS_WAVE = False
+
+try:
+    from pydub import AudioSegment  # type: ignore
+    HAS_PYDUB = True
+except ImportError:
+    HAS_PYDUB = False
+
+
+def _probe_audio_duration(audio_path: Path) -> Optional[float]:
+    """
+    Get duration of audio file in seconds.
+    Used in fallback mode when manifest doesn't exist.
+    """
+    if not audio_path.exists():
+        return None
+    
+    # Try wave module first (fastest for WAV files)
+    if HAS_WAVE and audio_path.suffix.lower() == '.wav':
+        try:
+            with wave.open(str(audio_path), 'rb') as wf:
+                frames = wf.getnframes()
+                rate = wf.getframerate()
+                return frames / float(rate)
+        except Exception:
+            pass
+    
+    # Fallback to pydub
+    if HAS_PYDUB:
+        try:
+            audio = AudioSegment.from_file(str(audio_path))
+            return len(audio) / 1000.0
+        except Exception:
+            pass
+    
+    return None
+
+
+def _load_project_data(project_root: Path) -> Dict[str, Any]:
+    """
+    Load project data from manifest or source files.
+    Tries manifest first for performance, falls back to source files.
+    """
+    manifest_path = project_root / 'manifest.json'
+    
+    # Try to use manifest if available
+    if manifest_path.exists():
+        try:
+            with open(manifest_path, 'r', encoding='utf-8') as f:
+                manifest = json.load(f)
+            print("📋 Using universal manifest", file=sys.stderr)
+            return manifest
+        except Exception as e:
+            print(f"⚠️  Failed to load manifest, falling back to source files: {e}", file=sys.stderr)
+    else:
+        print("📋 Manifest not found, reading source files directly", file=sys.stderr)
+    
+    # Fallback: Read source files directly
+    project_config = {}
+    config_path = project_root / 'project.khipu.json'
+    if config_path.exists():
+        with open(config_path, 'r', encoding='utf-8') as f:
+            project_config = json.load(f)
+    
+    # Load book metadata
+    book_metadata = {}
+    book_meta_paths = [
+        project_root / 'dossier' / 'book.json',
+        project_root / 'book.meta.json'
+    ]
+    for path in book_meta_paths:
+        if path.exists():
+            with open(path, 'r', encoding='utf-8') as f:
+                book_metadata = json.load(f)
+                break
+    
+    # Load narrative structure
+    chapters = []
+    structure_path = project_root / 'dossier' / 'narrative.structure.json'
+    if structure_path.exists():
+        with open(structure_path, 'r', encoding='utf-8') as f:
+            structure = json.load(f)
+            chapters = structure.get('chapters', [])
+    
+    # Scan for audio files and probe durations
+    audio_dir = project_root / 'audio' / 'wav'
+    completed_chapters = 0
+    missing_audio = []
+    
+    for idx, chapter in enumerate(chapters, start=1):
+        chapter_id = chapter.get('id', f'ch{idx:02d}')
+        audio_file = audio_dir / f'{chapter_id}_complete.wav'
+        
+        if audio_file.exists():
+            duration = _probe_audio_duration(audio_file)
+            chapter['audioFile'] = str(audio_file.relative_to(project_root))
+            chapter['duration'] = duration
+            chapter['hasAudio'] = True
+            completed_chapters += 1
+        else:
+            chapter['audioFile'] = None
+            chapter['duration'] = None
+            chapter['hasAudio'] = False
+            missing_audio.append(chapter_id)
+    
+    # Build manifest-like structure
+    return {
+        'project': {
+            'name': project_config.get('name', 'Untitled Project')
+        },
+        'book': {
+            'title': book_metadata.get('title', project_config.get('bookMeta', {}).get('title', 'Untitled')),
+            'subtitle': book_metadata.get('subtitle'),
+            'authors': book_metadata.get('authors', []),
+            'narrators': book_metadata.get('narrators', []),
+            'translators': book_metadata.get('translators', []),
+            'adaptors': book_metadata.get('adaptors', []),
+            'description': book_metadata.get('description'),
+            'language': book_metadata.get('language', 'en'),
+            'publisher': book_metadata.get('publisher'),
+            'publicationDate': book_metadata.get('publicationDate'),
+            'isbn': book_metadata.get('isbn'),
+            'copyright': book_metadata.get('copyright'),
+        },
+        'cover': {
+            'image': project_config.get('bookMeta', {}).get('coverImage')
+        },
+        'audio': {
+            'chapterCount': len(chapters),
+            'completedChapters': completed_chapters,
+            'missingAudio': missing_audio
+        },
+        'chapters': chapters
+    }
 
 
 def _run_ffmpeg(args: list[str], description: str = "FFmpeg operation") -> bool:
@@ -173,21 +312,15 @@ def package_m4b(
     project_root = Path(project_root)
     output_path = Path(output_path)
     
-    print(f"📦 Packaging M4B for Apple Books", file=sys.stderr)
+    print("📦 Packaging M4B for Apple Books", file=sys.stderr)
     print(f"   Project: {project_root}", file=sys.stderr)
     print(f"   Output: {output_path}", file=sys.stderr)
     
-    # Load manifest
-    manifest_path = project_root / 'manifest.json'
-    if not manifest_path.exists():
-        print(f"❌ Manifest not found: {manifest_path}", file=sys.stderr)
-        return False
-    
+    # Load project data (from manifest or source files)
     try:
-        with open(manifest_path, 'r', encoding='utf-8') as f:
-            manifest = json.load(f)
+        manifest = _load_project_data(project_root)
     except Exception as e:
-        print(f"❌ Failed to load manifest: {e}", file=sys.stderr)
+        print(f"❌ Failed to load project data: {e}", file=sys.stderr)
         return False
     
     # Check if all chapters have audio

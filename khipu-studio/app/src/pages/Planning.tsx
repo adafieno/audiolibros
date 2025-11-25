@@ -1127,7 +1127,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
 
         // Delete the old cache entry
         try {
-          const deleted = await deleteAudioCacheEntry(staleCacheKey);
+          const deleted = await deleteAudioCacheEntry(await staleCacheKey);
           console.log(`🧹 CLEANUP STALE CACHE - Deletion result: ${deleted} for segment ${segment.segment_id}`);
         } catch (error) {
           console.error(`Failed to delete stale cache for segment ${segment.segment_id}:`, error);
@@ -2006,7 +2006,7 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
 
     // Delete the old cache entry
     try {
-      const deleted = await deleteAudioCacheEntry(oldCacheKey);
+      const deleted = await deleteAudioCacheEntry(await oldCacheKey);
       console.log(`🗑️ CACHE INVALIDATION - Deletion result: ${deleted} for key: "${oldCacheKey}"`);
     } catch (error) {
       console.error("Failed to delete old cache entry:", error);

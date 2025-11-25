@@ -20,7 +20,7 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 from datetime import datetime
 
 # Try importing audio probing utilities
@@ -31,7 +31,7 @@ except ImportError:
     HAS_WAVE = False
 
 try:
-    from pydub import AudioSegment
+    from pydub import AudioSegment  # type: ignore
     HAS_PYDUB = True
 except ImportError:
     HAS_PYDUB = False

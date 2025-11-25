@@ -15,24 +15,62 @@ The M4B packager converts a completed audiobook project into Apple Books' M4B fo
 
 ## Technical Details
 
+### Data Loading Strategy
+
+The M4B packager supports **two modes** for maximum flexibility:
+
+**1. Fast Path (Manifest Available)**
+```
+1. Check if manifest.json exists
+   ↓
+2. Load pre-aggregated data (book metadata, chapters, audio paths, durations)
+   ↓
+3. Skip to FFmpeg processing
+```
+
+**2. Fallback Path (No Manifest)**
+```
+1. Manifest not found or failed to load
+   ↓
+2. Read source files directly:
+   - project.khipu.json (project name)
+   - book.meta.json or dossier/book.json (book metadata)
+   - dossier/narrative.structure.json (chapter list)
+   ↓
+3. Scan audio/wav/ directory for *_complete.wav files
+   ↓
+4. Probe each audio file for duration (using wave or pydub)
+   ↓
+5. Build manifest-like structure in memory
+   ↓
+6. Proceed to FFmpeg processing
+```
+
+**Key Benefits:**
+- ⚡ Manifest path is faster (pre-calculated durations)
+- 🛠️ Fallback path ensures packaging always works
+- 🔄 No workflow dependency on manifest generation
+
 ### Audio Processing Pipeline
 
 ```
-1. Read manifest.json
+1. Load project data (from manifest or source files)
    ↓
-2. Create FFmpeg concat list (all chapter WAV files)
+2. Validate all chapters have audio
    ↓
-3. Create FFmpeg metadata file (book info + chapter markers)
+3. Create FFmpeg concat list (all chapter WAV files)
    ↓
-4. Concatenate all chapters into single WAV
+4. Create FFmpeg metadata file (book info + chapter markers)
    ↓
-5. Convert to AAC with metadata:
+5. Concatenate all chapters into single WAV
+   ↓
+6. Convert to AAC with metadata:
    - Encode to AAC at specified bitrate
    - Embed chapter markers
-   - Add ID3 tags (title, artist, album_artist, etc.)
+   - Add ID3 tags (title, artist, album_artist, translator, adaptor, etc.)
    - Attach cover art
    ↓
-6. Output: {bookTitle}.m4b in exports/apple/
+7. Output: {bookTitle}.m4b in exports/apple/
 ```
 
 ### FFmpeg Commands Used

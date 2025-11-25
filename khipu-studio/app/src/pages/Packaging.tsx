@@ -490,6 +490,14 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
       <section style={{ marginBottom: "32px" }}>
         <h2 style={{ fontSize: "18px", fontWeight: "600", marginBottom: "16px" }}>
           {t("packaging.universalManifest", "Universal Manifest")}
+          <span style={{ 
+            fontSize: "12px", 
+            fontWeight: "400", 
+            color: "var(--muted)", 
+            marginLeft: "8px" 
+          }}>
+            {t("packaging.optional", "(Optional)")}
+          </span>
         </h2>
         <div style={{
           padding: "20px",
@@ -498,7 +506,7 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
           borderRadius: "8px"
         }}>
           <div style={{ fontSize: "14px", color: "var(--muted)", marginBottom: "16px" }}>
-            {t("packaging.manifestDescription", "The universal manifest aggregates all book metadata, chapter information, and audio file paths into a single file needed for platform-specific packaging.")}
+            {t("packaging.manifestDescription", "The universal manifest pre-aggregates book metadata, chapter information, and audio file paths for faster packaging. Packagers can work without it by reading source files directly, but generating it improves performance.")}
           </div>
           
           {/* Status indicator */}
@@ -508,10 +516,10 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
             gap: "8px",
             marginBottom: "16px",
             padding: "12px",
-            backgroundColor: manifestExists ? "rgba(76, 175, 80, 0.1)" : "rgba(255, 152, 0, 0.1)",
+            backgroundColor: manifestExists ? "rgba(76, 175, 80, 0.1)" : "rgba(158, 158, 158, 0.1)",
             borderRadius: "6px"
           }}>
-            <span style={{ fontSize: "20px" }}>{manifestExists ? "✓" : "⚠"}</span>
+            <span style={{ fontSize: "20px" }}>{manifestExists ? "✓" : "ℹ"}</span>
             <div>
               <div style={{ fontSize: "14px", fontWeight: "600", color: "var(--text)" }}>
                 {manifestExists 
@@ -520,8 +528,8 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
               </div>
               <div style={{ fontSize: "13px", color: "var(--muted)" }}>
                 {manifestExists
-                  ? t("packaging.manifestExistsDesc", "Ready for platform packaging")
-                  : t("packaging.manifestNotGeneratedDesc", "Generate manifest before preparing packages")}
+                  ? t("packaging.manifestExistsDesc", "Packaging will use pre-aggregated data for best performance")
+                  : t("packaging.manifestNotGeneratedDesc", "Packaging will scan source files directly (slower but works fine)")}
               </div>
             </div>
           </div>

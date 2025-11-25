@@ -2,36 +2,82 @@
 
 ## Overview
 
-The Universal Manifest is a centralized JSON file (`manifest.json`) that aggregates all metadata, chapter information, and audio file paths needed for platform-specific audiobook packaging. It serves as a single source of truth, eliminating redundant file scanning across different packaging operations.
+The Universal Manifest is an **optional** centralized JSON file (`manifest.json`) that pre-aggregates all metadata, chapter information, and audio file paths for faster platform-specific audiobook packaging.
+
+**Key Design Principle**: The manifest is NOT required for packaging. Platform packagers can operate in two modes:
+1. **Fast path**: Use pre-generated manifest if available (avoids redundant scanning and probing)
+2. **Fallback path**: Read source files directly if manifest is missing or stale
+
+This design provides performance optimization while maintaining simplicity and robustness.
+
+## Why Optional?
+
+**Advantages of generating manifest:**
+- ⚡ **Performance**: Scans audio directory and probes durations once, not on each packaging operation
+- 🔄 **Consistency**: All platforms use identical aggregated data
+- ✅ **Early validation**: Detects missing audio files before any packaging attempt
+- 📊 **Multi-platform efficiency**: Export to 5 platforms = 1 scan instead of 5
+
+**Advantages of making it optional:**
+- 🎯 **Simplicity**: Users can package immediately without extra workflow steps
+- 🔄 **Flexibility**: No risk of stale manifest when source files change
+- 🛠️ **Robustness**: Packagers always work, even if manifest generation fails
+- 🚀 **Quick iteration**: Metadata changes don't require regenerating manifest
+
+## When to Generate
+
+**Generate the manifest when:**
+- Packaging for multiple platforms (avoid redundant scanning)
+- Working with large projects where duration probing is slow (20+ chapters)
+- You want early validation of chapter audio completeness
+- Optimizing CI/CD pipelines for repeated packaging
+
+**Skip manifest generation when:**
+- Packaging for a single platform once
+- Rapidly iterating on metadata changes
+- Working with small projects (< 10 chapters)
+- Testing or debugging packaging issues
 
 ## Architecture
 
-### Generation Flow
+### Packaging Flow (with optional manifest)
 
 ```
 User clicks "Prepare" for a platform
     ↓
 Backend: packaging:create IPC handler
     ↓
+Check: Does manifest.json exist?
+    ├─ YES → Platform packager uses manifest (fast path)
+    └─ NO  → Platform packager reads source files directly (fallback path)
+    ↓
+Platform-specific packager (M4B, ZIP+MP3, EPUB3)
+```
+
+### Manifest Generation Flow (when user explicitly generates)
+
+```
+User clicks "Generate Manifest"
+    ↓
+Backend: packaging:generateManifest IPC handler
+    ↓
 Python: manifest_generator.py
     ↓
-Reads: project.khipu.json, dossier/book.json, narrative.structure.json
+Reads: project.khipu.json, book.meta.json, narrative.structure.json
     ↓
 Scans: audio/wav/*_complete.wav files
     ↓
 Probes: audio duration using wave/pydub libraries
     ↓
 Writes: manifest.json to project root
-    ↓
-Backend: Platform-specific packager (M4B, ZIP+MP3, EPUB3)
 ```
 
 ### File Locations
 
 - **Generator Script**: `py/packaging/manifest_generator.py`
-- **Package Init**: `py/packaging/__init__.py`
+- **M4B Packager**: `py/packaging/packagers/m4b_packager.py` (supports both manifest and fallback)
 - **Output File**: `{projectRoot}/manifest.json`
-- **Backend Integration**: `app/electron/main.cjs` (packaging:create handler)
+- **Backend Integration**: `app/electron/main.cjs` (packaging:create and packaging:generateManifest handlers)
 
 ## Manifest Structure
 
