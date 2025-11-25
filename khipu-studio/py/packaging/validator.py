@@ -617,6 +617,184 @@ def validate_zip_mp3_package(
     return result
 
 
+def validate_epub3_package(
+    package_path: str,
+    expected_specs: Optional[Dict[str, Any]] = None
+) -> ValidationResult:
+    """
+    Validate EPUB3 package for Kobo.
+    
+    Checks:
+    - EPUB file structure (mimetype, META-INF, OEBPS)
+    - MP3 audio files with proper specs
+    - SMIL synchronization files
+    - Package OPF structure
+    """
+    import zipfile
+    import tempfile
+    import shutil
+    
+    path = Path(package_path)
+    issues = []
+    specs = {}
+    
+    # Add package file info
+    file_stats = path.stat()
+    specs['fileSize'] = file_stats.st_size
+    specs['fileSizeMB'] = round(file_stats.st_size / (1024 * 1024), 2)
+    specs['createdAt'] = file_stats.st_ctime
+    specs['modifiedAt'] = file_stats.st_mtime
+    
+    # Check if EPUB file is valid ZIP
+    if not zipfile.is_zipfile(path):
+        issues.append(ValidationIssue(
+            severity='error',
+            category='structure',
+            message='Invalid EPUB file',
+            details='Package is not a valid ZIP archive'
+        ))
+        return ValidationResult(
+            valid=False,
+            platform='kobo',
+            package_path=package_path,
+            issues=issues,
+            specs=specs
+        )
+    
+    # Extract EPUB to temp directory for analysis
+    temp_dir = Path(tempfile.mkdtemp(prefix='khipu_validate_epub_'))
+    try:
+        with zipfile.ZipFile(path, 'r') as zf:
+            zf.extractall(temp_dir)
+        
+        # Check for required EPUB structure
+        if not (temp_dir / 'mimetype').exists():
+            issues.append(ValidationIssue(
+                severity='error',
+                category='structure',
+                message='Missing mimetype file',
+                details='EPUB must contain mimetype file at root'
+            ))
+        
+        if not (temp_dir / 'META-INF' / 'container.xml').exists():
+            issues.append(ValidationIssue(
+                severity='error',
+                category='structure',
+                message='Missing META-INF/container.xml',
+                details='EPUB must contain container.xml'
+            ))
+        
+        if not (temp_dir / 'OEBPS' / 'package.opf').exists():
+            issues.append(ValidationIssue(
+                severity='error',
+                category='structure',
+                message='Missing OEBPS/package.opf',
+                details='EPUB must contain package.opf'
+            ))
+        
+        # Find all MP3 files in audio directory
+        audio_dir = temp_dir / 'OEBPS' / 'audio'
+        if not audio_dir.exists():
+            issues.append(ValidationIssue(
+                severity='error',
+                category='structure',
+                message='Missing audio directory',
+                details='EPUB must contain OEBPS/audio directory'
+            ))
+        else:
+            mp3_files = sorted(audio_dir.glob('*.mp3'))
+            
+            if not mp3_files:
+                issues.append(ValidationIssue(
+                    severity='error',
+                    category='structure',
+                    message='No MP3 files found',
+                    details='EPUB audio directory must contain MP3 files'
+                ))
+            else:
+                specs['chapterCount'] = len(mp3_files)
+                
+                # Validate audio specs for first file (assume all same)
+                audio_info = _probe_audio_with_ffprobe(mp3_files[0])
+                if audio_info:
+                    specs['bitrate'] = audio_info['bitrate']
+                    specs['bitrateKbps'] = f"{audio_info['bitrate']}k"
+                    specs['sampleRate'] = audio_info['sampleRate']
+                    specs['channels'] = audio_info['channels']
+                    
+                    # Check against expected specs
+                    if expected_specs:
+                        expected_bitrate_str = expected_specs.get('bitrate', '')
+                        expected_bitrate = int(expected_bitrate_str.replace('k', '')) if expected_bitrate_str else None
+                        if expected_bitrate and audio_info['bitrate'] < expected_bitrate:
+                            issues.append(ValidationIssue(
+                                severity='warning',
+                                category='spec',
+                                message=f"Bitrate below expected: {audio_info['bitrate']}kbps < {expected_bitrate}kbps",
+                                details=f'Expected {expected_bitrate}kbps for Kobo'
+                            ))
+                        
+                        expected_sr = expected_specs.get('sampleRate')
+                        if expected_sr and audio_info['sampleRate'] != expected_sr:
+                            issues.append(ValidationIssue(
+                                severity='warning',
+                                category='spec',
+                                message=f"Sample rate mismatch: {audio_info['sampleRate']}Hz != {expected_sr}Hz",
+                                details=f'Expected {expected_sr}Hz for Kobo'
+                            ))
+        
+        # Check for SMIL files
+        smil_dir = temp_dir / 'OEBPS' / 'smil'
+        if not smil_dir.exists():
+            issues.append(ValidationIssue(
+                severity='warning',
+                category='structure',
+                message='Missing SMIL directory',
+                details='Media Overlays require SMIL synchronization files'
+            ))
+        else:
+            smil_files = list(smil_dir.glob('*.smil'))
+            if not smil_files:
+                issues.append(ValidationIssue(
+                    severity='warning',
+                    category='structure',
+                    message='No SMIL files found',
+                    details='Media Overlays require SMIL synchronization files'
+                ))
+            else:
+                specs['smilCount'] = len(smil_files)
+        
+        # Check for text files
+        text_dir = temp_dir / 'OEBPS' / 'text'
+        if not text_dir.exists():
+            issues.append(ValidationIssue(
+                severity='warning',
+                category='structure',
+                message='Missing text directory',
+                details='EPUB should contain XHTML text files'
+            ))
+        else:
+            xhtml_files = list(text_dir.glob('*.xhtml'))
+            specs['xhtmlCount'] = len(xhtml_files)
+    
+    finally:
+        # Cleanup temp directory
+        shutil.rmtree(temp_dir, ignore_errors=True)
+    
+    # Package is valid if no errors (warnings/info are ok)
+    valid = not any(issue.severity == 'error' for issue in issues)
+    
+    result = ValidationResult(
+        valid=valid,
+        platform='kobo',
+        package_path=package_path,
+        issues=issues,
+        specs=specs
+    )
+    
+    return result
+
+
 def validate_package(
     platform_id: str,
     package_path: str,
@@ -632,9 +810,8 @@ def validate_package(
     elif platform_id in ['google', 'spotify', 'acx']:
         return validate_zip_mp3_package(package_path, platform_id, expected_specs)
     
-    # TODO: Add validator for EPUB3 platform
-    # elif platform_id == 'kobo':
-    #     return validate_epub3_package(package_path, expected_specs)
+    elif platform_id == 'kobo':
+        return validate_epub3_package(package_path, expected_specs)
     
     # Fallback for unimplemented platforms
     return ValidationResult(

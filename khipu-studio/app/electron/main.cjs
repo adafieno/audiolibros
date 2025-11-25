@@ -1146,10 +1146,84 @@ function createWin() {
           
           break;
         }
-        case 'kobo':
-          console.log('[packaging:create] Packaging for Kobo Writing Life');
-          // TODO: Add Kobo packaging logic
+        case 'kobo': {
+          console.log('[packaging:create] Packaging for Kobo (EPUB3)');
+          
+          // Get audio spec from production settings or use defaults
+          const cfg = JSON.parse(fs.readFileSync(path.join(projectRoot, 'project.khipu.json'), 'utf-8'));
+          const prodSettingsPath = path.join(projectRoot, cfg.paths?.production || 'production.settings.json');
+          let audioSpec = { bitrate: '192k', sampleRate: 44100, channels: 1 };
+          
+          if (fs.existsSync(prodSettingsPath)) {
+            const prodSettings = JSON.parse(fs.readFileSync(prodSettingsPath, 'utf-8'));
+            const koboSettings = prodSettings.packaging?.kobo;
+            
+            if (koboSettings) {
+              audioSpec = {
+                bitrate: koboSettings.mp3_bitrate || '192k',
+                sampleRate: koboSettings.sr_hz || 44100,
+                channels: koboSettings.channels || 1
+              };
+            }
+          }
+          
+          // Create output directory
+          const exportDir = path.join(projectRoot, 'exports', 'kobo');
+          fs.mkdirSync(exportDir, { recursive: true });
+          outputPath = path.join(exportDir, `${sanitizedTitle}.epub`);
+          
+          // Call Python EPUB3 packager
+          const epub3ScriptPath = path.join(__dirname, '../../py/packaging/epub3_packager.py');
+          await new Promise((resolve, reject) => {
+            const pythonExe = getPythonExe();
+            const args = [
+              epub3ScriptPath,
+              projectRoot,
+              '--bitrate', audioSpec.bitrate,
+              '--sample-rate', String(audioSpec.sampleRate),
+              '--channels', String(audioSpec.channels)
+            ];
+            
+            console.log(`[packaging:create] Running EPUB3 packager: ${pythonExe} ${args.join(' ')}`);
+            
+            const proc = spawn(pythonExe, args, {
+              cwd: projectRoot,
+              shell: true,
+              stdio: ['ignore', 'pipe', 'pipe']
+            });
+            
+            let stdout = '';
+            let stderr = '';
+            
+            proc.stdout.on('data', (data) => { 
+              const output = data.toString();
+              stdout += output;
+              console.log('[EPUB3]', output.trim());
+            });
+            proc.stderr.on('data', (data) => { 
+              const output = data.toString();
+              stderr += output;
+              console.log('[EPUB3]', output.trim());
+            });
+            
+            proc.on('close', (code) => {
+              if (code === 0) {
+                console.log(`[packaging:create] Kobo EPUB3 packaging complete`);
+                resolve();
+              } else {
+                console.error(`[packaging:create] Kobo packaging failed:`, stderr);
+                reject(new Error(`Kobo packaging failed (exit code ${code}): ${stderr}`));
+              }
+            });
+            
+            proc.on('error', (err) => {
+              console.error(`[packaging:create] Failed to spawn Kobo packager:`, err);
+              reject(err);
+            });
+          });
+          
           break;
+        }
         default:
           throw new Error(`Unsupported platform: ${platformId}`);
       }
