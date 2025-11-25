@@ -1,6 +1,6 @@
 {
     "private": true,
-    "version": "0.0.0",
+    "version": "1.0.0",
     "type": "module",
     "description": "AI-powered audiobook production studio with multi-language support",
     "author": {
@@ -124,7 +124,9 @@
             "allowToChangeInstallationDirectory": true,
             "createDesktopShortcut": true,
             "createStartMenuShortcut": true,
-            "shortcutName": "Khipu Studio"
+            "shortcutName": "Khipu Studio",
+            "installerLanguages": ["en_US", "es_ES", "pt_BR"],
+            "language": "1033"
         }
     },
     "devDependenciesOptional": {
