@@ -5,4 +5,6 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   css: { postcss: { plugins: [] } },
+  // Use relative paths for assets so they work in Electron when loaded from file://
+  base: './',
 })
