@@ -890,6 +890,30 @@
     "string": "SKU",
     "comment": "Rótulo para campo de SKU"
   },
+  "book.rights.label": {
+    "string": "Direitos",
+    "comment": "Rótulo para campo de direitos"
+  },
+  "book.series": {
+    "string": "Informações da série",
+    "comment": "Cabeçalho da seção para informações da série"
+  },
+  "book.seriesName.label": {
+    "string": "Nome da série",
+    "comment": "Rótulo para campo de nome da série"
+  },
+  "book.seriesNumber.label": {
+    "string": "Número na série",
+    "comment": "Rótulo para campo de número na série"
+  },
+  "book.disclosure": {
+    "string": "Divulgação de voz digital",
+    "comment": "Cabeçalho da seção para divulgação de voz digital"
+  },
+  "book.hasDigitalVoices.label": {
+    "string": "Contém vozes digitais/IA",
+    "comment": "Rótulo para caixa de seleção de divulgação de voz digital"
+  },
   "project.title": {
     "string": "Configuração do projeto",
     "comment": "Título da página de configuração do projeto"

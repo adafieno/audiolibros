@@ -976,6 +976,30 @@
     "string": "SKU",
     "comment": "Label for SKU field"
   },
+  "book.rights.label": {
+    "string": "Rights",
+    "comment": "Label for rights field"
+  },
+  "book.series": {
+    "string": "Series Information",
+    "comment": "Section header for series information"
+  },
+  "book.seriesName.label": {
+    "string": "Series Name",
+    "comment": "Label for series name field"
+  },
+  "book.seriesNumber.label": {
+    "string": "Number in Series",
+    "comment": "Label for series number field"
+  },
+  "book.disclosure": {
+    "string": "Digital Voice Disclosure",
+    "comment": "Section header for digital voice disclosure"
+  },
+  "book.hasDigitalVoices.label": {
+    "string": "Contains digital voices/AI",
+    "comment": "Label for digital voice disclosure checkbox"
+  },
 
   "project.title": {
     "string": "Project Configuration",

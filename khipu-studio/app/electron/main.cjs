@@ -530,9 +530,10 @@ function getAudioProcessor() {
 /* ---------------- BrowserWindow + IPC ---------------- */
 function createWin() {
   // Icon path - in packaged app, extraResources are in resources/ folder
+  // Use .ico format for proper Windows taskbar icon display
   const iconPath = app.isPackaged
-    ? path.join(process.resourcesPath, "assets", "icons", "icon_256x256.png")
-    : path.join(__dirname, "..", "..", "assets", "icons", "icon_256x256.png");
+    ? path.join(process.resourcesPath, "assets", "icons", "khipu_studio.ico")
+    : path.join(__dirname, "..", "..", "assets", "icons", "khipu_studio.ico");
   
   const win = new BrowserWindow({
     width: 1280,
