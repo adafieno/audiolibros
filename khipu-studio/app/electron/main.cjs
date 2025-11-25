@@ -538,16 +538,30 @@ function createWin() {
   });
 
   win.webContents.on("render-process-gone", (_e, d) => console.error("[renderer gone]", d));
+  
+  // Log any loading errors
+  win.webContents.on("did-fail-load", (event, errorCode, errorDescription, validatedURL) => {
+    console.error("[did-fail-load]", { errorCode, errorDescription, validatedURL });
+  });
+  
+  // Open DevTools in production to debug
+  if (!process.env.VITE_DEV) {
+    win.webContents.openDevTools();
+  }
 
   if (process.env.VITE_DEV) {
     win.loadURL("http://localhost:5173");
   } else {
-    // In production, use path.resolve to find dist folder correctly
-    const distPath = app.isPackaged
-      ? path.join(process.resourcesPath, "app.asar", "dist", "index.html")
-      : path.join(__dirname, "../dist/index.html");
-    console.log("Loading UI from:", distPath);
-    win.loadFile(distPath);
+    // In production/packaged mode, the dist folder is inside app.asar
+    // __dirname is inside the asar: app.asar/electron
+    // So ../dist/index.html should work correctly
+    const indexPath = path.join(__dirname, "..", "dist", "index.html");
+    console.log("Loading UI from:", indexPath);
+    console.log("app.isPackaged:", app.isPackaged);
+    console.log("__dirname:", __dirname);
+    win.loadFile(indexPath).catch(err => {
+      console.error("Failed to load file:", err);
+    });
   }
 
   /* Cost tracking helper - writes tracking data from backend */
