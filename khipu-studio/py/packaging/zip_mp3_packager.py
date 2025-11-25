@@ -209,11 +209,16 @@ def create_zip_mp3_package(
                 continue
             
             # Look for complete audio file (stitched or original)
-            audio_file = audio_dir / 'complete.m4a'
+            # Priority: complete.wav (production output) > complete.m4a/mp3 > original.*
+            audio_file = audio_dir / 'complete.wav'
+            if not audio_file.exists():
+                audio_file = audio_dir / 'complete.m4a'
             if not audio_file.exists():
                 audio_file = audio_dir / 'complete.mp3'
             if not audio_file.exists():
                 # Try original if no stitched version
+                audio_file = audio_dir / 'original.wav'
+            if not audio_file.exists():
                 audio_file = audio_dir / 'original.m4a'
             if not audio_file.exists():
                 audio_file = audio_dir / 'original.mp3'
