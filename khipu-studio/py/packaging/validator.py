@@ -214,6 +214,13 @@ def validate_m4b_package(package_path: str, expected_specs: Optional[Dict[str, A
             specs=specs
         )
     
+    # Add package file info
+    file_stats = path.stat()
+    specs['fileSize'] = file_stats.st_size
+    specs['fileSizeMB'] = round(file_stats.st_size / (1024 * 1024), 2)
+    specs['createdAt'] = file_stats.st_ctime
+    specs['modifiedAt'] = file_stats.st_mtime
+    
     # Probe audio specs
     audio_info = _probe_audio_with_ffprobe(path)
     if not audio_info:
@@ -349,15 +356,18 @@ def validate_m4b_package(package_path: str, expected_specs: Optional[Dict[str, A
                 details='Artist or Composer tag should contain author/narrator name'
             ))
         
-        # Check for album - need to verify it's not just an empty string
+        # Check for album (optional for audiobooks - used for series info)
+        # Only flag as info if it's missing, since it's not critical for audiobooks
         album_value = metadata.get('album', '').strip()
         if not album_value:
-            issues.append(ValidationIssue(
-                severity='warning',
-                category='metadata',
-                message='Missing album metadata',
-                details='Album tag typically contains book title or series'
-            ))
+            # Only mention if other metadata is present (to avoid noise)
+            if metadata.get('title') and metadata.get('artist'):
+                issues.append(ValidationIssue(
+                    severity='info',
+                    category='metadata',
+                    message='Album metadata not set',
+                    details='Album tag can be used for book series or collection name (optional for audiobooks)'
+                ))
     else:
         issues.append(ValidationIssue(
             severity='warning',

@@ -1036,17 +1036,92 @@ function createWin() {
           break;
         }
         case 'google':
-          console.log('[packaging:create] Packaging for Google Play Books');
-          // TODO: Add Google Play Books packaging logic
-          break;
         case 'spotify':
-          console.log('[packaging:create] Packaging for Spotify');
-          // TODO: Add Spotify packaging logic
+        case 'acx': {
+          console.log(`[packaging:create] Packaging for ${platformId} (ZIP+MP3)`);
+          
+          // Get audio spec from production settings or use defaults
+          const cfg = JSON.parse(fs.readFileSync(path.join(projectRoot, 'project.khipu.json'), 'utf-8'));
+          const prodSettingsPath = path.join(projectRoot, cfg.paths?.production || 'production.settings.json');
+          let audioSpec = { bitrate: '192k', sampleRate: 44100, channels: 1 };
+          
+          if (fs.existsSync(prodSettingsPath)) {
+            const prodSettings = JSON.parse(fs.readFileSync(prodSettingsPath, 'utf-8'));
+            let platformSettings = null;
+            
+            if (platformId === 'google' || platformId === 'spotify') {
+              platformSettings = prodSettings.packaging?.gplay_spotify;
+            } else if (platformId === 'acx') {
+              platformSettings = prodSettings.packaging?.acx;
+            }
+            
+            if (platformSettings) {
+              audioSpec = {
+                bitrate: platformSettings.mp3_bitrate || (platformId === 'acx' ? '192k' : '256k'),
+                sampleRate: platformSettings.sr_hz || 44100,
+                channels: platformSettings.channels || 1
+              };
+            }
+          }
+          
+          // Create output directory
+          const exportDir = path.join(projectRoot, 'exports', platformId);
+          fs.mkdirSync(exportDir, { recursive: true });
+          outputPath = path.join(exportDir, `${sanitizedTitle}.zip`);
+          
+          // Call Python ZIP+MP3 packager
+          const zipMp3ScriptPath = path.join(__dirname, '../../py/packaging/zip_mp3_packager.py');
+          await new Promise((resolve, reject) => {
+            const pythonExe = getPythonExe();
+            const args = [
+              zipMp3ScriptPath,
+              projectRoot,
+              platformId,
+              '--bitrate', audioSpec.bitrate,
+              '--sample-rate', String(audioSpec.sampleRate),
+              '--channels', String(audioSpec.channels)
+            ];
+            
+            console.log(`[packaging:create] Running ZIP+MP3 packager: ${pythonExe} ${args.join(' ')}`);
+            
+            const proc = spawn(pythonExe, args, {
+              cwd: projectRoot,
+              shell: true,
+              stdio: ['ignore', 'pipe', 'pipe']
+            });
+            
+            let stdout = '';
+            let stderr = '';
+            
+            proc.stdout.on('data', (data) => { 
+              const output = data.toString();
+              stdout += output;
+              console.log('[ZIP+MP3]', output.trim());
+            });
+            proc.stderr.on('data', (data) => { 
+              const output = data.toString();
+              stderr += output;
+              console.log('[ZIP+MP3]', output.trim());
+            });
+            
+            proc.on('close', (code) => {
+              if (code === 0) {
+                console.log(`[packaging:create] ${platformId} ZIP+MP3 packaging complete`);
+                resolve();
+              } else {
+                console.error(`[packaging:create] ${platformId} packaging failed:`, stderr);
+                reject(new Error(`${platformId} packaging failed (exit code ${code}): ${stderr}`));
+              }
+            });
+            
+            proc.on('error', (err) => {
+              console.error(`[packaging:create] Failed to spawn ${platformId} packager:`, err);
+              reject(err);
+            });
+          });
+          
           break;
-        case 'acx':
-          console.log('[packaging:create] Packaging for ACX');
-          // TODO: Add ACX packaging logic
-          break;
+        }
         case 'kobo':
           console.log('[packaging:create] Packaging for Kobo Writing Life');
           // TODO: Add Kobo packaging logic

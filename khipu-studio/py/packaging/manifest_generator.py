@@ -240,12 +240,12 @@ def generate_universal_manifest(project_root: str | Path) -> Dict[str, Any]:
     with open(manifest_path, 'w', encoding='utf-8') as f:
         json.dump(manifest, f, indent=2, ensure_ascii=False)
     
-    print(f"✅ Generated manifest: {manifest_path}", file=sys.stderr)
-    print(f"📊 Total duration: {_format_duration(total_duration)}", file=sys.stderr)
-    print(f"📚 Chapters: {len(chapters)} total, {len(chapters) - len(missing_audio)} with audio", file=sys.stderr)
+    print(f"[SUCCESS] Generated manifest: {manifest_path}", file=sys.stderr)
+    print(f"[INFO] Total duration: {_format_duration(total_duration)}", file=sys.stderr)
+    print(f"[INFO] Chapters: {len(chapters)} total, {len(chapters) - len(missing_audio)} with audio", file=sys.stderr)
     
     if missing_audio:
-        print(f"⚠️  Missing audio for: {', '.join(missing_audio)}", file=sys.stderr)
+        print(f"[WARNING] Missing audio for: {', '.join(missing_audio)}", file=sys.stderr)
     
     return manifest
 
@@ -284,11 +284,11 @@ def main():
             output_path = Path(args.output)
             with open(output_path, 'w', encoding='utf-8') as f:
                 json.dump(manifest, f, indent=2, ensure_ascii=False)
-            print(f"✅ Manifest written to: {output_path}")
+            print(f"[SUCCESS] Manifest written to: {output_path}")
         
         return 0
     except Exception as e:
-        print(f"❌ Error: {e}", file=sys.stderr)
+        print(f"[ERROR] Error: {e}", file=sys.stderr)
         return 1
 
 

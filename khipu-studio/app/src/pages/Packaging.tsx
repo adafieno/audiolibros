@@ -906,6 +906,17 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
                     <span style={{ fontSize: '14px' }}>{validationResults[id].valid ? '✅' : '❌'}</span>
                     {validationResults[id].valid ? t('packaging.validationPassed', 'Validation Passed') : t('packaging.validationFailed', 'Validation Failed')}
                   </div>
+                  
+                  {/* Show package creation timestamp if available */}
+                  {validationResults[id].specs?.createdAt && (
+                    <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '8px' }}>
+                      📅 Created: {new Date(Number(validationResults[id].specs.createdAt) * 1000).toLocaleString()}
+                      {validationResults[id].specs?.fileSizeMB && (
+                        <> • {String(validationResults[id].specs.fileSizeMB) as string} MB</>
+                      )}
+                    </div>
+                  )}
+                  
                   {validationResults[id].issues.length > 0 && (
                     <div style={{ marginTop: '8px' }}>\n                      {validationResults[id].issues.map((issue, idx: number) => (
                         <div key={idx} style={{ 

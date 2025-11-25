@@ -73,12 +73,12 @@ def _load_project_data(project_root: Path) -> Dict[str, Any]:
         try:
             with open(manifest_path, 'r', encoding='utf-8') as f:
                 manifest = json.load(f)
-            print("📋 Using universal manifest", file=sys.stderr)
+            print("[INFO] Using universal manifest", file=sys.stderr)
             return manifest
         except Exception as e:
-            print(f"⚠️  Failed to load manifest, falling back to source files: {e}", file=sys.stderr)
+            print(f"[WARNING] Failed to load manifest, falling back to source files: {e}", file=sys.stderr)
     else:
-        print("📋 Manifest not found, reading source files directly", file=sys.stderr)
+        print("[INFO] Manifest not found, reading source files directly", file=sys.stderr)
     
     # Fallback: Read source files directly
     project_config = {}
@@ -174,16 +174,16 @@ def _run_ffmpeg(args: list[str], description: str = "FFmpeg operation") -> bool:
         )
         
         if result.returncode != 0:
-            print(f"❌ FFmpeg error: {result.stderr}", file=sys.stderr)
+            print(f"[ERROR] FFmpeg error: {result.stderr}", file=sys.stderr)
             return False
         
-        print(f"✅ {description} complete", file=sys.stderr)
+        print(f"[OK] {description} complete", file=sys.stderr)
         return True
     except FileNotFoundError:
-        print("❌ FFmpeg not found. Please install FFmpeg.", file=sys.stderr)
+        print("[ERROR] FFmpeg not found. Please install FFmpeg.", file=sys.stderr)
         return False
     except Exception as e:
-        print(f"❌ Error during {description}: {e}", file=sys.stderr)
+        print(f"[ERROR] Error during {description}: {e}", file=sys.stderr)
         return False
 
 
@@ -192,6 +192,8 @@ def _create_ffmpeg_metadata(manifest: Dict[str, Any], output_path: Path) -> Path
     Create FFmpeg metadata file with chapter markers.
     Returns path to metadata file.
     """
+    from datetime import datetime
+    
     metadata_lines = [";FFMETADATA1"]
     
     # Add book metadata
@@ -224,6 +226,11 @@ def _create_ffmpeg_metadata(manifest: Dict[str, Any], output_path: Path) -> Path
             metadata_lines.append(f"date={year}")
     
     metadata_lines.append("genre=Audiobook")
+    
+    # Add package creation timestamp
+    creation_timestamp = datetime.now().isoformat()
+    metadata_lines.append(f"creation_time={creation_timestamp}")
+    metadata_lines.append("encoder=Khipu Studio M4B Packager")
     
     # Add chapter markers
     chapters = manifest.get('chapters', [])
@@ -274,10 +281,10 @@ def _create_concat_list(manifest: Dict[str, Any], project_root: Path, output_pat
         if audio_abs_path.exists():
             audio_files.append(audio_abs_path)
         else:
-            print(f"⚠️  Audio file not found: {audio_abs_path}", file=sys.stderr)
+            print(f"[WARNING] Audio file not found: {audio_abs_path}", file=sys.stderr)
     
     if not audio_files:
-        print("❌ No audio files found for concatenation", file=sys.stderr)
+        print("[ERROR] No audio files found for concatenation", file=sys.stderr)
         return None
     
     # Create concat list file
@@ -288,7 +295,7 @@ def _create_concat_list(manifest: Dict[str, Any], project_root: Path, output_pat
             escaped_path = str(audio_file).replace("'", "'\\''")
             f.write(f"file '{escaped_path}'\n")
     
-    print(f"📋 Created concat list with {len(audio_files)} audio files", file=sys.stderr)
+    print(f"[INFO] Created concat list with {len(audio_files)} audio files", file=sys.stderr)
     return concat_path
 
 
@@ -320,14 +327,14 @@ def package_m4b(
     try:
         manifest = _load_project_data(project_root)
     except Exception as e:
-        print(f"❌ Failed to load project data: {e}", file=sys.stderr)
+        print(f"[ERROR] Failed to load project data: {e}", file=sys.stderr)
         return False
     
     # Check if all chapters have audio
     audio_info = manifest.get('audio', {})
     if audio_info.get('completedChapters', 0) < audio_info.get('chapterCount', 0):
         missing = audio_info.get('missingAudio', [])
-        print(f"❌ Not all chapters have audio. Missing: {', '.join(missing)}", file=sys.stderr)
+        print(f"[ERROR] Not all chapters have audio. Missing: {', '.join(missing)}", file=sys.stderr)
         return False
     
     # Create output directory
@@ -341,7 +348,7 @@ def package_m4b(
     sample_rate = audio_spec.get('sampleRate', 44100)
     channels = audio_spec.get('channels', 1)
     
-    print(f"🎵 Audio spec: AAC {bitrate}, {sample_rate}Hz, {channels}ch", file=sys.stderr)
+    print(f"[INFO] Audio spec: AAC {bitrate}, {sample_rate}Hz, {channels}ch", file=sys.stderr)
     
     # Create temporary directory for intermediate files
     with tempfile.TemporaryDirectory(prefix='m4b_packaging_') as temp_dir:
@@ -406,11 +413,11 @@ def package_m4b(
     
     # Verify output file was created
     if not output_path.exists():
-        print("❌ Output file was not created", file=sys.stderr)
-        return False
+        print("[ERROR] Output file was not created", file=sys.stderr)
+        return
     
     file_size_mb = output_path.stat().st_size / (1024 * 1024)
-    print(f"✅ M4B package created: {output_path.name} ({file_size_mb:.1f} MB)", file=sys.stderr)
+    print(f"[SUCCESS] M4B package created: {output_path.name} ({file_size_mb:.1f} MB)", file=sys.stderr)
     
     return True
 
