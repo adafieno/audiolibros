@@ -104,8 +104,6 @@
                     "arch": ["x64"]
                 }
             ],
-            "signtoolOptions": null,
-            "signAndEditExecutable": false,
             "legalTrademarks": "Khipu Studio"
         },
         "linux": {
