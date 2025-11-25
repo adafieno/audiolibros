@@ -857,12 +857,87 @@ function createWin() {
       // Step 1: Generate universal manifest
       await generateUniversalManifest(projectRoot);
 
-      // Platform-specific packaging logic
+      // Step 2: Platform-specific packaging logic
+      let outputPath;
+      const manifestPath = path.join(projectRoot, 'manifest.json');
+      const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+      const bookTitle = manifest.book?.title || 'audiobook';
+      const sanitizedTitle = bookTitle.replace(/[^a-z0-9]/gi, '_');
+      
       switch (platformId) {
-        case 'apple':
-          console.log('[packaging:create] Packaging for Apple Books');
-          // TODO: Add Apple Books packaging logic
+        case 'apple': {
+          console.log('[packaging:create] Packaging for Apple Books (M4B)');
+          
+          // Get audio spec from production settings or use defaults
+          const cfg = JSON.parse(fs.readFileSync(path.join(projectRoot, 'project.khipu.json'), 'utf-8'));
+          const prodSettingsPath = path.join(projectRoot, cfg.paths?.production || 'production.settings.json');
+          let audioSpec = { bitrate: '128k', sampleRate: 44100, channels: 1 };
+          
+          if (fs.existsSync(prodSettingsPath)) {
+            const prodSettings = JSON.parse(fs.readFileSync(prodSettingsPath, 'utf-8'));
+            if (prodSettings.packaging?.apple) {
+              audioSpec = {
+                bitrate: prodSettings.packaging.apple.aac_bitrate || '128k',
+                sampleRate: 44100,
+                channels: 1
+              };
+            }
+          }
+          
+          // Create output path
+          const exportDir = path.join(projectRoot, 'exports', 'apple');
+          fs.mkdirSync(exportDir, { recursive: true });
+          outputPath = path.join(exportDir, `${sanitizedTitle}.m4b`);
+          
+          // Call Python M4B packager
+          const m4bScriptPath = path.join(__dirname, '../../py/packaging/packagers/m4b_packager.py');
+          await new Promise((resolve, reject) => {
+            const pythonExe = getPythonExe();
+            const args = [
+              m4bScriptPath,
+              projectRoot,
+              '--output', outputPath,
+              '--bitrate', audioSpec.bitrate,
+              '--sample-rate', String(audioSpec.sampleRate),
+              '--channels', String(audioSpec.channels)
+            ];
+            
+            console.log(`[packaging:create] Running M4B packager: ${pythonExe} ${args.join(' ')}`);
+            
+            const proc = spawn(pythonExe, args, {
+              cwd: projectRoot,
+              shell: true,
+              stdio: ['ignore', 'pipe', 'pipe']
+            });
+            
+            let stdout = '';
+            let stderr = '';
+            
+            proc.stdout.on('data', (data) => { stdout += data.toString(); });
+            proc.stderr.on('data', (data) => { 
+              const output = data.toString();
+              stderr += output;
+              console.log('[M4B]', output.trim());
+            });
+            
+            proc.on('close', (code) => {
+              if (code === 0) {
+                console.log('[packaging:create] M4B packaging complete');
+                resolve();
+              } else {
+                console.error('[packaging:create] M4B packaging failed:', stderr);
+                reject(new Error(`M4B packaging failed (exit code ${code}): ${stderr}`));
+              }
+            });
+            
+            proc.on('error', (err) => {
+              console.error('[packaging:create] Failed to spawn M4B packager:', err);
+              reject(err);
+            });
+          });
+          
           break;
+        }
         case 'google':
           console.log('[packaging:create] Packaging for Google Play Books');
           // TODO: Add Google Play Books packaging logic
@@ -899,7 +974,11 @@ function createWin() {
         }
       });
 
-      return { success: true, message: `Packaging for ${platformId} completed successfully.` };
+      const message = outputPath 
+        ? `Package created: ${path.basename(outputPath)}`
+        : `Packaging for ${platformId} completed successfully.`;
+      
+      return { success: true, message, outputPath };
     } catch (error) {
       console.error('[packaging:create] failed:', error);
       return { success: false, error: String(error?.message || error) };

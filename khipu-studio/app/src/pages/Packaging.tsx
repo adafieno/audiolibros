@@ -48,8 +48,9 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
       onStatus?.(t('packaging.status.preparing') || `Preparing package for ${platformId}`);
       const res = await window.khipu!.call('packaging:create', { projectRoot: root, platformId });
       if (res?.success) {
-        onStatus?.(t('packaging.status.prepared') || `Package prepared for ${platformId}`);
-        setJobProgress(prev => ({ ...prev, [platformId]: { running: false, step: t('packaging.status.prepared'), pct: 100 } }));
+        const message = res.message || t('packaging.status.prepared') || `Package prepared for ${platformId}`;
+        onStatus?.(message);
+        setJobProgress(prev => ({ ...prev, [platformId]: { running: false, step: message, pct: 100 } }));
       } else {
         onStatus?.(t('packaging.status.prepareFailed') || `Failed to prepare package for ${platformId}`);
         console.warn('packaging:create returned failure', res);
