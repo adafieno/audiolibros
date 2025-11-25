@@ -203,28 +203,25 @@ def create_zip_mp3_package(
             chapter_title = chapter.get('title', f'Chapter {idx}')
             
             # Find audio file for this chapter
-            audio_dir = root / 'audio' / chapter_id
-            if not audio_dir.exists():
-                print(f"Warning: Audio directory not found for {chapter_id}")
-                continue
+            # Audio production saves files to audio/wav/{chapterId}_complete.wav
+            audio_wav_dir = root / 'audio' / 'wav'
             
-            # Look for complete audio file (stitched or original)
-            # Priority: complete.wav (production output) > complete.m4a/mp3 > original.*
-            audio_file = audio_dir / 'complete.wav'
+            # Look for complete audio file in audio/wav/ directory
+            # Priority: {chapterId}_complete.wav (production output) > fallbacks
+            audio_file = audio_wav_dir / f'{chapter_id}_complete.wav'
             if not audio_file.exists():
-                audio_file = audio_dir / 'complete.m4a'
+                audio_file = audio_wav_dir / f'{chapter_id}.wav'
+            
+            # Fallback: check audio/chapters/ directory (legacy)
             if not audio_file.exists():
-                audio_file = audio_dir / 'complete.mp3'
+                audio_chapters_dir = root / 'audio' / 'chapters'
+                audio_file = audio_chapters_dir / f'{chapter_id}_complete.wav'
             if not audio_file.exists():
-                # Try original if no stitched version
-                audio_file = audio_dir / 'original.wav'
-            if not audio_file.exists():
-                audio_file = audio_dir / 'original.m4a'
-            if not audio_file.exists():
-                audio_file = audio_dir / 'original.mp3'
+                audio_file = audio_chapters_dir / f'{chapter_id}.wav'
             
             if not audio_file.exists():
                 print(f"Warning: No audio file found for {chapter_id}")
+                print(f"  Expected: {audio_wav_dir / f'{chapter_id}_complete.wav'}")
                 continue
             
             # Output MP3 filename
