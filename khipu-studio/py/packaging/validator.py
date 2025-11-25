@@ -411,6 +411,212 @@ def validate_m4b_package(package_path: str, expected_specs: Optional[Dict[str, A
     )
 
 
+def validate_zip_mp3_package(
+    package_path: str,
+    platform_id: str,
+    expected_specs: Optional[Dict[str, Any]] = None
+) -> ValidationResult:
+    """
+    Validate ZIP+MP3 package for Google Play Books, Spotify, or ACX.
+    
+    Checks:
+    - ZIP file structure
+    - MP3 files with proper naming (chapter_NNN.mp3)
+    - MP3 audio specs (bitrate, sample rate, channels)
+    - ID3 metadata tags
+    - Optional metadata.json validity
+    """
+    import zipfile
+    import tempfile
+    import shutil
+    
+    path = Path(package_path)
+    issues = []
+    specs = {}
+    
+    # Add package file info
+    file_stats = path.stat()
+    specs['fileSize'] = file_stats.st_size
+    specs['fileSizeMB'] = round(file_stats.st_size / (1024 * 1024), 2)
+    specs['createdAt'] = file_stats.st_ctime
+    specs['modifiedAt'] = file_stats.st_mtime
+    
+    # Check if ZIP file is valid
+    if not zipfile.is_zipfile(path):
+        issues.append(ValidationIssue(
+            severity='error',
+            category='structure',
+            message='Invalid ZIP file',
+            details='Package is not a valid ZIP archive'
+        ))
+        return ValidationResult(
+            valid=False,
+            platform=platform_id,
+            package_path=package_path,
+            issues=issues,
+            specs=specs
+        )
+    
+    # Extract ZIP to temp directory for analysis
+    temp_dir = Path(tempfile.mkdtemp(prefix='khipu_validate_'))
+    try:
+        with zipfile.ZipFile(path, 'r') as zf:
+            zf.extractall(temp_dir)
+        
+        # Find all MP3 files
+        mp3_files = sorted(temp_dir.glob('*.mp3'))
+        
+        if not mp3_files:
+            issues.append(ValidationIssue(
+                severity='error',
+                category='structure',
+                message='No MP3 files found in package',
+                details='ZIP archive must contain MP3 audio files'
+            ))
+        else:
+            specs['chapterCount'] = len(mp3_files)
+            
+            # Validate each MP3 file
+            total_duration = 0.0
+            bitrates = []
+            sample_rates = []
+            channels_list = []
+            
+            for idx, mp3_file in enumerate(mp3_files, 1):
+                # Check naming convention (chapter_NNN.mp3)
+                expected_name = f'chapter_{idx:03d}.mp3'
+                if mp3_file.name != expected_name:
+                    issues.append(ValidationIssue(
+                        severity='warning',
+                        category='structure',
+                        message=f'Non-standard file name: {mp3_file.name}',
+                        details=f'Expected: {expected_name}'
+                    ))
+                
+                # Probe MP3 specs
+                audio_info = _probe_audio_with_ffprobe(mp3_file)
+                if audio_info:
+                    bitrates.append(audio_info['bitrate'])
+                    sample_rates.append(audio_info['sampleRate'])
+                    channels_list.append(audio_info['channels'])
+                    total_duration += audio_info.get('duration', 0.0)
+                    
+                    # Check ID3 metadata
+                    metadata = _check_m4b_metadata(mp3_file)
+                    if metadata:
+                        # Check required tags
+                        if not metadata.get('title'):
+                            issues.append(ValidationIssue(
+                                severity='warning',
+                                category='metadata',
+                                message=f'Missing title in {mp3_file.name}',
+                                details='ID3 title tag not set'
+                            ))
+                        if not metadata.get('artist'):
+                            issues.append(ValidationIssue(
+                                severity='warning',
+                                category='metadata',
+                                message=f'Missing artist in {mp3_file.name}',
+                                details='ID3 artist tag not set'
+                            ))
+                else:
+                    issues.append(ValidationIssue(
+                        severity='error',
+                        category='audio',
+                        message=f'Failed to read audio specs from {mp3_file.name}',
+                        details='Could not probe MP3 file with FFprobe'
+                    ))
+            
+            # Average specs
+            if bitrates:
+                avg_bitrate = sum(bitrates) // len(bitrates)
+                specs['bitrate'] = avg_bitrate
+                specs['bitrateKbps'] = f'{avg_bitrate}k'
+            
+            if sample_rates:
+                specs['sampleRate'] = sample_rates[0]  # Should all be same
+            
+            if channels_list:
+                specs['channels'] = channels_list[0]  # Should all be same
+            
+            specs['duration'] = round(total_duration, 2)
+            specs['durationMinutes'] = round(total_duration / 60, 1)
+            
+            # Check against expected specs if provided
+            if expected_specs:
+                # Bitrate check
+                expected_bitrate_str = expected_specs.get('bitrate', '')
+                expected_bitrate = int(expected_bitrate_str.replace('k', '')) if expected_bitrate_str else None
+                if expected_bitrate and avg_bitrate < expected_bitrate:
+                    issues.append(ValidationIssue(
+                        severity='warning',
+                        category='spec',
+                        message=f'Bitrate below expected: {avg_bitrate}kbps < {expected_bitrate}kbps',
+                        details=f'Expected {expected_bitrate}kbps for {platform_id}'
+                    ))
+                
+                # Sample rate check
+                expected_sr = expected_specs.get('sampleRate')
+                if expected_sr and sample_rates and sample_rates[0] != expected_sr:
+                    issues.append(ValidationIssue(
+                        severity='warning',
+                        category='spec',
+                        message=f'Sample rate mismatch: {sample_rates[0]}Hz != {expected_sr}Hz',
+                        details=f'Expected {expected_sr}Hz for {platform_id}'
+                    ))
+                
+                # Channels check
+                expected_ch = expected_specs.get('channels')
+                if expected_ch and channels_list and channels_list[0] != expected_ch:
+                    issues.append(ValidationIssue(
+                        severity='warning',
+                        category='spec',
+                        message=f'Channel count mismatch: {channels_list[0]} != {expected_ch}',
+                        details=f'Expected {expected_ch} channel(s) for {platform_id}'
+                    ))
+        
+        # Check for metadata.json (optional but nice to have)
+        metadata_json = temp_dir / 'metadata.json'
+        if metadata_json.exists():
+            try:
+                with open(metadata_json, 'r', encoding='utf-8') as f:
+                    metadata = json.load(f)
+                    specs['hasMetadataJson'] = True
+                    specs['title'] = metadata.get('title', 'Unknown')
+                    specs['authors'] = metadata.get('authors', [])
+            except Exception as e:
+                issues.append(ValidationIssue(
+                    severity='info',
+                    category='metadata',
+                    message='metadata.json is invalid',
+                    details=str(e)
+                ))
+        else:
+            issues.append(ValidationIssue(
+                severity='info',
+                category='metadata',
+                message='No metadata.json found in package',
+                details='Optional metadata file not included'
+            ))
+    
+    finally:
+        # Cleanup temp directory
+        shutil.rmtree(temp_dir, ignore_errors=True)
+    
+    # Package is valid if no errors (warnings/info are ok)
+    valid = not any(issue.severity == 'error' for issue in issues)
+    
+    result = ValidationResult(
+        valid=valid,
+        platform=platform_id,
+        package_path=package_path,
+        issues=issues,
+        specs=specs
+    )
+    
+    return result
+
+
 def validate_package(
     platform_id: str,
     package_path: str,
@@ -423,9 +629,10 @@ def validate_package(
     if platform_id == 'apple':
         return validate_m4b_package(package_path, expected_specs)
     
-    # TODO: Add validators for other platforms
-    # elif platform_id in ['google', 'spotify', 'acx']:
-    #     return validate_zip_mp3_package(package_path, expected_specs)
+    elif platform_id in ['google', 'spotify', 'acx']:
+        return validate_zip_mp3_package(package_path, platform_id, expected_specs)
+    
+    # TODO: Add validator for EPUB3 platform
     # elif platform_id == 'kobo':
     #     return validate_epub3_package(package_path, expected_specs)
     
