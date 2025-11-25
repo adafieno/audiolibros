@@ -1,0 +1,56 @@
+<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- Gradients for knots -->
+    <radialGradient id="knotRust" cx="30%" cy="30%">
+      <stop offset="0%" style="stop-color:#E66E46;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#C85225;stop-opacity:1" />
+    </radialGradient>
+    <radialGradient id="knotBeige" cx="30%" cy="30%">
+      <stop offset="0%" style="stop-color:#F0E1BE;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#DFCCA0;stop-opacity:1" />
+    </radialGradient>
+    <radialGradient id="knotTeal" cx="30%" cy="30%">
+      <stop offset="0%" style="stop-color:#1E5064;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0B3041;stop-opacity:1" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Background rounded rectangle -->
+  <rect x="64" y="64" width="384" height="384" rx="64" ry="64" fill="#F5F0E6"/>
+  
+  <!-- First cord (left) - dark olive #6F550A -->
+  <rect x="166.67" y="106.67" width="8" height="298.66" fill="#6F550A"/>
+  
+  <!-- First cord knots -->
+  <!-- Knot 1 at 25% - Rust #C85225 -->
+  <ellipse cx="170.67" cy="181.33" rx="21.33" ry="26.67" fill="url(#knotRust)"/>
+  <ellipse cx="170.67" cy="174.33" rx="10.67" ry="8.89" fill="#E66E46" opacity="0.6"/>
+  
+  <!-- Knot 2 at 55% - Beige #DFCCA0 -->
+  <ellipse cx="170.67" cy="270.73" rx="21.33" ry="26.67" fill="url(#knotBeige)"/>
+  <ellipse cx="170.67" cy="263.73" rx="10.67" ry="8.89" fill="#F0E1BE" opacity="0.6"/>
+  
+  <!-- Second cord (middle) - dark olive #6F550A -->
+  <rect x="252" y="106.67" width="8" height="298.66" fill="#6F550A"/>
+  
+  <!-- Second cord knots -->
+  <!-- Knot 3 at 35% - Teal #0B3041 -->
+  <ellipse cx="256" cy="211.2" rx="21.33" ry="26.67" fill="url(#knotTeal)"/>
+  <ellipse cx="256" cy="204.2" rx="10.67" ry="8.89" fill="#1E5064" opacity="0.6"/>
+  
+  <!-- Knot 4 at 70% - Rust #C85225 -->
+  <ellipse cx="256" cy="315.73" rx="21.33" ry="26.67" fill="url(#knotRust)"/>
+  <ellipse cx="256" cy="308.73" rx="10.67" ry="8.89" fill="#E66E46" opacity="0.6"/>
+  
+  <!-- Third cord (right) - dark olive #6F550A -->
+  <rect x="337.33" y="106.67" width="8" height="298.66" fill="#6F550A"/>
+  
+  <!-- Third cord knots -->
+  <!-- Knot 5 at 45% - Beige #DFCCA0 -->
+  <ellipse cx="341.33" cy="241.07" rx="21.33" ry="26.67" fill="url(#knotBeige)"/>
+  <ellipse cx="341.33" cy="234.07" rx="10.67" ry="8.89" fill="#F0E1BE" opacity="0.6"/>
+  
+  <!-- Knot 6 at 65% - Teal #0B3041 -->
+  <ellipse cx="341.33" cy="300.8" rx="21.33" ry="26.67" fill="url(#knotTeal)"/>
+  <ellipse cx="341.33" cy="293.8" rx="10.67" ry="8.89" fill="#1E5064" opacity="0.6"/>
+</svg>
