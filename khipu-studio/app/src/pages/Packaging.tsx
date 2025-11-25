@@ -799,11 +799,11 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
           {chaptersInfo.hasAudio === chaptersInfo.count && chaptersInfo.count > 0 && (
             <div style={{
               padding: "12px",
-              backgroundColor: "#e8f5e9",
+              backgroundColor: "var(--panel)",
               borderRadius: "6px",
-              border: "1px solid #4caf50",
+              border: "1px solid var(--accent)",
               fontSize: "14px",
-              color: "#2e7d32"
+              color: "var(--text)"
             }}>
               ✅ {t("packaging.allChaptersComplete", "All chapters have complete audio files. Ready for packaging!")}
             </div>
