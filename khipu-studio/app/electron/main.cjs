@@ -1069,6 +1069,30 @@ function createWin() {
           fs.mkdirSync(exportDir, { recursive: true });
           outputPath = path.join(exportDir, `${sanitizedTitle}.zip`);
           
+          // Check if an identical package already exists for another platform (Google/Spotify share same specs)
+          let existingPackage = null;
+          if (platformId === 'google' || platformId === 'spotify') {
+            // Google and Spotify use same specs, check if the other one exists
+            const otherPlatform = platformId === 'google' ? 'spotify' : 'google';
+            const otherPath = path.join(projectRoot, 'exports', otherPlatform, `${sanitizedTitle}.zip`);
+            if (fs.existsSync(otherPath)) {
+              existingPackage = { platform: otherPlatform, path: otherPath };
+            }
+          }
+          
+          // If identical package exists, copy it instead of regenerating
+          if (existingPackage) {
+            console.log(`[packaging:create] Found identical package from ${existingPackage.platform}, copying instead of regenerating...`);
+            try {
+              fs.copyFileSync(existingPackage.path, outputPath);
+              console.log(`[packaging:create] ${platformId} package created by copying from ${existingPackage.platform}`);
+              break;
+            } catch (err) {
+              console.warn(`[packaging:create] Failed to copy existing package, will regenerate:`, err.message);
+              // Fall through to regenerate if copy fails
+            }
+          }
+          
           // Call Python ZIP+MP3 packager
           const zipMp3ScriptPath = path.join(__dirname, '../../py/packaging/zip_mp3_packager.py');
           await new Promise((resolve, reject) => {
