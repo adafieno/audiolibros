@@ -62,6 +62,8 @@
     "main": "./electron/main.cjs",
     "build": {
         "appId": "com.khipu.studio",
+        "productName": "Khipu Studio",
+        "copyright": "Copyright © 2025 Agustín Da Fieno Delucchi",
         "files": [
             "dist/**",
             "electron/**",
@@ -104,10 +106,7 @@
             ],
             "signtoolOptions": null,
             "signAndEditExecutable": false,
-            "legalTrademarks": "Khipu Studio",
-            "copyright": "Copyright © 2025 Agustín Da Fieno Delucchi",
-            "fileVersion": "1.0.0",
-            "productVersion": "1.0.0"
+            "legalTrademarks": "Khipu Studio"
         },
         "linux": {
             "icon": "../assets/icons/",
