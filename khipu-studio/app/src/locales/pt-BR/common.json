@@ -2423,6 +2423,26 @@
     "string": "Arquivos de capítulo",
     "comment": "Descrição do requisito de arquivos de capítulo"
   },
+  "packaging.chapterAudioStatus": {
+    "string": "Status do Áudio dos Capítulos",
+    "comment": "Título da seção para status de conclusão do áudio dos capítulos"
+  },
+  "packaging.chaptersComplete": {
+    "string": "capítulos com áudio completo",
+    "comment": "Subtítulo mostrando capítulos que têm arquivos de áudio completos"
+  },
+  "packaging.missingChapters": {
+    "string": "Capítulos sem áudio completo:",
+    "comment": "Rótulo para lista de capítulos sem áudio completo"
+  },
+  "packaging.generateChaptersHint": {
+    "string": "Gere o áudio completo dos capítulos na página de Produção de Áudio primeiro",
+    "comment": "Mensagem de dica direcionando usuários para gerar áudio de capítulos"
+  },
+  "packaging.allChaptersComplete": {
+    "string": "Todos os capítulos têm arquivos de áudio completos. Pronto para empacotar!",
+    "comment": "Mensagem de sucesso quando todos os capítulos têm áudio completo"
+  },
   "packaging.requirements.audio": {
     "string": "Arquivos de áudio",
     "comment": "Descrição do requisito de arquivos de áudio"

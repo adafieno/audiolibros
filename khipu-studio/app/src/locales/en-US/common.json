@@ -3278,6 +3278,26 @@
     "string": "Chapter Audio Files",
     "comment": "Combined chapter and audio requirement description"
   },
+  "packaging.chapterAudioStatus": {
+    "string": "Chapter Audio Status",
+    "comment": "Section title for chapter audio completion status"
+  },
+  "packaging.chaptersComplete": {
+    "string": "chapters with complete audio",
+    "comment": "Subtitle showing chapters that have complete audio files"
+  },
+  "packaging.missingChapters": {
+    "string": "Chapters without complete audio:",
+    "comment": "Label for list of chapters missing complete audio"
+  },
+  "packaging.generateChaptersHint": {
+    "string": "Generate complete chapter audio in the Audio Production page first",
+    "comment": "Hint message directing users to generate chapter audio"
+  },
+  "packaging.allChaptersComplete": {
+    "string": "All chapters have complete audio files. Ready for packaging!",
+    "comment": "Success message when all chapters have complete audio"
+  },
   "packaging.requirements.audio": {
     "string": "Audio Files",
     "comment": "Description for audio files requirement"

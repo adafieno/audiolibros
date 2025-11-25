@@ -3639,6 +3639,26 @@
     "string": "Audio de Todos los Capítulos Completo",
     "comment": "Descripción del requisito de audio completo"
   },
+  "packaging.chapterAudioStatus": {
+    "string": "Estado del Audio de Capítulos",
+    "comment": "Título de sección para estado de completitud del audio de capítulos"
+  },
+  "packaging.chaptersComplete": {
+    "string": "capítulos con audio completo",
+    "comment": "Subtítulo mostrando capítulos que tienen archivos de audio completos"
+  },
+  "packaging.missingChapters": {
+    "string": "Capítulos sin audio completo:",
+    "comment": "Etiqueta para lista de capítulos sin audio completo"
+  },
+  "packaging.generateChaptersHint": {
+    "string": "Genera el audio completo de los capítulos en la página de Producción de Audio primero",
+    "comment": "Mensaje de ayuda dirigiendo a usuarios a generar audio de capítulos"
+  },
+  "packaging.allChaptersComplete": {
+    "string": "Todos los capítulos tienen archivos de audio completos. ¡Listo para empaquetar!",
+    "comment": "Mensaje de éxito cuando todos los capítulos tienen audio completo"
+  },
   "packaging.requirements.outputDirectory": {
     "string": "Directorio de Salida",
     "comment": "Descripción del requisito de directorio de salida"

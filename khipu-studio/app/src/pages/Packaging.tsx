@@ -27,7 +27,12 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
   const [cfg, setCfg] = useState<ProjectConfig | null>(null);
   const [productionSettings, setProductionSettings] = useState<ProductionSettings | null>(null);
   const [loading, setLoading] = useState(true);
-  const [chaptersInfo, setChaptersInfo] = useState<{ count: number; hasAudio: number; missingIds?: string[] }>({ count: 0, hasAudio: 0 });
+  const [chaptersInfo, setChaptersInfo] = useState<{ 
+    count: number; 
+    hasAudio: number; 
+    missingIds?: string[];
+    presentIds?: string[];
+  }>({ count: 0, hasAudio: 0 });
 
   const [preparing, setPreparing] = useState<Record<string, boolean>>({});
   const [jobProgress, setJobProgress] = useState<Record<string, { running: boolean; step?: string; pct?: number }>>({});
@@ -70,6 +75,7 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
           count: info.count,
           hasAudio: info.hasAudio,
           missingIds: Array.isArray(info.missingIds) ? info.missingIds : undefined,
+          presentIds: Array.isArray(info.presentIds) ? info.presentIds : undefined,
         });
       }
     } catch {
@@ -462,6 +468,104 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
           </>
         }
       />
+
+      {/* Chapter Audio Status Section */}
+      <section style={{ marginBottom: "32px" }}>
+        <h2 style={{ fontSize: "18px", fontWeight: "600", marginBottom: "16px" }}>
+          {t("packaging.chapterAudioStatus", "Chapter Audio Status")}
+        </h2>
+        <div style={{
+          padding: "20px",
+          backgroundColor: "var(--panel)",
+          border: "1px solid var(--border)",
+          borderRadius: "8px"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+            <div>
+              <div style={{ fontSize: "24px", fontWeight: "600", color: "var(--text)" }}>
+                {chaptersInfo.hasAudio} / {chaptersInfo.count}
+              </div>
+              <div style={{ fontSize: "14px", color: "var(--muted)" }}>
+                {t("packaging.chaptersComplete", "chapters with complete audio")}
+              </div>
+            </div>
+            <button 
+              onClick={() => stableRefreshChaptersInfo()}
+              style={{
+                padding: "8px 16px",
+                fontSize: "14px",
+                backgroundColor: "var(--accent)",
+                color: "var(--bg)",
+                border: "none",
+                borderRadius: "6px",
+                cursor: "pointer"
+              }}
+            >
+              {t("packaging.actions.refresh", "Refresh")}
+            </button>
+          </div>
+          
+          {/* Progress bar */}
+          <div style={{
+            width: "100%",
+            height: "8px",
+            backgroundColor: "var(--border)",
+            borderRadius: "4px",
+            overflow: "hidden",
+            marginBottom: "16px"
+          }}>
+            <div style={{
+              width: `${chaptersInfo.count > 0 ? (chaptersInfo.hasAudio / chaptersInfo.count) * 100 : 0}%`,
+              height: "100%",
+              backgroundColor: chaptersInfo.hasAudio === chaptersInfo.count ? "#4caf50" : "#2196f3",
+              transition: "width 0.3s ease"
+            }} />
+          </div>
+
+          {/* Missing chapters list */}
+          {chaptersInfo.missingIds && chaptersInfo.missingIds.length > 0 && (
+            <div style={{
+              padding: "12px",
+              backgroundColor: "var(--bg)",
+              borderRadius: "6px",
+              border: "1px solid var(--border)"
+            }}>
+              <div style={{ fontSize: "14px", fontWeight: "600", marginBottom: "8px", color: "var(--text)" }}>
+                {t("packaging.missingChapters", "Chapters without complete audio:")}
+              </div>
+              <div style={{ fontSize: "13px", color: "var(--muted)", display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {chaptersInfo.missingIds.map(id => (
+                  <span key={id} style={{
+                    padding: "4px 8px",
+                    backgroundColor: "var(--panel)",
+                    borderRadius: "4px",
+                    border: "1px solid var(--border)"
+                  }}>
+                    {id}
+                  </span>
+                ))}
+              </div>
+              <div style={{ fontSize: "12px", color: "var(--muted)", marginTop: "12px" }}>
+                💡 {t("packaging.generateChaptersHint", "Generate complete chapter audio in the Audio Production page first")}
+              </div>
+            </div>
+          )}
+
+          {/* Success message when all complete */}
+          {chaptersInfo.hasAudio === chaptersInfo.count && chaptersInfo.count > 0 && (
+            <div style={{
+              padding: "12px",
+              backgroundColor: "#e8f5e9",
+              borderRadius: "6px",
+              border: "1px solid #4caf50",
+              fontSize: "14px",
+              color: "#2e7d32"
+            }}>
+              ✅ {t("packaging.allChaptersComplete", "All chapters have complete audio files. Ready for packaging!")}
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* Overview Section */}
       <section style={{ marginBottom: "32px" }}>
