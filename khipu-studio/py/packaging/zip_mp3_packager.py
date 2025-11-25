@@ -140,8 +140,26 @@ def create_zip_mp3_package(
     except Exception as e:
         return PackagingResult(success=False, error=f'Failed to load project config: {e}')
     
+    # Load book metadata from multiple possible locations
+    book_meta = {}
+    book_meta_paths = [
+        root / 'dossier' / 'book.json',
+        root / 'book.meta.json'
+    ]
+    for path in book_meta_paths:
+        if path.exists():
+            try:
+                with open(path, 'r', encoding='utf-8') as f:
+                    book_meta = json.load(f)
+                    break
+            except Exception:
+                continue
+    
+    # Fallback to project config if no separate book metadata file
+    if not book_meta:
+        book_meta = project_config.get('bookMeta', {})
+    
     # Get book metadata
-    book_meta = project_config.get('bookMeta', {})
     title = book_meta.get('title', 'Untitled')
     authors = book_meta.get('authors', [])
     narrators = book_meta.get('narrators', [])

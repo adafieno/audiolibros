@@ -55,23 +55,23 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
     if (!root) return;
     setPreparing(prev => ({ ...prev, [platformId]: true }));
     // initialize job progress for UI
-    setJobProgress(prev => ({ ...prev, [platformId]: { running: true, step: t('packaging.status.preparing'), pct: 0 } }));
+    setJobProgress(prev => ({ ...prev, [platformId]: { running: true, step: t('packaging.status.packaging', 'Packaging...'), pct: 0 } }));
     try {
-      onStatus?.(t('packaging.status.preparing') || `Preparing package for ${platformId}`);
+      onStatus?.(t('packaging.status.packaging', 'Packaging...') || `Packaging for ${platformId}`);
       const res = await window.khipu!.call('packaging:create', { projectRoot: root, platformId });
       if (res?.success) {
-        const message = res.message || t('packaging.status.prepared') || `Package prepared for ${platformId}`;
+        const message = res.message || t('packaging.status.packaged', 'Package created successfully') || `Package created for ${platformId}`;
         onStatus?.(message);
         setJobProgress(prev => ({ ...prev, [platformId]: { running: false, step: message, pct: 100 } }));
       } else {
-        onStatus?.(t('packaging.status.prepareFailed') || `Failed to prepare package for ${platformId}`);
+        onStatus?.(t('packaging.status.packageFailed', 'Failed to create package') || `Failed to package ${platformId}`);
         console.warn('packaging:create returned failure', res);
-        setJobProgress(prev => ({ ...prev, [platformId]: { running: false, step: t('packaging.status.prepareFailed'), pct: 0 } }));
+        setJobProgress(prev => ({ ...prev, [platformId]: { running: false, step: t('packaging.status.packageFailed', 'Failed to create package'), pct: 0 } }));
       }
     } catch (error) {
-      console.error('Failed to prepare package:', error);
-      onStatus?.(t('packaging.status.prepareFailed') || `Failed to prepare package for ${platformId}`);
-      setJobProgress(prev => ({ ...prev, [platformId]: { running: false, step: t('packaging.status.prepareFailed'), pct: 0 } }));
+      console.error('Failed to create package:', error);
+      onStatus?.(t('packaging.status.packageFailed', 'Failed to create package') || `Failed to package ${platformId}`);
+      setJobProgress(prev => ({ ...prev, [platformId]: { running: false, step: t('packaging.status.packageFailed', 'Failed to create package'), pct: 0 } }));
     } finally {
       setPreparing(prev => ({ ...prev, [platformId]: false }));
       // Refresh chapters/audio info and manifest status after packaging attempt
@@ -841,10 +841,10 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
                     disabled={!!preparing[id] || chaptersInfo.count === 0 || chaptersInfo.hasAudio === 0}
                   >
                     {preparing[id] 
-                      ? t('packaging.status.preparing') 
+                      ? t('packaging.status.packaging', 'Packaging...') 
                       : existingPackages[id]?.exists 
                         ? t('packaging.repackage', 'Re-package') 
-                        : t('packaging.prepare')}
+                        : t('packaging.package', 'Package')}
                   </button>
                   {existingPackages[id]?.exists && (
                     <button
