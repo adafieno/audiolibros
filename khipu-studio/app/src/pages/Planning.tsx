@@ -398,8 +398,10 @@ function EditablePreview({
 
   // Enhanced text change handler with better cursor tracking
   const handleTextareaChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setEditedText(e.target.value);
-    setCursorPosition(e.target.selectionStart);
+    const newValue = e.target.value;
+    const newCursorPos = e.target.selectionStart;
+    setEditedText(newValue);
+    setCursorPosition(newCursorPos);
   }, []);
 
   // Handle cursor position updates on selection change
@@ -2013,19 +2015,10 @@ export default function PlanningPage({ onStatus }: { onStatus: (s: string) => vo
     }
   };
 
-  // Handle row click: set selection and play audio
+  // Handle row click: set selection only (no auto-play)
   const handleRowClick = async (rowIndex: number) => {
     setSelIndex(rowIndex);
-    
-    // Get the segment ID from the filtered row
-    const row = filteredRows[rowIndex];
-    if (row && row.segmentId) {
-      try {
-        await handleSegmentAudition(row.segmentId);
-      } catch (error) {
-        console.error('Failed to play segment audio:', error);
-      }
-    }
+    // Don't automatically play audio - user must click play button explicitly
   };
 
   // Handle segment audition with character voice

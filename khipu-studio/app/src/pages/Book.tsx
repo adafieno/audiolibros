@@ -84,11 +84,6 @@ export default function Book() {
     const newMeta = { ...bookMeta, ...updates };
     console.log("Updating BookMeta:", { currentMeta: bookMeta, updates, newMeta });
     
-    // Ensure required fields are never empty
-    if (newMeta.authors.length === 0 && updates.authors && updates.authors.length > 0) {
-      newMeta.authors = updates.authors.filter(author => author.trim() !== "");
-    }
-    
     setBookMeta(newMeta);
   };
 
@@ -221,6 +216,7 @@ export default function Book() {
             <label>
               <div>{t("book.title.label")}</div>
               <input
+                type="text"
                 style={{ width: "100%" }}
                 value={bookMeta?.title || ""}
                 onChange={(e) => updateBookMeta({ title: e.target.value })}
@@ -229,6 +225,7 @@ export default function Book() {
             <label>
               <div>{t("book.subtitle.label")}</div>
               <input
+                type="text"
                 style={{ width: "100%" }}
                 value={bookMeta?.subtitle || ""}
                 onChange={(e) => updateBookMeta({ subtitle: e.target.value })}
@@ -237,45 +234,53 @@ export default function Book() {
             <label>
               <div>{t("book.authors.label")}</div>
               <input
+                type="text"
                 style={{ width: "100%" }}
                 value={bookMeta?.authors?.join(", ") || ""}
                 placeholder={t("book.authors.placeholder")}
-                onChange={(e) => updateBookMeta({ 
-                  authors: e.target.value.split(",").map(a => a.trim()).filter(a => a) 
-                })}
+                onChange={(e) => {
+                  const authors = e.target.value.split(",").map(a => a.trim());
+                  updateBookMeta({ authors });
+                }}
               />
             </label>
             <label>
               <div>{t("book.narrators.label")}</div>
               <input
+                type="text"
                 style={{ width: "100%" }}
                 value={bookMeta?.narrators?.join(", ") || ""}
                 placeholder={t("book.narrators.placeholder")}
-                onChange={(e) => updateBookMeta({ 
-                  narrators: e.target.value.split(",").map(n => n.trim()).filter(n => n) 
-                })}
+                onChange={(e) => {
+                  const narrators = e.target.value.split(",").map(n => n.trim());
+                  updateBookMeta({ narrators });
+                }}
               />
             </label>
             <label>
               <div>{t("book.translators.label")}</div>
               <input
+                type="text"
                 style={{ width: "100%" }}
                 value={bookMeta?.translators?.join(", ") || ""}
                 placeholder={t("book.translators.placeholder")}
-                onChange={(e) => updateBookMeta({ 
-                  translators: e.target.value.split(",").map(t => t.trim()).filter(t => t) 
-                })}
+                onChange={(e) => {
+                  const translators = e.target.value.split(",").map(t => t.trim());
+                  updateBookMeta({ translators });
+                }}
               />
             </label>
             <label>
               <div>{t("book.adaptors.label")}</div>
               <input
+                type="text"
                 style={{ width: "100%" }}
                 value={bookMeta?.adaptors?.join(", ") || ""}
                 placeholder={t("book.adaptors.placeholder")}
-                onChange={(e) => updateBookMeta({ 
-                  adaptors: e.target.value.split(",").map(a => a.trim()).filter(a => a) 
-                })}
+                onChange={(e) => {
+                  const adaptors = e.target.value.split(",").map(a => a.trim());
+                  updateBookMeta({ adaptors });
+                }}
               />
             </label>
             <label>
