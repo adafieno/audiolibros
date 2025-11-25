@@ -205,7 +205,6 @@ def generate_universal_manifest(project_root: str | Path) -> Dict[str, Any]:
         'generated': datetime.utcnow().isoformat() + 'Z',
         'project': {
             'name': project_config.get('name', 'Untitled Project'),
-            'root': str(project_root),
         },
         'book': {
             'title': book_metadata.get('title', project_config.get('bookMeta', {}).get('title', 'Untitled')),

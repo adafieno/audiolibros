@@ -40,8 +40,7 @@ Backend: Platform-specific packager (M4B, ZIP+MP3, EPUB3)
   "version": "1.0",
   "generated": "2025-11-25T01:42:10.429804Z",
   "project": {
-    "name": "Project Name",
-    "root": "/path/to/project"
+    "name": "Project Name"
   },
   "book": {
     "title": "Book Title",
@@ -91,6 +90,14 @@ Backend: Platform-specific packager (M4B, ZIP+MP3, EPUB3)
   ]
 }
 ```
+
+### Design Principles
+
+**Portability**: All file paths are relative to the project root. No absolute paths are stored, making the manifest portable across different machines and environments.
+
+**Self-Contained**: The manifest contains all metadata needed for packaging. Packagers receive the project root path at runtime and resolve relative paths.
+
+**Platform-Agnostic**: This is Khipu Studio's internal format, not an industry standard. Each platform (Apple Books, Google Play, ACX, etc.) has its own format, which is why we need platform-specific packagers to convert this manifest into their required formats.
 
 ## Implementation Details
 
