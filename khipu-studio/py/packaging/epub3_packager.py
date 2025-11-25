@@ -66,16 +66,22 @@ def _convert_to_mp3(
             '-b:a', bitrate,
             '-ar', str(sample_rate),
             '-ac', str(channels),
-            '-y'  # Overwrite output file
+            '-y',  # Overwrite output file
+            str(output_path)
         ]
         
         subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', check=True)
-        return True
+        return output_path.exists()
     except subprocess.CalledProcessError as e:
-        print(f"[ERROR] FFmpeg conversion failed: {e.stderr}")
+        print(f"[ERROR] FFmpeg conversion failed:")
+        print(f"  Command: {' '.join(cmd)}")
+        print(f"  Exit code: {e.returncode}")
+        if e.stderr:
+            print(f"  Error output: {e.stderr}")
         return False
     except Exception as e:
         print(f"[ERROR] Conversion failed: {e}")
+        print(f"  Command: {' '.join(cmd)}")
         return False
 
 
