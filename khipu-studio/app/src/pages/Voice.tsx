@@ -150,6 +150,282 @@ const VUMeter = ({ level, label, color }: { level: number; label: string; color:
   );
 };
 
+// Analog VU Meter Component with Needle
+const AnalogVUMeter = ({ level, isPlaying }: { level: number; isPlaying: boolean }) => {
+  const [currentLevel, setCurrentLevel] = useState(0);
+  const [peakLevel, setPeakLevel] = useState(0);
+  
+  useEffect(() => {
+    if (isPlaying) {
+      // More realistic audio dynamics - mostly hovering around -6 to -3 dB (70-85%)
+      const interval = setInterval(() => {
+        const random = Math.random();
+        let targetLevel;
+        
+        if (random < 0.7) {
+          // 70% of the time: normal speech levels (-10 to -3 dB)
+          targetLevel = 60 + Math.random() * 20; // 60-80%
+        } else if (random < 0.9) {
+          // 20% of the time: louder peaks (-3 to 0 dB)
+          targetLevel = 80 + Math.random() * 15; // 80-95%
+        } else {
+          // 10% of the time: quiet passages (-20 to -10 dB)
+          targetLevel = 30 + Math.random() * 30; // 30-60%
+        }
+        
+        // Smooth transition with attack and decay
+        setCurrentLevel(prev => {
+          const diff = targetLevel - prev;
+          const attack = diff > 0 ? 0.3 : 0.4; // Much faster decay for audio pauses
+          return prev + diff * attack;
+        });
+        
+        setPeakLevel(prev => Math.max(prev * 0.98, currentLevel)); // Slower decay for peaks
+      }, 50);
+      return () => clearInterval(interval);
+    } else {
+      // Smooth return to rest position (far left)
+      const interval = setInterval(() => {
+        setCurrentLevel(prev => prev * 0.85);
+        setPeakLevel(prev => prev * 0.9);
+        if (currentLevel < 0.5) {
+          setCurrentLevel(0);
+          setPeakLevel(0);
+        }
+      }, 50);
+      return () => clearInterval(interval);
+    }
+  }, [isPlaying, currentLevel]);
+  
+  // Map percentage to dB scale and needle angle
+  // 0% = -20dB at 275° (pointing to lower left), 100% = +3dB at 15° (pointing to lower right)
+  // Since 15° is less than 275°, we need to go from 275° down to 15° = going counterclockwise
+  // But we want clockwise motion, so we add: 275° + angle increment
+  // To go from 275° to 15° clockwise, we actually go 275° → 360° → 15° = +100° total
+  const needleRotation = 275 + (currentLevel / 100) * 100;
+  
+  return (
+    <div style={{
+      width: "180px",
+      height: "110px",
+      background: "linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%)",
+      borderRadius: "6px",
+      border: "1px solid #444",
+      boxShadow: "0 4px 8px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1)",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "8px",
+      position: "relative"
+    }}>
+      {/* Meter face with vintage paper texture */}
+      <div style={{
+        width: "164px",
+        height: "85px",
+        background: "radial-gradient(ellipse at center top, #fff9e6 0%, #f5e6c8 40%, #e8d9b8 100%)",
+        borderRadius: "4px",
+        position: "relative",
+        overflow: "hidden",
+        boxShadow: "inset 0 -2px 6px rgba(0,0,0,0.08), inset 0 2px 4px rgba(255,255,255,0.6), 0 1px 0 rgba(255,255,255,0.4)",
+        border: "1px solid #c9b897"
+      }}>
+        {/* Scale background */}
+        <svg width="164" height="85" style={{ position: "absolute", top: 0, left: 0 }}>
+          <defs>
+            <linearGradient id="greenGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style={{ stopColor: "#2d5f2d", stopOpacity: 0.15 }} />
+              <stop offset="100%" style={{ stopColor: "#4a8f4a", stopOpacity: 0.15 }} />
+            </linearGradient>
+            <linearGradient id="redGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style={{ stopColor: "#c04040", stopOpacity: 0.15 }} />
+              <stop offset="100%" style={{ stopColor: "#d84040", stopOpacity: 0.15 }} />
+            </linearGradient>
+          </defs>
+          
+          {/* Green safe zone arc (covers -20 to 0 dB) */}
+          <path
+            d="M 35 63 A 45 45 0 0 1 98 22"
+            fill="none"
+            stroke="url(#greenGrad)"
+            strokeWidth="14"
+          />
+          
+          {/* Red danger zone arc (0 to +3 dB) */}
+          <path
+            d="M 98 22 A 45 45 0 0 1 129 63"
+            fill="none"
+            stroke="url(#redGrad)"
+            strokeWidth="14"
+          />
+          
+          {/* Major tick marks and labels */}
+          {[
+            { label: '-20', angle: 165 },
+            { label: '-10', angle: 135 },
+            { label: '-5', angle: 105 },
+            { label: '0', angle: 75, bold: true },
+            { label: '+1', angle: 55, red: true },
+            { label: '+2', angle: 35, red: true },
+            { label: '+3', angle: 15, red: true }
+          ].map((tick, i) => {
+            const rad = (tick.angle * Math.PI) / 180;
+            const innerRadius = 40;
+            const outerRadius = tick.bold ? 48 : 46;
+            const labelRadius = 30;
+            const x1 = 82 + Math.cos(rad) * innerRadius;
+            const y1 = 70 - Math.sin(rad) * innerRadius;
+            const x2 = 82 + Math.cos(rad) * outerRadius;
+            const y2 = 70 - Math.sin(rad) * outerRadius;
+            const labelX = 82 + Math.cos(rad) * labelRadius;
+            const labelY = 70 - Math.sin(rad) * labelRadius;
+            
+            return (
+              <g key={i}>
+                <line
+                  x1={x1}
+                  y1={y1}
+                  x2={x2}
+                  y2={y2}
+                  stroke={tick.red ? "#8b0000" : "#000"}
+                  strokeWidth={tick.bold ? "2" : "1.5"}
+                />
+                <text
+                  x={labelX}
+                  y={labelY + 3}
+                  textAnchor="middle"
+                  fontSize={tick.bold ? "9" : "7"}
+                  fontWeight={tick.bold ? "bold" : "normal"}
+                  fill={tick.red ? "#8b0000" : "#000"}
+                  fontFamily="Arial, sans-serif"
+                >
+                  {tick.label}
+                </text>
+              </g>
+            );
+          })}
+          
+          {/* Minor tick marks - different density for left and right */}
+          {[...Array.from({ length: 6 }).map((_, i) => {
+            // Left side (negative dB): fewer ticks, compressed scale
+            return 165 - ((i + 1) * 15);
+          }), ...Array.from({ length: 3 }).map((_, i) => {
+            // Right side (positive dB): 20° spacing
+            return 65 - ((i + 1) * 10);
+          })].map((angle, i) => {
+            // Skip positions where major ticks are
+            const isMajorAngle = [165, 135, 105, 75, 55, 35, 15].some(a => Math.abs(angle - a) < 4);
+            if (isMajorAngle) return null;
+            
+            const rad = (angle * Math.PI) / 180;
+            const x1 = 82 + Math.cos(rad) * 42;
+            const y1 = 70 - Math.sin(rad) * 42;
+            const x2 = 82 + Math.cos(rad) * 45;
+            const y2 = 70 - Math.sin(rad) * 45;
+            
+            return (
+              <line
+                key={`minor-${i}`}
+                x1={x1}
+                y1={y1}
+                x2={x2}
+                y2={y2}
+                stroke="#333"
+                strokeWidth="0.5"
+              />
+            );
+          })}
+        </svg>
+        
+        {/* VU label */}
+        <div style={{
+          position: "absolute",
+          top: "3px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          fontSize: "11px",
+          fontWeight: "bold",
+          letterSpacing: "2px",
+          color: "#000",
+          fontFamily: "Arial, sans-serif"
+        }}>
+          VU
+        </div>
+        
+        {/* Needle assembly */}
+        <div style={{
+          position: "absolute",
+          bottom: "15px",
+          left: "82px",
+          width: "100px",
+          height: "100px",
+          transformOrigin: "0% 100%",
+          transform: `rotate(${needleRotation}deg)`,
+          transition: "transform 0.08s ease-out"
+        }}>
+          {/* Needle shaft */}
+          <div style={{
+            position: "absolute",
+            bottom: "0",
+            left: "0",
+            width: "0.5px",
+            height: "50px",
+            background: "#000",
+            boxShadow: "none"
+          }} />
+          
+          {/* Needle tip */}
+          <div style={{
+            position: "absolute",
+            top: "-3px",
+            left: "-1px",
+            width: "0",
+            height: "0",
+            borderLeft: "1px solid transparent",
+            borderRight: "1px solid transparent",
+            borderBottom: "4px solid #000"
+          }} />
+        </div>
+        
+        {/* Pivot point (screw head) */}
+        <div style={{
+          position: "absolute",
+          bottom: "15px",
+          left: "79px",
+          width: "6px",
+          height: "6px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle at 30% 30%, #888, #333)",
+          border: "0.5px solid #000",
+          boxShadow: "0 1px 2px rgba(0,0,0,0.5)",
+          zIndex: 10
+        }}>
+          <div style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            width: "3px",
+            height: "0.5px",
+            backgroundColor: "#555",
+            transform: "translate(-50%, -50%)"
+          }} />
+        </div>
+      </div>
+      
+      {/* Bottom label plate */}
+      <div style={{
+        marginTop: "4px",
+        fontSize: "8px",
+        color: "#999",
+        fontFamily: "monospace",
+        letterSpacing: "0.5px"
+      }}>
+        {isPlaying ? "ACTIVE" : "STANDBY"}
+      </div>
+    </div>
+  );
+};
+
 interface Chapter {
   id: string;
   title?: string;
@@ -1909,16 +2185,35 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
 
           {/* Right: Text Display + Audio Production Module */}
           <div style={{ display: "flex", flexDirection: "column", gap: "8px", minHeight: 0 }}>
-            {/* Text Display */}
+            {/* Text Display with VU Meter */}
             {selectedRowIndex >= 0 && selectedRowIndex < audioSegments.length && (
-              <TextDisplay
-                text={audioSegments[selectedRowIndex].text}
-                isPlaying={isCurrentSegmentPlaying(selectedRowIndex)}
-                currentTime={getCurrentAudioTime()}
-                totalDuration={getCurrentAudioDuration()}
-                voiceName={audioSegments[selectedRowIndex].voice}
-                segmentId={audioSegments[selectedRowIndex].segmentId.toString()}
-              />
+              <div style={{ display: "flex", gap: "12px", alignItems: "stretch" }}>
+                <div style={{ flex: 1 }}>
+                  <TextDisplay
+                    text={audioSegments[selectedRowIndex].text}
+                    isPlaying={isCurrentSegmentPlaying(selectedRowIndex)}
+                    currentTime={getCurrentAudioTime()}
+                    totalDuration={getCurrentAudioDuration()}
+                    voiceName={audioSegments[selectedRowIndex].voice}
+                    segmentId={audioSegments[selectedRowIndex].segmentId.toString()}
+                  />
+                </div>
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "12px",
+                  backgroundColor: "var(--panel)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "6px",
+                  marginBottom: "8px"
+                }}>
+                  <AnalogVUMeter 
+                    level={75}
+                    isPlaying={isCurrentSegmentPlaying(selectedRowIndex)}
+                  />
+                </div>
+              </div>
             )}
             
             {/* Action Buttons Toolbar - Unified audio production controls */}
