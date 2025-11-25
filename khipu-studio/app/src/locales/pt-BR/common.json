@@ -2278,6 +2278,30 @@
     "string": "Marcar empacotamento como completo",
     "comment": "Texto do botão para marcar fluxo de empacotamento como completo"
   },
+  "packaging.prepare": {
+    "string": "Preparar",
+    "comment": "Rótulo do botão para preparar pacote para uma plataforma"
+  },
+  "packaging.repackage": {
+    "string": "Re-empacotar",
+    "comment": "Rótulo do botão para re-empacotar quando o pacote já existe"
+  },
+  "packaging.packageExists": {
+    "string": "Pacote criado",
+    "comment": "Rótulo exibido quando já existe um pacote para uma plataforma"
+  },
+  "packaging.status.preparing": {
+    "string": "Preparando...",
+    "comment": "Texto de status mostrado enquanto prepara um pacote"
+  },
+  "packaging.status.prepared": {
+    "string": "Pacote preparado",
+    "comment": "Texto de status mostrado quando a preparação do pacote é concluída"
+  },
+  "packaging.status.prepareFailed": {
+    "string": "Falha ao preparar pacote",
+    "comment": "Texto de status mostrado quando a preparação do pacote falha"
+  },
   "packaging.loadProject": {
     "string": "Por favor carregue um projeto primeiro para gerenciar empacotamento.",
     "comment": "Mensagem quando nenhum projeto está carregado"

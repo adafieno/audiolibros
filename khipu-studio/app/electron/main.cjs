@@ -846,6 +846,82 @@ function createWin() {
     }
   });
 
+  ipcMain.handle("packaging:checkExisting", async (_e, { projectRoot, platformId }) => {
+    try {
+      console.log('[packaging:checkExisting] Checking for:', { projectRoot, platformId });
+      
+      if (!projectRoot) throw new Error('Missing projectRoot');
+      if (!platformId) throw new Error('Missing platformId');
+
+      // Get book title to construct expected output path
+      const manifestPath = path.join(projectRoot, 'manifest.json');
+      let bookTitle = 'audiobook';
+      
+      if (fs.existsSync(manifestPath)) {
+        const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+        bookTitle = manifest.book?.title || 'audiobook';
+      } else {
+        const bookMetaPaths = [
+          path.join(projectRoot, 'dossier', 'book.json'),
+          path.join(projectRoot, 'book.meta.json')
+        ];
+        for (const bookMetaPath of bookMetaPaths) {
+          if (fs.existsSync(bookMetaPath)) {
+            const bookMeta = JSON.parse(fs.readFileSync(bookMetaPath, 'utf-8'));
+            bookTitle = bookMeta.title || 'audiobook';
+            break;
+          }
+        }
+      }
+      
+      const sanitizedTitle = bookTitle.replace(/[^a-z0-9]/gi, '_');
+      let packagePath = null;
+      let exists = false;
+      
+      // Check for platform-specific output files
+      switch (platformId) {
+        case 'apple': {
+          packagePath = path.join(projectRoot, 'exports', 'apple', `${sanitizedTitle}.m4b`);
+          exists = fs.existsSync(packagePath);
+          console.log('[packaging:checkExisting] Apple M4B check:', { packagePath, exists });
+          break;
+        }
+        case 'google':
+        case 'spotify':
+        case 'acx': {
+          // These will likely use ZIP format
+          packagePath = path.join(projectRoot, 'exports', platformId, `${sanitizedTitle}.zip`);
+          exists = fs.existsSync(packagePath);
+          break;
+        }
+        case 'kobo': {
+          // EPUB3 format
+          packagePath = path.join(projectRoot, 'exports', 'kobo', `${sanitizedTitle}.epub`);
+          exists = fs.existsSync(packagePath);
+          break;
+        }
+        default:
+          return { exists: false, packagePath: null };
+      }
+      
+      // Get file size if exists
+      let fileSize = null;
+      let createdAt = null;
+      if (exists && packagePath) {
+        const stats = fs.statSync(packagePath);
+        fileSize = stats.size;
+        createdAt = stats.mtime.toISOString();
+      }
+      
+      const result = { exists, packagePath, fileSize, createdAt };
+      console.log('[packaging:checkExisting] Result:', result);
+      return result;
+    } catch (error) {
+      console.error('[packaging:checkExisting] Error:', error);
+      return { exists: false, packagePath: null, error: String(error?.message || error) };
+    }
+  });
+
   ipcMain.handle("packaging:create", async (_e, { projectRoot, platformId }) => {
     const packagingStartTime = Date.now();
     try {

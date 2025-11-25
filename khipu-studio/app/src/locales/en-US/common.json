@@ -3161,6 +3161,14 @@
     "string": "Prepare",
     "comment": "Button label to prepare package for a platform"
   },
+  "packaging.repackage": {
+    "string": "Re-package",
+    "comment": "Button label to re-package when package already exists"
+  },
+  "packaging.packageExists": {
+    "string": "Package created",
+    "comment": "Label shown when a package already exists for a platform"
+  },
   "packaging.status.preparing": {
     "string": "Preparing...",
     "comment": "Status text shown while preparing a package"

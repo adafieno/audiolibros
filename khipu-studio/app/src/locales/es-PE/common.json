@@ -3514,6 +3514,14 @@
     "string": "Preparar",
     "comment": "Etiqueta del botón para preparar paquete para una plataforma"
   },
+  "packaging.repackage": {
+    "string": "Re-empaquetar",
+    "comment": "Etiqueta del botón para re-empaquetar cuando el paquete ya existe"
+  },
+  "packaging.packageExists": {
+    "string": "Paquete creado",
+    "comment": "Etiqueta mostrada cuando ya existe un paquete para una plataforma"
+  },
   "packaging.status.preparing": {
     "string": "Preparando...",
     "comment": "Texto de estado mostrado mientras se prepara un paquete"

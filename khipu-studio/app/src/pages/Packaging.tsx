@@ -38,6 +38,7 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
   const [jobProgress, setJobProgress] = useState<Record<string, { running: boolean; step?: string; pct?: number }>>({});
   const [manifestExists, setManifestExists] = useState<boolean>(false);
   const [generatingManifest, setGeneratingManifest] = useState<boolean>(false);
+  const [existingPackages, setExistingPackages] = useState<Record<string, { exists: boolean; fileSize?: number; createdAt?: string }>>({});
 
   const preparePlatform = async (platformId: string) => {
     if (!root) return;
@@ -65,6 +66,7 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
       // Refresh chapters/audio info and manifest status after packaging attempt
       stableRefreshChaptersInfo().catch(() => {});
       checkManifestExists().catch(() => {});
+      checkExistingPackages().catch(() => {});
     }
   };
 
@@ -79,6 +81,32 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
     } catch (err) {
       console.error('Failed to check manifest:', err);
       setManifestExists(false);
+    }
+  }, [root]);
+
+  // Helper to check for existing packages
+  const checkExistingPackages = useCallback(async () => {
+    if (!root) return;
+    try {
+      const platformIds = ['apple', 'google', 'spotify', 'acx', 'kobo'];
+      const results: Record<string, { exists: boolean; fileSize?: number; createdAt?: string }> = {};
+      
+      for (const platformId of platformIds) {
+        const result = await window.khipu!.call('packaging:checkExisting', { projectRoot: root, platformId });
+        console.log(`[checkExistingPackages] ${platformId}:`, result);
+        if (result) {
+          results[platformId] = {
+            exists: result.exists || false,
+            fileSize: result.fileSize,
+            createdAt: result.createdAt
+          };
+        }
+      }
+      
+      console.log('[checkExistingPackages] Setting state:', results);
+      setExistingPackages(results);
+    } catch (err) {
+      console.error('Failed to check existing packages:', err);
     }
   }, [root]);
 
@@ -167,8 +195,12 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
 
     loadData();
 
+    // Check for existing packages and manifest on mount
+    checkExistingPackages();
+    checkManifestExists();
+
     // cleanup is optional (preload just forwards ipcRenderer.on). We won't remove listener here.
-  }, [root, onStatus, stableRefreshChaptersInfo]);
+  }, [root, onStatus, stableRefreshChaptersInfo, checkExistingPackages, checkManifestExists]);
 
   // Register IPC listener for audio chapter updates. Keep this at top-level (not nested inside other hooks).
   useEffect(() => {
@@ -737,7 +769,11 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
                     disabled={!!preparing[id] || chaptersInfo.count === 0 || chaptersInfo.hasAudio === 0}
                     style={{ marginLeft: '8px' }}
                   >
-                    {preparing[id] ? t('packaging.status.preparing') : t('packaging.prepare')}
+                    {preparing[id] 
+                      ? t('packaging.status.preparing') 
+                      : existingPackages[id]?.exists 
+                        ? t('packaging.repackage', 'Re-package') 
+                        : t('packaging.prepare')}
                   </button>
                   {/* If packaging spec checks failed, show a subtle hint but don't block Prepare */}
                   
@@ -746,6 +782,34 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
               <p style={{ fontSize: "14px", color: "var(--muted)" }}>
                 Format: {packageFormat}
               </p>
+              
+              {/* Show existing package info if present */}
+              {existingPackages[id]?.exists && (
+                <div style={{ 
+                  fontSize: '13px', 
+                  color: 'var(--muted)', 
+                  padding: '8px 12px',
+                  backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                  borderRadius: '4px',
+                  marginBottom: '8px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ color: 'green', fontSize: '16px' }}>✓</span>
+                    <span style={{ fontWeight: '500' }}>
+                      {t('packaging.packageExists', 'Package created')}
+                    </span>
+                  </div>
+                  {existingPackages[id].fileSize && (
+                    <div style={{ marginLeft: '22px', fontSize: '12px', marginTop: '2px' }}>
+                      {(existingPackages[id].fileSize! / (1024 * 1024)).toFixed(1)} MB
+                      {existingPackages[id].createdAt && (
+                        <> • {new Date(existingPackages[id].createdAt!).toLocaleDateString()}</>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+              
               <div style={{ fontSize: '14px', color: 'var(--muted)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {requirements.map((req, index) => (
                   <div key={index} style={{ display: 'flex', alignItems: 'center' }}>
@@ -762,12 +826,12 @@ export default function PackagingPage({ onStatus }: { onStatus?: (s: string) => 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <strong style={{ fontSize: '13px' }}>{jobProgress[id].step}</strong>
                       {jobProgress[id].pct != null && (
-                        <span style={{ color: 'var(--muted)' }}>{Math.round((jobProgress[id].pct || 0) * 100)}%</span>
+                        <span style={{ color: 'var(--muted)' }}>{Math.round(jobProgress[id].pct || 0)}%</span>
                       )}
                     </div>
                     {jobProgress[id].running && (
                       <div style={{ height: '6px', background: 'var(--border)', borderRadius: 4, marginTop: 6 }}>
-                        <div style={{ height: '6px', background: 'var(--accent)', width: `${Math.min(100, (jobProgress[id].pct || 0) * 100)}%`, borderRadius: 4 }} />
+                        <div style={{ height: '6px', background: 'var(--accent)', width: `${Math.min(100, jobProgress[id].pct || 0)}%`, borderRadius: 4 }} />
                       </div>
                     )}
                   </div>
