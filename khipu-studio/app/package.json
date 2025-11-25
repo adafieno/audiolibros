@@ -81,6 +81,7 @@
             }
         ],
         "mac": {
+            "icon": "../assets/icons/khipu_studio.icns",
             "category": "public.app-category.productivity",
             "target": [
                 {
@@ -90,6 +91,7 @@
             ]
         },
         "win": {
+            "icon": "../assets/icons/icon_256x256.png",
             "target": [
                 {
                     "target": "nsis",
@@ -99,16 +101,9 @@
             "signtoolOptions": null,
             "signAndEditExecutable": false
         },
-        "nsis": {
-            "oneClick": false,
-            "allowToChangeInstallationDirectory": true,
-            "createDesktopShortcut": true,
-            "createStartMenuShortcut": true,
-            "shortcutName": "Khipu Studio"
-        },
         "linux": {
-            "icon": "assets/icons/khipu.png",
-            "category": "AudioVideo",
+            "icon": "../assets/icons/",
+            "category": "AudioVideo;Audio;AudioVideoEditing",
             "target": [
                 {
                     "target": "AppImage",
@@ -123,6 +118,13 @@
                     "arch": ["x64"]
                 }
             ]
+        },
+        "nsis": {
+            "oneClick": false,
+            "allowToChangeInstallationDirectory": true,
+            "createDesktopShortcut": true,
+            "createStartMenuShortcut": true,
+            "shortcutName": "Khipu Studio"
         }
     },
     "devDependenciesOptional": {
