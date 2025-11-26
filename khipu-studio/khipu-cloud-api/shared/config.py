@@ -63,8 +63,8 @@ class Settings(BaseSettings):
     AZURE_AD_B2C_CLIENT_SECRET: str | None = None
     AZURE_AD_B2C_AUTHORITY: str | None = None
     
-    # CORS
-    CORS_ORIGINS: List[str] = ["http://localhost:5173", "http://localhost:3000"]
+    # CORS - Accept both comma-separated string and JSON array
+    CORS_ORIGINS: str | List[str] = ["http://localhost:5173", "http://localhost:3000"]
     CORS_ALLOW_CREDENTIALS: bool = True
     
     # Default Tenant
@@ -89,6 +89,14 @@ class Settings(BaseSettings):
         if self.USE_MANAGED_IDENTITY:
             return {"use_managed_identity": True}
         return {"api_key": self.AZURE_OPENAI_API_KEY}
+    
+    @property
+    def cors_origins_list(self) -> List[str]:
+        """Convert CORS origins to list if it's a string"""
+        if isinstance(self.CORS_ORIGINS, str):
+            # Handle comma-separated string
+            return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
+        return self.CORS_ORIGINS
 
 
 # Create global settings instance
