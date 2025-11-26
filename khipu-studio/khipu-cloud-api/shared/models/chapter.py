@@ -1,7 +1,7 @@
 """Chapter model for audiobook projects."""
 from datetime import datetime
 from uuid import UUID
-from sqlalchemy import String, Integer, Text, ForeignKey, DateTime
+from sqlalchemy import String, Integer, Text, ForeignKey, DateTime, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from shared.db.database import Base
@@ -13,7 +13,7 @@ class Chapter(Base):
     __tablename__ = "chapters"
     
     # Primary key
-    id: Mapped[UUID] = mapped_column(primary_key=True, server_default="gen_random_uuid()")
+    id: Mapped[UUID] = mapped_column(primary_key=True, server_default=text("gen_random_uuid()"))
     
     # Foreign keys
     project_id: Mapped[UUID] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
@@ -31,8 +31,8 @@ class Chapter(Base):
     is_complete: Mapped[bool] = mapped_column(nullable=False, default=False)
     
     # Timestamps
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default="now()")
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default="now()", onupdate=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=text("now()"), onupdate=datetime.utcnow)
     
     # Relationships
     project: Mapped["Project"] = relationship("Project", back_populates="chapters")

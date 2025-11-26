@@ -38,9 +38,9 @@ export interface ChapterListResponse {
  * Get all chapters for a project
  */
 export async function getChapters(projectId: string): Promise<ChapterListResponse> {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('access_token')
   
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/projects/${projectId}/chapters`, {
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/projects/${projectId}/chapters/`, {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -58,9 +58,9 @@ export async function getChapters(projectId: string): Promise<ChapterListRespons
  * Get a single chapter by ID
  */
 export async function getChapter(projectId: string, chapterId: string): Promise<Chapter> {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('access_token')
   
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/projects/${projectId}/chapters/${chapterId}`, {
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/projects/${projectId}/chapters/${chapterId}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -78,9 +78,9 @@ export async function getChapter(projectId: string, chapterId: string): Promise<
  * Create a new chapter
  */
 export async function createChapter(projectId: string, data: CreateChapterData): Promise<Chapter> {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('access_token')
   
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/projects/${projectId}/chapters`, {
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/projects/${projectId}/chapters/`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -104,9 +104,9 @@ export async function updateChapter(
   chapterId: string,
   data: UpdateChapterData
 ): Promise<Chapter> {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('access_token')
   
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/projects/${projectId}/chapters/${chapterId}`, {
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/projects/${projectId}/chapters/${chapterId}`, {
     method: 'PUT',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -126,9 +126,9 @@ export async function updateChapter(
  * Delete a chapter
  */
 export async function deleteChapter(projectId: string, chapterId: string): Promise<void> {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('access_token')
   
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/projects/${projectId}/chapters/${chapterId}`, {
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/projects/${projectId}/chapters/${chapterId}`, {
     method: 'DELETE',
     headers: {
       'Authorization': `Bearer ${token}`,

@@ -50,7 +50,7 @@ export const projectsApi = {
     search?: string;
     status?: string;
   }): Promise<ProjectsListResponse> => {
-    const response = await api.get('/projects', { params });
+    const response = await api.get('/projects/', { params });
     return response.data;
   },
 
@@ -60,7 +60,7 @@ export const projectsApi = {
   },
 
   create: async (data: ProjectCreate): Promise<Project> => {
-    const response = await api.post('/projects', data);
+    const response = await api.post('/projects/', data);
     return response.data;
   },
 

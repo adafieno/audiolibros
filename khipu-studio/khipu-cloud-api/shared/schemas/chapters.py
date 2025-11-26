@@ -1,7 +1,8 @@
 """Chapter schemas for request/response validation."""
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, Field
+from uuid import UUID
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class ChapterBase(BaseModel):
@@ -27,15 +28,14 @@ class ChapterUpdate(BaseModel):
 
 class ChapterResponse(ChapterBase):
     """Schema for chapter response."""
-    id: str
-    project_id: str
+    id: UUID
+    project_id: UUID
     word_count: int
     character_count: int
     created_at: datetime
     updated_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ChapterListResponse(BaseModel):
