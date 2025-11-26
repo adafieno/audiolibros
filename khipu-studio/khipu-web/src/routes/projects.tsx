@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { projectsApi } from '../lib/projects';
 import { useAuth } from '../hooks/useAuthHook';
+import { useTranslation } from 'react-i18next';
 
 export const Route = createFileRoute('/projects')({
   component: ProjectsPage,
@@ -10,6 +11,7 @@ export const Route = createFileRoute('/projects')({
 
 function ProjectsPage() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<string>('');
 
@@ -23,51 +25,54 @@ function ProjectsPage() {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
-            <p className="mt-2 text-gray-600">
-              Welcome back, {user?.full_name || user?.email}
+            <h1 className="text-3xl font-bold" style={{ color: 'var(--text)' }}>{t('projects.title')}</h1>
+            <p className="mt-2" style={{ color: 'var(--text-muted)' }}>
+              {t('projects.welcome', { name: user?.full_name || user?.email })}
             </p>
           </div>
           <Link
             to="/projects/new"
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            style={{ backgroundColor: 'var(--accent)', color: 'white' }}
+            className="px-4 py-2 rounded-lg hover:opacity-90 transition-colors"
           >
-            New Project
+            {t('projects.newProject')}
           </Link>
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
+        <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border p-4 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
-                Search
+              <label htmlFor="search" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
+                {t('projects.search')}
               </label>
               <input
                 id="search"
                 type="text"
-                placeholder="Search by title, author..."
+                placeholder={t('projects.searchPlaceholder')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
-                Status
+              <label htmlFor="status" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
+                {t('projects.status')}
               </label>
               <select
                 id="status"
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">All Statuses</option>
-                <option value="draft">Draft</option>
-                <option value="in_progress">In Progress</option>
-                <option value="review">Review</option>
-                <option value="completed">Completed</option>
-                <option value="published">Published</option>
+                <option value="">{t('projects.allStatuses')}</option>
+                <option value="draft">{t('projects.statusDraft')}</option>
+                <option value="in_progress">{t('projects.statusInProgress')}</option>
+                <option value="review">{t('projects.statusReview')}</option>
+                <option value="completed">{t('projects.statusCompleted')}</option>
+                <option value="published">{t('projects.statusPublished')}</option>
               </select>
             </div>
           </div>
@@ -76,21 +81,22 @@ function ProjectsPage() {
         {/* Projects List */}
         {isLoading && (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="mt-2 text-gray-600">Loading projects...</p>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: 'var(--accent)' }}></div>
+            <p className="mt-2" style={{ color: 'var(--text-muted)' }}>{t('projects.loading')}</p>
           </div>
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-800">Failed to load projects. Please try again.</p>
+          <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--error)' }} className="border rounded-lg p-4">
+            <p style={{ color: 'var(--error)' }}>{t('projects.loadError')}</p>
           </div>
         )}
 
         {data && data.items.length === 0 && (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
+          <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border p-12 text-center">
             <svg
-              className="mx-auto h-12 w-12 text-gray-400"
+              className="mx-auto h-12 w-12"
+              style={{ color: 'var(--text-muted)' }}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -102,14 +108,15 @@ function ProjectsPage() {
                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No projects</h3>
-            <p className="mt-1 text-sm text-gray-500">Get started by creating a new project.</p>
+            <h3 className="mt-2 text-sm font-medium" style={{ color: 'var(--text)' }}>{t('projects.noProjects')}</h3>
+            <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>{t('projects.noProjectsDesc')}</p>
             <div className="mt-6">
               <Link
                 to="/projects/new"
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                style={{ backgroundColor: 'var(--accent)', color: 'white' }}
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md hover:opacity-90"
               >
-                New Project
+                {t('projects.newProject')}
               </Link>
             </div>
           </div>
@@ -122,10 +129,11 @@ function ProjectsPage() {
                 key={project.id}
                 to="/projects/$projectId"
                 params={{ projectId: project.id }}
-                className="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-6"
+                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }}
+                className="rounded-lg shadow border hover:shadow-md transition-shadow p-6"
               >
                 <div className="flex items-start justify-between mb-3">
-                  <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
+                  <h3 className="text-lg font-semibold line-clamp-2" style={{ color: 'var(--text)' }}>
                     {project.title}
                   </h3>
                   <span
@@ -144,26 +152,26 @@ function ProjectsPage() {
                 </div>
 
                 {project.subtitle && (
-                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">{project.subtitle}</p>
+                  <p className="text-sm mb-3 line-clamp-2" style={{ color: 'var(--text-muted)' }}>{project.subtitle}</p>
                 )}
 
                 {project.authors && project.authors.length > 0 && (
-                  <p className="text-sm text-gray-500 mb-2">
-                    <span className="font-medium">Author:</span> {project.authors.join(', ')}
+                  <p className="text-sm mb-2" style={{ color: 'var(--text-muted)' }}>
+                    <span className="font-medium">{t('projects.author')}</span> {project.authors.join(', ')}
                   </p>
                 )}
 
                 {project.narrators && project.narrators.length > 0 && (
-                  <p className="text-sm text-gray-500 mb-4">
-                    <span className="font-medium">Narrator:</span> {project.narrators.join(', ')}
+                  <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
+                    <span className="font-medium">{t('projects.narrator')}</span> {project.narrators.join(', ')}
                   </p>
                 )}
 
-                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                  <span className="text-xs text-gray-500">
+                <div className="flex items-center justify-between pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
+                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
                     {new Date(project.created_at).toLocaleDateString()}
                   </span>
-                  <span className="text-xs text-gray-500">{project.language}</span>
+                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{project.language}</span>
                 </div>
               </Link>
             ))}

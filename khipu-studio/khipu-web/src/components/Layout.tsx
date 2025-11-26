@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import { useAuth } from '../hooks/useAuthHook';
+import { useTranslation } from 'react-i18next';
 import type { ReactNode } from 'react';
 
 interface LayoutProps {
@@ -13,14 +14,15 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { to: '/projects', label: 'Projects', icon: '📁' },
-  { to: '/settings', label: 'Settings', icon: '⚙️' },
+  { to: '/projects', label: 'nav.projects', icon: '📁' },
+  { to: '/settings', label: 'nav.settings', icon: '⚙️' },
 ];
 
 export function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
 
   const handleLogout = () => {
     logout();
@@ -34,8 +36,8 @@ export function Layout({ children }: LayoutProps) {
         <div className="flex items-center gap-3">
           <img src="/khipu-icon.png" alt="Khipu" style={{ borderColor: 'var(--border)' }} className="w-12 h-12 border-2 rounded-lg p-1" />
           <div>
-            <h1 className="text-lg font-semibold" style={{ color: 'var(--text)' }}>Khipu Studio</h1>
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Cloud Edition</p>
+            <h1 className="text-lg font-semibold" style={{ color: 'var(--text)' }}>{t('app.title')}</h1>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('app.subtitle')}</p>
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -47,7 +49,7 @@ export function Layout({ children }: LayoutProps) {
             className="text-sm hover:opacity-80"
             style={{ color: 'var(--text-muted)' }}
           >
-            Logout
+            {t('nav.logout')}
           </button>
         </div>
       </header>
@@ -66,10 +68,9 @@ export function Layout({ children }: LayoutProps) {
                   color: isActive ? 'white' : 'var(--text-muted)'
                 }}
                 className="flex flex-col items-center justify-center w-16 h-16 rounded-xl transition-colors hover:opacity-80"
-                title={item.label}
+                title={t(item.label)}
               >
                 <span className="text-2xl">{item.icon}</span>
-                <span className="text-xs mt-1">{item.label}</span>
               </Link>
             );
           })}
@@ -83,7 +84,7 @@ export function Layout({ children }: LayoutProps) {
 
       {/* Footer */}
       <footer style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text-muted)' }} className="border-t px-6 py-2 text-xs text-center">
-        © 2025 Agustín Da Fieno Delucchi. All rights reserved.
+        {t('app.copyright')}
       </footer>
     </div>
   );

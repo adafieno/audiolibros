@@ -99,7 +99,7 @@ function SettingsPage() {
                   {t(`settings.theme${theme.charAt(0).toUpperCase() + theme.slice(1)}`)}
                 </span>
                 {settings.theme === theme && (
-                  <span className="text-xs" style={{ color: 'var(--accent)' }}>Selected</span>
+                  <span className="text-xs" style={{ color: 'var(--accent)' }}>{t('settings.selected')}</span>
                 )}
               </button>
             ))}
@@ -111,11 +111,11 @@ function SettingsPage() {
       <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border mb-6">
         <div className="p-6 border-b" style={{ borderColor: 'var(--border)' }}>
           <h2 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>{t('settings.language')}</h2>
-          <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>Select your preferred language</p>
+          <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>{t('settings.languageDescription')}</p>
         </div>
         <div className="p-6">
           <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text)' }}>
-            Application Language
+            {t('settings.languageLabel')}
           </label>
           <div className="space-y-3">
             {[
@@ -138,7 +138,7 @@ function SettingsPage() {
                   <span className="text-sm font-medium">{lang.name}</span>
                 </div>
                 {settings.language === lang.code && (
-                  <span className="text-sm font-medium" style={{ color: 'var(--accent)' }}>Selected</span>
+                  <span className="text-sm font-medium" style={{ color: 'var(--accent)' }}>{t('settings.selected')}</span>
                 )}
               </button>
             ))}
@@ -152,58 +152,58 @@ function SettingsPage() {
           <div className="p-6 border-b" style={{ borderColor: 'var(--border)', backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
             <div className="flex items-center gap-2">
               <span className="text-xl">🔐</span>
-              <h2 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>Admin Settings</h2>
+              <h2 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>{t('settings.admin')}</h2>
             </div>
             <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>
-              Administrative controls and system management
+              {t('settings.adminDescription')}
             </p>
           </div>
           <div className="p-6 space-y-4">
             <div className="flex items-center justify-between p-4 rounded-lg" style={{ backgroundColor: 'var(--bg)' }}>
               <div>
-                <h3 className="text-sm font-medium" style={{ color: 'var(--text)' }}>User Management</h3>
+                <h3 className="text-sm font-medium" style={{ color: 'var(--text)' }}>{t('settings.userManagement')}</h3>
                 <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                  View and manage all users in the system
+                  {t('settings.userManagementDesc')}
                 </p>
               </div>
               <button style={{ backgroundColor: 'var(--accent)', color: 'white' }} className="px-4 py-2 text-sm rounded-md hover:opacity-80">
-                Manage Users
+                {t('settings.manageUsers')}
               </button>
             </div>
 
             <div className="flex items-center justify-between p-4 rounded-lg" style={{ backgroundColor: 'var(--bg)' }}>
               <div>
-                <h3 className="text-sm font-medium" style={{ color: 'var(--text)' }}>Tenant Management</h3>
+                <h3 className="text-sm font-medium" style={{ color: 'var(--text)' }}>{t('settings.tenantManagement')}</h3>
                 <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                  Configure tenants and subscription plans
+                  {t('settings.tenantManagementDesc')}
                 </p>
               </div>
               <button style={{ backgroundColor: 'var(--accent)', color: 'white' }} className="px-4 py-2 text-sm rounded-md hover:opacity-80">
-                Manage Tenants
+                {t('settings.manageTenants')}
               </button>
             </div>
 
             <div className="flex items-center justify-between p-4 rounded-lg" style={{ backgroundColor: 'var(--bg)' }}>
               <div>
-                <h3 className="text-sm font-medium" style={{ color: 'var(--text)' }}>System Settings</h3>
+                <h3 className="text-sm font-medium" style={{ color: 'var(--text)' }}>{t('settings.systemSettings')}</h3>
                 <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                  Configure global application settings
+                  {t('settings.systemSettingsDesc')}
                 </p>
               </div>
               <button style={{ backgroundColor: 'var(--accent)', color: 'white' }} className="px-4 py-2 text-sm rounded-md hover:opacity-80">
-                Configure
+                {t('settings.configure')}
               </button>
             </div>
 
             <div className="flex items-center justify-between p-4 rounded-lg" style={{ backgroundColor: 'var(--bg)' }}>
               <div>
-                <h3 className="text-sm font-medium" style={{ color: 'var(--text)' }}>API Keys</h3>
+                <h3 className="text-sm font-medium" style={{ color: 'var(--text)' }}>{t('settings.apiKeys')}</h3>
                 <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                  Manage Azure TTS and OpenAI API keys
+                  {t('settings.apiKeysDesc')}
                 </p>
               </div>
               <button style={{ backgroundColor: 'var(--accent)', color: 'white' }} className="px-4 py-2 text-sm rounded-md hover:opacity-80">
-                Manage Keys
+                {t('settings.manageKeys')}
               </button>
             </div>
           </div>
@@ -217,24 +217,24 @@ function SettingsPage() {
             <span className="text-xl">👤</span>
             <h2 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>{t('settings.account')}</h2>
           </div>
-          <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>Your account information</p>
+          <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>{t('settings.accountDescription')}</p>
         </div>
         <div className="p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>Email</p>
+              <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>{t('settings.email')}</p>
               <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>{user?.email}</p>
             </div>
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>Full Name</p>
-              <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>{user?.full_name || 'Not set'}</p>
+              <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>{t('settings.fullName')}</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>{user?.full_name || t('settings.notSet')}</p>
             </div>
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>Role</p>
+              <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>{t('settings.role')}</p>
               <p className="text-sm mt-1 capitalize" style={{ color: 'var(--text-muted)' }}>{user?.role}</p>
             </div>
           </div>
