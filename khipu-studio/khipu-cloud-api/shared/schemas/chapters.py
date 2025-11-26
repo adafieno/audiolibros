@@ -1,0 +1,44 @@
+"""Chapter schemas for request/response validation."""
+from datetime import datetime
+from typing import Optional
+from pydantic import BaseModel, Field
+
+
+class ChapterBase(BaseModel):
+    """Base chapter schema."""
+    title: str = Field(..., min_length=1, max_length=500)
+    content: str = Field(default="")
+    order: int = Field(default=0, ge=0)
+    is_complete: bool = Field(default=False)
+
+
+class ChapterCreate(ChapterBase):
+    """Schema for creating a new chapter."""
+    pass
+
+
+class ChapterUpdate(BaseModel):
+    """Schema for updating a chapter."""
+    title: Optional[str] = Field(None, min_length=1, max_length=500)
+    content: Optional[str] = None
+    order: Optional[int] = Field(None, ge=0)
+    is_complete: Optional[bool] = None
+
+
+class ChapterResponse(ChapterBase):
+    """Schema for chapter response."""
+    id: str
+    project_id: str
+    word_count: int
+    character_count: int
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+class ChapterListResponse(BaseModel):
+    """Schema for chapter list response."""
+    items: list[ChapterResponse]
+    total: int

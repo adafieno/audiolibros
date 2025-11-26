@@ -8,6 +8,7 @@ from sqlalchemy.orm import relationship
 import uuid
 
 from shared.db.database import Base
+from .chapter import Chapter
 
 
 class Tenant(Base):
@@ -122,6 +123,7 @@ class Project(Base):
     tenant = relationship("Tenant", back_populates="projects")
     owner = relationship("User", back_populates="projects", foreign_keys=[owner_id])
     members = relationship("ProjectMember", back_populates="project", cascade="all, delete-orphan")
+    chapters = relationship("Chapter", back_populates="project", cascade="all, delete-orphan", order_by="Chapter.order")
 
 
 class ProjectMember(Base):

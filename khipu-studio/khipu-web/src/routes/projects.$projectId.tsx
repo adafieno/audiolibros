@@ -126,6 +126,48 @@ function ProjectDetailPage() {
               </div>
             </div>
 
+            {/* Workflow Links */}
+            <div>
+              <h2 className="text-sm font-medium mb-3" style={{ color: 'var(--text)' }}>Workflow</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <button
+                  onClick={() => navigate({ to: `/projects/${projectId}/manuscript` as any })}
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    padding: '1rem',
+                    backgroundColor: 'var(--panel-accent)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '0.5rem',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  className="hover:opacity-80"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-medium" style={{ color: 'var(--text)' }}>
+                        {t('manuscript.title')}
+                      </h3>
+                      <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+                        {t('manuscript.description')}
+                      </p>
+                    </div>
+                    <svg
+                      className="w-5 h-5"
+                      style={{ color: 'var(--text-muted)' }}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </button>
+              </div>
+            </div>
+
             {project.workflow_completed && Object.keys(project.workflow_completed).length > 0 && (
               <div>
                 <h2 className="text-sm font-medium mb-3" style={{ color: 'var(--text)' }}>{t('projectDetail.workflowProgress')}</h2>
