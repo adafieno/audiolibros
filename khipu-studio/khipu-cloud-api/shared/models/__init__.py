@@ -52,13 +52,15 @@ class User(Base):
     
     # Identity
     email = Column(String(255), nullable=False, index=True)
+    hashed_password = Column(String(255), nullable=True)  # Nullable for Azure AD users
     azure_ad_id = Column(String(255), nullable=True, unique=True, index=True)
     full_name = Column(String(255), nullable=True)
     avatar_url = Column(Text, nullable=True)
     
     # Role & Permissions
-    role = Column(String(50), nullable=False)  # 'admin', 'creator', 'validator'
+    role = Column(String(50), nullable=False, default="creator")  # 'admin', 'creator', 'validator'
     permissions = Column(JSON, default=[])
+    is_superuser = Column(Boolean, default=False)
     
     # Status
     is_active = Column(Boolean, default=True)
