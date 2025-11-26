@@ -1,21 +1,27 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Navigate } from '@tanstack/react-router';
+import { useAuth } from '../hooks/useAuthHook';
 
 export const Route = createFileRoute('/')({
   component: IndexComponent,
 });
 
 function IndexComponent() {
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-900">Welcome to Khipu Cloud</h1>
-        <p className="mt-4 text-gray-600">Your audiobook production workspace</p>
-        <div className="mt-8">
-          <a href="/login" className="text-primary-600 hover:text-primary-700 underline">
-            Go to Login
-          </a>
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="mt-2 text-gray-600">Loading...</p>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+
+  return <Navigate to="/projects" />;
 }

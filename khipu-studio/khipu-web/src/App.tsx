@@ -1,6 +1,7 @@
 import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider, useAuth } from './hooks/useAuth';
+import { AuthProvider } from './hooks/useAuth';
+import { useAuth } from './hooks/useAuthHook';
 import { routeTree } from './routeTree.gen';
 
 // Create a query client
