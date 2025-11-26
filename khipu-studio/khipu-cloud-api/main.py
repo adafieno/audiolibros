@@ -26,12 +26,7 @@ async def lifespan(app: FastAPI):
     logger.info("Starting Khipu Cloud API...")
     logger.info(f"Environment: {settings.ENV}")
     logger.info(f"Debug mode: {settings.DEBUG}")
-    
-    # Create database tables (for development only)
-    if settings.DEBUG:
-        logger.warning("DEBUG mode: Creating database tables if they don't exist")
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
+    logger.info("Database schema managed by Alembic migrations")
     
     yield
     

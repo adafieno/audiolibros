@@ -121,6 +121,32 @@ class Project(Base):
     # Relationships
     tenant = relationship("Tenant", back_populates="projects")
     owner = relationship("User", back_populates="projects", foreign_keys=[owner_id])
+    members = relationship("ProjectMember", back_populates="project", cascade="all, delete-orphan")
+
+
+class ProjectMember(Base):
+    """Project team member model for role-based access control"""
+    __tablename__ = "project_members"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    
+    # Role in project: 'creator', 'reviewer'
+    role = Column(String(50), nullable=False, default="reviewer")
+    
+    # Permissions specific to this project
+    # Examples: ["read", "write", "review", "annotate", "approve"]
+    permissions = Column(ARRAY(String), default=["read"])
+    
+    # Metadata
+    added_at = Column(DateTime(timezone=True), server_default=func.now())
+    added_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    
+    # Relationships
+    project = relationship("Project", back_populates="members")
+    user = relationship("User", foreign_keys=[user_id])
+    added_by_user = relationship("User", foreign_keys=[added_by])
 
 
 # Add __init__.py files to make modules importable

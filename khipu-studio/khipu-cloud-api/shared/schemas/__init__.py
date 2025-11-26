@@ -15,6 +15,12 @@ from .projects import (
     ProjectResponse,
     ProjectListResponse,
 )
+from .project_members import (
+    ProjectMemberBase,
+    ProjectMemberAdd,
+    ProjectMemberUpdate,
+    ProjectMemberResponse,
+)
 
 __all__ = [
     "UserBase",
@@ -29,4 +35,8 @@ __all__ = [
     "ProjectUpdate",
     "ProjectResponse",
     "ProjectListResponse",
+    "ProjectMemberBase",
+    "ProjectMemberAdd",
+    "ProjectMemberUpdate",
+    "ProjectMemberResponse",
 ]
