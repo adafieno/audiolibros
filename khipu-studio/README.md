@@ -43,6 +43,8 @@ Khipu Studio is a comprehensive desktop application that transforms manuscripts 
 
 Double-click the installer and follow the setup wizard. All dependencies are bundled.
 
+📘 **Detailed Setup**: See [docs/installation/QUICKSTART.md](./docs/installation/QUICKSTART.md)
+
 ### Configure API Keys
 
 After installation, on first launch you'll be prompted to configure:
@@ -81,12 +83,13 @@ If you're building from source, see [INSTALL.md](./INSTALL.md) for complete setu
 
 ## 📖 Documentation
 
-- **[Installation Guide (Users)](./INSTALLATION-GUIDE.md)** - End-user installation and setup
-- **[Installation Guide (Developers)](./INSTALL.md)** - Build from source instructions
-- **[Quick Start](./QUICKSTART.md)** - Get started in 5 minutes
-- **[User Guide](./docs/03-user-guide.md)** - Complete application walkthrough
-- **[Architecture](./docs/01-architectural-design.md)** - Technical architecture overview
-- **[Features](./docs/02-feature-specifications.md)** - Detailed feature specifications
+- **[Documentation Index](./docs/README.md)** - Complete documentation organization
+- **[Quick Start](./docs/installation/QUICKSTART.md)** - Get started in 5 minutes
+- **[Installation Guide (Users)](./docs/installation/INSTALLATION-GUIDE.md)** - End-user setup
+- **[Installation Guide (Developers)](./docs/installation/INSTALL.md)** - Build from source
+- **[Development Tools](./docs/development/)** - Automation and developer guides
+- **[Cloud Architecture](./docs-cloud/)** - Cloud migration documentation
+- **[Utility Scripts](./scripts/README.md)** - Script organization and usage
 
 ## 🔧 Building Installers
 
@@ -152,6 +155,31 @@ Spanish, English, Portuguese, French, German, Italian, Chinese, Japanese, and 40
 Copyright © 2025 Agustín Da Fieno Delucchi. All rights reserved.
 
 **This is proprietary software.** Redistribution, modification, or reverse engineering is prohibited without explicit written permission.
+
+## 📁 Project Structure
+
+```
+khipu-studio/
+├── app/                    # Desktop application (Electron + React + Vite)
+├── khipu-cloud-api/        # Cloud backend (FastAPI microservices)
+├── khipu-web/              # Web frontend (React + Vite)
+├── shared/                 # Shared types/schemas
+├── scripts/                # Utility scripts and tools
+│   ├── screenshot-automation/
+│   ├── pdf-conversion/
+│   ├── maintenance/
+│   ├── testing/
+│   └── setup/
+├── docs/                   # Desktop app documentation
+├── docs-cloud/             # Cloud architecture docs
+├── lib/                    # Shared libraries
+├── py/                     # Python backend services
+├── assets/                 # Static assets (icons, audio)
+├── project-templates/      # Project templates
+└── temp-data/              # Cache and temporary files
+```
+
+See [scripts/README.md](./scripts/README.md) for utility script documentation.
 
 ## 🆘 Support
 

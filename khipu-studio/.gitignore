@@ -1,0 +1,68 @@
+# Dependencies
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Build outputs
+dist/
+build/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Temporary data
+temp-data/
+cache/
+temp/
+screenshots/
+*.tmp
+*.temp
+test-*.png
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+
+# Package manager
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Electron
+out/
+release-builds/
+
+# Azure
+.azure/
+
+# Cloud config (keep templates)
+*.key
+*.pem
+*.p12
