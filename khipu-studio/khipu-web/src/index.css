@@ -1,20 +1,46 @@
 @import "tailwindcss";
 
+/* Theme Variables */
+:root {
+  /* Dark Theme - High Contrast (Default) */
+  --bg: #0d1117;
+  --panel: #161b22;
+  --panel-accent: #21262d;
+  --border: #30363d;
+  --text: #f0f6fc;
+  --text-muted: #8b949e;
+  --accent: #58a6ff;
+  --accent-hover: #1f6feb;
+  --success: #3fb950;
+  --warning: #d29922;
+  --error: #f85149;
+}
+
+:root[data-theme="light"] {
+  /* Light Theme - Clean & Modern */
+  --bg: #f9fafb;
+  --panel: #ffffff;
+  --panel-accent: #f3f4f6;
+  --border: #d1d5db;
+  --text: #111827;
+  --text-muted: #6b7280;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+}
+
 @layer base {
-  :root {
-    --color-primary-50: 240 249 255;
-    --color-primary-100: 224 242 254;
-    --color-primary-200: 186 230 253;
-    --color-primary-300: 125 211 252;
-    --color-primary-400: 56 189 248;
-    --color-primary-500: 14 165 233;
-    --color-primary-600: 2 132 199;
-    --color-primary-700: 3 105 161;
-    --color-primary-800: 7 89 133;
-    --color-primary-900: 12 74 110;
-  }
-  
   body {
     @apply font-sans antialiased;
+    background-color: var(--bg);
+    color: var(--text);
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  #root {
+    background-color: var(--bg);
+    min-height: 100vh;
   }
 }

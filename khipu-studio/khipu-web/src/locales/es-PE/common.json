@@ -1,0 +1,50 @@
+{
+  "app.title": {
+    "string": "Khipu Studio",
+    "comment": "Título principal de la aplicación"
+  },
+  "app.copyright": {
+    "string": "© 2025 Agustín Da Fieno Delucchi. Todos los derechos reservados.",
+    "comment": "Aviso de derechos de autor"
+  },
+  "nav.projects": {
+    "string": "Proyectos",
+    "comment": "Elemento del menú de navegación para proyectos"
+  },
+  "nav.settings": {
+    "string": "Configuración",
+    "comment": "Elemento del menú de navegación para configuración"
+  },
+  "settings.title": {
+    "string": "Configuración",
+    "comment": "Título de la página de configuración"
+  },
+  "settings.description": {
+    "string": "Administra tus preferencias de aplicación",
+    "comment": "Descripción de la página de configuración"
+  },
+  "settings.theme": {
+    "string": "Tema",
+    "comment": "Etiqueta de configuración de tema"
+  },
+  "settings.themeSystem": {
+    "string": "Sistema",
+    "comment": "Opción de tema del sistema"
+  },
+  "settings.themeDark": {
+    "string": "Oscuro",
+    "comment": "Opción de tema oscuro"
+  },
+  "settings.themeLight": {
+    "string": "Claro",
+    "comment": "Opción de tema claro"
+  },
+  "settings.language": {
+    "string": "Idioma",
+    "comment": "Etiqueta de configuración de idioma"
+  },
+  "settings.account": {
+    "string": "Cuenta",
+    "comment": "Etiqueta de sección de cuenta"
+  }
+}

@@ -28,23 +28,24 @@ export function Layout({ children }: LayoutProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--bg)' }}>
       {/* Top Header Bar */}
-      <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
+      <header style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="border-b px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <img src="/khipu-icon.png" alt="Khipu" className="w-12 h-12 border-2 border-gray-200 rounded-lg p-1" />
+          <img src="/khipu-icon.png" alt="Khipu" style={{ borderColor: 'var(--border)' }} className="w-12 h-12 border-2 rounded-lg p-1" />
           <div>
-            <h1 className="text-lg font-semibold text-gray-900">Khipu Studio</h1>
-            <p className="text-xs text-gray-500">Cloud Edition</p>
+            <h1 className="text-lg font-semibold" style={{ color: 'var(--text)' }}>Khipu Studio</h1>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Cloud Edition</p>
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <div className="text-sm text-gray-600">
+          <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
             {user?.email}
           </div>
           <button
             onClick={handleLogout}
-            className="text-sm text-gray-600 hover:text-gray-900"
+            className="text-sm hover:opacity-80"
+            style={{ color: 'var(--text-muted)' }}
           >
             Logout
           </button>
@@ -53,18 +54,18 @@ export function Layout({ children }: LayoutProps) {
 
       <div className="flex flex-1">
         {/* Vertical Navigation Sidebar */}
-        <aside className="w-20 bg-white border-r border-gray-200 flex flex-col items-center py-4 gap-2">
+        <aside style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="w-20 border-r flex flex-col items-center py-4 gap-2">
           {navItems.map((item) => {
             const isActive = location.pathname.startsWith(item.to);
             return (
               <Link
                 key={item.to}
                 to={item.to}
-                className={`flex flex-col items-center justify-center w-16 h-16 rounded-xl transition-colors ${
-                  isActive
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
+                style={{
+                  backgroundColor: isActive ? 'var(--accent)' : 'transparent',
+                  color: isActive ? 'white' : 'var(--text-muted)'
+                }}
+                className="flex flex-col items-center justify-center w-16 h-16 rounded-xl transition-colors hover:opacity-80"
                 title={item.label}
               >
                 <span className="text-2xl">{item.icon}</span>
@@ -81,7 +82,7 @@ export function Layout({ children }: LayoutProps) {
       </div>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 px-6 py-2 text-xs text-gray-500 text-center">
+      <footer style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text-muted)' }} className="border-t px-6 py-2 text-xs text-center">
         © 2025 Agustín Da Fieno Delucchi. All rights reserved.
       </footer>
     </div>

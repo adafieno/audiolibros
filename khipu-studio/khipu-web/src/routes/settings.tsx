@@ -1,12 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuthHook';
+import { useTranslation } from 'react-i18next';
+import { applyTheme, type Theme } from '../lib/theme';
+import i18n from '../i18n';
 
 export const Route = createFileRoute('/settings')({
   component: SettingsPage,
 });
 
-type Theme = 'system' | 'light' | 'dark';
 type Language = 'en-US' | 'es-PE' | 'pt-BR';
 
 interface Settings {
@@ -18,6 +20,7 @@ const STORAGE_KEY = 'khipu_settings';
 
 function SettingsPage() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const isAdmin = user?.role === 'admin';
 
   const [settings, setSettings] = useState<Settings>(() => {
@@ -26,91 +29,77 @@ function SettingsPage() {
       try {
         return JSON.parse(stored);
       } catch {
-        return { theme: 'system', language: 'en-US' };
+        return { theme: 'system', language: i18n.language as Language || 'en-US' };
       }
     }
-    return { theme: 'system', language: 'en-US' };
+    return { theme: 'system', language: i18n.language as Language || 'en-US' };
   });
 
-  const [hasChanges, setHasChanges] = useState(false);
-
+  // Apply theme whenever it changes
   useEffect(() => {
-    // Apply theme to document
-    const root = document.documentElement;
-    if (settings.theme === 'dark') {
-      root.classList.add('dark');
-    } else if (settings.theme === 'light') {
-      root.classList.remove('dark');
-    } else {
-      // System preference
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (prefersDark) {
-        root.classList.add('dark');
-      } else {
-        root.classList.remove('dark');
-      }
-    }
+    applyTheme(settings.theme);
   }, [settings.theme]);
+
+  // Apply language whenever it changes
+  useEffect(() => {
+    if (i18n.language !== settings.language) {
+      i18n.changeLanguage(settings.language);
+    }
+  }, [settings.language]);
+
+  // Auto-save settings changes (like desktop app)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      console.log('Settings auto-saved');
+    }, 500); // Save after 500ms of no changes
+
+    return () => clearTimeout(timeoutId);
+  }, [settings]);
 
   const handleThemeChange = (theme: Theme) => {
     setSettings({ ...settings, theme });
-    setHasChanges(true);
   };
 
   const handleLanguageChange = (language: Language) => {
     setSettings({ ...settings, language });
-    setHasChanges(true);
-  };
-
-  const handleSave = () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-    setHasChanges(false);
-  };
-
-  const handleReset = () => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        setSettings(JSON.parse(stored));
-      } catch {
-        setSettings({ theme: 'system', language: 'en-US' });
-      }
-    }
-    setHasChanges(false);
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-        <p className="mt-2 text-gray-600">Manage your application preferences</p>
+        <h1 className="text-3xl font-bold" style={{ color: 'var(--text)' }}>{t('settings.title')}</h1>
+        <p className="mt-2" style={{ color: 'var(--text-muted)' }}>{t('settings.description')}</p>
       </div>
 
       {/* Appearance Section */}
-      <div className="bg-white rounded-lg shadow mb-6">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Appearance</h2>
-          <p className="mt-1 text-sm text-gray-600">Customize how Khipu Studio looks</p>
+      <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border mb-6">
+        <div className="p-6 border-b" style={{ borderColor: 'var(--border)' }}>
+          <h2 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>{t('settings.theme')}</h2>
+          <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>Customize how Khipu Studio looks</p>
         </div>
         <div className="p-6">
-          <label className="block text-sm font-medium text-gray-700 mb-3">Theme</label>
+          <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text)' }}>{t('settings.theme')}</label>
           <div className="grid grid-cols-3 gap-4">
             {(['system', 'light', 'dark'] as const).map((theme) => (
               <button
                 key={theme}
                 onClick={() => handleThemeChange(theme)}
-                className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-colors ${
-                  settings.theme === theme
-                    ? 'border-blue-600 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
+                style={{
+                  backgroundColor: settings.theme === theme ? 'var(--panel-accent)' : 'transparent',
+                  borderColor: settings.theme === theme ? 'var(--accent)' : 'var(--border)',
+                  color: 'var(--text)'
+                }}
+                className="flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-colors hover:opacity-80"
               >
                 <span className="text-2xl">
                   {theme === 'system' ? '💻' : theme === 'light' ? '☀️' : '🌙'}
                 </span>
-                <span className="text-sm font-medium text-gray-900 capitalize">{theme}</span>
+                <span className="text-sm font-medium capitalize">
+                  {t(`settings.theme${theme.charAt(0).toUpperCase() + theme.slice(1)}`)}
+                </span>
                 {settings.theme === theme && (
-                  <span className="text-xs text-blue-600">Selected</span>
+                  <span className="text-xs" style={{ color: 'var(--accent)' }}>Selected</span>
                 )}
               </button>
             ))}
@@ -119,13 +108,13 @@ function SettingsPage() {
       </div>
 
       {/* Language Section */}
-      <div className="bg-white rounded-lg shadow mb-6">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Language</h2>
-          <p className="mt-1 text-sm text-gray-600">Select your preferred language</p>
+      <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border mb-6">
+        <div className="p-6 border-b" style={{ borderColor: 'var(--border)' }}>
+          <h2 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>{t('settings.language')}</h2>
+          <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>Select your preferred language</p>
         </div>
         <div className="p-6">
-          <label className="block text-sm font-medium text-gray-700 mb-3">
+          <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text)' }}>
             Application Language
           </label>
           <div className="space-y-3">
@@ -137,18 +126,19 @@ function SettingsPage() {
               <button
                 key={lang.code}
                 onClick={() => handleLanguageChange(lang.code)}
-                className={`w-full flex items-center justify-between p-4 rounded-lg border-2 transition-colors ${
-                  settings.language === lang.code
-                    ? 'border-blue-600 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
+                style={{
+                  backgroundColor: settings.language === lang.code ? 'var(--panel-accent)' : 'transparent',
+                  borderColor: settings.language === lang.code ? 'var(--accent)' : 'var(--border)',
+                  color: 'var(--text)'
+                }}
+                className="w-full flex items-center justify-between p-4 rounded-lg border-2 transition-colors hover:opacity-80"
               >
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{lang.flag}</span>
-                  <span className="text-sm font-medium text-gray-900">{lang.name}</span>
+                  <span className="text-sm font-medium">{lang.name}</span>
                 </div>
                 {settings.language === lang.code && (
-                  <span className="text-sm text-blue-600 font-medium">Selected</span>
+                  <span className="text-sm font-medium" style={{ color: 'var(--accent)' }}>Selected</span>
                 )}
               </button>
             ))}
@@ -158,61 +148,61 @@ function SettingsPage() {
 
       {/* Admin Section - Only visible to admins */}
       {isAdmin && (
-        <div className="bg-white rounded-lg shadow border-2 border-amber-200 mb-6">
-          <div className="p-6 border-b border-gray-200 bg-amber-50">
+        <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--warning)' }} className="rounded-lg shadow border-2 mb-6">
+          <div className="p-6 border-b" style={{ borderColor: 'var(--border)', backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
             <div className="flex items-center gap-2">
               <span className="text-xl">🔐</span>
-              <h2 className="text-xl font-semibold text-gray-900">Admin Settings</h2>
+              <h2 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>Admin Settings</h2>
             </div>
-            <p className="mt-1 text-sm text-gray-600">
+            <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>
               Administrative controls and system management
             </p>
           </div>
           <div className="p-6 space-y-4">
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-4 rounded-lg" style={{ backgroundColor: 'var(--bg)' }}>
               <div>
-                <h3 className="text-sm font-medium text-gray-900">User Management</h3>
-                <p className="text-xs text-gray-600 mt-1">
+                <h3 className="text-sm font-medium" style={{ color: 'var(--text)' }}>User Management</h3>
+                <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                   View and manage all users in the system
                 </p>
               </div>
-              <button className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700">
+              <button style={{ backgroundColor: 'var(--accent)', color: 'white' }} className="px-4 py-2 text-sm rounded-md hover:opacity-80">
                 Manage Users
               </button>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-4 rounded-lg" style={{ backgroundColor: 'var(--bg)' }}>
               <div>
-                <h3 className="text-sm font-medium text-gray-900">Tenant Management</h3>
-                <p className="text-xs text-gray-600 mt-1">
+                <h3 className="text-sm font-medium" style={{ color: 'var(--text)' }}>Tenant Management</h3>
+                <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                   Configure tenants and subscription plans
                 </p>
               </div>
-              <button className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700">
+              <button style={{ backgroundColor: 'var(--accent)', color: 'white' }} className="px-4 py-2 text-sm rounded-md hover:opacity-80">
                 Manage Tenants
               </button>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-4 rounded-lg" style={{ backgroundColor: 'var(--bg)' }}>
               <div>
-                <h3 className="text-sm font-medium text-gray-900">System Settings</h3>
-                <p className="text-xs text-gray-600 mt-1">
+                <h3 className="text-sm font-medium" style={{ color: 'var(--text)' }}>System Settings</h3>
+                <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                   Configure global application settings
                 </p>
               </div>
-              <button className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700">
+              <button style={{ backgroundColor: 'var(--accent)', color: 'white' }} className="px-4 py-2 text-sm rounded-md hover:opacity-80">
                 Configure
               </button>
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-4 rounded-lg" style={{ backgroundColor: 'var(--bg)' }}>
               <div>
-                <h3 className="text-sm font-medium text-gray-900">API Keys</h3>
-                <p className="text-xs text-gray-600 mt-1">
+                <h3 className="text-sm font-medium" style={{ color: 'var(--text)' }}>API Keys</h3>
+                <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                   Manage Azure TTS and OpenAI API keys
                 </p>
               </div>
-              <button className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700">
+              <button style={{ backgroundColor: 'var(--accent)', color: 'white' }} className="px-4 py-2 text-sm rounded-md hover:opacity-80">
                 Manage Keys
               </button>
             </div>
@@ -221,58 +211,35 @@ function SettingsPage() {
       )}
 
       {/* Project Owner Section - Visible to project owners when viewing project settings */}
-      <div className="bg-white rounded-lg shadow mb-6">
-        <div className="p-6 border-b border-gray-200">
+      <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border mb-6">
+        <div className="p-6 border-b" style={{ borderColor: 'var(--border)' }}>
           <div className="flex items-center gap-2">
             <span className="text-xl">👤</span>
-            <h2 className="text-xl font-semibold text-gray-900">Account</h2>
+            <h2 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>{t('settings.account')}</h2>
           </div>
-          <p className="mt-1 text-sm text-gray-600">Your account information</p>
+          <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>Your account information</p>
         </div>
         <div className="p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-700">Email</p>
-              <p className="text-sm text-gray-900 mt-1">{user?.email}</p>
+              <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>Email</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>{user?.email}</p>
             </div>
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-700">Full Name</p>
-              <p className="text-sm text-gray-900 mt-1">{user?.full_name || 'Not set'}</p>
+              <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>Full Name</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>{user?.full_name || 'Not set'}</p>
             </div>
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-700">Role</p>
-              <p className="text-sm text-gray-900 mt-1 capitalize">{user?.role}</p>
+              <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>Role</p>
+              <p className="text-sm mt-1 capitalize" style={{ color: 'var(--text-muted)' }}>{user?.role}</p>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Save/Reset Buttons */}
-      {hasChanges && (
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-600">You have unsaved changes</p>
-            <div className="flex gap-3">
-              <button
-                onClick={handleReset}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
-              >
-                Reset
-              </button>
-              <button
-                onClick={handleSave}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
-                Save Changes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
