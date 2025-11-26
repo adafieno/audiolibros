@@ -32,7 +32,7 @@ export function Layout({ children }: LayoutProps) {
       {/* Top Header Bar */}
       <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <img src="/khipu-icon.png" alt="Khipu" className="w-8 h-8" />
+          <img src="/khipu-icon.png" alt="Khipu" className="w-12 h-12 border-2 border-gray-200 rounded-lg p-1" />
           <div>
             <h1 className="text-lg font-semibold text-gray-900">Khipu Studio</h1>
             <p className="text-xs text-gray-500">Cloud Edition</p>
