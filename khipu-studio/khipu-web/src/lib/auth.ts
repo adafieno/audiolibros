@@ -34,20 +34,16 @@ export const authApi = {
     const tokenResponse = await api.post('/auth/login', credentials);
     const token = tokenResponse.data;
     
-    // Store token temporarily to fetch user
-    const oldToken = localStorage.getItem('access_token');
+    // Store tokens
     localStorage.setItem('access_token', token.access_token);
+    localStorage.setItem('refresh_token', token.refresh_token);
     
     try {
       const userResponse = await api.get('/auth/me');
       return { token, user: userResponse.data };
     } catch (error) {
-      // Restore old token if user fetch fails
-      if (oldToken) {
-        localStorage.setItem('access_token', oldToken);
-      } else {
-        localStorage.removeItem('access_token');
-      }
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
       throw error;
     }
   },

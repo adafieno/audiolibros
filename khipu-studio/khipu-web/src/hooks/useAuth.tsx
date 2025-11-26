@@ -22,9 +22,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check if user is already logged in
     const loadUser = async () => {
       const token = localStorage.getItem('access_token');
+      console.log('Loading user on mount, has token:', !!token);
       if (token) {
         try {
           const userData = await authApi.getCurrentUser();
+          console.log('Loaded user from token:', userData);
           setUser(userData);
         } catch (error) {
           console.error('Failed to load user:', error);
@@ -40,6 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (credentials: LoginCredentials) => {
     const { token, user } = await authApi.login(credentials);
+    console.log('Login successful, setting user:', user);
     localStorage.setItem('access_token', token.access_token);
     localStorage.setItem('refresh_token', token.refresh_token);
     setUser(user);
