@@ -8,6 +8,13 @@ from .auth import (
     TokenRefresh,
     TokenPayload,
 )
+from .projects import (
+    ProjectBase,
+    ProjectCreate,
+    ProjectUpdate,
+    ProjectResponse,
+    ProjectListResponse,
+)
 
 __all__ = [
     "UserBase",
@@ -17,4 +24,9 @@ __all__ = [
     "Token",
     "TokenRefresh",
     "TokenPayload",
+    "ProjectBase",
+    "ProjectCreate",
+    "ProjectUpdate",
+    "ProjectResponse",
+    "ProjectListResponse",
 ]
