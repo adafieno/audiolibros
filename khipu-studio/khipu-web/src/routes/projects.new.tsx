@@ -43,8 +43,7 @@ function NewProjectPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-3xl mx-auto px-4">
+    <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="mb-6">
           <button
             onClick={() => navigate({ to: '/projects' })}
@@ -177,6 +176,5 @@ function NewProjectPage() {
           </form>
         </div>
       </div>
-    </div>
   );
 }

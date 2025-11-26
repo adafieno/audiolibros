@@ -79,12 +79,10 @@ function ProjectEditPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-2xl mx-auto px-4">
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="mt-2 text-gray-600">Loading project...</p>
-          </div>
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="mt-2 text-gray-600">Loading project...</p>
         </div>
       </div>
     );
@@ -92,19 +90,16 @@ function ProjectEditPage() {
 
   if (error || !project) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-2xl mx-auto px-4">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-800">Failed to load project</p>
-          </div>
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800">Failed to load project</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-2xl mx-auto px-4">
+    <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="mb-6">
           <button
             onClick={() => navigate({ to: `/projects/${projectId}` })}
@@ -253,6 +248,5 @@ function ProjectEditPage() {
           </form>
         </div>
       </div>
-    </div>
   );
 }
