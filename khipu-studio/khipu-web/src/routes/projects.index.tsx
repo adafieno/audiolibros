@@ -1,21 +1,16 @@
-import { createFileRoute, Link, Outlet } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { projectsApi } from '../lib/projects';
 import { useAuth } from '../hooks/useAuthHook';
 import { useTranslation } from 'react-i18next';
 
-export const Route = createFileRoute('/projects')({
-  component: ProjectsLayout,
+export const Route = createFileRoute('/projects/')({
+  component: ProjectsIndexPage,
 });
 
-// This is now a layout component that renders child routes
-function ProjectsLayout() {
-  return <Outlet />;
-}
-
-// Move the projects list to the index route
-function ProjectsPage() {
+function ProjectsIndexPage() {
+  console.log('ProjectsIndexPage rendering');
   const { user } = useAuth();
   const { t } = useTranslation();
   const [search, setSearch] = useState('');

@@ -9,6 +9,7 @@ export const Route = createFileRoute('/projects/new')({
 });
 
 function NewProjectPage() {
+  console.log('NewProjectPage rendering');
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const [title, setTitle] = useState('');

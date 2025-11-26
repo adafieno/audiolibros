@@ -9,12 +9,14 @@ export const Route = createRootRoute({
 function RootComponent() {
   const location = useLocation();
   const isAuthPage = location.pathname === '/login' || location.pathname === '/';
+  
+  console.log('RootComponent rendering, pathname:', location.pathname, 'isAuthPage:', isAuthPage);
 
   // Don't show layout on login page or home redirect
   if (isAuthPage) {
     return (
       <>
-        <Outlet />
+        <Outlet key={location.pathname} />
         <TanStackRouterDevtools position="bottom-right" />
       </>
     );
@@ -23,7 +25,7 @@ function RootComponent() {
   return (
     <>
       <Layout>
-        <Outlet />
+        <Outlet key={location.pathname} />
       </Layout>
       <TanStackRouterDevtools position="bottom-right" />
     </>
