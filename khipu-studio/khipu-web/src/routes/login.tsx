@@ -25,7 +25,7 @@ function LoginComponent() {
       await login({ email, password });
       navigate({ to: '/' });
     } catch (err: any) {
-      const errorMessage = err.response?.data?.detail || err.message || 'Invalid email or password';
+      const errorMessage = err.response?.data?.detail || err.message || t('auth.invalidCredentials');
       setError(errorMessage);
       console.error('Login error:', err);
     } finally {

@@ -26,7 +26,7 @@ function NewProjectPage() {
     },
     onError: (err: unknown) => {
       const error = err as { response?: { data?: { detail?: string } }; message?: string };
-      setError(error.response?.data?.detail || error.message || 'Failed to create project');
+      setError(error.response?.data?.detail || error.message || t('projectForm.createError'));
     },
   });
 

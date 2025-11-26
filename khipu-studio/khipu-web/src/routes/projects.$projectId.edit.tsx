@@ -238,7 +238,7 @@ function ProjectEditPage() {
                 <p style={{ color: 'var(--error)' }}>
                   {(updateMutation.error as { response?: { data?: { detail?: string } }; message?: string })?.response?.data?.detail ||
                     (updateMutation.error as { message?: string })?.message ||
-                    'Failed to update project'}
+                    t('projectForm.updateError')}
                 </p>
               </div>
             )}

@@ -76,7 +76,7 @@ function SettingsPage() {
       <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border mb-6">
         <div className="p-6 border-b" style={{ borderColor: 'var(--border)' }}>
           <h2 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>{t('settings.theme')}</h2>
-          <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>Customize how Khipu Studio looks</p>
+          <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>{t('settings.themeDescription')}</p>
         </div>
         <div className="p-6">
           <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text)' }}>{t('settings.theme')}</label>
