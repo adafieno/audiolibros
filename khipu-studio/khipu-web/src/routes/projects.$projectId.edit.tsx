@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { projectsApi } from '../lib/projects';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export const Route = createFileRoute('/projects/$projectId/edit')({
   component: ProjectEditPage,
@@ -11,6 +12,7 @@ function ProjectEditPage() {
   const { projectId } = Route.useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const { data: project, isLoading, error } = useQuery({
     queryKey: ['project', projectId],
@@ -79,10 +81,10 @@ function ProjectEditPage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="mt-2 text-gray-600">Loading project...</p>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: 'var(--accent)' }}></div>
+          <p className="mt-2" style={{ color: 'var(--text-muted)' }}>{t('projectDetail.loading')}</p>
         </div>
       </div>
     );
@@ -90,9 +92,9 @@ function ProjectEditPage() {
 
   if (error || !project) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-800">Failed to load project</p>
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--error)' }} className="border rounded-lg p-4">
+          <p style={{ color: 'var(--error)' }}>{t('projectDetail.loadError')}</p>
         </div>
       </div>
     );
@@ -103,19 +105,20 @@ function ProjectEditPage() {
         <div className="mb-6">
           <button
             onClick={() => navigate({ to: `/projects/${projectId}` })}
-            className="text-gray-600 hover:text-gray-900 flex items-center gap-2"
+            style={{ color: 'var(--text-muted)' }}
+            className="hover:opacity-80 flex items-center gap-2"
           >
-            ← Back to Project
+            ← {t('projectForm.backToProject')}
           </button>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">Edit Project</h1>
+        <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border p-6">
+          <h1 className="text-2xl font-bold mb-6" style={{ color: 'var(--text)' }}>{t('projectForm.editTitle')}</h1>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                Title <span className="text-red-500">*</span>
+              <label htmlFor="title" className="block text-sm font-medium" style={{ color: 'var(--text)' }}>
+                {t('projectForm.title')} <span style={{ color: 'var(--error)' }}>*</span>
               </label>
               <input
                 type="text"
@@ -123,105 +126,116 @@ function ProjectEditPage() {
                 required
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                className="mt-1 block w-full rounded-md border shadow-sm focus:outline-none focus:ring-2"
+                placeholder={t('projectForm.titlePlaceholder')}
               />
             </div>
 
             <div>
-              <label htmlFor="subtitle" className="block text-sm font-medium text-gray-700">
-                Subtitle
+              <label htmlFor="subtitle" className="block text-sm font-medium" style={{ color: 'var(--text)' }}>
+                {t('projectForm.subtitle')}
               </label>
               <input
                 type="text"
                 id="subtitle"
                 value={formData.subtitle}
                 onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                className="mt-1 block w-full rounded-md border shadow-sm focus:outline-none focus:ring-2"
+                placeholder={t('projectForm.subtitlePlaceholder')}
               />
             </div>
 
             <div>
-              <label htmlFor="authors" className="block text-sm font-medium text-gray-700">
-                Authors (comma-separated)
+              <label htmlFor="authors" className="block text-sm font-medium" style={{ color: 'var(--text)' }}>
+                {t('projectForm.authors')}
               </label>
               <input
                 type="text"
                 id="authors"
                 value={formData.authors}
                 onChange={(e) => setFormData({ ...formData, authors: e.target.value })}
-                placeholder="Jane Doe, John Smith"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                placeholder={t('projectForm.authorsPlaceholder')}
+                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                className="mt-1 block w-full rounded-md border shadow-sm focus:outline-none focus:ring-2"
               />
             </div>
 
             <div>
-              <label htmlFor="narrators" className="block text-sm font-medium text-gray-700">
-                Narrators (comma-separated)
+              <label htmlFor="narrators" className="block text-sm font-medium" style={{ color: 'var(--text)' }}>
+                {t('projectForm.narrators')}
               </label>
               <input
                 type="text"
                 id="narrators"
                 value={formData.narrators}
                 onChange={(e) => setFormData({ ...formData, narrators: e.target.value })}
-                placeholder="Voice Actor 1, Voice Actor 2"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                placeholder={t('projectForm.narratorsPlaceholder')}
+                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                className="mt-1 block w-full rounded-md border shadow-sm focus:outline-none focus:ring-2"
               />
             </div>
 
             <div>
-              <label htmlFor="language" className="block text-sm font-medium text-gray-700">
-                Language
+              <label htmlFor="language" className="block text-sm font-medium" style={{ color: 'var(--text)' }}>
+                {t('projectForm.language')}
               </label>
               <select
                 id="language"
                 value={formData.language}
                 onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                className="mt-1 block w-full rounded-md border shadow-sm focus:outline-none focus:ring-2"
               >
-                <option value="en-US">English (US)</option>
-                <option value="en-GB">English (UK)</option>
-                <option value="es-ES">Spanish (Spain)</option>
-                <option value="es-MX">Spanish (Mexico)</option>
-                <option value="fr-FR">French</option>
-                <option value="de-DE">German</option>
-                <option value="it-IT">Italian</option>
-                <option value="pt-BR">Portuguese (Brazil)</option>
+                <option value="en-US">{t('languages.en-US')}</option>
+                <option value="en-GB">{t('languages.en-GB')}</option>
+                <option value="es-ES">{t('languages.es-ES')}</option>
+                <option value="es-MX">{t('languages.es-MX')}</option>
+                <option value="es-PE">{t('languages.es-PE')}</option>
+                <option value="fr-FR">{t('languages.fr-FR')}</option>
+                <option value="de-DE">{t('languages.de-DE')}</option>
+                <option value="it-IT">{t('languages.it-IT')}</option>
+                <option value="pt-BR">{t('languages.pt-BR')}</option>
               </select>
             </div>
 
             <div>
-              <label htmlFor="status" className="block text-sm font-medium text-gray-700">
-                Status
+              <label htmlFor="status" className="block text-sm font-medium" style={{ color: 'var(--text)' }}>
+                {t('projects.status')}
               </label>
               <select
                 id="status"
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as 'draft' | 'in_progress' | 'review' | 'completed' | 'published' })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                className="mt-1 block w-full rounded-md border shadow-sm focus:outline-none focus:ring-2"
               >
-                <option value="draft">Draft</option>
-                <option value="in_progress">In Progress</option>
-                <option value="review">Review</option>
-                <option value="completed">Completed</option>
+                <option value="draft">{t('projects.statusDraft')}</option>
+                <option value="in_progress">{t('projects.statusInProgress')}</option>
+                <option value="review">{t('projects.statusReview')}</option>
+                <option value="completed">{t('projects.statusCompleted')}</option>
               </select>
             </div>
 
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                Description
+              <label htmlFor="description" className="block text-sm font-medium" style={{ color: 'var(--text)' }}>
+                {t('projectForm.description')}
               </label>
               <textarea
                 id="description"
                 rows={4}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                className="mt-1 block w-full rounded-md border shadow-sm focus:outline-none focus:ring-2"
+                placeholder={t('projectForm.descriptionPlaceholder')}
               />
             </div>
 
             {updateMutation.isError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-red-800">
+              <div className="rounded-lg p-4" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: 'var(--error)', border: '1px solid' }}>
+                <p style={{ color: 'var(--error)' }}>
                   {(updateMutation.error as { response?: { data?: { detail?: string } }; message?: string })?.response?.data?.detail ||
                     (updateMutation.error as { message?: string })?.message ||
                     'Failed to update project'}
@@ -233,16 +247,18 @@ function ProjectEditPage() {
               <button
                 type="button"
                 onClick={() => navigate({ to: `/projects/${projectId}` })}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                style={{ borderColor: 'var(--border)', color: 'var(--text)' }}
+                className="px-4 py-2 border rounded-md hover:opacity-80"
               >
-                Cancel
+                {t('projectForm.cancel')}
               </button>
               <button
                 type="submit"
                 disabled={updateMutation.isPending}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: 'var(--accent)', color: 'white' }}
+                className="px-4 py-2 rounded-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+                {updateMutation.isPending ? t('projectForm.saving') : t('projectForm.saveChanges')}
               </button>
             </div>
           </form>
