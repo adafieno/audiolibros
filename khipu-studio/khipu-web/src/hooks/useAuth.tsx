@@ -37,17 +37,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (credentials: LoginCredentials) => {
-    const response = await authApi.login(credentials);
-    localStorage.setItem('access_token', response.access_token);
-    localStorage.setItem('refresh_token', response.refresh_token);
-    setUser(response.user);
+    const { token, user } = await authApi.login(credentials);
+    localStorage.setItem('access_token', token.access_token);
+    localStorage.setItem('refresh_token', token.refresh_token);
+    setUser(user);
   };
 
   const register = async (data: RegisterData) => {
-    const response = await authApi.register(data);
-    localStorage.setItem('access_token', response.access_token);
-    localStorage.setItem('refresh_token', response.refresh_token);
-    setUser(response.user);
+    const { token, user } = await authApi.register(data);
+    localStorage.setItem('access_token', token.access_token);
+    localStorage.setItem('refresh_token', token.refresh_token);
+    setUser(user);
   };
 
   const logout = () => {

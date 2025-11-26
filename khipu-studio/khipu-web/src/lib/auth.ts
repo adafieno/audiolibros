@@ -27,18 +27,45 @@ export interface AuthResponse {
   access_token: string;
   refresh_token: string;
   token_type: string;
-  user: User;
 }
 
 export const authApi = {
-  login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    const response = await api.post('/auth/login', credentials);
-    return response.data;
+  login: async (credentials: LoginCredentials): Promise<{ token: AuthResponse; user: User }> => {
+    const tokenResponse = await api.post('/auth/login', credentials);
+    const token = tokenResponse.data;
+    
+    // Store token temporarily to fetch user
+    const oldToken = localStorage.getItem('access_token');
+    localStorage.setItem('access_token', token.access_token);
+    
+    try {
+      const userResponse = await api.get('/auth/me');
+      return { token, user: userResponse.data };
+    } catch (error) {
+      // Restore old token if user fetch fails
+      if (oldToken) {
+        localStorage.setItem('access_token', oldToken);
+      } else {
+        localStorage.removeItem('access_token');
+      }
+      throw error;
+    }
   },
 
-  register: async (data: RegisterData): Promise<AuthResponse> => {
-    const response = await api.post('/auth/register', data);
-    return response.data;
+  register: async (data: RegisterData): Promise<{ token: AuthResponse; user: User }> => {
+    const tokenResponse = await api.post('/auth/register', data);
+    const token = tokenResponse.data;
+    
+    // Store token temporarily to fetch user
+    localStorage.setItem('access_token', token.access_token);
+    
+    try {
+      const userResponse = await api.get('/auth/me');
+      return { token, user: userResponse.data };
+    } catch (error) {
+      localStorage.removeItem('access_token');
+      throw error;
+    }
   },
 
   getCurrentUser: async (): Promise<User> => {
