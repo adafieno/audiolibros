@@ -8,9 +8,16 @@ export interface Project {
   subtitle?: string;
   authors?: string[];
   narrators?: string[];
+  translators?: string[];
+  adaptors?: string[];
   language: string;
   description?: string;
+  publisher?: string;
+  publish_date?: string;
+  isbn?: string;
+  cover_image_url?: string;
   status: 'draft' | 'in_progress' | 'review' | 'completed' | 'published';
+  settings?: Record<string, any>;
   workflow_completed?: Record<string, boolean>;
   created_at: string;
   updated_at: string;
@@ -30,9 +37,16 @@ export interface ProjectUpdate {
   subtitle?: string;
   authors?: string[];
   narrators?: string[];
+  translators?: string[];
+  adaptors?: string[];
   language?: string;
   description?: string;
+  publisher?: string;
+  publish_date?: string;
+  isbn?: string;
   status?: 'draft' | 'in_progress' | 'review' | 'completed' | 'published';
+  settings?: Record<string, any>;
+  workflow_completed?: Record<string, boolean>;
 }
 
 export interface ProjectsListResponse {

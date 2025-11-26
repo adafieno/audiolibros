@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { projectsApi } from '../lib/projects';
 import { useTranslation } from 'react-i18next';
 
@@ -53,6 +54,13 @@ function ProjectDetailPage() {
     );
   }
 
+  // Auto-redirect to properties page on first visit
+  useEffect(() => {
+    if (project && !project.workflow_completed?.project_properties) {
+      navigate({ to: '/projects/$projectId/properties', params: { projectId } });
+    }
+  }, [project, projectId, navigate]);
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="mb-6">
@@ -67,12 +75,12 @@ function ProjectDetailPage() {
 
         <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border">
           {/* Header */}
-          <div className="p-6 border-b border-gray-200">
+          <div className="p-6 border-b" style={{ borderColor: 'var(--border)' }}>
             <div className="flex justify-between items-start">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">{project.title}</h1>
+                <h1 className="text-3xl font-bold" style={{ color: 'var(--text)' }}>{project.title}</h1>
                 {project.subtitle && (
-                  <p className="mt-2 text-lg text-gray-600">{project.subtitle}</p>
+                  <p className="mt-2 text-lg" style={{ color: 'var(--text-muted)' }}>{project.subtitle}</p>
                 )}
               </div>
               <span
@@ -130,6 +138,78 @@ function ProjectDetailPage() {
             <div>
               <h2 className="text-sm font-medium mb-3" style={{ color: 'var(--text)' }}>Workflow</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <button
+                  onClick={() => navigate({ to: '/projects/$projectId/properties', params: { projectId } })}
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    padding: '1rem',
+                    backgroundColor: 'var(--panel-accent)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '0.5rem',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  className="hover:opacity-80"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-medium" style={{ color: 'var(--text)' }}>
+                        {t('projectProperties.title', 'Project Properties')}
+                      </h3>
+                      <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+                        {t('projectProperties.cardDescription', 'Configure TTS, LLM, and technical settings')}
+                      </p>
+                    </div>
+                    <svg
+                      className="w-5 h-5"
+                      style={{ color: 'var(--text-muted)' }}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => navigate({ to: '/projects/$projectId/book', params: { projectId } })}
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    padding: '1rem',
+                    backgroundColor: 'var(--panel-accent)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '0.5rem',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  className="hover:opacity-80"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-medium" style={{ color: 'var(--text)' }}>
+                        {t('book.title', 'Book Details')}
+                      </h3>
+                      <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+                        {t('book.cardDescription', 'Enter book metadata and publishing information')}
+                      </p>
+                    </div>
+                    <svg
+                      className="w-5 h-5"
+                      style={{ color: 'var(--text-muted)' }}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </button>
+
                 <button
                   onClick={() => navigate({ to: `/projects/${projectId}/manuscript` as any })}
                   style={{

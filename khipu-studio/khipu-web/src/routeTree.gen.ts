@@ -16,8 +16,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
 import { Route as ProjectsNewRouteImport } from './routes/projects.new'
 import { Route as ProjectsProjectIdRouteImport } from './routes/projects.$projectId'
+import { Route as ProjectsProjectIdPropertiesRouteImport } from './routes/projects.$projectId.properties'
 import { Route as ProjectsProjectIdManuscriptRouteImport } from './routes/projects.$projectId.manuscript'
 import { Route as ProjectsProjectIdEditRouteImport } from './routes/projects.$projectId.edit'
+import { Route as ProjectsProjectIdBookRouteImport } from './routes/projects.$projectId.book'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
@@ -54,6 +56,12 @@ const ProjectsProjectIdRoute = ProjectsProjectIdRouteImport.update({
   path: '/$projectId',
   getParentRoute: () => ProjectsRoute,
 } as any)
+const ProjectsProjectIdPropertiesRoute =
+  ProjectsProjectIdPropertiesRouteImport.update({
+    id: '/properties',
+    path: '/properties',
+    getParentRoute: () => ProjectsProjectIdRoute,
+  } as any)
 const ProjectsProjectIdManuscriptRoute =
   ProjectsProjectIdManuscriptRouteImport.update({
     id: '/manuscript',
@@ -65,6 +73,11 @@ const ProjectsProjectIdEditRoute = ProjectsProjectIdEditRouteImport.update({
   path: '/edit',
   getParentRoute: () => ProjectsProjectIdRoute,
 } as any)
+const ProjectsProjectIdBookRoute = ProjectsProjectIdBookRouteImport.update({
+  id: '/book',
+  path: '/book',
+  getParentRoute: () => ProjectsProjectIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -74,8 +87,10 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId': typeof ProjectsProjectIdRouteWithChildren
   '/projects/new': typeof ProjectsNewRoute
   '/projects/': typeof ProjectsIndexRoute
+  '/projects/$projectId/book': typeof ProjectsProjectIdBookRoute
   '/projects/$projectId/edit': typeof ProjectsProjectIdEditRoute
   '/projects/$projectId/manuscript': typeof ProjectsProjectIdManuscriptRoute
+  '/projects/$projectId/properties': typeof ProjectsProjectIdPropertiesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -84,8 +99,10 @@ export interface FileRoutesByTo {
   '/projects/$projectId': typeof ProjectsProjectIdRouteWithChildren
   '/projects/new': typeof ProjectsNewRoute
   '/projects': typeof ProjectsIndexRoute
+  '/projects/$projectId/book': typeof ProjectsProjectIdBookRoute
   '/projects/$projectId/edit': typeof ProjectsProjectIdEditRoute
   '/projects/$projectId/manuscript': typeof ProjectsProjectIdManuscriptRoute
+  '/projects/$projectId/properties': typeof ProjectsProjectIdPropertiesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -96,8 +113,10 @@ export interface FileRoutesById {
   '/projects/$projectId': typeof ProjectsProjectIdRouteWithChildren
   '/projects/new': typeof ProjectsNewRoute
   '/projects/': typeof ProjectsIndexRoute
+  '/projects/$projectId/book': typeof ProjectsProjectIdBookRoute
   '/projects/$projectId/edit': typeof ProjectsProjectIdEditRoute
   '/projects/$projectId/manuscript': typeof ProjectsProjectIdManuscriptRoute
+  '/projects/$projectId/properties': typeof ProjectsProjectIdPropertiesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -109,8 +128,10 @@ export interface FileRouteTypes {
     | '/projects/$projectId'
     | '/projects/new'
     | '/projects/'
+    | '/projects/$projectId/book'
     | '/projects/$projectId/edit'
     | '/projects/$projectId/manuscript'
+    | '/projects/$projectId/properties'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -119,8 +140,10 @@ export interface FileRouteTypes {
     | '/projects/$projectId'
     | '/projects/new'
     | '/projects'
+    | '/projects/$projectId/book'
     | '/projects/$projectId/edit'
     | '/projects/$projectId/manuscript'
+    | '/projects/$projectId/properties'
   id:
     | '__root__'
     | '/'
@@ -130,8 +153,10 @@ export interface FileRouteTypes {
     | '/projects/$projectId'
     | '/projects/new'
     | '/projects/'
+    | '/projects/$projectId/book'
     | '/projects/$projectId/edit'
     | '/projects/$projectId/manuscript'
+    | '/projects/$projectId/properties'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -192,6 +217,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsProjectIdRouteImport
       parentRoute: typeof ProjectsRoute
     }
+    '/projects/$projectId/properties': {
+      id: '/projects/$projectId/properties'
+      path: '/properties'
+      fullPath: '/projects/$projectId/properties'
+      preLoaderRoute: typeof ProjectsProjectIdPropertiesRouteImport
+      parentRoute: typeof ProjectsProjectIdRoute
+    }
     '/projects/$projectId/manuscript': {
       id: '/projects/$projectId/manuscript'
       path: '/manuscript'
@@ -206,17 +238,28 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsProjectIdEditRouteImport
       parentRoute: typeof ProjectsProjectIdRoute
     }
+    '/projects/$projectId/book': {
+      id: '/projects/$projectId/book'
+      path: '/book'
+      fullPath: '/projects/$projectId/book'
+      preLoaderRoute: typeof ProjectsProjectIdBookRouteImport
+      parentRoute: typeof ProjectsProjectIdRoute
+    }
   }
 }
 
 interface ProjectsProjectIdRouteChildren {
+  ProjectsProjectIdBookRoute: typeof ProjectsProjectIdBookRoute
   ProjectsProjectIdEditRoute: typeof ProjectsProjectIdEditRoute
   ProjectsProjectIdManuscriptRoute: typeof ProjectsProjectIdManuscriptRoute
+  ProjectsProjectIdPropertiesRoute: typeof ProjectsProjectIdPropertiesRoute
 }
 
 const ProjectsProjectIdRouteChildren: ProjectsProjectIdRouteChildren = {
+  ProjectsProjectIdBookRoute: ProjectsProjectIdBookRoute,
   ProjectsProjectIdEditRoute: ProjectsProjectIdEditRoute,
   ProjectsProjectIdManuscriptRoute: ProjectsProjectIdManuscriptRoute,
+  ProjectsProjectIdPropertiesRoute: ProjectsProjectIdPropertiesRoute,
 }
 
 const ProjectsProjectIdRouteWithChildren =
