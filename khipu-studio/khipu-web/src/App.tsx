@@ -5,31 +5,31 @@ import { useAuth } from './hooks/useAuthHook';
 import { routeTree } from './routeTree.gen';
 import './i18n'; // Initialize i18n
 import { applyTheme, type Theme } from './lib/theme';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 
 // Create a query client
 const queryClient = new QueryClient();
 
-// Create a router instance
-const router = createRouter({
-  routeTree,
-  context: {
-    auth: undefined!,
-    queryClient,
-  },
-  defaultPreload: 'intent',
-  defaultPreloadStaleTime: 0,
-});
-
 // Register router for type safety
 declare module '@tanstack/react-router' {
   interface Register {
-    router: typeof router;
+    router: ReturnType<typeof createRouter>;
   }
 }
 
 function InnerApp() {
   const auth = useAuth();
+  
+  // Create router instance with current auth context
+  const router = useMemo(() => createRouter({
+    routeTree,
+    context: {
+      auth,
+      queryClient,
+    },
+    defaultPreload: 'intent',
+    defaultPreloadStaleTime: 0,
+  }), [auth]);
   
   // Apply theme on app load
   useEffect(() => {
@@ -42,7 +42,7 @@ function InnerApp() {
     }
   }, []);
   
-  return <RouterProvider router={router} context={{ auth, queryClient }} />;
+  return <RouterProvider router={router} />;
 }
 
 function App() {
