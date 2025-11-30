@@ -28,7 +28,7 @@ const projectRoutes: NavItem[] = [
   { to: 'characters', label: 'nav.characters', icon: '🎭', workflowStep: 'characters' },
   { to: 'planning', label: 'nav.planning', icon: '🪄', workflowStep: 'planning' },
   { to: 'voice', label: 'nav.voice', icon: '🎙️', workflowStep: 'voice' },
-  { to: 'packaging', label: 'nav.packaging', icon: '📦', workflowStep: 'voice' },
+  { to: 'export', label: 'nav.export', icon: '📦', workflowStep: 'export' },
   { to: 'cost', label: 'nav.cost', icon: '💰' },
 ];
 

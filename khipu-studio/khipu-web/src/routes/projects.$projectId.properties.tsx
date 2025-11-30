@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect, type FormEvent } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { projectsApi } from '../lib/projects';
+import { setStepCompleted } from '../store/project';
 import { useTranslation } from 'react-i18next';
 
 export const Route = createFileRoute('/projects/$projectId/properties')({
@@ -71,6 +72,12 @@ function ProjectPropertiesPage() {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       setSaveMessage(t('projectProperties.saved', 'Project settings saved successfully'));
       setTimeout(() => setSaveMessage(''), 3000);
+      // Minimal properties completion: language and at least one export platform or TTS voice
+      const languageSet = Boolean((project as any)?.language) || false;
+      const hasVoice = Boolean(settings.tts?.engine?.voice);
+      const platforms = settings.export?.platforms || {};
+      const hasPlatform = Object.values(platforms).some(Boolean);
+      setStepCompleted('project', languageSet || hasVoice || hasPlatform);
     },
     onError: (err: unknown) => {
       const error = err as { response?: { data?: { detail?: string } }; message?: string };
