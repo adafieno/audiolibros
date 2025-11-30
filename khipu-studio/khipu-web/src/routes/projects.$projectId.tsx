@@ -1,6 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
 import { projectsApi } from '../lib/projects';
 import { useTranslation } from 'react-i18next';
 
@@ -53,13 +52,6 @@ function ProjectDetailPage() {
       </div>
     );
   }
-
-  // Auto-redirect to properties page on first visit
-  useEffect(() => {
-    if (project && !project.workflow_completed?.project_properties) {
-      navigate({ to: '/projects/$projectId/properties', params: { projectId } });
-    }
-  }, [project, projectId, navigate]);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -175,7 +167,7 @@ function ProjectDetailPage() {
                 </button>
 
                 <button
-                  onClick={() => navigate({ to: '/projects/$projectId/book', params: { projectId } })}
+                  onClick={() => navigate({ to: '/projects/$projectId/book' as any, params: { projectId } })}
                   style={{
                     display: 'block',
                     width: '100%',

@@ -126,7 +126,7 @@ function ProjectPropertiesPage() {
         </button>
         <div className="flex gap-3">
           <button
-            onClick={() => navigate({ to: '/projects/$projectId/book', params: { projectId } })}
+            onClick={() => navigate({ to: '/projects/$projectId/book' as any, params: { projectId } })}
             style={{ backgroundColor: 'var(--accent)', color: 'white' }}
             className="px-4 py-2 rounded-md hover:opacity-90"
           >
@@ -335,7 +335,7 @@ function ProjectPropertiesPage() {
               </button>
               <button
                 type="button"
-                onClick={() => navigate({ to: '/projects/$projectId/book', params: { projectId } })}
+                onClick={() => navigate({ to: '/projects/$projectId/book' as any, params: { projectId } })}
                 style={{ backgroundColor: 'var(--success)', color: 'white' }}
                 className="px-4 py-2 rounded-md hover:opacity-90"
               >

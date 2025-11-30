@@ -320,7 +320,7 @@ function BookDetailsPage() {
               </button>
               <button
                 type="button"
-                onClick={() => navigate({ to: '/projects/$projectId/manuscript', params: { projectId } })}
+                onClick={() => navigate({ to: '/projects/$projectId/manuscript' as any, params: { projectId } })}
                 style={{ backgroundColor: 'var(--success)', color: 'white' }}
                 className="px-4 py-2 rounded-md hover:opacity-90"
               >
