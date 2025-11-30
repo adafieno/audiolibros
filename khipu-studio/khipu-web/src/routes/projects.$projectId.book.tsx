@@ -34,7 +34,8 @@ function BookDetailsPage() {
   const [categories, setCategories] = useState('');
   const [seriesName, setSeriesName] = useState('');
   const [seriesNumber, setSeriesNumber] = useState('');
-  const [digitalVoiceDisclosure, setDigitalVoiceDisclosure] = useState('');
+  // Digital voice disclosure now a checkbox; we store only boolean and derive text
+  const [digitalVoiceDisclosureChecked, setDigitalVoiceDisclosureChecked] = useState(false);
   const [error, setError] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
 
@@ -55,7 +56,7 @@ function BookDetailsPage() {
       setCategories((project as any).categories?.join(', ') || '');
       setSeriesName((project as any).series_name || '');
       setSeriesNumber(String((project as any).series_number || '') || '');
-      setDigitalVoiceDisclosure((project as any).digital_voice_disclosure || '');
+      setDigitalVoiceDisclosureChecked(!!(project as any).digital_voice_disclosure);
     }
   }, [project]);
 
@@ -92,7 +93,7 @@ function BookDetailsPage() {
       categories: categories ? categories.split(',').map(c => c.trim()).filter(Boolean) : undefined,
       series_name: seriesName || undefined,
       series_number: seriesNumber ? Number(seriesNumber) : undefined,
-      digital_voice_disclosure: digitalVoiceDisclosure || undefined,
+      digital_voice_disclosure: digitalVoiceDisclosureChecked ? t('book.digitalVoiceDisclosure.defaultText') : undefined,
     });
 
     // Evaluate book completion after save trigger (optimistic check); final confirmation after project refetch
@@ -102,7 +103,7 @@ function BookDetailsPage() {
     const hasDescription = description.trim().length > 0;
     // Digital voice disclosure placeholder: treat as required once field exists; currently assume true
     const hasLanguage = language.trim().length > 0;
-    const hasDigitalDisclosure = digitalVoiceDisclosure.trim().length > 0;
+    const hasDigitalDisclosure = digitalVoiceDisclosureChecked;
     const bookComplete = hasTitle && hasAuthor && hasDescription && hasDigitalDisclosure && hasLanguage;
     setStepCompleted('book', bookComplete);
   };
@@ -114,6 +115,21 @@ function BookDetailsPage() {
         <p className="mt-2" style={{ color: 'var(--text-muted)' }}>{t('book.loading', 'Loading...')}</p>
       </div>
     );
+  }
+
+  // Build language options dynamically from translation keys
+  const { i18n } = useTranslation();
+  let languageOptions: { code: string; label: string }[] = [];
+  try {
+    const bundle: Record<string, any> = i18n.getResourceBundle(i18n.language, 'common');
+    const keys = Object.keys(bundle).filter(k => k.startsWith('languages.'));
+    languageOptions = keys.map(k => ({ code: k.replace('languages.', ''), label: t(k) }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  } catch {
+    // fallback to previous hard-coded minimal set if bundle unavailable
+    languageOptions = [
+      'en-US','en-GB','es-ES','es-MX','es-PE','pt-BR','fr-FR','de-DE','it-IT'
+    ].map(code => ({ code, label: t(`languages.${code}`) }));
   }
 
   return (
@@ -188,15 +204,9 @@ function BookDetailsPage() {
                   className="w-full px-3 py-2 border rounded-md"
                 >
                   <option value="">{t('book.language.placeholder', 'Select book language')}</option>
-                  <option value="en-US">{t('languages.en-US')}</option>
-                  <option value="en-GB">{t('languages.en-GB')}</option>
-                  <option value="es-ES">{t('languages.es-ES')}</option>
-                  <option value="es-MX">{t('languages.es-MX')}</option>
-                  <option value="es-PE">{t('languages.es-PE')}</option>
-                  <option value="pt-BR">{t('languages.pt-BR')}</option>
-                  <option value="fr-FR">{t('languages.fr-FR')}</option>
-                  <option value="de-DE">{t('languages.de-DE')}</option>
-                  <option value="it-IT">{t('languages.it-IT')}</option>
+                  {languageOptions.map(opt => (
+                    <option key={opt.code} value={opt.code}>{opt.label}</option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -359,24 +369,25 @@ function BookDetailsPage() {
             </div>
           </section>
 
-          {/* Digital Voice Disclosure */}
+          {/* Digital Voice Disclosure (Checkbox) */}
           <section>
             <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--text)' }}>
               {t('book.digitalVoiceDisclosure.label', 'Digital Voice Disclosure')} <span style={{ color: 'var(--error)' }}>*</span>
             </h2>
-            <p className="mb-2 text-sm" style={{ color: 'var(--text-muted)' }}>
-              {t('book.digitalVoiceDisclosure.help', 'Provide a disclosure clarifying that synthetic / AI voices are used in this production as required by platform policies.')}
-            </p>
-            <textarea
-              id="digitalVoiceDisclosure"
-              rows={4}
-              required
-              value={digitalVoiceDisclosure}
-              onChange={(e) => setDigitalVoiceDisclosure(e.target.value)}
-              style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-              className="w-full px-3 py-2 border rounded-md"
-              placeholder={t('book.digitalVoiceDisclosure.placeholder', 'e.g. "This audiobook was created using digitally generated voices."')}
-            />
+            <div className="flex items-center gap-2">
+              <input
+                id="digitalVoiceDisclosure"
+                type="checkbox"
+                checked={digitalVoiceDisclosureChecked}
+                onChange={(e) => setDigitalVoiceDisclosureChecked(e.target.checked)}
+                className="h-4 w-4"
+                style={{ accentColor: 'var(--accent)' }}
+                required
+              />
+              <label htmlFor="digitalVoiceDisclosure" className="text-sm" style={{ color: 'var(--text)' }}>
+                {t('book.digitalVoiceDisclosure.checkboxLabel', 'Contains digital voices/AI')}
+              </label>
+            </div>
           </section>
 
           {/* Publishing Information */}

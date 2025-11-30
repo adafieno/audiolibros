@@ -88,6 +88,45 @@
   "languages.de-DE": { "string": "German", "comment": "Language name" },
   "languages.it-IT": { "string": "Italian", "comment": "Language name" },
   "languages.pt-BR": { "string": "Português (Brasil)", "comment": "Language name" },
+  "languages.ar": { "string": "Arabic", "comment": "Language name for Arabic" },
+  "languages.bg": { "string": "Bulgarian", "comment": "Language name for Bulgarian" },
+  "languages.ca": { "string": "Catalan", "comment": "Language name for Catalan" },
+  "languages.cs": { "string": "Czech", "comment": "Language name for Czech" },
+  "languages.da": { "string": "Danish", "comment": "Language name for Danish" },
+  "languages.de": { "string": "German", "comment": "Language name for German" },
+  "languages.el": { "string": "Greek", "comment": "Language name for Greek" },
+  "languages.en": { "string": "English", "comment": "Language name for English" },
+  "languages.es": { "string": "Spanish", "comment": "Language name for Spanish" },
+  "languages.et": { "string": "Estonian", "comment": "Language name for Estonian" },
+  "languages.eu": { "string": "Basque", "comment": "Language name for Basque" },
+  "languages.fi": { "string": "Finnish", "comment": "Language name for Finnish" },
+  "languages.fr": { "string": "French", "comment": "Language name for French" },
+  "languages.gl": { "string": "Galician", "comment": "Language name for Galician" },
+  "languages.he": { "string": "Hebrew", "comment": "Language name for Hebrew" },
+  "languages.hi": { "string": "Hindi", "comment": "Language name for Hindi" },
+  "languages.hr": { "string": "Croatian", "comment": "Language name for Croatian" },
+  "languages.hu": { "string": "Hungarian", "comment": "Language name for Hungarian" },
+  "languages.id": { "string": "Indonesian", "comment": "Language name for Indonesian" },
+  "languages.it": { "string": "Italian", "comment": "Language name for Italian" },
+  "languages.ja": { "string": "Japanese", "comment": "Language name for Japanese" },
+  "languages.ko": { "string": "Korean", "comment": "Language name for Korean" },
+  "languages.lt": { "string": "Lithuanian", "comment": "Language name for Lithuanian" },
+  "languages.lv": { "string": "Latvian", "comment": "Language name for Latvian" },
+  "languages.mt": { "string": "Maltese", "comment": "Language name for Maltese" },
+  "languages.nb": { "string": "Norwegian", "comment": "Language name for Norwegian" },
+  "languages.nl": { "string": "Dutch", "comment": "Language name for Dutch" },
+  "languages.pl": { "string": "Polish", "comment": "Language name for Polish" },
+  "languages.pt": { "string": "Portuguese", "comment": "Language name for Portuguese" },
+  "languages.ro": { "string": "Romanian", "comment": "Language name for Romanian" },
+  "languages.ru": { "string": "Russian", "comment": "Language name for Russian" },
+  "languages.sk": { "string": "Slovak", "comment": "Language name for Slovak" },
+  "languages.sl": { "string": "Slovenian", "comment": "Language name for Slovenian" },
+  "languages.sv": { "string": "Swedish", "comment": "Language name for Swedish" },
+  "languages.th": { "string": "Thai", "comment": "Language name for Thai" },
+  "languages.tr": { "string": "Turkish", "comment": "Language name for Turkish" },
+  "languages.uk": { "string": "Ukrainian", "comment": "Language name for Ukrainian" },
+  "languages.vi": { "string": "Vietnamese", "comment": "Language name for Vietnamese" },
+  "languages.zh": { "string": "Chinese", "comment": "Language name for Chinese" },
   "settings.title": { "string": "Settings", "comment": "Settings page title" },
   "settings.description": { "string": "Customize your Khipu Studio experience", "comment": "Settings description" },
   "settings.theme": { "string": "Theme", "comment": "Theme section" },
@@ -176,8 +215,8 @@
   ,"book.seriesNumber.label": { "string": "Series Number", "comment": "Series number label" }
   ,"book.seriesNumber.placeholder": { "string": "Enter number in series", "comment": "Series number placeholder" }
   ,"book.digitalVoiceDisclosure.label": { "string": "Digital Voice Disclosure", "comment": "Disclosure section header" }
-  ,"book.digitalVoiceDisclosure.placeholder": { "string": "e.g. \"This audiobook was created using digitally generated voices.\"", "comment": "Disclosure placeholder" }
-  ,"book.digitalVoiceDisclosure.help": { "string": "Provide a disclosure clarifying that synthetic / AI voices are used in this production as required by platform policies.", "comment": "Disclosure help text" }
+  ,"book.digitalVoiceDisclosure.checkboxLabel": { "string": "Contains digital voices/AI", "comment": "Checkbox label" }
+  ,"book.digitalVoiceDisclosure.defaultText": { "string": "This audiobook was created using digitally generated voices.", "comment": "Default disclosure text when checkbox checked" }
   ,"book.publishing": { "string": "Publishing Information", "comment": "Publishing section" }
   ,"book.publisher.label": { "string": "Publisher", "comment": "Publisher label" }
   ,"book.publisher.placeholder": { "string": "Publisher name", "comment": "Publisher placeholder" }

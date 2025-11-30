@@ -91,6 +91,46 @@
   "languages.de-DE": { "string": "Deutsch", "comment": "Nombre de idioma" },
   "languages.it-IT": { "string": "Italiano", "comment": "Nombre de idioma" },
   "languages.pt-BR": { "string": "Português (Brasil)", "comment": "Nombre de idioma" },
+  /* Lista completa de idiomas genéricos (desktop) */
+  "languages.ar": { "string": "Árabe", "comment": "Nombre de idioma" },
+  "languages.bg": { "string": "Búlgaro", "comment": "Nombre de idioma" },
+  "languages.ca": { "string": "Catalán", "comment": "Nombre de idioma" },
+  "languages.cs": { "string": "Checo", "comment": "Nombre de idioma" },
+  "languages.da": { "string": "Danés", "comment": "Nombre de idioma" },
+  "languages.de": { "string": "Alemán", "comment": "Nombre de idioma" },
+  "languages.el": { "string": "Griego", "comment": "Nombre de idioma" },
+  "languages.en": { "string": "Inglés", "comment": "Nombre de idioma" },
+  "languages.es": { "string": "Español", "comment": "Nombre de idioma" },
+  "languages.et": { "string": "Estonio", "comment": "Nombre de idioma" },
+  "languages.eu": { "string": "Vasco", "comment": "Nombre de idioma" },
+  "languages.fi": { "string": "Finés", "comment": "Nombre de idioma" },
+  "languages.fr": { "string": "Francés", "comment": "Nombre de idioma" },
+  "languages.gl": { "string": "Gallego", "comment": "Nombre de idioma" },
+  "languages.he": { "string": "Hebreo", "comment": "Nombre de idioma" },
+  "languages.hi": { "string": "Hindi", "comment": "Nombre de idioma" },
+  "languages.hr": { "string": "Croata", "comment": "Nombre de idioma" },
+  "languages.hu": { "string": "Húngaro", "comment": "Nombre de idioma" },
+  "languages.id": { "string": "Indonesio", "comment": "Nombre de idioma" },
+  "languages.it": { "string": "Italiano", "comment": "Nombre de idioma" },
+  "languages.ja": { "string": "Japonés", "comment": "Nombre de idioma" },
+  "languages.ko": { "string": "Coreano", "comment": "Nombre de idioma" },
+  "languages.lt": { "string": "Lituano", "comment": "Nombre de idioma" },
+  "languages.lv": { "string": "Letón", "comment": "Nombre de idioma" },
+  "languages.mt": { "string": "Maltés", "comment": "Nombre de idioma" },
+  "languages.nb": { "string": "Noruego", "comment": "Nombre de idioma" },
+  "languages.nl": { "string": "Neerlandés", "comment": "Nombre de idioma" },
+  "languages.pl": { "string": "Polaco", "comment": "Nombre de idioma" },
+  "languages.pt": { "string": "Portugués", "comment": "Nombre de idioma" },
+  "languages.ro": { "string": "Rumano", "comment": "Nombre de idioma" },
+  "languages.ru": { "string": "Ruso", "comment": "Nombre de idioma" },
+  "languages.sk": { "string": "Eslovaco", "comment": "Nombre de idioma" },
+  "languages.sl": { "string": "Esloveno", "comment": "Nombre de idioma" },
+  "languages.sv": { "string": "Sueco", "comment": "Nombre de idioma" },
+  "languages.th": { "string": "Tailandés", "comment": "Nombre de idioma" },
+  "languages.tr": { "string": "Turco", "comment": "Nombre de idioma" },
+  "languages.uk": { "string": "Ucraniano", "comment": "Nombre de idioma" },
+  "languages.vi": { "string": "Vietnamita", "comment": "Nombre de idioma" },
+  "languages.zh": { "string": "Chino", "comment": "Nombre de idioma" },
   "settings.title": { "string": "Configuración", "comment": "Título de página de configuración" },
   "settings.description": { "string": "Personaliza tu experiencia con Khipu Studio", "comment": "Descripción de configuración" },
   "settings.theme": { "string": "Tema", "comment": "Sección de tema" },
@@ -148,9 +188,9 @@
     ,"book.seriesName.placeholder": { "string": "Ingresa el nombre de la serie", "comment": "Placeholder nombre serie" }
     ,"book.seriesNumber.label": { "string": "Número en la serie", "comment": "Etiqueta número serie" }
     ,"book.seriesNumber.placeholder": { "string": "Ingresa el número dentro de la serie", "comment": "Placeholder número serie" }
-    ,"book.digitalVoiceDisclosure.label": { "string": "Divulgación de voz digital", "comment": "Encabezado divulgación" }
-    ,"book.digitalVoiceDisclosure.placeholder": { "string": "Ej: \"Este audiolibro fue creado usando voces generadas digitalmente.\"", "comment": "Placeholder divulgación" }
-    ,"book.digitalVoiceDisclosure.help": { "string": "Proporciona una divulgación aclarando que se usan voces sintéticas / IA según políticas de las plataformas.", "comment": "Texto ayuda divulgación" }
+    ,"book.digitalVoiceDisclosure.label": { "string": "Divulgación de Voz Digital", "comment": "Encabezado divulgación" }
+    ,"book.digitalVoiceDisclosure.checkboxLabel": { "string": "Contiene voces digitales/IA", "comment": "Etiqueta checkbox" }
+    ,"book.digitalVoiceDisclosure.defaultText": { "string": "Este audiolibro fue creado usando voces generadas digitalmente.", "comment": "Texto de divulgación por defecto" }
     ,"book.publishing": { "string": "Información editorial", "comment": "Sección editorial" }
     ,"book.publisher.label": { "string": "Editorial", "comment": "Etiqueta editorial" }
     ,"book.publisher.placeholder": { "string": "Nombre de la editorial", "comment": "Placeholder editorial" }
