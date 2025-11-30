@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuthHook';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { projectsApi } from '../lib/projects';
+import { setProjectState, useProjectState, isStepAvailable, isStepCompleted } from '../store/project';
 import type { ReactNode } from 'react';
 
 interface LayoutProps {
@@ -31,32 +32,7 @@ const projectRoutes: NavItem[] = [
   { to: 'cost', label: 'nav.cost', icon: '💰' },
 ];
 
-function isStepCompleted(step: string | undefined, workflowCompleted?: Record<string, boolean>): boolean {
-  if (!step || !workflowCompleted) return false;
-  return workflowCompleted[step] === true;
-}
-
-function isStepAvailable(step: string | undefined, workflowCompleted?: Record<string, boolean>): boolean {
-  if (!step) return true;
-  if (!workflowCompleted) return step === 'project' || step === 'manuscript';
-  
-  switch (step) {
-    case 'project':
-    case 'manuscript':
-      return true;
-    case 'casting':
-      return workflowCompleted.manuscript === true;
-    case 'characters':
-      return workflowCompleted.casting === true;
-    case 'planning':
-    case 'voice':
-      return workflowCompleted.characters === true;
-    case 'export':
-      return workflowCompleted.voice === true;
-    default:
-      return false;
-  }
-}
+// step helpers moved to centralized store
 
 export function Layout({ children }: LayoutProps) {
   const location = useLocation();
@@ -64,6 +40,7 @@ export function Layout({ children }: LayoutProps) {
   const { user, logout } = useAuth();
   const { t } = useTranslation();
   const params = useParams({ strict: false }) as { projectId?: string };
+  const projectState = useProjectState();
   
   // Extract projectId from URL - check both params and pathname
   const projectId = params.projectId || 
@@ -75,13 +52,22 @@ export function Layout({ children }: LayoutProps) {
     enabled: !!projectId,
   });
 
+  // Keep centralized store in sync with fetched project
+  if (projectId && project) {
+    setProjectState({
+      currentProjectId: projectId,
+      root: project.root,
+      workflowCompleted: project.workflow_completed,
+    });
+  }
+
   // Build navigation items - always show workflow routes if we have a project loaded
   const navItems: NavItem[] = [homeRoute];
   
-  if (project) {
+  if (projectState.currentProjectId) {
     // Add workflow routes when we have a project loaded
     const availableRoutes = projectRoutes.filter((route) =>
-      isStepAvailable(route.workflowStep, project.workflow_completed)
+      isStepAvailable(route.workflowStep, projectState.workflowCompleted)
     );
     navItems.push(...availableRoutes);
   }
@@ -130,20 +116,20 @@ export function Layout({ children }: LayoutProps) {
             } else if (item.to === '/settings') {
               // Settings is active on settings page
               isActive = location.pathname === '/settings';
-            } else if (projectId) {
+            } else if (projectState.currentProjectId) {
               // Workflow items are active when on that specific route
-              isActive = location.pathname.includes(`/projects/${projectId}/${item.to}`);
+              isActive = location.pathname.includes(`/projects/${projectState.currentProjectId}/${item.to}`);
             }
             
-            const completed = isStepCompleted(item.workflowStep, project?.workflow_completed);
-            const available = isStepAvailable(item.workflowStep, project?.workflow_completed);
+            const completed = isStepCompleted(item.workflowStep, projectState.workflowCompleted);
+            const available = isStepAvailable(item.workflowStep, projectState.workflowCompleted);
             
             // Build the link target
             let linkTo: string;
             if (item.to === '/projects' || item.to === '/settings') {
               linkTo = item.to;
-            } else if (projectId) {
-              linkTo = `/projects/${projectId}/${item.to}`;
+            } else if (projectState.currentProjectId) {
+              linkTo = `/projects/${projectState.currentProjectId}/${item.to}`;
             } else {
               linkTo = item.to; // Fallback
             }
@@ -190,9 +176,26 @@ export function Layout({ children }: LayoutProps) {
       </div>
 
       {/* Footer */}
-      <footer style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text-muted)' }} className="border-t px-6 py-2 text-xs text-center">
-        {t('app.copyright')}
-      </footer>
+      <footer style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text-muted)' }} className="border-t px-6 py-2 text-xs">
+            <div className="flex items-center justify-between">
+              <span>
+                {projectState.currentProjectId
+                  ? t('projects.activeProject', { id: projectState.currentProjectId })
+                  : t('projects.noActiveProject')}
+              </span>
+              {projectState.workflowCompleted && (
+                <span>
+                  {t('projects.progressSummary', {
+                    completed: Object.values(projectState.workflowCompleted).filter(Boolean).length,
+                    total: 6,
+                  })}
+                </span>
+              )}
+              <span>
+                {t('app.copyright')}
+              </span>
+            </div>
+          </footer>
     </div>
   );
 }

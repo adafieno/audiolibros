@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getChapters, createChapter, updateChapter, deleteChapter, type Chapter, type UpdateChapterData } from '../api/chapters'
 import { projectsApi } from '../lib/projects'
+import { setStepCompleted } from '../store/project'
 
 export const Route = createFileRoute('/projects/$projectId/manuscript')({
   component: ManuscriptPage,
@@ -28,6 +29,18 @@ function ManuscriptPage() {
     queryKey: ['chapters', projectId],
     queryFn: () => getChapters(projectId),
   })
+
+  // Update workflow completion for manuscript when all chapters are complete
+  useEffect(() => {
+    const items = chaptersData?.items || []
+    if (items.length > 0) {
+      const allComplete = items.every((c) => c.is_complete)
+      setStepCompleted('manuscript', allComplete)
+    } else {
+      // No chapters yet => not complete
+      setStepCompleted('manuscript', false)
+    }
+  }, [chaptersData])
 
   // Create chapter mutation
   const createMutation = useMutation({

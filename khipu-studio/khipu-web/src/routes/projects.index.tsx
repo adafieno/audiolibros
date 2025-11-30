@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { projectsApi } from '../lib/projects';
 import { useAuth } from '../hooks/useAuthHook';
 import { useTranslation } from 'react-i18next';
+import { clearProjectState } from '../store/project';
 
 export const Route = createFileRoute('/projects/')({
   component: ProjectsIndexPage,
@@ -15,6 +16,11 @@ function ProjectsIndexPage() {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<string>('');
+
+  // Ensure sidebar shows only Home/Settings on project list
+  useEffect(() => {
+    clearProjectState();
+  }, []);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['projects', { search, status }],
