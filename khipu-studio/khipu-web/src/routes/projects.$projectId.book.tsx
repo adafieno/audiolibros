@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect, type FormEvent } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { projectsApi, type ProjectUpdate } from '../lib/projects';
@@ -10,7 +10,6 @@ export const Route = createFileRoute('/projects/$projectId/book')({
 
 function BookDetailsPage() {
   const { projectId } = Route.useParams();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
 
@@ -80,34 +79,15 @@ function BookDetailsPage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: 'var(--accent)' }}></div>
-          <p className="mt-2" style={{ color: 'var(--text-muted)' }}>{t('book.loading', 'Loading...')}</p>
-        </div>
+      <div className="text-center py-12">
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: 'var(--accent)' }}></div>
+        <p className="mt-2" style={{ color: 'var(--text-muted)' }}>{t('book.loading', 'Loading...')}</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="mb-6 flex justify-between items-center">
-        <button
-          onClick={() => navigate({ to: '/projects/$projectId', params: { projectId } })}
-          style={{ color: 'var(--text-muted)' }}
-          className="hover:opacity-80 flex items-center gap-2"
-        >
-          ← {t('book.back', 'Back to Project')}
-        </button>
-        <button
-          onClick={() => navigate({ to: '/projects/$projectId/properties', params: { projectId } })}
-          style={{ borderColor: 'var(--border)', color: 'var(--text)' }}
-          className="px-4 py-2 border rounded-md hover:opacity-80"
-        >
-          ← {t('book.goToProperties', 'Project Properties')}
-        </button>
-      </div>
-
+    <div>
       <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border p-6">
         <h1 className="text-2xl font-bold mb-2" style={{ color: 'var(--text)' }}>
           {t('book.title', 'Book Details')}
@@ -298,35 +278,17 @@ function BookDetailsPage() {
           </section>
 
           {/* Actions */}
-          <div className="flex justify-between pt-6 border-t" style={{ borderColor: 'var(--border)' }}>
+          <div className="flex justify-end gap-3 pt-6 border-t" style={{ borderColor: 'var(--border)' }}>
             <button
-              type="button"
-              onClick={() => navigate({ to: '/projects/$projectId', params: { projectId } })}
-              style={{ borderColor: 'var(--border)', color: 'var(--text)' }}
-              className="px-4 py-2 border rounded-md hover:opacity-80"
+              type="submit"
+              disabled={updateMutation.isPending}
+              style={{ backgroundColor: 'var(--accent)', color: 'white' }}
+              className="px-4 py-2 rounded-md hover:opacity-90 disabled:opacity-50"
             >
-              {t('book.cancel', 'Cancel')}
+              {updateMutation.isPending 
+                ? t('book.saving', 'Saving...') 
+                : t('book.save', 'Save Book Details')}
             </button>
-            <div className="flex gap-3">
-              <button
-                type="submit"
-                disabled={updateMutation.isPending}
-                style={{ backgroundColor: 'var(--accent)', color: 'white' }}
-                className="px-4 py-2 rounded-md hover:opacity-90 disabled:opacity-50"
-              >
-                {updateMutation.isPending 
-                  ? t('book.saving', 'Saving...') 
-                  : t('book.save', 'Save Book Details')}
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate({ to: '/projects/$projectId/manuscript' as any, params: { projectId } })}
-                style={{ backgroundColor: 'var(--success)', color: 'white' }}
-                className="px-4 py-2 rounded-md hover:opacity-90"
-              >
-                {t('book.nextStep', 'Next: Manuscript')} →
-              </button>
-            </div>
           </div>
         </form>
       </div>
