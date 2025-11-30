@@ -120,6 +120,47 @@
   "settings.accountDescription": { "string": "Información de tu cuenta", "comment": "Descripción de cuenta" },
   "settings.email": { "string": "Correo electrónico", "comment": "Etiqueta de correo" },
   "settings.fullName": { "string": "Nombre completo", "comment": "Etiqueta de nombre completo" },
+    "book.basicInfo": { "string": "Información básica", "comment": "Encabezado de sección" }
+    ,"book.title.label": { "string": "Título del libro", "comment": "Etiqueta título" }
+    ,"book.title.placeholder": { "string": "Ingresa el título del libro", "comment": "Placeholder título" }
+    ,"book.subtitle.label": { "string": "Subtítulo", "comment": "Etiqueta subtítulo" }
+    ,"book.subtitle.placeholder": { "string": "Ingresa el subtítulo del libro", "comment": "Placeholder subtítulo" }
+    ,"book.language.label": { "string": "Idioma / Locale", "comment": "Etiqueta idioma" }
+    ,"book.language.placeholder": { "string": "Selecciona el idioma del libro", "comment": "Placeholder idioma" }
+    ,"book.contributors": { "string": "Colaboradores", "comment": "Sección colaboradores" }
+    ,"book.authors.label": { "string": "Autores", "comment": "Etiqueta autores" }
+    ,"book.authors.placeholder": { "string": "Lista separada por comas", "comment": "Placeholder autores" }
+    ,"book.narrators.label": { "string": "Narradores", "comment": "Etiqueta narradores" }
+    ,"book.narrators.placeholder": { "string": "Lista separada por comas", "comment": "Placeholder narradores" }
+    ,"book.translators.label": { "string": "Traductores", "comment": "Etiqueta traductores" }
+    ,"book.translators.placeholder": { "string": "Lista separada por comas", "comment": "Placeholder traductores" }
+    ,"book.adaptors.label": { "string": "Adaptadores", "comment": "Etiqueta adaptadores" }
+    ,"book.adaptors.placeholder": { "string": "Lista separada por comas", "comment": "Placeholder adaptadores" }
+    ,"book.content": { "string": "Información de contenido", "comment": "Sección contenido" }
+    ,"book.description.label": { "string": "Descripción", "comment": "Etiqueta descripción" }
+    ,"book.description.placeholder": { "string": "Ingresa una descripción del libro", "comment": "Placeholder descripción" }
+    ,"book.keywords.label": { "string": "Palabras clave", "comment": "Etiqueta palabras clave" }
+    ,"book.keywords.placeholder": { "string": "Palabras separadas por comas", "comment": "Placeholder palabras clave" }
+    ,"book.categories.label": { "string": "Categorías", "comment": "Etiqueta categorías" }
+    ,"book.categories.placeholder": { "string": "Categorías separadas por comas", "comment": "Placeholder categorías" }
+    ,"book.series": { "string": "Información de la serie", "comment": "Sección serie" }
+    ,"book.seriesName.label": { "string": "Nombre de la serie", "comment": "Etiqueta nombre serie" }
+    ,"book.seriesName.placeholder": { "string": "Ingresa el nombre de la serie", "comment": "Placeholder nombre serie" }
+    ,"book.seriesNumber.label": { "string": "Número en la serie", "comment": "Etiqueta número serie" }
+    ,"book.seriesNumber.placeholder": { "string": "Ingresa el número dentro de la serie", "comment": "Placeholder número serie" }
+    ,"book.digitalVoiceDisclosure.label": { "string": "Divulgación de voz digital", "comment": "Encabezado divulgación" }
+    ,"book.digitalVoiceDisclosure.placeholder": { "string": "Ej: \"Este audiolibro fue creado usando voces generadas digitalmente.\"", "comment": "Placeholder divulgación" }
+    ,"book.digitalVoiceDisclosure.help": { "string": "Proporciona una divulgación aclarando que se usan voces sintéticas / IA según políticas de las plataformas.", "comment": "Texto ayuda divulgación" }
+    ,"book.publishing": { "string": "Información editorial", "comment": "Sección editorial" }
+    ,"book.publisher.label": { "string": "Editorial", "comment": "Etiqueta editorial" }
+    ,"book.publisher.placeholder": { "string": "Nombre de la editorial", "comment": "Placeholder editorial" }
+    ,"book.isbn.label": { "string": "ISBN", "comment": "Etiqueta ISBN" }
+    ,"book.isbn.placeholder": { "string": "Número ISBN", "comment": "Placeholder ISBN" }
+    ,"book.save": { "string": "Guardar detalles del libro", "comment": "Botón guardar" }
+    ,"book.saving": { "string": "Guardando...", "comment": "Estado guardando" }
+    ,"book.saved": { "string": "Detalles del libro guardados", "comment": "Mensaje guardado" }
+    ,"book.saveError": { "string": "Error al guardar detalles del libro", "comment": "Error guardar" }
+    ,"book.loading": { "string": "Cargando detalles del libro...", "comment": "Carga libro" },
   "settings.notSet": { "string": "No establecido", "comment": "Valor no establecido" },
   "settings.role": { "string": "Rol", "comment": "Etiqueta de rol" },
   "manuscript.title": { "string": "Manuscrito", "comment": "T\u00edtulo de p\u00e1gina de manuscrito" },
@@ -144,8 +185,5 @@
   "manuscript.createError": { "string": "Error al crear cap\u00edtulo", "comment": "Error de creaci\u00f3n" },
   "manuscript.updateError": { "string": "Error al actualizar cap\u00edtulo", "comment": "Error de actualizaci\u00f3n" },
   "manuscript.deleteError": { "string": "Error al eliminar cap\u00edtulo", "comment": "Error de eliminaci\u00f3n" },
-  "manuscript.loadError": { "string": "Error al cargar cap\u00edtulos", "comment": "Error de carga" },
-  "projectForm.createError": { "string": "Error al crear proyecto", "comment": "Error al crear proyecto" },
-  "projectForm.updateError": { "string": "Error al actualizar proyecto", "comment": "Error al actualizar proyecto" },
-  "projectForm.saveChanges": { "string": "Guardar Cambios", "comment": "Bot\u00f3n guardar cambios" }
+  "manuscript.loadError": { "string": "Error al cargar cap\u00edtulos", "comment": "Error de carga" }
 }

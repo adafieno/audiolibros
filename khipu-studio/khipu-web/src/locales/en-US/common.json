@@ -145,4 +145,47 @@
   "projectForm.createError": { "string": "Failed to create project", "comment": "Project create error" },
   "projectForm.updateError": { "string": "Failed to update project", "comment": "Project update error" },
   "projectForm.saveChanges": { "string": "Save Changes", "comment": "Save changes button" }
+  ,"book.title": { "string": "Book Details", "comment": "Book details page title" }
+  ,"book.description": { "string": "Enter the book metadata and publishing information that will appear in the audiobook.", "comment": "Book page intro" }
+  ,"book.basicInfo": { "string": "Basic Information", "comment": "Section header" }
+  ,"book.title.label": { "string": "Book Title", "comment": "Title label" }
+  ,"book.title.placeholder": { "string": "Enter the book title", "comment": "Title placeholder" }
+  ,"book.subtitle.label": { "string": "Subtitle", "comment": "Subtitle label" }
+  ,"book.subtitle.placeholder": { "string": "Enter the book subtitle", "comment": "Subtitle placeholder" }
+  ,"book.language.label": { "string": "Book Language / Locale", "comment": "Language label" }
+  ,"book.language.placeholder": { "string": "Select book language", "comment": "Language placeholder" }
+  ,"book.contributors": { "string": "Contributors", "comment": "Contributors section" }
+  ,"book.authors.label": { "string": "Authors", "comment": "Authors label" }
+  ,"book.authors.placeholder": { "string": "Comma-separated list", "comment": "Authors placeholder" }
+  ,"book.narrators.label": { "string": "Narrators", "comment": "Narrators label" }
+  ,"book.narrators.placeholder": { "string": "Comma-separated list", "comment": "Narrators placeholder" }
+  ,"book.translators.label": { "string": "Translators", "comment": "Translators label" }
+  ,"book.translators.placeholder": { "string": "Comma-separated list", "comment": "Translators placeholder" }
+  ,"book.adaptors.label": { "string": "Adaptors", "comment": "Adaptors label" }
+  ,"book.adaptors.placeholder": { "string": "Comma-separated list", "comment": "Adaptors placeholder" }
+  ,"book.content": { "string": "Content Information", "comment": "Content section" }
+  ,"book.description.label": { "string": "Description", "comment": "Description label" }
+  ,"book.description.placeholder": { "string": "Enter a description of the book", "comment": "Description placeholder" }
+  ,"book.keywords.label": { "string": "Keywords", "comment": "Keywords label" }
+  ,"book.keywords.placeholder": { "string": "Comma-separated keywords", "comment": "Keywords placeholder" }
+  ,"book.categories.label": { "string": "Categories", "comment": "Categories label" }
+  ,"book.categories.placeholder": { "string": "Comma-separated categories", "comment": "Categories placeholder" }
+  ,"book.series": { "string": "Series Information", "comment": "Series section" }
+  ,"book.seriesName.label": { "string": "Series Name", "comment": "Series name label" }
+  ,"book.seriesName.placeholder": { "string": "Enter series name", "comment": "Series name placeholder" }
+  ,"book.seriesNumber.label": { "string": "Series Number", "comment": "Series number label" }
+  ,"book.seriesNumber.placeholder": { "string": "Enter number in series", "comment": "Series number placeholder" }
+  ,"book.digitalVoiceDisclosure.label": { "string": "Digital Voice Disclosure", "comment": "Disclosure section header" }
+  ,"book.digitalVoiceDisclosure.placeholder": { "string": "e.g. \"This audiobook was created using digitally generated voices.\"", "comment": "Disclosure placeholder" }
+  ,"book.digitalVoiceDisclosure.help": { "string": "Provide a disclosure clarifying that synthetic / AI voices are used in this production as required by platform policies.", "comment": "Disclosure help text" }
+  ,"book.publishing": { "string": "Publishing Information", "comment": "Publishing section" }
+  ,"book.publisher.label": { "string": "Publisher", "comment": "Publisher label" }
+  ,"book.publisher.placeholder": { "string": "Publisher name", "comment": "Publisher placeholder" }
+  ,"book.isbn.label": { "string": "ISBN", "comment": "ISBN label" }
+  ,"book.isbn.placeholder": { "string": "ISBN number", "comment": "ISBN placeholder" }
+  ,"book.save": { "string": "Save Book Details", "comment": "Save button" }
+  ,"book.saving": { "string": "Saving...", "comment": "Saving state" }
+  ,"book.saved": { "string": "Book details saved successfully", "comment": "Save success message" }
+  ,"book.saveError": { "string": "Failed to save book details", "comment": "Save error message" }
+  ,"book.loading": { "string": "Loading book details...", "comment": "Book loading message" }
 }

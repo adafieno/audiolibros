@@ -29,6 +29,12 @@ function BookDetailsPage() {
   const [description, setDescription] = useState('');
   const [publisher, setPublisher] = useState('');
   const [isbn, setIsbn] = useState('');
+  const [language, setLanguage] = useState('');
+  const [keywords, setKeywords] = useState('');
+  const [categories, setCategories] = useState('');
+  const [seriesName, setSeriesName] = useState('');
+  const [seriesNumber, setSeriesNumber] = useState('');
+  const [digitalVoiceDisclosure, setDigitalVoiceDisclosure] = useState('');
   const [error, setError] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
 
@@ -44,6 +50,12 @@ function BookDetailsPage() {
       setDescription(project.description || '');
       setPublisher(project.publisher || '');
       setIsbn(project.isbn || '');
+      setLanguage((project as any).language || '');
+      setKeywords((project as any).keywords?.join(', ') || '');
+      setCategories((project as any).categories?.join(', ') || '');
+      setSeriesName((project as any).series_name || '');
+      setSeriesNumber(String((project as any).series_number || '') || '');
+      setDigitalVoiceDisclosure((project as any).digital_voice_disclosure || '');
     }
   }, [project]);
 
@@ -75,6 +87,12 @@ function BookDetailsPage() {
       description: description || undefined,
       publisher: publisher || undefined,
       isbn: isbn || undefined,
+      language: language || undefined,
+      keywords: keywords ? keywords.split(',').map(k => k.trim()).filter(Boolean) : undefined,
+      categories: categories ? categories.split(',').map(c => c.trim()).filter(Boolean) : undefined,
+      series_name: seriesName || undefined,
+      series_number: seriesNumber ? Number(seriesNumber) : undefined,
+      digital_voice_disclosure: digitalVoiceDisclosure || undefined,
     });
 
     // Evaluate book completion after save trigger (optimistic check); final confirmation after project refetch
@@ -83,9 +101,9 @@ function BookDetailsPage() {
     const hasAuthor = authorList.length > 0;
     const hasDescription = description.trim().length > 0;
     // Digital voice disclosure placeholder: treat as required once field exists; currently assume true
-    const digitalVoiceDisclosure = true;
-    const hasLanguage = (project as any)?.language || false; // Fallback until language editable here
-    const bookComplete = hasTitle && hasAuthor && hasDescription && digitalVoiceDisclosure && !!hasLanguage;
+    const hasLanguage = language.trim().length > 0;
+    const hasDigitalDisclosure = digitalVoiceDisclosure.trim().length > 0;
+    const bookComplete = hasTitle && hasAuthor && hasDescription && hasDigitalDisclosure && hasLanguage;
     setStepCompleted('book', bookComplete);
   };
 
@@ -156,6 +174,30 @@ function BookDetailsPage() {
                   className="w-full px-3 py-2 border rounded-md"
                   placeholder={t('book.subtitle.placeholder', 'Enter the book subtitle')}
                 />
+              </div>
+              <div>
+                <label htmlFor="language" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
+                  {t('book.language.label', 'Book Language / Locale')} <span style={{ color: 'var(--error)' }}>*</span>
+                </label>
+                <select
+                  id="language"
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  required
+                  style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                  className="w-full px-3 py-2 border rounded-md"
+                >
+                  <option value="">{t('book.language.placeholder', 'Select book language')}</option>
+                  <option value="en-US">{t('languages.en-US')}</option>
+                  <option value="en-GB">{t('languages.en-GB')}</option>
+                  <option value="es-ES">{t('languages.es-ES')}</option>
+                  <option value="es-MX">{t('languages.es-MX')}</option>
+                  <option value="es-PE">{t('languages.es-PE')}</option>
+                  <option value="pt-BR">{t('languages.pt-BR')}</option>
+                  <option value="fr-FR">{t('languages.fr-FR')}</option>
+                  <option value="de-DE">{t('languages.de-DE')}</option>
+                  <option value="it-IT">{t('languages.it-IT')}</option>
+                </select>
               </div>
             </div>
           </section>
@@ -248,7 +290,93 @@ function BookDetailsPage() {
                   placeholder={t('book.description.placeholder', 'Enter a description of the book')}
                 />
               </div>
+              <div>
+                <label htmlFor="keywords" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
+                  {t('book.keywords.label', 'Keywords')}
+                </label>
+                <input
+                  id="keywords"
+                  type="text"
+                  value={keywords}
+                  onChange={(e) => setKeywords(e.target.value)}
+                  style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                  className="w-full px-3 py-2 border rounded-md"
+                  placeholder={t('book.keywords.placeholder', 'Comma-separated keywords')}
+                />
+              </div>
+              <div>
+                <label htmlFor="categories" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
+                  {t('book.categories.label', 'Categories')}
+                </label>
+                <input
+                  id="categories"
+                  type="text"
+                  value={categories}
+                  onChange={(e) => setCategories(e.target.value)}
+                  style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                  className="w-full px-3 py-2 border rounded-md"
+                  placeholder={t('book.categories.placeholder', 'Comma-separated categories')}
+                />
+              </div>
             </div>
+          </section>
+
+          {/* Series Information */}
+          <section>
+            <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--text)' }}>
+              {t('book.series', 'Series Information')}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="seriesName" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
+                  {t('book.seriesName.label', 'Series Name')}
+                </label>
+                <input
+                  id="seriesName"
+                  type="text"
+                  value={seriesName}
+                  onChange={(e) => setSeriesName(e.target.value)}
+                  style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                  className="w-full px-3 py-2 border rounded-md"
+                  placeholder={t('book.seriesName.placeholder', 'Enter series name')}
+                />
+              </div>
+              <div>
+                <label htmlFor="seriesNumber" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
+                  {t('book.seriesNumber.label', 'Series Number')}
+                </label>
+                <input
+                  id="seriesNumber"
+                  type="number"
+                  min={1}
+                  value={seriesNumber}
+                  onChange={(e) => setSeriesNumber(e.target.value)}
+                  style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                  className="w-full px-3 py-2 border rounded-md"
+                  placeholder={t('book.seriesNumber.placeholder', 'Enter number in series')}
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* Digital Voice Disclosure */}
+          <section>
+            <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--text)' }}>
+              {t('book.digitalVoiceDisclosure.label', 'Digital Voice Disclosure')} <span style={{ color: 'var(--error)' }}>*</span>
+            </h2>
+            <p className="mb-2 text-sm" style={{ color: 'var(--text-muted)' }}>
+              {t('book.digitalVoiceDisclosure.help', 'Provide a disclosure clarifying that synthetic / AI voices are used in this production as required by platform policies.')}
+            </p>
+            <textarea
+              id="digitalVoiceDisclosure"
+              rows={4}
+              required
+              value={digitalVoiceDisclosure}
+              onChange={(e) => setDigitalVoiceDisclosure(e.target.value)}
+              style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+              className="w-full px-3 py-2 border rounded-md"
+              placeholder={t('book.digitalVoiceDisclosure.placeholder', 'e.g. "This audiobook was created using digitally generated voices."')}
+            />
           </section>
 
           {/* Publishing Information */}
