@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { projectsApi } from '../lib/projects';
 import { useAuth } from '../hooks/useAuthHook';
 import { useTranslation } from 'react-i18next';
-import { clearProjectState } from '../store/project';
 
 export const Route = createFileRoute('/projects/')({
   component: ProjectsIndexPage,
@@ -17,10 +16,9 @@ function ProjectsIndexPage() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<string>('');
 
-  // Ensure sidebar shows only Home/Settings on project list
-  useEffect(() => {
-    clearProjectState();
-  }, []);
+  // Do NOT clear project workflow state here so that after opening a project
+  // and returning Home, workflow icons remain visible (requested behavior).
+  // If we ever need an explicit "Close Project" action, that should invoke clearProjectState().
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['projects', { search, status }],
