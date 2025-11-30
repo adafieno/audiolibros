@@ -3,6 +3,7 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { projectsApi, type ProjectUpdate } from '../lib/projects';
 import { useTranslation } from 'react-i18next';
+import { setStepCompleted } from '../store/project';
 
 export const Route = createFileRoute('/projects/$projectId/book')({
   component: BookDetailsPage,
@@ -75,6 +76,17 @@ function BookDetailsPage() {
       publisher: publisher || undefined,
       isbn: isbn || undefined,
     });
+
+    // Evaluate book completion after save trigger (optimistic check); final confirmation after project refetch
+    const hasTitle = title.trim().length > 0;
+    const authorList = authors.split(',').map(a => a.trim()).filter(Boolean);
+    const hasAuthor = authorList.length > 0;
+    const hasDescription = description.trim().length > 0;
+    // Digital voice disclosure placeholder: treat as required once field exists; currently assume true
+    const digitalVoiceDisclosure = true;
+    const hasLanguage = (project as any)?.language || false; // Fallback until language editable here
+    const bookComplete = hasTitle && hasAuthor && hasDescription && digitalVoiceDisclosure && !!hasLanguage;
+    setStepCompleted('book', bookComplete);
   };
 
   if (isLoading) {

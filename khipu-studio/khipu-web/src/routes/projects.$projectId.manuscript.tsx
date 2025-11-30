@@ -33,13 +33,10 @@ function ManuscriptPage() {
   // Update workflow completion for manuscript when all chapters are complete
   useEffect(() => {
     const items = chaptersData?.items || []
-    if (items.length > 0) {
-      const allComplete = items.every((c) => c.is_complete)
-      setStepCompleted('manuscript', allComplete)
-    } else {
-      // No chapters yet => not complete
-      setStepCompleted('manuscript', false)
-    }
+    // Manuscript completion (import existence) requires at least one chapter
+    const manuscriptImported = items.length > 0
+    setStepCompleted('manuscript', manuscriptImported)
+    // Planning completion will later check all chapters marked complete; keep separate
   }, [chaptersData])
 
   // Create chapter mutation

@@ -5,7 +5,7 @@ export type WorkflowCompleted = Record<string, boolean>;
 export interface ProjectState {
   currentProjectId?: string;
   root?: unknown;
-  workflowCompleted?: WorkflowCompleted;
+  workflowCompleted?: WorkflowCompleted; // keys: book, project, manuscript, casting, characters, planning, voice, export, cost
 }
 
 const state: ProjectState = {};
@@ -51,21 +51,27 @@ export function isStepCompleted(step: string | undefined, workflowCompleted?: Wo
 
 export function isStepAvailable(step: string | undefined, workflowCompleted?: WorkflowCompleted): boolean {
   if (!step) return true;
-  if (!workflowCompleted) return step === 'project' || step === 'manuscript';
+  // Until we have data, allow initial steps
+  if (!workflowCompleted) return step === 'book' || step === 'project' || step === 'manuscript';
 
   switch (step) {
+    case 'book':
     case 'project':
+      return true; // Always available when project loaded
     case 'manuscript':
-      return true;
+      return workflowCompleted.book === true && workflowCompleted.project === true; // After book & project config
     case 'casting':
-      return workflowCompleted.manuscript === true;
+      return workflowCompleted.manuscript === true; // After manuscript imported
     case 'characters':
-      return workflowCompleted.casting === true;
+      return workflowCompleted.casting === true; // After casting voices selected
     case 'planning':
+      return workflowCompleted.characters === true; // After all characters voiced
     case 'voice':
-      return workflowCompleted.characters === true;
+      return workflowCompleted.planning === true; // After planning (chapters marked complete)
     case 'export':
-      return workflowCompleted.voice === true;
+      return workflowCompleted.voice === true; // After full audio generated
+    case 'cost':
+      return workflowCompleted.book === true && workflowCompleted.project === true; // Visible when book + project complete
     default:
       return false;
   }

@@ -21,7 +21,7 @@ const homeRoute: NavItem = { to: '/projects', label: 'nav.home', icon: '🏠' };
 const settingsRoute: NavItem = { to: '/settings', label: 'nav.settings', icon: '⚙️' };
 
 const projectRoutes: NavItem[] = [
-  { to: 'book', label: 'nav.book', icon: '📖', workflowStep: 'project' },
+  { to: 'book', label: 'nav.book', icon: '📖', workflowStep: 'book' },
   { to: 'properties', label: 'nav.project', icon: '📄', workflowStep: 'project' },
   { to: 'manuscript', label: 'nav.manuscript', icon: '✍️', workflowStep: 'manuscript' },
   { to: 'casting', label: 'nav.casting', icon: '🗣️', workflowStep: 'casting' },
@@ -186,8 +186,8 @@ export function Layout({ children }: LayoutProps) {
               {projectState.workflowCompleted && (
                 <span>
                   {t('projects.progressSummary', {
-                    completed: Object.values(projectState.workflowCompleted).filter(Boolean).length,
-                    total: 6,
+                    completed: Object.entries(projectState.workflowCompleted).filter(([k,v]) => k !== 'cost' && v).length,
+                    total: 8,
                   })}
                 </span>
               )}

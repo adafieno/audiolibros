@@ -73,11 +73,12 @@ function ProjectPropertiesPage() {
       setSaveMessage(t('projectProperties.saved', 'Project settings saved successfully'));
       setTimeout(() => setSaveMessage(''), 3000);
       // Minimal properties completion: language and at least one export platform or TTS voice
-      const languageSet = Boolean((project as any)?.language) || false;
-      const hasVoice = Boolean(settings.tts?.engine?.voice);
       const platforms = settings.export?.platforms || {};
       const hasPlatform = Object.values(platforms).some(Boolean);
-      setStepCompleted('project', languageSet || hasVoice || hasPlatform);
+      const ttsConfigured = settings.tts?.engine?.name === 'azure' && !!settings.tts?.engine?.voice;
+      const llmConfigured = ['openai','azure-openai','anthropic'].includes(settings.llm?.engine?.name || '');
+      // Project completion requires at least one platform + TTS + LLM configured
+      setStepCompleted('project', hasPlatform && ttsConfigured && llmConfigured);
     },
     onError: (err: unknown) => {
       const error = err as { response?: { data?: { detail?: string } }; message?: string };
