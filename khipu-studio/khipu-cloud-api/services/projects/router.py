@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, or_
 from sqlalchemy.orm import selectinload
+from pydantic import BaseModel
 
 from shared.db.database import get_db
 from shared.models import Project, User, ProjectMember
@@ -29,6 +30,18 @@ from shared.auth.permissions import (
 )
 
 router = APIRouter()
+
+
+class SuggestIPARequest(BaseModel):
+    word: str
+
+
+class SuggestIPAResponse(BaseModel):
+    success: bool
+    ipa: Optional[str] = None
+    error: Optional[str] = None
+    examples: Optional[list[str]] = None
+    source: Optional[str] = None
 
 
 @router.post("/", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
@@ -429,3 +442,198 @@ async def remove_project_member(
     await db.commit()
     
     return None
+
+
+@router.post("/{project_id}/suggest-ipa", response_model=SuggestIPAResponse)
+async def suggest_ipa(
+    project_id: str,
+    request: SuggestIPARequest,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Suggest IPA transcription for a word using the project's language and LLM."""
+    # Get project
+    result = await db.execute(
+        select(Project).where(Project.id == project_id)
+    )
+    project = result.scalar_one_or_none()
+    
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Project not found"
+        )
+    
+    # Check permission (at least read access)
+    await require_project_permission(current_user, project, Permission.READ, db)
+    
+    # Get word and project settings
+    word = request.word.strip()
+    if not word:
+        return SuggestIPAResponse(success=False, error="Word is required")
+    
+    settings = project.settings or {}
+    pronunciation_map = settings.get("pronunciationMap", {})
+    language = project.language or "en-US"
+    
+    # Check if word already exists in pronunciation map
+    if word in pronunciation_map:
+        existing_ipa = pronunciation_map[word]
+        if existing_ipa:
+            return SuggestIPAResponse(
+                success=True,
+                ipa=existing_ipa,
+                source="project"
+            )
+    
+    # Try to get IPA from local table first
+    import json
+    from pathlib import Path
+    
+    try:
+        # Load IPA tables
+        resources_dir = Path(__file__).resolve().parents[3] / "py" / "resources"
+        default_table_path = resources_dir / "ipa_table.json"
+        table = {}
+        
+        if default_table_path.exists():
+            table = json.loads(default_table_path.read_text(encoding="utf-8") or "{}")
+        
+        # Try language-specific tables
+        if language:
+            lang_code = language.split("-")[0] if "-" in language else language
+            lang_table_path = resources_dir / f"ipa_table.{lang_code}.json"
+            if lang_table_path.exists():
+                lang_table = json.loads(lang_table_path.read_text(encoding="utf-8") or "{}")
+                table.update(lang_table)
+        
+        # Check if word exists in table
+        word_lower = word.lower()
+        if word_lower in table:
+            entry = table[word_lower]
+            if isinstance(entry, str):
+                ipa_result = entry
+                if ipa_result:  # Make sure IPA is not empty
+                    return SuggestIPAResponse(
+                        success=True,
+                        ipa=ipa_result,
+                        source="table"
+                    )
+            elif isinstance(entry, dict):
+                ipa_result = entry.get("ipa", "")
+                if ipa_result:  # Make sure IPA is not empty
+                    return SuggestIPAResponse(
+                        success=True,
+                        ipa=ipa_result,
+                        examples=entry.get("examples"),
+                        source="table"
+                    )
+    except Exception as e:
+        # If table lookup fails, continue to LLM
+        import traceback
+        print(f"Table lookup error: {e}")
+        print(traceback.format_exc())
+    
+    # LLM-based IPA suggestion
+    try:
+        from openai import AsyncAzureOpenAI
+        from shared.config import Settings
+        
+        config = Settings()
+        
+        # Get LLM configuration from project settings
+        llm_settings = settings.get("llm", {})
+        llm_engine = llm_settings.get("engine", {})
+        llm_model = llm_engine.get("model", "gpt-4o")
+        
+        # Build system prompt with IPA rules from table if available
+        rules = ""
+        if table:
+            keys = sorted(list(table.keys()), key=lambda k: -len(k))
+            lines = []
+            for k in keys[:50]:  # Limit to first 50 rules to keep prompt manageable
+                v = table.get(k)
+                ipa_v = None
+                if isinstance(v, str):
+                    ipa_v = v
+                elif isinstance(v, dict):
+                    ipa_v = v.get("ipa")
+                if ipa_v:
+                    lines.append(f"{k} -> {ipa_v}")
+            if lines:
+                rules = "Grapheme to IPA rules:\n" + "\n".join(lines)
+        
+        system_message = (
+            "You are a concise expert phonetics assistant. Given a single word "
+            "and an optional language/locale, respond with only the IPA "
+            "transcription for that word. Do NOT include explanations, markup, "
+            "or additional text—only the IPA characters. If unsure, return "
+            "an empty string. Use the IPA standard for the language when possible."
+        )
+        
+        user_message = (
+            f"Provide the IPA transcription (only the IPA) for the single word: "
+            f'"{word}". '
+            f"Book locale: {language}. "
+            f"If book locale is empty, use locale inferred from the word. "
+            f"Respond with a single short line containing only the IPA. "
+            f"Do not include explanations or extra text."
+        )
+        
+        messages = []
+        if rules:
+            messages.append({"role": "system", "content": rules})
+        messages.append({"role": "system", "content": system_message})
+        messages.append({"role": "user", "content": user_message})
+        
+        # Create Azure OpenAI client
+        client = AsyncAzureOpenAI(
+            api_version=config.AZURE_OPENAI_API_VERSION,
+            azure_endpoint=config.AZURE_OPENAI_ENDPOINT,
+            api_key=config.AZURE_OPENAI_API_KEY
+        )
+        
+        # Call LLM
+        response = await client.chat.completions.create(
+            model=llm_model,
+            messages=messages,
+            temperature=0.0,
+            max_tokens=80
+        )
+        
+        # Extract IPA from response
+        raw_ipa = response.choices[0].message.content.strip() if response.choices else ""
+        
+        # Clean up IPA: remove slashes, brackets, quotes
+        import re
+        ipa = raw_ipa
+        if ipa.startswith("/") and ipa.endswith("/") and len(ipa) > 2:
+            ipa = ipa[1:-1].strip()
+        elif ipa.startswith("[") and ipa.endswith("]") and len(ipa) > 2:
+            ipa = ipa[1:-1].strip()
+        
+        # Try to find IPA between slashes
+        match = re.search(r"/([^/]+)/", ipa)
+        if match:
+            ipa = match.group(1).strip()
+        
+        # Remove quotes and extra whitespace
+        ipa = ipa.strip().strip('"').strip("'").strip()
+        
+        if ipa:
+            return SuggestIPAResponse(
+                success=True,
+                ipa=ipa,
+                source="llm"
+            )
+    except Exception as e:
+        import traceback
+        print(f"LLM IPA suggestion error: {e}")
+        print(traceback.format_exc())
+        # Fall through to error response
+    
+    # If we get here, both table and LLM failed
+    return SuggestIPAResponse(
+        success=False,
+        error=f"IPA not found for '{word}'. Please enter the IPA notation manually in the field above."
+    )

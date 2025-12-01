@@ -77,7 +77,15 @@ function BookDetailsPage() {
     if (!project) return;
     // Prevent reinitializing form on every project refetch
     if (initializedRef.current) return;
-    const book = project.settings?.book || {};
+    const book = (project.settings?.book || {}) as {
+      keywords?: string[];
+      categories?: string[];
+      series_name?: string;
+      series_number?: number;
+      digital_voice_disclosure?: string;
+      cover_image_b64?: string;
+      cover_image_url?: string;
+    };
     const next: FormState = {
       title: project.title || '',
       subtitle: project.subtitle || '',
@@ -150,9 +158,18 @@ function BookDetailsPage() {
         },
       };
       // Skip autosave if the only change is transient data URL cover preview
-      const onlyCoverDataUrl = update.settings?.book?.cover_image_b64 &&
+      const bookSettings = update.settings?.book as {
+        cover_image_b64?: string;
+        keywords?: string[];
+        categories?: string[];
+        series_name?: string;
+        series_number?: number;
+        digital_voice_disclosure?: string;
+        cover_image_url?: string;
+      } | undefined;
+      const onlyCoverDataUrl = bookSettings?.cover_image_b64 &&
         !update.title && !update.subtitle && !update.authors && !update.narrators && !update.translators && !update.adaptors && !update.language && !update.description && !update.publisher && !update.isbn && !update.cover_image_url &&
-        !update.settings?.book?.keywords && !update.settings?.book?.categories && !update.settings?.book?.series_name && !update.settings?.book?.series_number && !update.settings?.book?.digital_voice_disclosure && !update.settings?.book?.cover_image_url;
+        !bookSettings?.keywords && !bookSettings?.categories && !bookSettings?.series_name && !bookSettings?.series_number && !bookSettings?.digital_voice_disclosure && !bookSettings?.cover_image_url;
 
       // Check completion status
       const complete =

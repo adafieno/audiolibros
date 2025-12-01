@@ -17,7 +17,7 @@ export interface Project {
   isbn?: string;
   cover_image_url?: string;
   status: 'draft' | 'in_progress' | 'review' | 'completed' | 'published';
-  settings?: Record<string, any>;
+  settings?: Record<string, unknown>;
   workflow_completed?: Record<string, boolean>;
   created_at: string;
   updated_at: string;
@@ -45,7 +45,7 @@ export interface ProjectUpdate {
   publish_date?: string;
   isbn?: string;
   status?: 'draft' | 'in_progress' | 'review' | 'completed' | 'published';
-  settings?: Record<string, any>;
+  settings?: Record<string, unknown>;
   workflow_completed?: Record<string, boolean>;
   cover_image_url?: string;
 }
@@ -86,5 +86,16 @@ export const projectsApi = {
 
   delete: async (id: string): Promise<void> => {
     await api.delete(`/projects/${id}`);
+  },
+
+  suggestIpa: async (id: string, word: string): Promise<{
+    success: boolean;
+    ipa?: string;
+    error?: string;
+    examples?: string[];
+    source?: string;
+  }> => {
+    const response = await api.post(`/projects/${id}/suggest-ipa`, { word });
+    return response.data;
   },
 };

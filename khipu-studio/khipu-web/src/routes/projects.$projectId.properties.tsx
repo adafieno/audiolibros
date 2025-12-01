@@ -444,9 +444,22 @@ function ProjectPropertiesPage() {
                   />
                   <button
                     type="button"
-                    onClick={() => {
-                      // TODO: Implement IPA suggestion via API
-                      alert('IPA suggestion not yet implemented in web version');
+                    onClick={async () => {
+                      try {
+                        const result = await projectsApi.suggestIpa(projectId, word);
+                        if (result.success && result.ipa) {
+                          const newMap = { ...settings.pronunciationMap, [word]: result.ipa };
+                          updateSettings(['pronunciationMap'], newMap);
+                          if (result.examples && result.examples.length > 0) {
+                            alert(`${t('project.suggestIpaConfirm', 'Suggested examples:')} ${result.examples.join(', ')}`);
+                          }
+                        } else {
+                          alert(result.error || t('project.suggestIpaError', 'Could not suggest IPA. Please enter manually.'));
+                        }
+                      } catch (err) {
+                        console.error('IPA suggestion error:', err);
+                        alert(t('project.suggestIpaError', 'Could not suggest IPA. Please enter manually.'));
+                      }
                     }}
                     style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
                     className="px-3 py-1 border rounded text-sm hover:opacity-80"
