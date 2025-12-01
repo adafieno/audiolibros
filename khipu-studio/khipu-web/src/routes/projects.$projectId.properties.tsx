@@ -173,10 +173,10 @@ function ProjectPropertiesPage() {
         </div>
       )}
 
-      <form className="space-y-8">
+      <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* TTS Configuration */}
           <section>
-            <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--text)' }}>
+            <h2 className="text-lg font-semibold mb-3" style={{ color: 'var(--text)' }}>
               {t('projectProperties.tts', 'Text-to-Speech Engine')}
             </h2>
             <div className="space-y-4">
@@ -229,7 +229,7 @@ function ProjectPropertiesPage() {
 
           {/* LLM Configuration */}
           <section>
-            <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--text)' }}>
+            <h2 className="text-lg font-semibold mb-3" style={{ color: 'var(--text)' }}>
               {t('projectProperties.llm', 'LLM Engine')}
             </h2>
             <div className="space-y-4">
@@ -269,7 +269,7 @@ function ProjectPropertiesPage() {
 
           {/* Planning Configuration */}
           <section>
-            <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--text)' }}>
+            <h2 className="text-lg font-semibold mb-3" style={{ color: 'var(--text)' }}>
               {t('projectProperties.planning', 'Planning')}
             </h2>
             <div className="space-y-4">
@@ -309,7 +309,7 @@ function ProjectPropertiesPage() {
 
           {/* Export Platforms */}
           <section>
-            <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--text)' }}>
+            <h2 className="text-lg font-semibold mb-3" style={{ color: 'var(--text)' }}>
               {t('projectProperties.export', 'Export Platforms')}
             </h2>
             <div className="space-y-3">
