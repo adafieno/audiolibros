@@ -154,7 +154,7 @@ function ProjectPropertiesPage() {
   }, [project]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: { settings: ProjectSettings }) => projectsApi.update(projectId, data),
+    mutationFn: (data: { settings: ProjectSettings; workflow_completed?: Record<string, boolean> }) => projectsApi.update(projectId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project', projectId] });
       queryClient.invalidateQueries({ queryKey: ['projects'] });
@@ -182,20 +182,28 @@ function ProjectPropertiesPage() {
     if (autosaveTimer.current) window.clearTimeout(autosaveTimer.current);
     autosaveTimer.current = window.setTimeout(() => {
       setError('');
-      const payload = { settings };
+      const platforms = settings.export?.platforms || {};
+      const hasPlatform = Object.values(platforms).some(Boolean);
+      const ttsConfigured = settings.tts?.engine?.name === 'azure' && !!settings.tts?.engine?.voice;
+      const llmConfigured = ['openai','azure-openai','anthropic'].includes(settings.llm?.engine?.name || '');
+      const isComplete = hasPlatform && ttsConfigured && llmConfigured;
+      
+      const payload = { 
+        settings,
+        workflow_completed: {
+          ...(project?.workflow_completed || {}),
+          project: isComplete
+        }
+      };
       const hash = JSON.stringify(payload);
       if (hash !== lastSavedHashRef.current) {
         lastSavedHashRef.current = hash;
         mutateRef.current(payload);
       }
-      const platforms = settings.export?.platforms || {};
-      const hasPlatform = Object.values(platforms).some(Boolean);
-      const ttsConfigured = settings.tts?.engine?.name === 'azure' && !!settings.tts?.engine?.voice;
-      const llmConfigured = ['openai','azure-openai','anthropic'].includes(settings.llm?.engine?.name || '');
-      setStepCompleted('project', hasPlatform && ttsConfigured && llmConfigured);
+      setStepCompleted('project', isComplete);
     }, 700);
     return () => { if (autosaveTimer.current) window.clearTimeout(autosaveTimer.current); };
-  }, [settings]);
+  }, [settings, project?.workflow_completed]);
 
   const updateSettings = (path: string[], value: unknown) => {
     setSettings((prev) => {

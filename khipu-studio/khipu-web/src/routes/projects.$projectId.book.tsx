@@ -39,12 +39,20 @@ function BookDetailsPage() {
   const tRef = useRef(t);
   const mutateRef = useRef<(data: ProjectUpdate) => void>(() => {});
   const settingsRef = useRef<Project['settings'] | undefined>(undefined);
+  const projectRef = useRef<Project | undefined>(undefined);
   const [error, setError] = useState('');
 
   const { data: project, isLoading } = useQuery<Project>({
     queryKey: ['project', projectId],
     queryFn: () => projectsApi.get(projectId),
   });
+
+  // Keep project ref updated
+  useEffect(() => {
+    if (project) {
+      projectRef.current = project;
+    }
+  }, [project]);
 
   const [form, setForm] = useState<FormState>({
     title: '',
@@ -146,6 +154,20 @@ function BookDetailsPage() {
         !update.title && !update.subtitle && !update.authors && !update.narrators && !update.translators && !update.adaptors && !update.language && !update.description && !update.publisher && !update.isbn && !update.cover_image_url &&
         !update.settings?.book?.keywords && !update.settings?.book?.categories && !update.settings?.book?.series_name && !update.settings?.book?.series_number && !update.settings?.book?.digital_voice_disclosure && !update.settings?.book?.cover_image_url;
 
+      // Check completion status
+      const complete =
+        form.title.trim() &&
+        form.authors.split(',').map(a => a.trim()).filter(Boolean).length > 0 &&
+        form.description.trim() &&
+        form.language.trim() &&
+        form.digitalVoiceDisclosureChecked;
+      
+      // Add workflow_completed to the update
+      update.workflow_completed = {
+        ...(projectRef.current?.workflow_completed || {}),
+        book: !!complete
+      };
+      
       // Compute a hash of the payload; avoid mutating if unchanged
       const hash = JSON.stringify(update);
       const changed = hash !== lastSavedHashRef.current;
@@ -153,12 +175,6 @@ function BookDetailsPage() {
         lastSavedHashRef.current = hash;
         mutateRef.current(update);
       }
-      const complete =
-        form.title.trim() &&
-        form.authors.split(',').map(a => a.trim()).filter(Boolean).length > 0 &&
-        form.description.trim() &&
-        form.language.trim() &&
-        form.digitalVoiceDisclosureChecked;
       setStepCompleted('book', !!complete);
     }, 700);
     return () => { if (autosaveTimer.current) window.clearTimeout(autosaveTimer.current); };
