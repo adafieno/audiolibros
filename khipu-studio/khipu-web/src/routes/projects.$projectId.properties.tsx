@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { projectsApi } from '../lib/projects';
 import { setStepCompleted } from '../store/project';
@@ -56,11 +56,16 @@ function ProjectPropertiesPage() {
   // Local state for settings
   const [settings, setSettings] = useState<ProjectSettings>({});
   const [error, setError] = useState('');
-  const [saveMessage, setSaveMessage] = useState('');
+  const initializedRef = useRef(false);
+  const autosaveTimer = useRef<number | null>(null);
+  const lastSavedHashRef = useRef<string>('');
+  const tRef = useRef(t);
+  const mutateRef = useRef<(data: { settings: ProjectSettings }) => void>(() => {});
 
   // Load settings from project when available
   useEffect(() => {
-    if (project?.settings) {
+    if (project?.settings && !initializedRef.current) {
+      initializedRef.current = true;
       setSettings(project.settings as ProjectSettings);
     }
   }, [project]);
@@ -70,8 +75,6 @@ function ProjectPropertiesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project', projectId] });
       queryClient.invalidateQueries({ queryKey: ['projects'] });
-      setSaveMessage(t('projectProperties.saved', 'Project settings saved successfully'));
-      setTimeout(() => setSaveMessage(''), 3000);
       // Minimal properties completion: language and at least one export platform or TTS voice
       const platforms = settings.export?.platforms || {};
       const hasPlatform = Object.values(platforms).some(Boolean);
@@ -86,11 +89,30 @@ function ProjectPropertiesPage() {
     },
   });
 
-  const handleSave = (e: FormEvent) => {
-    e.preventDefault();
-    setError('');
-    updateMutation.mutate({ settings });
-  };
+  // Stable refs to avoid effect dependency warnings
+  useEffect(() => { tRef.current = t; }, [t]);
+  useEffect(() => { mutateRef.current = updateMutation.mutate; }, [updateMutation.mutate]);
+
+  // Autosave with debounce and payload hashing
+  useEffect(() => {
+    if (!initializedRef.current) return;
+    if (autosaveTimer.current) window.clearTimeout(autosaveTimer.current);
+    autosaveTimer.current = window.setTimeout(() => {
+      setError('');
+      const payload = { settings };
+      const hash = JSON.stringify(payload);
+      if (hash !== lastSavedHashRef.current) {
+        lastSavedHashRef.current = hash;
+        mutateRef.current(payload);
+      }
+      const platforms = settings.export?.platforms || {};
+      const hasPlatform = Object.values(platforms).some(Boolean);
+      const ttsConfigured = settings.tts?.engine?.name === 'azure' && !!settings.tts?.engine?.voice;
+      const llmConfigured = ['openai','azure-openai','anthropic'].includes(settings.llm?.engine?.name || '');
+      setStepCompleted('project', hasPlatform && ttsConfigured && llmConfigured);
+    }, 700);
+    return () => { if (autosaveTimer.current) window.clearTimeout(autosaveTimer.current); };
+  }, [settings]);
 
   const updateSettings = (path: string[], value: unknown) => {
     setSettings((prev) => {
@@ -119,15 +141,31 @@ function ProjectPropertiesPage() {
     );
   }
 
+  const platforms = settings.export?.platforms || {};
+  const hasPlatform = Object.values(platforms).some(Boolean);
+  const ttsConfigured = settings.tts?.engine?.name === 'azure' && !!settings.tts?.engine?.voice;
+  const llmConfigured = ['openai','azure-openai','anthropic'].includes(settings.llm?.engine?.name || '');
+  const isComplete = hasPlatform && ttsConfigured && llmConfigured;
+
   return (
     <div>
-      <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border p-6">
-        <h1 className="text-2xl font-bold mb-2" style={{ color: 'var(--text)' }}>
-          {t('projectProperties.title', 'Project Properties')}
-        </h1>
-        <p className="mb-6" style={{ color: 'var(--text-muted)' }}>
-          {t('projectProperties.description', 'Configure technical settings for TTS, LLM, and export options.')}
-        </p>
+      <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border p-6 mb-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text)' }}>
+              {t('projectProperties.title', 'Project Properties')}
+            </h1>
+            <p style={{ color: 'var(--text-muted)' }}>
+              {t('projectProperties.description', 'Configure technical settings for TTS, LLM, and export options.')}
+            </p>
+          </div>
+          {isComplete ? (
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium shadow" style={{ background: '#22c55e', color: '#052e12' }}>
+              {t('project.completed', 'Completed')}
+            </span>
+          ) : null}
+        </div>
+      </div>
 
         {error && (
           <div className="mb-4 rounded-lg p-4" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: 'var(--error)', border: '1px solid' }}>
@@ -135,13 +173,9 @@ function ProjectPropertiesPage() {
           </div>
         )}
 
-        {saveMessage && (
-          <div className="mb-4 rounded-lg p-4" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', borderColor: 'var(--success)', border: '1px solid' }}>
-            <p style={{ color: 'var(--success)' }}>{saveMessage}</p>
-          </div>
-        )}
+        
 
-        <form onSubmit={handleSave} className="space-y-8">
+        <form className="space-y-8">
           {/* TTS Configuration */}
           <section>
             <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--text)' }}>
@@ -298,18 +332,9 @@ function ProjectPropertiesPage() {
             </div>
           </section>
 
-          {/* Actions */}
-          <div className="flex justify-end gap-3 pt-6 border-t" style={{ borderColor: 'var(--border)' }}>
-            <button
-              type="submit"
-              disabled={updateMutation.isPending}
-              style={{ backgroundColor: 'var(--accent)', color: 'white' }}
-              className="px-4 py-2 rounded-md hover:opacity-90 disabled:opacity-50"
-            >
-              {updateMutation.isPending 
-                ? t('projectProperties.saving', 'Saving...') 
-                : t('projectProperties.save', 'Save Properties')}
-            </button>
+          {/* Autosave status */}
+          <div className="flex justify-end pt-2" style={{ minHeight: 24, color: 'var(--text-muted)' }}>
+            {updateMutation.isPending ? t('projectProperties.saving', 'Saving...') : null}
           </div>
         </form>
       </div>
