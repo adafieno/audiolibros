@@ -405,6 +405,88 @@ function ProjectPropertiesPage() {
             </div>
           </section>
 
+          {/* Pronunciation Map */}
+          <section>
+            <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text)' }}>
+              {t('project.pronunciationMap', 'Pronunciation Map')}
+            </h3>
+            <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
+              {t('project.pronunciationMapInfo', 'Customize pronunciations using IPA. Use "Suggest IPA" for automated suggestions.')}
+            </p>
+            <div className="space-y-2">
+              {Object.entries(settings.pronunciationMap || {}).map(([word, ipa]) => (
+                <div key={word} className="flex gap-2 items-center">
+                  <input
+                    type="text"
+                    value={word}
+                    disabled
+                    style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)', opacity: 0.7 }}
+                    className="w-32 px-2 py-1 border rounded text-sm"
+                  />
+                  <input
+                    type="text"
+                    value={ipa}
+                    onChange={(e) => {
+                      const newMap = { ...settings.pronunciationMap, [word]: e.target.value };
+                      updateSettings(['pronunciationMap'], newMap);
+                    }}
+                    style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                    className="w-48 px-2 py-1 border rounded text-sm"
+                    placeholder={t('project.ipaPlaceholder', 'IPA notation')}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // TODO: Implement IPA suggestion via API
+                      alert('IPA suggestion not yet implemented in web version');
+                    }}
+                    style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                    className="px-3 py-1 border rounded text-sm hover:opacity-80"
+                  >
+                    {t('project.suggestIPA', 'Suggest IPA')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newMap = { ...settings.pronunciationMap };
+                      delete newMap[word];
+                      updateSettings(['pronunciationMap'], newMap);
+                    }}
+                    style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: 'var(--error)', color: 'var(--error)' }}
+                    className="px-3 py-1 border rounded text-sm hover:opacity-80"
+                  >
+                    {t('project.removeWord', 'Remove')}
+                  </button>
+                </div>
+              ))}
+              <div className="flex gap-2 items-center">
+                <input
+                  type="text"
+                  id="newPronWord"
+                  style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                  className="w-32 px-2 py-1 border rounded text-sm"
+                  placeholder={t('project.wordPlaceholder', 'Word')}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const input = document.getElementById('newPronWord') as HTMLInputElement;
+                    const word = input?.value?.trim();
+                    if (word && !(settings.pronunciationMap || {})[word]) {
+                      const newMap = { ...(settings.pronunciationMap || {}), [word]: '' };
+                      updateSettings(['pronunciationMap'], newMap);
+                      input.value = '';
+                    }
+                  }}
+                  style={{ backgroundColor: '#22c55e', borderColor: '#16a34a', color: 'white' }}
+                  className="px-3 py-1 border rounded text-sm hover:opacity-90"
+                >
+                  {t('project.addWord', 'Add Word')}
+                </button>
+              </div>
+            </div>
+          </section>
+
         </div>
 
         {/* RIGHT COLUMN: LLM + TTS Engines */}
@@ -481,40 +563,38 @@ function ProjectPropertiesPage() {
             <h3 className="text-lg font-semibold mb-3" style={{ color: 'var(--text)' }}>
               {t('project.tts', 'TTS Engine')}
             </h3>
-            <div className="space-y-3">
-              <div className="grid grid-cols-[140px_1fr] gap-2 items-center">
-                <select
-                  value={settings.tts?.engine?.name || 'azure'}
-                  onChange={(e) => {
-                    const name = e.target.value;
-                    if (name === 'azure') {
-                      updateSettings(['tts', 'engine'], { name: 'azure', voice: settings.tts?.engine?.voice || '' });
-                    } else if (name === 'elevenlabs') {
-                      updateSettings(['tts', 'engine'], { name: 'elevenlabs', voice: settings.tts?.engine?.voice || '' });
-                    } else {
-                      updateSettings(['tts', 'engine'], { name: 'openai', voice: settings.tts?.engine?.voice || '' });
-                    }
-                  }}
-                  style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                  className="px-3 py-2 border rounded-md"
-                >
-                  <option value="azure">Azure</option>
-                  <option value="elevenlabs">ElevenLabs</option>
-                  <option value="openai">OpenAI TTS</option>
-                </select>
-                <input
-                  type="text"
-                  value={settings.tts?.engine?.voice || ''}
-                  onChange={(e) => updateSettings(['tts', 'engine', 'voice'], e.target.value)}
-                  style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                  className="px-3 py-2 border rounded-md"
-                  placeholder="es-PE-CamilaNeural"
-                />
-              </div>
-              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                {t('project.ttsCachingInfo', 'TTS caching is always enabled for optimal performance.')}
-              </p>
+            <div className="grid grid-cols-[140px_1fr] gap-2 items-center mb-3">
+              <select
+                value={settings.tts?.engine?.name || 'azure'}
+                onChange={(e) => {
+                  const name = e.target.value;
+                  if (name === 'azure') {
+                    updateSettings(['tts', 'engine'], { name: 'azure', voice: settings.tts?.engine?.voice || '' });
+                  } else if (name === 'elevenlabs') {
+                    updateSettings(['tts', 'engine'], { name: 'elevenlabs', voice: settings.tts?.engine?.voice || '' });
+                  } else {
+                    updateSettings(['tts', 'engine'], { name: 'openai', voice: settings.tts?.engine?.voice || '' });
+                  }
+                }}
+                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                className="px-3 py-2 border rounded-md"
+              >
+                <option value="azure">Azure</option>
+                <option value="elevenlabs">ElevenLabs</option>
+                <option value="openai">OpenAI TTS</option>
+              </select>
+              <input
+                type="text"
+                value={settings.tts?.engine?.voice || ''}
+                onChange={(e) => updateSettings(['tts', 'engine', 'voice'], e.target.value)}
+                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                className="px-3 py-2 border rounded-md"
+                placeholder="es-PE-CamilaNeural"
+              />
             </div>
+            <p className="text-sm mb-3" style={{ color: 'var(--text-muted)' }}>
+              {t('project.ttsCachingInfo', 'TTS caching is always enabled for optimal performance.')}
+            </p>
             
             {/* Azure TTS Credentials */}
             {settings.tts?.engine?.name === 'azure' && (
@@ -549,88 +629,6 @@ function ProjectPropertiesPage() {
 
         </div>
       </div>
-
-      {/* Pronunciation Map - Full width below */}
-      <section className="mb-6">
-        <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text)' }}>
-          {t('project.pronunciationMap', 'Pronunciation Map')}
-        </h3>
-        <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
-          {t('project.pronunciationMapInfo', 'Customize pronunciations using IPA. Use "Suggest IPA" for automated suggestions.')}
-        </p>
-        <div className="space-y-2">
-          {Object.entries(settings.pronunciationMap || {}).map(([word, ipa]) => (
-            <div key={word} className="flex gap-2 items-center">
-              <input
-                type="text"
-                value={word}
-                disabled
-                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)', opacity: 0.7 }}
-                className="w-32 px-2 py-1 border rounded text-sm"
-              />
-              <input
-                type="text"
-                value={ipa}
-                onChange={(e) => {
-                  const newMap = { ...settings.pronunciationMap, [word]: e.target.value };
-                  updateSettings(['pronunciationMap'], newMap);
-                }}
-                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                className="w-48 px-2 py-1 border rounded text-sm"
-                placeholder={t('project.ipaPlaceholder', 'IPA notation')}
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  // TODO: Implement IPA suggestion via API
-                  alert('IPA suggestion not yet implemented in web version');
-                }}
-                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                className="px-3 py-1 border rounded text-sm hover:opacity-80"
-              >
-                {t('project.suggestIPA', 'Suggest IPA')}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const newMap = { ...settings.pronunciationMap };
-                  delete newMap[word];
-                  updateSettings(['pronunciationMap'], newMap);
-                }}
-                style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: 'var(--error)', color: 'var(--error)' }}
-                className="px-3 py-1 border rounded text-sm hover:opacity-80"
-              >
-                {t('project.removeWord', 'Remove')}
-              </button>
-            </div>
-          ))}
-          <div className="flex gap-2 items-center">
-            <input
-              type="text"
-              id="newPronWord"
-              style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-              className="w-32 px-2 py-1 border rounded text-sm"
-              placeholder={t('project.wordPlaceholder', 'Word')}
-            />
-            <button
-              type="button"
-              onClick={() => {
-                const input = document.getElementById('newPronWord') as HTMLInputElement;
-                const word = input?.value?.trim();
-                if (word && !(settings.pronunciationMap || {})[word]) {
-                  const newMap = { ...(settings.pronunciationMap || {}), [word]: '' };
-                  updateSettings(['pronunciationMap'], newMap);
-                  input.value = '';
-                }
-              }}
-              style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-              className="px-3 py-1 border rounded text-sm hover:opacity-80"
-            >
-              {t('project.addWord', 'Add Word')}
-            </button>
-          </div>
-        </div>
-      </section>
 
       {/* Autosave status */}
       <div className="flex justify-end pt-2" style={{ minHeight: 24, color: 'var(--text-muted)' }}>
