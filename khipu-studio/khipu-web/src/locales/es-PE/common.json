@@ -199,7 +199,15 @@
     ,"book.saving": { "string": "Guardando...", "comment": "Estado guardando" }
     ,"book.saved": { "string": "Detalles del libro guardados", "comment": "Mensaje guardado" }
     ,"book.saveError": { "string": "Error al guardar detalles del libro", "comment": "Error guardar" }
-    ,"book.loading": { "string": "Cargando detalles del libro...", "comment": "Carga libro" },
+    ,"book.loading": { "string": "Cargando detalles del libro...", "comment": "Carga libro" }
+    ,"book.coverImage.panelTitle": { "string": "Imagen de portada", "comment": "Título del panel de portada" }
+    ,"book.coverImage.label": { "string": "Portada del libro", "comment": "Etiqueta de portada" }
+    ,"book.coverImage.select": { "string": "Seleccionar imagen de portada", "comment": "Etiqueta de botón seleccionar" }
+    ,"book.coverImage.change": { "string": "Cambiar imagen de portada", "comment": "Etiqueta de botón cambiar" }
+    ,"book.coverImage.remove": { "string": "Eliminar", "comment": "Etiqueta de botón eliminar" }
+    ,"book.coverImage.requirements": { "string": "Requisitos: Imagen cuadrada 2000–4000px. Preferible 3000×3000px. Formatos: PNG o JPG.", "comment": "Texto de requisitos de portada" }
+    ,"book.coverImage.previewAlt": { "string": "Vista previa de la portada", "comment": "Texto alternativo de vista previa" }
+    ,"book.coverImage.placeholder": { "string": "Sin portada seleccionada", "comment": "Texto de marcador cuando no hay portada" },
   "settings.notSet": { "string": "No establecido", "comment": "Valor no establecido" },
   "settings.role": { "string": "Rol", "comment": "Etiqueta de rol" },
   "manuscript.title": { "string": "Manuscrito", "comment": "T\u00edtulo de p\u00e1gina de manuscrito" },
