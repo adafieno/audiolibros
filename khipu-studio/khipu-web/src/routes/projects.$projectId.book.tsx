@@ -157,7 +157,7 @@ function BookDetailsPage() {
     { key: 'chinese', label: t('languages.group.chinese', '🇨🇳 Chinese'), codes: ['zh-CN','zh-TW','zh-HK'] },
     { key: 'japanese', label: t('languages.group.japanese', '🇯🇵 Japanese'), codes: ['ja-JP'] },
     { key: 'korean', label: t('languages.group.korean', '🇰🇷 Korean'), codes: ['ko-KR'] },
-    { key: 'arabic', label: t('languages.group.arabic', '🇸🇦 Arabic'), codes: ['ar-SA','ar-EG','ar-AE','ar-MA','ar-LB','ar-AE'] },
+    { key: 'arabic', label: t('languages.group.arabic', '🇸🇦 Arabic'), codes: ['ar-SA','ar-EG','ar-AE','ar-MA','ar-LB'] },
     { key: 'otherEuropean', label: t('languages.group.otherEuropean', '🇪🇺 Other European'), codes: ['ru-RU','nl-NL','nl-BE','sv-SE','nb-NO','da-DK','fi-FI','pl-PL','cs-CZ','sk-SK','hu-HU','ro-RO','bg-BG','hr-HR','sl-SI','lt-LT','lv-LV','et-EE','mt-MT','el-GR','tr-TR','uk-UA'] },
     { key: 'regionalEuropean', label: t('languages.group.regionalEuropean', '🏴 Regional European'), codes: ['ca-ES','eu-ES','gl-ES'] },
     { key: 'otherLanguages', label: t('languages.group.otherLanguages', '🌏 Other Languages'), codes: ['hi-IN','th-TH','vi-VN','id-ID','he-IL'] },
@@ -300,10 +300,10 @@ function BookDetailsPage() {
                   });
                 }} />
                 <button type="button" className="px-3 py-1 text-sm rounded shadow-sm" style={{ background: 'var(--accent)', color: '#fff' }} onClick={() => document.getElementById('coverFileInput')?.click()}>
-                  {t('book.coverImage.upload', 'Upload Image')}
+                  {form.coverImageUrl ? t('book.coverImage.change', 'Change Image') : t('book.coverImage.upload', 'Upload Image')}
                 </button>
                 {form.coverImageUrl && (
-                  <button type="button" className="px-3 py-1 text-sm rounded border" style={{ borderColor: 'var(--border)', color: 'var(--text)' }} onClick={() => setForm(p => ({ ...p, coverImageUrl: '' }))}>
+                  <button type="button" className="px-3 py-1 text-sm rounded" style={{ background: '#ef4444', color: '#fff' }} onClick={() => setForm(p => ({ ...p, coverImageUrl: '' }))}>
                     {t('book.coverImage.remove', 'Remove')}
                   </button>
                 )}
