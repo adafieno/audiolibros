@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { projectsApi, type ProjectUpdate } from '../lib/projects';
 import { useTranslation } from 'react-i18next';
 import { setStepCompleted } from '../store/project';
+import { ImageSelectorWeb } from '../components/ImageSelectorWeb';
 
 export const Route = createFileRoute('/projects/$projectId/book')({
   component: BookDetailsPage,
@@ -178,6 +179,28 @@ function BookDetailsPage() {
   return (
     <div>
       <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border p-6">
+              {/* Cover Image */}
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
+                  {t('book.coverImage.label', 'Cover Image')}
+                </label>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <ImageSelectorWeb
+                    value={form.coverImage}
+                    onChange={(url) => setForm(prev => ({ ...prev, coverImage: url || '' }))}
+                    onUpload={async (variants) => {
+                      // Placeholder cloud upload: integrate your storage API here.
+                      // Example: upload to project storage and return a public/base URL.
+                      // For now, return the first variant as object URL to keep preview working.
+                      if (variants[0]) {
+                        return URL.createObjectURL(variants[0].blob);
+                      }
+                      return undefined;
+                    }}
+                  />
+                </div>
+              </div>
+
         <h1 className="text-2xl font-bold mb-2" style={{ color: 'var(--text)' }}>
           {t('book.title', 'Book Details')}
         </h1>
