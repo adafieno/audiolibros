@@ -36,6 +36,9 @@ function BookDetailsPage() {
   const initializedRef = useRef(false);
   const autosaveTimer = useRef<number | null>(null);
   const lastSavedHashRef = useRef<string>('');
+  const tRef = useRef(t);
+  const mutateRef = useRef<(data: ProjectUpdate) => void>(() => {});
+  const settingsRef = useRef<Project['settings'] | undefined>(undefined);
   const [error, setError] = useState('');
 
   const { data: project, isLoading } = useQuery<Project>({
@@ -102,6 +105,11 @@ function BookDetailsPage() {
     },
   });
 
+  // Keep stable refs for external deps used inside autosave effect
+  useEffect(() => { tRef.current = t; }, [t]);
+  useEffect(() => { mutateRef.current = updateMutation.mutate; }, [updateMutation.mutate]);
+  useEffect(() => { settingsRef.current = project?.settings; }, [project?.settings]);
+
   useEffect(() => {
     if (!initializedRef.current) return;
     if (autosaveTimer.current) window.clearTimeout(autosaveTimer.current);
@@ -120,14 +128,14 @@ function BookDetailsPage() {
         isbn: form.isbn || undefined,
         cover_image_url: form.coverImageUrl && !form.coverImageUrl.startsWith('data:') ? form.coverImageUrl : undefined,
         settings: {
-          ...(project?.settings || {}),
+          ...(settingsRef.current || {}),
           book: {
-            ...(project?.settings?.book || {}),
+            ...(settingsRef.current?.book || {}),
             keywords: form.keywords ? form.keywords.split(',').map(k => k.trim()).filter(Boolean) : undefined,
             categories: form.categories ? form.categories.split(',').map(c => c.trim()).filter(Boolean) : undefined,
             series_name: form.seriesName || undefined,
             series_number: form.seriesNumber ? Number(form.seriesNumber) : undefined,
-            digital_voice_disclosure: form.digitalVoiceDisclosureChecked ? t('book.digitalVoiceDisclosure.defaultText', 'This audiobook uses synthetic voices.') : undefined,
+            digital_voice_disclosure: form.digitalVoiceDisclosureChecked ? tRef.current('book.digitalVoiceDisclosure.defaultText', 'This audiobook uses synthetic voices.') : undefined,
             cover_image_url: form.coverImageUrl && !form.coverImageUrl.startsWith('data:') ? form.coverImageUrl : undefined,
             cover_image_b64: form.coverImageUrl?.startsWith('data:image/jpeg;base64,') ? form.coverImageUrl.replace('data:image/jpeg;base64,','') : undefined,
           },
@@ -143,7 +151,7 @@ function BookDetailsPage() {
       const changed = hash !== lastSavedHashRef.current;
       if (!onlyCoverDataUrl && changed) {
         lastSavedHashRef.current = hash;
-        updateMutation.mutate(update);
+        mutateRef.current(update);
       }
       const complete =
         form.title.trim() &&
