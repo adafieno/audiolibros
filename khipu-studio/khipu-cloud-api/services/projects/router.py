@@ -534,6 +534,41 @@ async def suggest_ipa(
         import traceback
         traceback.print_exc()
     
+    # Built-in minimal vocabulary fallback (common words) before LLM
+    try:
+        word_lower_builtin = word.lower()
+        mini_vocab = {
+            # Spanish articles & conjunctions
+            "el": "el",
+            "la": "la",
+            "los": "los",
+            "las": "las",
+            "y": "i",  # conjunction 'y' pronounced /i/
+            "un": "un",
+            "una": "una",
+            "unos": "unos",
+            "unas": "unas",
+            "de": "de",
+            "del": "del",
+            "que": "ke",  # approximate; real IPA /ke/ context dependent
+            # English very common short words
+            "the": "ðə",  # unstressed form
+            "a": "ə",
+            "an": "æn",
+            "and": "ænd",
+            "to": "tu",
+            "in": "ɪn",
+            "on": "ɒn",
+        }
+        if word_lower_builtin in mini_vocab:
+            return SuggestIPAResponse(
+                success=True,
+                ipa=mini_vocab[word_lower_builtin],
+                source="builtin"
+            )
+    except Exception as e:
+        print(f"[IPA] Built-in vocab fallback error (ignored): {e}")
+
     # LLM-based IPA suggestion
     try:
         from openai import AsyncAzureOpenAI
@@ -544,6 +579,17 @@ async def suggest_ipa(
         print(f"[IPA-LLM] Attempting LLM fallback for word: {word}")
         print(f"[IPA-LLM] Azure endpoint: {config.AZURE_OPENAI_ENDPOINT}")
         print(f"[IPA-LLM] Has API key: {bool(config.AZURE_OPENAI_API_KEY)}")
+
+        # If Azure OpenAI not configured, short-circuit with clearer error
+        if not config.AZURE_OPENAI_API_KEY or not config.AZURE_OPENAI_ENDPOINT:
+            print("[IPA-LLM] Missing Azure OpenAI configuration; skipping LLM call.")
+            return SuggestIPAResponse(
+                success=False,
+                error=(
+                    f"IPA not found for '{word}'. Azure OpenAI is not configured, "
+                    "so automatic IPA suggestion is limited. Please enter the IPA manually."
+                )
+            )
         
         # Get LLM configuration from project settings
         llm_settings = settings.get("llm", {})
