@@ -452,16 +452,6 @@ async def suggest_ipa(
     db: AsyncSession = Depends(get_db)
 ):
     """Suggest IPA transcription for a word using the project's language and LLM."""
-    print(f"[IPA] suggest_ipa called for project {project_id}, word: {request.word}")
-    
-    # TEMPORARY: Return test response to verify endpoint works
-    return SuggestIPAResponse(
-        success=True,
-        ipa="TEST-IPA",
-        source="test",
-        error=None
-    )
-    
     # Get project
     result = await db.execute(
         select(Project).where(Project.id == project_id)
@@ -486,9 +476,6 @@ async def suggest_ipa(
     pronunciation_map = settings.get("pronunciationMap", {})
     language = project.language or "en-US"
     
-    print(f"[IPA] Project language: {language}")
-    print(f"[IPA] Existing pronunciation map: {pronunciation_map}")
-    
     # Check if word already exists in pronunciation map
     if word in pronunciation_map:
         existing_ipa = pronunciation_map[word]
@@ -503,22 +490,18 @@ async def suggest_ipa(
     import json
     from pathlib import Path
     
+    table = {}  # Initialize outside try block so LLM can use it
+    
     try:
-        # Load IPA tables
-        # router.py is in khipu-cloud-api/services/projects/
-        # We need to go up to khipu-studio root, then into py/resources
+        # Load IPA tables (router.py is in khipu-cloud-api/services/projects/)
         resources_dir = Path(__file__).resolve().parents[3] / "py" / "resources"
-        default_table_path = resources_dir / "ipa_table.json"
-        table = {}
         
+        # Load default table
+        default_table_path = resources_dir / "ipa_table.json"
         if default_table_path.exists():
             table = json.loads(default_table_path.read_text(encoding="utf-8") or "{}")
-        else:
-            print(f"IPA table not found at: {default_table_path}")
-            print(f"Router file location: {Path(__file__).resolve()}")
-            print(f"Resources dir: {resources_dir}")
         
-        # Try language-specific tables
+        # Load language-specific table
         if language:
             lang_code = language.split("-")[0] if "-" in language else language
             lang_table_path = resources_dir / f"ipa_table.{lang_code}.json"
@@ -528,26 +511,17 @@ async def suggest_ipa(
         
         # Check if word exists in table
         word_lower = word.lower()
-        print(f"[IPA] Checking table for word: {word_lower}")
-        print(f"[IPA] Table has {len(table)} entries")
-        print(f"[IPA] Word in table: {word_lower in table}")
-        
         if word_lower in table:
             entry = table[word_lower]
-            print(f"[IPA] Found entry: {entry}")
-            if isinstance(entry, str):
-                ipa_result = entry
-                if ipa_result:  # Make sure IPA is not empty
-                    print(f"[IPA] Returning string IPA: {ipa_result}")
-                    return SuggestIPAResponse(
-                        success=True,
-                        ipa=ipa_result,
-                        source="table"
-                    )
+            if isinstance(entry, str) and entry:
+                return SuggestIPAResponse(
+                    success=True,
+                    ipa=entry,
+                    source="table"
+                )
             elif isinstance(entry, dict):
                 ipa_result = entry.get("ipa", "")
-                if ipa_result:  # Make sure IPA is not empty
-                    print(f"[IPA] Returning dict IPA: {ipa_result}")
+                if ipa_result:
                     return SuggestIPAResponse(
                         success=True,
                         ipa=ipa_result,
@@ -556,9 +530,9 @@ async def suggest_ipa(
                     )
     except Exception as e:
         # If table lookup fails, continue to LLM
+        print(f"[IPA] Table lookup exception: {e}")
         import traceback
-        print(f"Table lookup error: {e}")
-        print(traceback.format_exc())
+        traceback.print_exc()
     
     # LLM-based IPA suggestion
     try:
@@ -567,10 +541,16 @@ async def suggest_ipa(
         
         config = Settings()
         
+        print(f"[IPA-LLM] Attempting LLM fallback for word: {word}")
+        print(f"[IPA-LLM] Azure endpoint: {config.AZURE_OPENAI_ENDPOINT}")
+        print(f"[IPA-LLM] Has API key: {bool(config.AZURE_OPENAI_API_KEY)}")
+        
         # Get LLM configuration from project settings
         llm_settings = settings.get("llm", {})
         llm_engine = llm_settings.get("engine", {})
-        llm_model = llm_engine.get("model", "gpt-4o")
+        llm_model = llm_engine.get("model", config.AZURE_OPENAI_DEPLOYMENT_GPT4O)
+        
+        print(f"[IPA-LLM] Using model: {llm_model}")
         
         # Build system prompt with IPA rules from table if available
         rules = ""
@@ -620,15 +600,18 @@ async def suggest_ipa(
         )
         
         # Call LLM
+        print(f"[IPA-LLM] Calling Azure OpenAI...")
         response = await client.chat.completions.create(
             model=llm_model,
             messages=messages,
             temperature=0.0,
             max_tokens=80
         )
+        print(f"[IPA-LLM] Got response from LLM")
         
         # Extract IPA from response
         raw_ipa = response.choices[0].message.content.strip() if response.choices else ""
+        print(f"[IPA-LLM] Raw IPA: {raw_ipa}")
         
         # Clean up IPA: remove slashes, brackets, quotes
         import re
