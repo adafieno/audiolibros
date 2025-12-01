@@ -493,8 +493,14 @@ async def suggest_ipa(
     try:
         from openai import AsyncOpenAI
         import os
+        import httpx
+        import pkg_resources
         
         print(f"[IPA-LLM] Attempting LLM for word: {word}")
+        try:
+            print(f"[IPA-LLM] Runtime versions -> httpx={httpx.__version__}, openai={pkg_resources.get_distribution('openai').version}")
+        except Exception as _e:
+            print(f"[IPA-LLM] Could not print runtime versions: {_e}")
 
         # Extract OpenAI creds from project settings
         creds = settings.get("creds", {}).get("llm", {}) if isinstance(settings, dict) else {}
