@@ -1,10 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useState, useEffect, useRef, type FormEvent } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { projectsApi, type ProjectUpdate } from '../lib/projects';
 import { useTranslation } from 'react-i18next';
 import { setStepCompleted } from '../store/project';
 import { ImageSelectorWeb } from '../components/ImageSelectorWeb';
+import { getGroupedLocales, getLocaleDisplayName } from '../data/languages';
 
 export const Route = createFileRoute('/projects/$projectId/book')({
   component: BookDetailsPage,
@@ -23,7 +24,7 @@ type ProjectExtra = {
 function BookDetailsPage() {
   const { projectId } = Route.useParams();
   const queryClient = useQueryClient();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   const { data: project, isLoading } = useQuery({
     queryKey: ['project', projectId],
@@ -68,7 +69,7 @@ function BookDetailsPage() {
     coverImage: '',
   });
   const [error, setError] = useState('');
-  const [saveMessage, setSaveMessage] = useState('');
+  // removed manual save message (autosave)
 
   // Load data from project when available
   const initializedRef = useRef(false);
@@ -105,8 +106,7 @@ function BookDetailsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project', projectId] });
       queryClient.invalidateQueries({ queryKey: ['projects'] });
-      setSaveMessage(t('book.saved', 'Book details saved successfully'));
-      setTimeout(() => setSaveMessage(''), 3000);
+      // no manual save message for autosave mode
     },
     onError: (err: unknown) => {
       const error = err as { response?: { data?: { detail?: string } }; message?: string };
@@ -114,44 +114,46 @@ function BookDetailsPage() {
     },
   });
 
-  const handleSave = (e: FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    const payload: ProjectUpdate = {
-      title: form.title,
-      subtitle: form.subtitle || undefined,
-      authors: form.authors ? form.authors.split(',').map((a) => a.trim()) : undefined,
-      narrators: form.narrators ? form.narrators.split(',').map((n) => n.trim()) : undefined,
-      translators: form.translators ? form.translators.split(',').map((t) => t.trim()) : undefined,
-      adaptors: form.adaptors ? form.adaptors.split(',').map((a) => a.trim()) : undefined,
-      description: form.description || undefined,
-      publisher: form.publisher || undefined,
-      isbn: form.isbn || undefined,
-    };
-    const extras: ProjectExtra = {
-      language: form.language || undefined,
-      keywords: form.keywords ? form.keywords.split(',').map(k => k.trim()).filter(Boolean) : undefined,
-      categories: form.categories ? form.categories.split(',').map(c => c.trim()).filter(Boolean) : undefined,
-      series_name: form.seriesName || undefined,
-      series_number: form.seriesNumber ? Number(form.seriesNumber) : undefined,
-      digital_voice_disclosure: form.digitalVoiceDisclosureChecked ? t('book.digitalVoiceDisclosure.defaultText') : undefined,
-      cover_image: form.coverImage || undefined,
-    };
-    const merged = { ...payload, ...extras } as unknown as ProjectUpdate;
-    updateMutation.mutate(merged);
-
-    // Evaluate book completion after save trigger (optimistic check); final confirmation after project refetch
-    const hasTitle = form.title.trim().length > 0;
-    const authorList = form.authors.split(',').map(a => a.trim()).filter(Boolean);
-    const hasAuthor = authorList.length > 0;
-    const hasDescription = form.description.trim().length > 0;
-    // Digital voice disclosure placeholder: treat as required once field exists; currently assume true
-    const hasLanguage = form.language.trim().length > 0;
-    const hasDigitalDisclosure = form.digitalVoiceDisclosureChecked;
-    const bookComplete = hasTitle && hasAuthor && hasDescription && hasDigitalDisclosure && hasLanguage;
-    setStepCompleted('book', bookComplete);
-  };
+  // Debounced autosave
+  const autosaveTimer = useRef<number | null>(null);
+  useEffect(() => {
+    if (!initializedRef.current) return; // skip until initial load
+    if (autosaveTimer.current) window.clearTimeout(autosaveTimer.current);
+    autosaveTimer.current = window.setTimeout(() => {
+      setError('');
+      const payload: ProjectUpdate = {
+        title: form.title,
+        subtitle: form.subtitle || undefined,
+        authors: form.authors ? form.authors.split(',').map((a) => a.trim()) : undefined,
+        narrators: form.narrators ? form.narrators.split(',').map((n) => n.trim()) : undefined,
+        translators: form.translators ? form.translators.split(',').map((t) => t.trim()) : undefined,
+        adaptors: form.adaptors ? form.adaptors.split(',').map((a) => a.trim()) : undefined,
+        description: form.description || undefined,
+        publisher: form.publisher || undefined,
+        isbn: form.isbn || undefined,
+      };
+      const extras: ProjectExtra = {
+        language: form.language || undefined,
+        keywords: form.keywords ? form.keywords.split(',').map(k => k.trim()).filter(Boolean) : undefined,
+        categories: form.categories ? form.categories.split(',').map(c => c.trim()).filter(Boolean) : undefined,
+        series_name: form.seriesName || undefined,
+        series_number: form.seriesNumber ? Number(form.seriesNumber) : undefined,
+        digital_voice_disclosure: form.digitalVoiceDisclosureChecked ? t('book.digitalVoiceDisclosure.defaultText') : undefined,
+        cover_image: form.coverImage || undefined,
+      };
+      const merged = { ...payload, ...extras } as unknown as ProjectUpdate;
+      updateMutation.mutate(merged);
+      const hasTitle = form.title.trim().length > 0;
+      const authorList = form.authors.split(',').map(a => a.trim()).filter(Boolean);
+      const hasAuthor = authorList.length > 0;
+      const hasDescription = form.description.trim().length > 0;
+      const hasLanguage = form.language.trim().length > 0;
+      const hasDigitalDisclosure = form.digitalVoiceDisclosureChecked;
+      const bookComplete = hasTitle && hasAuthor && hasDescription && hasDigitalDisclosure && hasLanguage;
+      setStepCompleted('book', bookComplete);
+    }, 800);
+    return () => { if (autosaveTimer.current) window.clearTimeout(autosaveTimer.current); };
+  }, [form, t, updateMutation]);
 
   if (isLoading) {
     return (
@@ -162,19 +164,7 @@ function BookDetailsPage() {
     );
   }
 
-  // Build language options dynamically from translation keys
-  let languageOptions: { code: string; label: string }[] = [];
-  try {
-    const bundle = i18n.getResourceBundle(i18n.language, 'common') as Record<string, unknown>;
-    const keys = Object.keys(bundle).filter(k => k.startsWith('languages.'));
-    languageOptions = keys.map(k => ({ code: k.replace('languages.', ''), label: t(k) }))
-      .sort((a, b) => a.label.localeCompare(b.label));
-  } catch {
-    // fallback to previous hard-coded minimal set if bundle unavailable
-    languageOptions = [
-      'en-US','en-GB','es-ES','es-MX','es-PE','pt-BR','fr-FR','de-DE','it-IT'
-    ].map(code => ({ code, label: t(`languages.${code}`) }));
-  }
+  const groupedLocales = getGroupedLocales();
 
   return (
     <div>
@@ -214,19 +204,16 @@ function BookDetailsPage() {
           </div>
         )}
 
-        {saveMessage && (
-          <div className="mb-4 rounded-lg p-4" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', borderColor: 'var(--success)', border: '1px solid' }}>
-            <p style={{ color: 'var(--success)' }}>{saveMessage}</p>
-          </div>
-        )}
+        {/* Autosave removes manual success banner */}
 
-        <form onSubmit={handleSave} className="space-y-6">
+        <form className="space-y-6">
           {/* Basic Information */}
-          <section>
-            <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--text)' }}>
-              {t('book.basicInfo', 'Basic Information')}
-            </h2>
-            <div className="space-y-4">
+          <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2">
+              <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--text)' }}>
+                {t('book.basicInfo', 'Basic Information')}
+              </h2>
+              <div className="space-y-4">
               <div>
                 <label htmlFor="title" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
                   {t('book.title.label', 'Book Title')} <span style={{ color: 'var(--error)' }}>*</span>
@@ -257,46 +244,48 @@ function BookDetailsPage() {
                   placeholder={t('book.subtitle.placeholder', 'Enter the book subtitle')}
                 />
               </div>
-              <div>
-                <label htmlFor="language" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
-                  {t('book.language.label', 'Book Language / Locale')} <span style={{ color: 'var(--error)' }}>*</span>
-                </label>
-                <select
-                  id="language"
-                  value={form.language}
-                  onChange={(e) => setForm(prev => ({ ...prev, language: e.target.value }))}
-                  required
-                  style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                  className="w-full px-3 py-2 border rounded-md"
-                >
-                  <option value="">{t('book.language.placeholder', 'Select book language')}</option>
-                  {languageOptions.map(opt => (
-                    <option key={opt.code} value={opt.code}>{opt.label}</option>
-                  ))}
-                </select>
-              </div>
+                <div>
+                  <label htmlFor="language" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
+                    {t('book.language.label', 'Book Language / Locale')} <span style={{ color: 'var(--error)' }}>*</span>
+                  </label>
+                  <select
+                    id="language"
+                    value={form.language}
+                    onChange={(e) => setForm(prev => ({ ...prev, language: e.target.value }))}
+                    required
+                    style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                    className="w-full px-3 py-2 border rounded-md"
+                  >
+                    <option value="">{t('book.language.placeholder', 'Select book language')}</option>
+                    {Object.entries(groupedLocales).map(([group, locales]) => (
+                      <optgroup key={group} label={group}>
+                        {locales.map(loc => (
+                          <option key={loc.code} value={loc.code}>{getLocaleDisplayName(loc.code)}</option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                </div>
 
-              <div>
-                <label htmlFor="coverImage" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
-                  {t('book.coverImage.label', 'Cover Image (Path or URL)')}
-                </label>
-                <input
-                  id="coverImage"
-                  type="text"
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--text)' }}>
+                {t('book.coverImage.panelTitle', 'Cover Image')}
+              </h2>
+              <div className="space-y-4">
+                <ImageSelectorWeb
                   value={form.coverImage}
-                  onChange={(e) => setForm(prev => ({ ...prev, coverImage: e.target.value }))}
-                  style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                  className="w-full px-3 py-2 border rounded-md"
-                  placeholder={t('book.coverImage.placeholder', 'e.g., assets/covers/book.jpg or https://...')}
+                  onChange={(url) => setForm(prev => ({ ...prev, coverImage: url || '' }))}
+                  onUpload={async (variants) => {
+                    if (variants[0]) return URL.createObjectURL(variants[0].blob);
+                    return undefined;
+                  }}
                 />
-                {form.coverImage ? (
-                  <img
-                    src={form.coverImage}
-                    alt={t('book.coverImage.previewAlt', 'Cover preview')}
-                    style={{ maxWidth: 200, display: 'block', marginTop: 8, borderRadius: 6 }}
-                  />
-                ) : null}
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  {t('book.coverImage.requirements', 'Requisitos: formato JPEG/PNG, 3000×3000 píxeles (acepta 2000–4000px).')}
+                </p>
               </div>
+            </div>
             </div>
           </section>
 
@@ -516,18 +505,8 @@ function BookDetailsPage() {
             </div>
           </section>
 
-          {/* Actions */}
-          <div className="flex justify-end gap-3 pt-6 border-t" style={{ borderColor: 'var(--border)' }}>
-            <button
-              type="submit"
-              disabled={updateMutation.isPending}
-              style={{ backgroundColor: 'var(--accent)', color: 'white' }}
-              className="px-4 py-2 rounded-md hover:opacity-90 disabled:opacity-50"
-            >
-              {updateMutation.isPending 
-                ? t('book.saving', 'Saving...') 
-                : t('book.save', 'Save Book Details')}
-            </button>
+          <div className="flex justify-end pt-2" style={{ color: 'var(--text-muted)', minHeight: 24 }}>
+            {updateMutation.isPending ? t('book.saving', 'Saving…') : null}
           </div>
         </form>
       </div>
