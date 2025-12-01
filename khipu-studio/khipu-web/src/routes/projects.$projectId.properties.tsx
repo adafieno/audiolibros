@@ -66,7 +66,7 @@ function ProjectPropertiesPage() {
   useEffect(() => {
     if (project?.settings && !initializedRef.current) {
       initializedRef.current = true;
-      setSettings(project.settings as ProjectSettings);
+      setTimeout(() => setSettings(project.settings as ProjectSettings), 0);
     }
   }, [project]);
 
@@ -148,7 +148,7 @@ function ProjectPropertiesPage() {
   const isComplete = hasPlatform && ttsConfigured && llmConfigured;
 
   return (
-    <div>
+    <div className="p-6">
       <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border p-6 mb-6">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -167,15 +167,13 @@ function ProjectPropertiesPage() {
         </div>
       </div>
 
-        {error && (
-          <div className="mb-4 rounded-lg p-4" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: 'var(--error)', border: '1px solid' }}>
-            <p style={{ color: 'var(--error)' }}>{error}</p>
-          </div>
-        )}
+      {error && (
+        <div className="mb-4 rounded-lg p-4" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: 'var(--error)', border: '1px solid' }}>
+          <p style={{ color: 'var(--error)' }}>{error}</p>
+        </div>
+      )}
 
-        
-
-        <form className="space-y-8">
+      <form className="space-y-8">
           {/* TTS Configuration */}
           <section>
             <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--text)' }}>
@@ -332,12 +330,11 @@ function ProjectPropertiesPage() {
             </div>
           </section>
 
-          {/* Autosave status */}
-          <div className="flex justify-end pt-2" style={{ minHeight: 24, color: 'var(--text-muted)' }}>
-            {updateMutation.isPending ? t('projectProperties.saving', 'Saving...') : null}
-          </div>
-        </form>
-      </div>
+        {/* Autosave status */}
+        <div className="flex justify-end pt-2" style={{ minHeight: 24, color: 'var(--text-muted)' }}>
+          {updateMutation.isPending ? t('projectProperties.saving', 'Saving...') : null}
+        </div>
+      </form>
     </div>
   );
 }
