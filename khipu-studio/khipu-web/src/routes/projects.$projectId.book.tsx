@@ -35,6 +35,7 @@ function BookDetailsPage() {
   const queryClient = useQueryClient();
   const initializedRef = useRef(false);
   const autosaveTimer = useRef<number | null>(null);
+  const lastSavedHashRef = useRef<string>('');
   const [error, setError] = useState('');
 
   const { data: project, isLoading } = useQuery<Project>({
@@ -136,7 +137,12 @@ function BookDetailsPage() {
       const onlyCoverDataUrl = update.settings?.book?.cover_image_b64 &&
         !update.title && !update.subtitle && !update.authors && !update.narrators && !update.translators && !update.adaptors && !update.language && !update.description && !update.publisher && !update.isbn && !update.cover_image_url &&
         !update.settings?.book?.keywords && !update.settings?.book?.categories && !update.settings?.book?.series_name && !update.settings?.book?.series_number && !update.settings?.book?.digital_voice_disclosure && !update.settings?.book?.cover_image_url;
-      if (!onlyCoverDataUrl) {
+
+      // Compute a hash of the payload; avoid mutating if unchanged
+      const hash = JSON.stringify(update);
+      const changed = hash !== lastSavedHashRef.current;
+      if (!onlyCoverDataUrl && changed) {
+        lastSavedHashRef.current = hash;
         updateMutation.mutate(update);
       }
       const complete =
@@ -148,7 +154,7 @@ function BookDetailsPage() {
       setStepCompleted('book', !!complete);
     }, 700);
     return () => { if (autosaveTimer.current) window.clearTimeout(autosaveTimer.current); };
-  }, [form, project, t, updateMutation]);
+  }, [form]);
 
   if (isLoading) {
     return <div className="py-12 text-center">{t('book.loading', 'Loading...')}</div>;
