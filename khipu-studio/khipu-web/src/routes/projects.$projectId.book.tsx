@@ -78,6 +78,8 @@ function BookDetailsPage() {
       const p = project as Partial<ProjectExtra> & {
         title?: string; subtitle?: string; authors?: string[]; narrators?: string[]; translators?: string[]; adaptors?: string[];
         description?: string; publisher?: string; isbn?: string;
+        settings?: { book?: Partial<ProjectExtra> & { series_name?: string; series_number?: number } };
+        cover_image_url?: string;
       };
       setTimeout(() => setForm({
         title: p.title || '',
@@ -90,12 +92,12 @@ function BookDetailsPage() {
         publisher: p.publisher || '',
         isbn: p.isbn || '',
         language: p.language || '',
-        keywords: p.keywords?.join(', ') || '',
-        categories: p.categories?.join(', ') || '',
-        seriesName: p.series_name || '',
-        seriesNumber: String(p.series_number ?? '') || '',
-        digitalVoiceDisclosureChecked: !!p.digital_voice_disclosure,
-        coverImage: (p as { cover_image?: string }).cover_image || '',
+        keywords: (p.settings?.book?.keywords || p.keywords)?.join(', ') || '',
+        categories: (p.settings?.book?.categories || p.categories)?.join(', ') || '',
+        seriesName: (p.settings?.book?.series_name ?? p.series_name) || '',
+        seriesNumber: String((p.settings?.book?.series_number ?? p.series_number) ?? '') || '',
+        digitalVoiceDisclosureChecked: !!(p.settings?.book?.digital_voice_disclosure ?? p.digital_voice_disclosure),
+        coverImage: p.settings?.book?.cover_image || p.cover_image || p.cover_image_url || '',
       }), 0);
       initializedRef.current = true;
     }
