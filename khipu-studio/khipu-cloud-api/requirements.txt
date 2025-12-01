@@ -27,8 +27,8 @@ bcrypt==4.0.1
 pydantic[email]==2.10.2
 pydantic-settings==2.6.1
 
-# HTTP Client
-httpx==0.28.0
+# HTTP Client (compatible with openai 1.54.x)
+httpx==0.27.2
 aiofiles==24.1.0
 
 # Utilities
@@ -39,7 +39,7 @@ tenacity==9.0.0
 pytest==8.3.4
 pytest-asyncio==0.24.0
 pytest-cov==6.0.0
-httpx==0.28.0
+httpx==0.27.2
 
 # Development
 black==24.10.0

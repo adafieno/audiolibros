@@ -42,6 +42,7 @@ class SuggestIPAResponse(BaseModel):
     error: Optional[str] = None
     examples: Optional[list[str]] = None
     source: Optional[str] = None
+    error_code: Optional[str] = None
 
 
 @router.post("/", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
@@ -486,135 +487,41 @@ async def suggest_ipa(
                 source="project"
             )
     
-    # Try to get IPA from local table first
-    import json
-    from pathlib import Path
-    
-    table = {}  # Initialize outside try block so LLM can use it
-    
-    try:
-        # Load IPA tables (router.py is in khipu-cloud-api/services/projects/)
-        resources_dir = Path(__file__).resolve().parents[3] / "py" / "resources"
-        
-        # Load default table
-        default_table_path = resources_dir / "ipa_table.json"
-        if default_table_path.exists():
-            table = json.loads(default_table_path.read_text(encoding="utf-8") or "{}")
-        
-        # Load language-specific table
-        if language:
-            lang_code = language.split("-")[0] if "-" in language else language
-            lang_table_path = resources_dir / f"ipa_table.{lang_code}.json"
-            if lang_table_path.exists():
-                lang_table = json.loads(lang_table_path.read_text(encoding="utf-8") or "{}")
-                table.update(lang_table)
-        
-        # Check if word exists in table
-        word_lower = word.lower()
-        if word_lower in table:
-            entry = table[word_lower]
-            if isinstance(entry, str) and entry:
-                return SuggestIPAResponse(
-                    success=True,
-                    ipa=entry,
-                    source="table"
-                )
-            elif isinstance(entry, dict):
-                ipa_result = entry.get("ipa", "")
-                if ipa_result:
-                    return SuggestIPAResponse(
-                        success=True,
-                        ipa=ipa_result,
-                        examples=entry.get("examples"),
-                        source="table"
-                    )
-    except Exception as e:
-        # If table lookup fails, continue to LLM
-        print(f"[IPA] Table lookup exception: {e}")
-        import traceback
-        traceback.print_exc()
-    
-    # Built-in minimal vocabulary fallback (common words) before LLM
-    try:
-        word_lower_builtin = word.lower()
-        mini_vocab = {
-            # Spanish articles & conjunctions
-            "el": "el",
-            "la": "la",
-            "los": "los",
-            "las": "las",
-            "y": "i",  # conjunction 'y' pronounced /i/
-            "un": "un",
-            "una": "una",
-            "unos": "unos",
-            "unas": "unas",
-            "de": "de",
-            "del": "del",
-            "que": "ke",  # approximate; real IPA /ke/ context dependent
-            # English very common short words
-            "the": "ðə",  # unstressed form
-            "a": "ə",
-            "an": "æn",
-            "and": "ænd",
-            "to": "tu",
-            "in": "ɪn",
-            "on": "ɒn",
-        }
-        if word_lower_builtin in mini_vocab:
-            return SuggestIPAResponse(
-                success=True,
-                ipa=mini_vocab[word_lower_builtin],
-                source="builtin"
-            )
-    except Exception as e:
-        print(f"[IPA] Built-in vocab fallback error (ignored): {e}")
+    # LLM-first design: skip local tables/wordlists and go straight to LLM
 
-    # LLM-based IPA suggestion
+    # LLM-based IPA suggestion (OpenAI-first; model and key from project settings)
     try:
-        from openai import AsyncAzureOpenAI
-        from shared.config import Settings
+        from openai import AsyncOpenAI
+        import os
         
-        config = Settings()
-        
-        print(f"[IPA-LLM] Attempting LLM fallback for word: {word}")
-        print(f"[IPA-LLM] Azure endpoint: {config.AZURE_OPENAI_ENDPOINT}")
-        print(f"[IPA-LLM] Has API key: {bool(config.AZURE_OPENAI_API_KEY)}")
+        print(f"[IPA-LLM] Attempting LLM for word: {word}")
 
-        # If Azure OpenAI not configured, short-circuit with clearer error
-        if not config.AZURE_OPENAI_API_KEY or not config.AZURE_OPENAI_ENDPOINT:
-            print("[IPA-LLM] Missing Azure OpenAI configuration; skipping LLM call.")
+        # Extract OpenAI creds from project settings
+        creds = settings.get("creds", {}).get("llm", {}) if isinstance(settings, dict) else {}
+        openai_cfg = creds.get("openai", {}) if isinstance(creds, dict) else {}
+        api_key = openai_cfg.get("apiKey")
+        base_url = openai_cfg.get("baseUrl")  # optional
+        
+        if not api_key:
+            print("[IPA-LLM] Missing OpenAI API key in project settings.")
             return SuggestIPAResponse(
                 success=False,
                 error=(
-                    f"IPA not found for '{word}'. Azure OpenAI is not configured, "
-                    "so automatic IPA suggestion is limited. Please enter the IPA manually."
-                )
+                    "OpenAI API key not configured in Project Properties. "
+                    "Add it under LLM credentials to enable IPA suggestions."
+                ),
+                source="config",
+                error_code="MissingOpenAIKey"
             )
         
         # Get LLM configuration from project settings
-        llm_settings = settings.get("llm", {})
-        llm_engine = llm_settings.get("engine", {})
-        llm_model = llm_engine.get("model", config.AZURE_OPENAI_DEPLOYMENT_GPT4O)
+        llm_settings = settings.get("llm", {}) if isinstance(settings, dict) else {}
+        llm_engine = llm_settings.get("engine", {}) if isinstance(llm_settings, dict) else {}
+        llm_model = llm_engine.get("model", "gpt-4o")
         
         print(f"[IPA-LLM] Using model: {llm_model}")
         
-        # Build system prompt with IPA rules from table if available
-        rules = ""
-        if table:
-            keys = sorted(list(table.keys()), key=lambda k: -len(k))
-            lines = []
-            for k in keys[:50]:  # Limit to first 50 rules to keep prompt manageable
-                v = table.get(k)
-                ipa_v = None
-                if isinstance(v, str):
-                    ipa_v = v
-                elif isinstance(v, dict):
-                    ipa_v = v.get("ipa")
-                if ipa_v:
-                    lines.append(f"{k} -> {ipa_v}")
-            if lines:
-                rules = "Grapheme to IPA rules:\n" + "\n".join(lines)
-        
+        # Build concise prompt
         system_message = (
             "You are a concise expert phonetics assistant. Given a single word "
             "and an optional language/locale, respond with only the IPA "
@@ -633,28 +540,24 @@ async def suggest_ipa(
         )
         
         messages = []
-        if rules:
-            messages.append({"role": "system", "content": rules})
         messages.append({"role": "system", "content": system_message})
         messages.append({"role": "user", "content": user_message})
-        
-        # Create Azure OpenAI client
-        client = AsyncAzureOpenAI(
-            api_version=config.AZURE_OPENAI_API_VERSION,
-            azure_endpoint=config.AZURE_OPENAI_ENDPOINT,
-            api_key=config.AZURE_OPENAI_API_KEY
-        )
-        
-        # Call LLM
-        print(f"[IPA-LLM] Calling Azure OpenAI...")
+
+        # Create OpenAI async client
+        client_kwargs = {"api_key": api_key}
+        if base_url:
+            client_kwargs["base_url"] = base_url
+        client = AsyncOpenAI(**client_kwargs)
+
+        print(f"[IPA-LLM] Calling OpenAI Chat Completions (model={llm_model})...")
         response = await client.chat.completions.create(
             model=llm_model,
             messages=messages,
             temperature=0.0,
-            max_tokens=80
+            max_tokens=80,
         )
-        print(f"[IPA-LLM] Got response from LLM")
-        
+        print(f"[IPA-LLM] Got response from OpenAI")
+
         # Extract IPA from response
         raw_ipa = response.choices[0].message.content.strip() if response.choices else ""
         print(f"[IPA-LLM] Raw IPA: {raw_ipa}")
@@ -681,14 +584,49 @@ async def suggest_ipa(
                 ipa=ipa,
                 source="llm"
             )
+        # Empty result from LLM
+        return SuggestIPAResponse(
+            success=False,
+            error="LLM returned an empty IPA result.",
+            source="llm"
+        )
     except Exception as e:
         import traceback
-        print(f"LLM IPA suggestion error: {e}")
+        # Try to classify OpenAI error for clearer UX
+        error_code = e.__class__.__name__
+        reason = "LLM call failed; please check server logs."
+        debug_detail = None
+        try:
+            from openai import APIConnectionError, AuthenticationError, RateLimitError, BadRequestError
+            if isinstance(e, AuthenticationError):
+                reason = "Azure OpenAI authentication failed. Check API key and endpoint."
+            elif isinstance(e, APIConnectionError):
+                reason = "Cannot reach Azure OpenAI endpoint. Check endpoint URL/network."
+            elif isinstance(e, BadRequestError):
+                reason = "Azure OpenAI request invalid. Verify deployment name and API version."
+            elif isinstance(e, RateLimitError):
+                reason = "Azure OpenAI rate limited. Please retry shortly."
+        except Exception:
+            pass
+        try:
+            from shared.config import Settings as _S
+            if _S().DEBUG:
+                debug_detail = str(e)
+        except Exception:
+            pass
+        print(f"LLM IPA suggestion error [{error_code}]: {e}")
         print(traceback.format_exc())
-        # Fall through to error response
+        return SuggestIPAResponse(
+            success=False,
+            error=(reason + (f" Detail: {debug_detail}" if debug_detail else "")),
+            source="llm",
+            error_code=error_code
+        )
     
-    # If we get here, both table and LLM failed
+    # Unreachable with returns above; keep for safety
+    # If we get here, something unexpected happened
     return SuggestIPAResponse(
         success=False,
-        error=f"IPA not found for '{word}'. Please enter the IPA notation manually in the field above."
+        error=f"IPA not found for '{word}'. Please enter the IPA notation manually in the field above.",
+        source="unknown"
     )
