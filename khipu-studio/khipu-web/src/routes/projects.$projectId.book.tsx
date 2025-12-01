@@ -3,7 +3,6 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { projectsApi, type ProjectUpdate, type Project } from '../lib/projects';
-import { ImageSelectorWeb } from '../components/ImageSelectorWeb';
 import { SUPPORTED_LOCALES, getLocaleDisplayName } from '../data/languages';
 import { setStepCompleted } from '../store/project';
 
@@ -81,7 +80,7 @@ function BookDetailsPage() {
       seriesName: book.series_name || '',
       seriesNumber: book.series_number ? String(book.series_number) : '',
       digitalVoiceDisclosureChecked: !!book.digital_voice_disclosure,
-      coverImageUrl: book.cover_image_url || project.cover_image_url || '',
+      coverImageUrl: book.cover_image_b64 ? `data:image/jpeg;base64,${book.cover_image_b64}` : (book.cover_image_url || project.cover_image_url || ''),
     };
     initializedRef.current = true;
     // Defer state application to avoid synchronous setState lint warning
@@ -116,7 +115,7 @@ function BookDetailsPage() {
         description: form.description || undefined,
         publisher: form.publisher || undefined,
         isbn: form.isbn || undefined,
-        cover_image_url: form.coverImageUrl || undefined,
+        cover_image_url: form.coverImageUrl && !form.coverImageUrl.startsWith('data:') ? form.coverImageUrl : undefined,
         settings: {
           ...(project?.settings || {}),
           book: {
@@ -126,7 +125,8 @@ function BookDetailsPage() {
             series_name: form.seriesName || undefined,
             series_number: form.seriesNumber ? Number(form.seriesNumber) : undefined,
             digital_voice_disclosure: form.digitalVoiceDisclosureChecked ? t('book.digitalVoiceDisclosure.defaultText', 'This audiobook uses synthetic voices.') : undefined,
-            cover_image_url: form.coverImageUrl || undefined,
+            cover_image_url: form.coverImageUrl && !form.coverImageUrl.startsWith('data:') ? form.coverImageUrl : undefined,
+            cover_image_b64: form.coverImageUrl?.startsWith('data:image/jpeg;base64,') ? form.coverImageUrl.replace('data:image/jpeg;base64,','') : undefined,
           },
         },
       };
@@ -262,17 +262,54 @@ function BookDetailsPage() {
               </div>
             </div>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-2">
             <h2 className="text-lg font-semibold" style={{ color: 'var(--text)' }}>{t('book.coverImage.panelTitle', 'Cover Image')}</h2>
-            <div style={{ border: '1px solid var(--border)', borderRadius: 8, padding: 12, background: 'var(--panel)' }}>
-              <ImageSelectorWeb
-                value={form.coverImageUrl}
-                onChange={url => setForm(p => ({ ...p, coverImageUrl: url || '' }))}
-                onUpload={async variants => { if (variants[0]) return URL.createObjectURL(variants[0].blob); }}
-                imageStyle={{ width: 300, height: 300, border: '1px solid var(--border)', borderRadius: 6, backgroundColor: 'var(--panel)' }}
-              />
+            <div className="flex items-start gap-4">
+              <div style={{ width: 300, height: 300, border: '1px solid var(--border)', borderRadius: 6, background: 'var(--panel)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                {form.coverImageUrl ? (
+                  <img src={form.coverImageUrl} alt={t('book.coverImage.alt','Cover image')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('book.coverImage.placeholder','No image uploaded')}</span>
+                )}
+              </div>
+              <div className="flex flex-col gap-2">
+                <input id="coverFileInput" type="file" accept="image/jpeg" className="hidden" onChange={async (e) => {
+                  const file = e.currentTarget.files?.[0];
+                  if (!file) return;
+                  if (file.type !== 'image/jpeg') { setError(t('book.coverImage.error.format', 'Cover must be a JPG image.')); return; }
+                  let bmp: ImageBitmap;
+                  try { bmp = await createImageBitmap(file); } catch { setError(t('book.coverImage.error.load', 'Failed to load image for validation.')); return; }
+                  if (bmp.width !== 3000 || bmp.height !== 3000) { setError(t('book.coverImage.error.size', 'Image must be exactly 3000 × 3000 pixels.')); return; }
+                  const arrayBuffer = await file.arrayBuffer();
+                  const bytes = new Uint8Array(arrayBuffer);
+                  let binary = ''; for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+                  const base64 = btoa(binary);
+                  const dataUrl = `data:image/jpeg;base64,${base64}`;
+                  setError('');
+                  setForm(p => ({ ...p, coverImageUrl: dataUrl }));
+                  // Immediately persist, without waiting for debounce
+                  updateMutation.mutate({
+                    settings: {
+                      ...(project?.settings || {}),
+                      book: {
+                        ...(project?.settings?.book || {}),
+                        cover_image_b64: base64,
+                        cover_image_url: undefined,
+                      },
+                    },
+                  });
+                }} />
+                <button type="button" className="px-3 py-1 text-sm rounded shadow-sm" style={{ background: 'var(--accent)', color: '#fff' }} onClick={() => document.getElementById('coverFileInput')?.click()}>
+                  {t('book.coverImage.upload', 'Upload Image')}
+                </button>
+                {form.coverImageUrl && (
+                  <button type="button" className="px-3 py-1 text-sm rounded border" style={{ borderColor: 'var(--border)', color: 'var(--text)' }} onClick={() => setForm(p => ({ ...p, coverImageUrl: '' }))}>
+                    {t('book.coverImage.remove', 'Remove')}
+                  </button>
+                )}
+              </div>
             </div>
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('book.coverImage.requirements', 'Requirements: Square image 2000–4000px. Preferred 3000×3000px. Formats: PNG or JPG.')}</p>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('book.coverImage.requirements', 'Requirements: JPEG format, 3000×3000 pixels')}</p>
           </div>
         </section>
         <div className="flex justify-end pt-2" style={{ minHeight: 24, color: 'var(--text-muted)' }}>{updateMutation.isPending ? t('book.saving', 'Saving…') : null}</div>
