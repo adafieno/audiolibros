@@ -291,6 +291,12 @@ function BookDetailsPage() {
                 {t('book.coverImage.panelTitle', 'Cover Image')}
               </h2>
               <div className="space-y-4">
+                <div style={{
+                  border: '1px solid var(--border)',
+                  borderRadius: 8,
+                  padding: 12,
+                  backgroundColor: 'var(--panel)'
+                }}>
                 <ImageSelectorWeb
                   value={form.coverImage}
                   onChange={(url) => setForm(prev => ({ ...prev, coverImage: url || '' }))}
@@ -298,7 +304,9 @@ function BookDetailsPage() {
                     if (variants[0]) return URL.createObjectURL(variants[0].blob);
                     return undefined;
                   }}
+                  imageStyle={{ width: 300, height: 300, border: '1px solid var(--border)', borderRadius: 6, backgroundColor: 'var(--panel)' }}
                 />
+                </div>
                 <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                   {t('book.coverImage.requirements', 'Requirements: Square image 2000–4000px. Preferred 3000×3000px. Formats: PNG or JPG.')}
                 </p>
