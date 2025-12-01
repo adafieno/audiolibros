@@ -9,6 +9,66 @@ export const Route = createFileRoute('/projects/$projectId/properties')({
   component: ProjectPropertiesPage,
 });
 
+// Password field component with visibility toggle
+function PasswordField({ 
+  label, 
+  value, 
+  onChange, 
+  placeholder 
+}: { 
+  label: string; 
+  value: string; 
+  onChange: (value: string) => void; 
+  placeholder?: string; 
+}) {
+  const [showPassword, setShowPassword] = useState(false);
+  
+  return (
+    <label>
+      <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>{label}</div>
+      <div style={{ position: 'relative' }}>
+        <input
+          type={showPassword ? 'text' : 'password'}
+          value={value}
+          placeholder={placeholder}
+          onChange={(e) => onChange(e.target.value)}
+          style={{ 
+            backgroundColor: 'var(--panel)', 
+            borderColor: 'var(--border)', 
+            color: 'var(--text)',
+            paddingRight: '36px'
+          }}
+          className="w-full px-3 py-2 border rounded-md"
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          style={{
+            position: 'absolute',
+            right: '8px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: '16px',
+            color: 'var(--muted)',
+            padding: '2px',
+            borderRadius: '2px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '24px',
+            height: '24px'
+          }}
+        >
+          {showPassword ? '🙈' : '👁️'}
+        </button>
+      </div>
+    </label>
+  );
+}
+
 type TtsEngine = {
   name: 'azure' | 'elevenlabs' | 'openai';
   voice?: string;
@@ -291,72 +351,57 @@ function ProjectPropertiesPage() {
             <h3 className="text-lg font-semibold mb-3" style={{ color: 'var(--text)' }}>
               {t('project.packaging', 'Packaging')}
             </h3>
-            <div className="space-y-4">
-              <div>
-                <div className="text-sm mb-2" style={{ color: 'var(--text)' }}>
-                  {t('project.targetPlatforms', 'Target Platforms')}
-                </div>
-                <div className="flex flex-wrap gap-4">
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={settings.export?.platforms?.apple ?? false}
-                      onChange={(e) => updateSettings(['export', 'platforms', 'apple'], e.target.checked)}
-                      className="rounded"
-                    />
-                    <span className="text-sm" style={{ color: 'var(--text)' }}>Apple Books</span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={settings.export?.platforms?.google ?? false}
-                      onChange={(e) => updateSettings(['export', 'platforms', 'google'], e.target.checked)}
-                      className="rounded"
-                    />
-                    <span className="text-sm" style={{ color: 'var(--text)' }}>Google Play</span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={settings.export?.platforms?.spotify ?? false}
-                      onChange={(e) => updateSettings(['export', 'platforms', 'spotify'], e.target.checked)}
-                      className="rounded"
-                    />
-                    <span className="text-sm" style={{ color: 'var(--text)' }}>Spotify</span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={settings.export?.platforms?.acx ?? false}
-                      onChange={(e) => updateSettings(['export', 'platforms', 'acx'], e.target.checked)}
-                      className="rounded"
-                    />
-                    <span className="text-sm" style={{ color: 'var(--text)' }}>ACX</span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={settings.export?.platforms?.kobo ?? false}
-                      onChange={(e) => updateSettings(['export', 'platforms', 'kobo'], e.target.checked)}
-                      className="rounded"
-                    />
-                    <span className="text-sm" style={{ color: 'var(--text)' }}>Kobo</span>
-                  </label>
-                </div>
+            <div>
+              <div className="text-sm mb-2" style={{ color: 'var(--text)' }}>
+                {t('project.targetPlatforms', 'Target Platforms')}
               </div>
-              <label>
-                <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
-                  {t('project.outputDirectory', 'Output Directory')}
-                </div>
-                <input
-                  type="text"
-                  value={settings.export?.outputDir ?? 'output'}
-                  onChange={(e) => updateSettings(['export', 'outputDir'], e.target.value)}
-                  style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                  className="w-full px-3 py-2 border rounded-md"
-                  placeholder="output"
-                />
-              </label>
+              <div className="flex flex-wrap gap-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={settings.export?.platforms?.apple ?? false}
+                    onChange={(e) => updateSettings(['export', 'platforms', 'apple'], e.target.checked)}
+                    className="rounded"
+                  />
+                  <span className="text-sm" style={{ color: 'var(--text)' }}>Apple Books</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={settings.export?.platforms?.google ?? false}
+                    onChange={(e) => updateSettings(['export', 'platforms', 'google'], e.target.checked)}
+                    className="rounded"
+                  />
+                  <span className="text-sm" style={{ color: 'var(--text)' }}>Google Play</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={settings.export?.platforms?.spotify ?? false}
+                    onChange={(e) => updateSettings(['export', 'platforms', 'spotify'], e.target.checked)}
+                    className="rounded"
+                  />
+                  <span className="text-sm" style={{ color: 'var(--text)' }}>Spotify</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={settings.export?.platforms?.acx ?? false}
+                    onChange={(e) => updateSettings(['export', 'platforms', 'acx'], e.target.checked)}
+                    className="rounded"
+                  />
+                  <span className="text-sm" style={{ color: 'var(--text)' }}>ACX</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={settings.export?.platforms?.kobo ?? false}
+                    onChange={(e) => updateSettings(['export', 'platforms', 'kobo'], e.target.checked)}
+                    className="rounded"
+                  />
+                  <span className="text-sm" style={{ color: 'var(--text)' }}>Kobo</span>
+                </label>
+              </div>
             </div>
           </section>
 
@@ -370,74 +415,65 @@ function ProjectPropertiesPage() {
             <h3 className="text-lg font-semibold mb-3" style={{ color: 'var(--text)' }}>
               {t('project.llm', 'LLM Engine')}
             </h3>
-            <div className="space-y-4">
-              <div className="grid grid-cols-[140px_1fr] gap-2 items-center">
-                <select
-                  value={settings.llm?.engine?.name || 'openai'}
-                  onChange={(e) => {
-                    const name = e.target.value;
-                    if (name === 'openai') {
-                      updateSettings(['llm', 'engine'], { name: 'openai', model: settings.llm?.engine?.model || 'gpt-4o' });
-                    } else if (name === 'azure-openai') {
-                      updateSettings(['llm', 'engine'], { name: 'azure-openai', model: settings.llm?.engine?.model || 'gpt-4o' });
-                    } else {
-                      updateSettings(['llm', 'engine'], { name: 'anthropic', model: settings.llm?.engine?.model || 'claude-3-opus' });
-                    }
-                  }}
-                  style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                  className="px-3 py-2 border rounded-md"
-                >
-                  <option value="openai">OpenAI</option>
-                  <option value="azure-openai">Azure OpenAI</option>
-                  <option value="anthropic">Anthropic</option>
-                </select>
-                <input
-                  type="text"
-                  value={settings.llm?.engine?.model || ''}
-                  onChange={(e) => updateSettings(['llm', 'engine', 'model'], e.target.value)}
-                  style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                  className="px-3 py-2 border rounded-md"
-                  placeholder={t('projectProperties.llmModelPlaceholder', 'e.g., gpt-4o, claude-3-opus')}
-                />
-              </div>
-              
-              {/* OpenAI Credentials */}
-              {settings.llm?.engine?.name === 'openai' && (
-                <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
-                  <h4 className="text-sm font-semibold mb-3" style={{ color: 'var(--text)' }}>
-                    {t('project.openaiCredentials', 'OpenAI Credentials')}
-                  </h4>
-                  <div className="space-y-3">
-                    <label>
-                      <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
-                        {t('project.openaiApiKey', 'OpenAI API Key')}
-                      </div>
-                      <input
-                        type="password"
-                        value={settings.creds?.llm?.openai?.apiKey || ''}
-                        onChange={(e) => updateSettings(['creds', 'llm', 'openai', 'apiKey'], e.target.value)}
-                        style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                        className="w-full px-3 py-2 border rounded-md"
-                        placeholder="sk-..."
-                      />
-                    </label>
-                    <label>
-                      <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
-                        {t('project.openaiBaseUrl', 'Base URL (optional)')}
-                      </div>
-                      <input
-                        type="text"
-                        value={settings.creds?.llm?.openai?.baseUrl || ''}
-                        onChange={(e) => updateSettings(['creds', 'llm', 'openai', 'baseUrl'], e.target.value)}
-                        style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                        className="w-full px-3 py-2 border rounded-md"
-                        placeholder="https://api.openai.com/v1"
-                      />
-                    </label>
-                  </div>
-                </div>
-              )}
+            <div className="grid grid-cols-[140px_1fr] gap-2 items-center mb-4">
+              <select
+                value={settings.llm?.engine?.name || 'openai'}
+                onChange={(e) => {
+                  const name = e.target.value;
+                  if (name === 'openai') {
+                    updateSettings(['llm', 'engine'], { name: 'openai', model: settings.llm?.engine?.model || 'gpt-4o' });
+                  } else if (name === 'azure-openai') {
+                    updateSettings(['llm', 'engine'], { name: 'azure-openai', model: settings.llm?.engine?.model || 'gpt-4o' });
+                  } else {
+                    updateSettings(['llm', 'engine'], { name: 'anthropic', model: settings.llm?.engine?.model || 'claude-3-opus' });
+                  }
+                }}
+                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                className="px-3 py-2 border rounded-md"
+              >
+                <option value="openai">OpenAI</option>
+                <option value="azure-openai">Azure OpenAI</option>
+                <option value="anthropic">Anthropic</option>
+              </select>
+              <input
+                type="text"
+                value={settings.llm?.engine?.model || ''}
+                onChange={(e) => updateSettings(['llm', 'engine', 'model'], e.target.value)}
+                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                className="px-3 py-2 border rounded-md"
+                placeholder="gpt-4o"
+              />
             </div>
+            
+            {/* OpenAI Credentials */}
+            {settings.llm?.engine?.name === 'openai' && (
+              <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
+                <h4 className="text-base font-semibold mb-3" style={{ color: 'var(--text)' }}>
+                  {t('project.openaiCredentials', 'OpenAI Credentials')}
+                </h4>
+                <div className="grid grid-cols-[1fr_1fr] gap-3 items-start">
+                  <PasswordField
+                    label={t('project.openaiApiKey', 'OpenAI API Key')}
+                    value={settings.creds?.llm?.openai?.apiKey || ''}
+                    onChange={(value) => updateSettings(['creds', 'llm', 'openai', 'apiKey'], value)}
+                    placeholder="sk-..."
+                  />
+                  <label>
+                    <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
+                      {t('project.openaiBaseUrl', 'OpenAI Base URL (optional)')}
+                    </div>
+                    <input
+                      type="text"
+                      value={settings.creds?.llm?.openai?.baseUrl || ''}
+                      onChange={(e) => updateSettings(['creds', 'llm', 'openai', 'baseUrl'], e.target.value)}
+                      style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                      className="w-full px-3 py-2 border rounded-md"
+                      placeholder="https://api.openai.com/v1"
+                    />
+                  </label>
+                </div>
+              </div>
+            )}
           </section>
 
           {/* TTS Engine */}
@@ -445,7 +481,7 @@ function ProjectPropertiesPage() {
             <h3 className="text-lg font-semibold mb-3" style={{ color: 'var(--text)' }}>
               {t('project.tts', 'TTS Engine')}
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div className="grid grid-cols-[140px_1fr] gap-2 items-center">
                 <select
                   value={settings.tts?.engine?.name || 'azure'}
@@ -472,50 +508,43 @@ function ProjectPropertiesPage() {
                   onChange={(e) => updateSettings(['tts', 'engine', 'voice'], e.target.value)}
                   style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
                   className="px-3 py-2 border rounded-md"
-                  placeholder={t('projectProperties.ttsVoicePlaceholder', 'e.g., es-PE-CamilaNeural')}
+                  placeholder="es-PE-CamilaNeural"
                 />
               </div>
               <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                 {t('project.ttsCachingInfo', 'TTS caching is always enabled for optimal performance.')}
               </p>
-              
-              {/* Azure TTS Credentials */}
-              {settings.tts?.engine?.name === 'azure' && (
-                <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
-                  <h4 className="text-sm font-semibold mb-3" style={{ color: 'var(--text)' }}>
-                    {t('project.azureTtsCredentials', 'Azure TTS Credentials')}
-                  </h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <label>
-                      <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
-                        {t('project.azureTtsKey', 'Azure TTS Key')}
-                      </div>
-                      <input
-                        type="password"
-                        value={settings.creds?.tts?.azure?.key || ''}
-                        onChange={(e) => updateSettings(['creds', 'tts', 'azure', 'key'], e.target.value)}
-                        style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                        className="w-full px-3 py-2 border rounded-md"
-                        placeholder="••••••••"
-                      />
-                    </label>
-                    <label>
-                      <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
-                        {t('project.azureRegion', 'Azure Region')}
-                      </div>
-                      <input
-                        type="text"
-                        value={settings.creds?.tts?.azure?.region || ''}
-                        onChange={(e) => updateSettings(['creds', 'tts', 'azure', 'region'], e.target.value)}
-                        style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                        className="w-full px-3 py-2 border rounded-md"
-                        placeholder="eastus"
-                      />
-                    </label>
-                  </div>
-                </div>
-              )}
             </div>
+            
+            {/* Azure TTS Credentials */}
+            {settings.tts?.engine?.name === 'azure' && (
+              <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
+                <h4 className="text-base font-semibold mb-3" style={{ color: 'var(--text)' }}>
+                  {t('project.azureTtsCredentials', 'Azure TTS Credentials')}
+                </h4>
+                <div className="grid grid-cols-[1fr_200px] gap-3 items-start">
+                  <PasswordField
+                    label={t('project.azureTtsKey', 'Azure TTS Key')}
+                    value={settings.creds?.tts?.azure?.key || ''}
+                    onChange={(value) => updateSettings(['creds', 'tts', 'azure', 'key'], value)}
+                    placeholder="••••••••"
+                  />
+                  <label>
+                    <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
+                      {t('project.azureRegion', 'Azure Region')}
+                    </div>
+                    <input
+                      type="text"
+                      value={settings.creds?.tts?.azure?.region || ''}
+                      onChange={(e) => updateSettings(['creds', 'tts', 'azure', 'region'], e.target.value)}
+                      style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                      className="w-full px-3 py-2 border rounded-md"
+                      placeholder="eastus"
+                    />
+                  </label>
+                </div>
+              </div>
+            )}
           </section>
 
         </div>
@@ -537,7 +566,7 @@ function ProjectPropertiesPage() {
                 value={word}
                 disabled
                 style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)', opacity: 0.7 }}
-                className="w-32 px-3 py-2 border rounded-md"
+                className="w-32 px-2 py-1 border rounded text-sm"
               />
               <input
                 type="text"
@@ -547,7 +576,7 @@ function ProjectPropertiesPage() {
                   updateSettings(['pronunciationMap'], newMap);
                 }}
                 style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                className="w-48 px-3 py-2 border rounded-md"
+                className="w-48 px-2 py-1 border rounded text-sm"
                 placeholder={t('project.ipaPlaceholder', 'IPA notation')}
               />
               <button
@@ -557,7 +586,7 @@ function ProjectPropertiesPage() {
                   alert('IPA suggestion not yet implemented in web version');
                 }}
                 style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                className="px-3 py-2 border rounded-md text-sm hover:opacity-80"
+                className="px-3 py-1 border rounded text-sm hover:opacity-80"
               >
                 {t('project.suggestIPA', 'Suggest IPA')}
               </button>
@@ -569,7 +598,7 @@ function ProjectPropertiesPage() {
                   updateSettings(['pronunciationMap'], newMap);
                 }}
                 style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: 'var(--error)', color: 'var(--error)' }}
-                className="px-3 py-2 border rounded-md text-sm hover:opacity-80"
+                className="px-3 py-1 border rounded text-sm hover:opacity-80"
               >
                 {t('project.removeWord', 'Remove')}
               </button>
@@ -580,7 +609,7 @@ function ProjectPropertiesPage() {
               type="text"
               id="newPronWord"
               style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-              className="w-32 px-3 py-2 border rounded-md"
+              className="w-32 px-2 py-1 border rounded text-sm"
               placeholder={t('project.wordPlaceholder', 'Word')}
             />
             <button
@@ -595,7 +624,7 @@ function ProjectPropertiesPage() {
                 }
               }}
               style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-              className="px-4 py-2 border rounded-md text-sm hover:opacity-80"
+              className="px-3 py-1 border rounded text-sm hover:opacity-80"
             >
               {t('project.addWord', 'Add Word')}
             </button>
