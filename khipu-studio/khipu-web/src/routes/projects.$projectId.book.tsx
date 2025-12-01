@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { projectsApi, type ProjectUpdate } from '../lib/projects';
 import { useTranslation } from 'react-i18next';
@@ -16,6 +16,7 @@ type ProjectExtra = {
   series_name?: string;
   series_number?: number;
   digital_voice_disclosure?: string;
+  cover_image?: string;
 };
 
 function BookDetailsPage() {
@@ -45,6 +46,7 @@ function BookDetailsPage() {
     seriesName: string;
     seriesNumber: string;
     digitalVoiceDisclosureChecked: boolean;
+    coverImage: string;
   };
   const [form, setForm] = useState<FormState>({
     title: '',
@@ -62,18 +64,20 @@ function BookDetailsPage() {
     seriesName: '',
     seriesNumber: '',
     digitalVoiceDisclosureChecked: false,
+    coverImage: '',
   });
   const [error, setError] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
 
   // Load data from project when available
+  const initializedRef = useRef(false);
   useEffect(() => {
-    if (project) {
+    if (project && !initializedRef.current) {
       const p = project as Partial<ProjectExtra> & {
         title?: string; subtitle?: string; authors?: string[]; narrators?: string[]; translators?: string[]; adaptors?: string[];
         description?: string; publisher?: string; isbn?: string;
       };
-      setForm({
+      setTimeout(() => setForm({
         title: p.title || '',
         subtitle: p.subtitle || '',
         authors: p.authors?.join(', ') || '',
@@ -89,7 +93,9 @@ function BookDetailsPage() {
         seriesName: p.series_name || '',
         seriesNumber: String(p.series_number ?? '') || '',
         digitalVoiceDisclosureChecked: !!p.digital_voice_disclosure,
-      });
+        coverImage: (p as { cover_image?: string }).cover_image || '',
+      }), 0);
+      initializedRef.current = true;
     }
   }, [project]);
 
@@ -129,6 +135,7 @@ function BookDetailsPage() {
       series_name: form.seriesName || undefined,
       series_number: form.seriesNumber ? Number(form.seriesNumber) : undefined,
       digital_voice_disclosure: form.digitalVoiceDisclosureChecked ? t('book.digitalVoiceDisclosure.defaultText') : undefined,
+      cover_image: form.coverImage || undefined,
     };
     const merged = { ...payload, ...extras } as unknown as ProjectUpdate;
     updateMutation.mutate(merged);
@@ -244,6 +251,28 @@ function BookDetailsPage() {
                     <option key={opt.code} value={opt.code}>{opt.label}</option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label htmlFor="coverImage" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
+                  {t('book.coverImage.label', 'Cover Image (Path or URL)')}
+                </label>
+                <input
+                  id="coverImage"
+                  type="text"
+                  value={form.coverImage}
+                  onChange={(e) => setForm(prev => ({ ...prev, coverImage: e.target.value }))}
+                  style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                  className="w-full px-3 py-2 border rounded-md"
+                  placeholder={t('book.coverImage.placeholder', 'e.g., assets/covers/book.jpg or https://...')}
+                />
+                {form.coverImage ? (
+                  <img
+                    src={form.coverImage}
+                    alt={t('book.coverImage.previewAlt', 'Cover preview')}
+                    style={{ maxWidth: 200, display: 'block', marginTop: 8, borderRadius: 6 }}
+                  />
+                ) : null}
               </div>
             </div>
           </section>
