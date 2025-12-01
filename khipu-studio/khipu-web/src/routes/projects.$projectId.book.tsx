@@ -9,54 +9,87 @@ export const Route = createFileRoute('/projects/$projectId/book')({
   component: BookDetailsPage,
 });
 
+type ProjectExtra = {
+  language?: string;
+  keywords?: string[];
+  categories?: string[];
+  series_name?: string;
+  series_number?: number;
+  digital_voice_disclosure?: string;
+};
+
 function BookDetailsPage() {
   const { projectId } = Route.useParams();
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const { data: project, isLoading } = useQuery({
     queryKey: ['project', projectId],
     queryFn: () => projectsApi.get(projectId),
   });
 
-  // Local state for book metadata
-  const [title, setTitle] = useState('');
-  const [subtitle, setSubtitle] = useState('');
-  const [authors, setAuthors] = useState('');
-  const [narrators, setNarrators] = useState('');
-  const [translators, setTranslators] = useState('');
-  const [adaptors, setAdaptors] = useState('');
-  const [description, setDescription] = useState('');
-  const [publisher, setPublisher] = useState('');
-  const [isbn, setIsbn] = useState('');
-  const [language, setLanguage] = useState('');
-  const [keywords, setKeywords] = useState('');
-  const [categories, setCategories] = useState('');
-  const [seriesName, setSeriesName] = useState('');
-  const [seriesNumber, setSeriesNumber] = useState('');
-  // Digital voice disclosure now a checkbox; we store only boolean and derive text
-  const [digitalVoiceDisclosureChecked, setDigitalVoiceDisclosureChecked] = useState(false);
+  // Local state for book metadata (single object to avoid multiple setState in effects)
+  type FormState = {
+    title: string;
+    subtitle: string;
+    authors: string;
+    narrators: string;
+    translators: string;
+    adaptors: string;
+    description: string;
+    publisher: string;
+    isbn: string;
+    language: string;
+    keywords: string;
+    categories: string;
+    seriesName: string;
+    seriesNumber: string;
+    digitalVoiceDisclosureChecked: boolean;
+  };
+  const [form, setForm] = useState<FormState>({
+    title: '',
+    subtitle: '',
+    authors: '',
+    narrators: '',
+    translators: '',
+    adaptors: '',
+    description: '',
+    publisher: '',
+    isbn: '',
+    language: '',
+    keywords: '',
+    categories: '',
+    seriesName: '',
+    seriesNumber: '',
+    digitalVoiceDisclosureChecked: false,
+  });
   const [error, setError] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
 
   // Load data from project when available
   useEffect(() => {
     if (project) {
-      setTitle(project.title || '');
-      setSubtitle(project.subtitle || '');
-      setAuthors(project.authors?.join(', ') || '');
-      setNarrators(project.narrators?.join(', ') || '');
-      setTranslators(project.translators?.join(', ') || '');
-      setAdaptors(project.adaptors?.join(', ') || '');
-      setDescription(project.description || '');
-      setPublisher(project.publisher || '');
-      setIsbn(project.isbn || '');
-      setLanguage((project as any).language || '');
-      setKeywords((project as any).keywords?.join(', ') || '');
-      setCategories((project as any).categories?.join(', ') || '');
-      setSeriesName((project as any).series_name || '');
-      setSeriesNumber(String((project as any).series_number || '') || '');
-      setDigitalVoiceDisclosureChecked(!!(project as any).digital_voice_disclosure);
+      const p = project as Partial<ProjectExtra> & {
+        title?: string; subtitle?: string; authors?: string[]; narrators?: string[]; translators?: string[]; adaptors?: string[];
+        description?: string; publisher?: string; isbn?: string;
+      };
+      setForm({
+        title: p.title || '',
+        subtitle: p.subtitle || '',
+        authors: p.authors?.join(', ') || '',
+        narrators: p.narrators?.join(', ') || '',
+        translators: p.translators?.join(', ') || '',
+        adaptors: p.adaptors?.join(', ') || '',
+        description: p.description || '',
+        publisher: p.publisher || '',
+        isbn: p.isbn || '',
+        language: p.language || '',
+        keywords: p.keywords?.join(', ') || '',
+        categories: p.categories?.join(', ') || '',
+        seriesName: p.series_name || '',
+        seriesNumber: String(p.series_number ?? '') || '',
+        digitalVoiceDisclosureChecked: !!p.digital_voice_disclosure,
+      });
     }
   }, [project]);
 
@@ -78,32 +111,36 @@ function BookDetailsPage() {
     e.preventDefault();
     setError('');
 
-    updateMutation.mutate({
-      title,
-      subtitle: subtitle || undefined,
-      authors: authors ? authors.split(',').map((a) => a.trim()) : undefined,
-      narrators: narrators ? narrators.split(',').map((n) => n.trim()) : undefined,
-      translators: translators ? translators.split(',').map((t) => t.trim()) : undefined,
-      adaptors: adaptors ? adaptors.split(',').map((a) => a.trim()) : undefined,
-      description: description || undefined,
-      publisher: publisher || undefined,
-      isbn: isbn || undefined,
-      language: language || undefined,
-      keywords: keywords ? keywords.split(',').map(k => k.trim()).filter(Boolean) : undefined,
-      categories: categories ? categories.split(',').map(c => c.trim()).filter(Boolean) : undefined,
-      series_name: seriesName || undefined,
-      series_number: seriesNumber ? Number(seriesNumber) : undefined,
-      digital_voice_disclosure: digitalVoiceDisclosureChecked ? t('book.digitalVoiceDisclosure.defaultText') : undefined,
-    });
+    const payload: ProjectUpdate = {
+      title: form.title,
+      subtitle: form.subtitle || undefined,
+      authors: form.authors ? form.authors.split(',').map((a) => a.trim()) : undefined,
+      narrators: form.narrators ? form.narrators.split(',').map((n) => n.trim()) : undefined,
+      translators: form.translators ? form.translators.split(',').map((t) => t.trim()) : undefined,
+      adaptors: form.adaptors ? form.adaptors.split(',').map((a) => a.trim()) : undefined,
+      description: form.description || undefined,
+      publisher: form.publisher || undefined,
+      isbn: form.isbn || undefined,
+    };
+    const extras: ProjectExtra = {
+      language: form.language || undefined,
+      keywords: form.keywords ? form.keywords.split(',').map(k => k.trim()).filter(Boolean) : undefined,
+      categories: form.categories ? form.categories.split(',').map(c => c.trim()).filter(Boolean) : undefined,
+      series_name: form.seriesName || undefined,
+      series_number: form.seriesNumber ? Number(form.seriesNumber) : undefined,
+      digital_voice_disclosure: form.digitalVoiceDisclosureChecked ? t('book.digitalVoiceDisclosure.defaultText') : undefined,
+    };
+    const merged = { ...payload, ...extras } as unknown as ProjectUpdate;
+    updateMutation.mutate(merged);
 
     // Evaluate book completion after save trigger (optimistic check); final confirmation after project refetch
-    const hasTitle = title.trim().length > 0;
-    const authorList = authors.split(',').map(a => a.trim()).filter(Boolean);
+    const hasTitle = form.title.trim().length > 0;
+    const authorList = form.authors.split(',').map(a => a.trim()).filter(Boolean);
     const hasAuthor = authorList.length > 0;
-    const hasDescription = description.trim().length > 0;
+    const hasDescription = form.description.trim().length > 0;
     // Digital voice disclosure placeholder: treat as required once field exists; currently assume true
-    const hasLanguage = language.trim().length > 0;
-    const hasDigitalDisclosure = digitalVoiceDisclosureChecked;
+    const hasLanguage = form.language.trim().length > 0;
+    const hasDigitalDisclosure = form.digitalVoiceDisclosureChecked;
     const bookComplete = hasTitle && hasAuthor && hasDescription && hasDigitalDisclosure && hasLanguage;
     setStepCompleted('book', bookComplete);
   };
@@ -118,10 +155,9 @@ function BookDetailsPage() {
   }
 
   // Build language options dynamically from translation keys
-  const { i18n } = useTranslation();
   let languageOptions: { code: string; label: string }[] = [];
   try {
-    const bundle: Record<string, any> = i18n.getResourceBundle(i18n.language, 'common');
+    const bundle = i18n.getResourceBundle(i18n.language, 'common') as Record<string, unknown>;
     const keys = Object.keys(bundle).filter(k => k.startsWith('languages.'));
     languageOptions = keys.map(k => ({ code: k.replace('languages.', ''), label: t(k) }))
       .sort((a, b) => a.label.localeCompare(b.label));
@@ -169,8 +205,8 @@ function BookDetailsPage() {
                   id="title"
                   type="text"
                   required
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  value={form.title}
+                  onChange={(e) => setForm(prev => ({ ...prev, title: e.target.value }))}
                   style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
                   className="w-full px-3 py-2 border rounded-md"
                   placeholder={t('book.title.placeholder', 'Enter the book title')}
@@ -184,8 +220,8 @@ function BookDetailsPage() {
                 <input
                   id="subtitle"
                   type="text"
-                  value={subtitle}
-                  onChange={(e) => setSubtitle(e.target.value)}
+                  value={form.subtitle}
+                  onChange={(e) => setForm(prev => ({ ...prev, subtitle: e.target.value }))}
                   style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
                   className="w-full px-3 py-2 border rounded-md"
                   placeholder={t('book.subtitle.placeholder', 'Enter the book subtitle')}
@@ -197,8 +233,8 @@ function BookDetailsPage() {
                 </label>
                 <select
                   id="language"
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
+                  value={form.language}
+                  onChange={(e) => setForm(prev => ({ ...prev, language: e.target.value }))}
                   required
                   style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
                   className="w-full px-3 py-2 border rounded-md"
@@ -225,8 +261,8 @@ function BookDetailsPage() {
                 <input
                   id="authors"
                   type="text"
-                  value={authors}
-                  onChange={(e) => setAuthors(e.target.value)}
+                  value={form.authors}
+                  onChange={(e) => setForm(prev => ({ ...prev, authors: e.target.value }))}
                   style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
                   className="w-full px-3 py-2 border rounded-md"
                   placeholder={t('book.authors.placeholder', 'Comma-separated list')}
@@ -240,8 +276,8 @@ function BookDetailsPage() {
                 <input
                   id="narrators"
                   type="text"
-                  value={narrators}
-                  onChange={(e) => setNarrators(e.target.value)}
+                  value={form.narrators}
+                  onChange={(e) => setForm(prev => ({ ...prev, narrators: e.target.value }))}
                   style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
                   className="w-full px-3 py-2 border rounded-md"
                   placeholder={t('book.narrators.placeholder', 'Comma-separated list')}
@@ -255,8 +291,8 @@ function BookDetailsPage() {
                 <input
                   id="translators"
                   type="text"
-                  value={translators}
-                  onChange={(e) => setTranslators(e.target.value)}
+                  value={form.translators}
+                  onChange={(e) => setForm(prev => ({ ...prev, translators: e.target.value }))}
                   style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
                   className="w-full px-3 py-2 border rounded-md"
                   placeholder={t('book.translators.placeholder', 'Comma-separated list')}
@@ -270,8 +306,8 @@ function BookDetailsPage() {
                 <input
                   id="adaptors"
                   type="text"
-                  value={adaptors}
-                  onChange={(e) => setAdaptors(e.target.value)}
+                  value={form.adaptors}
+                  onChange={(e) => setForm(prev => ({ ...prev, adaptors: e.target.value }))}
                   style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
                   className="w-full px-3 py-2 border rounded-md"
                   placeholder={t('book.adaptors.placeholder', 'Comma-separated list')}
@@ -293,8 +329,8 @@ function BookDetailsPage() {
                 <textarea
                   id="description"
                   rows={8}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  value={form.description}
+                  onChange={(e) => setForm(prev => ({ ...prev, description: e.target.value }))}
                   style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
                   className="w-full px-3 py-2 border rounded-md"
                   placeholder={t('book.description.placeholder', 'Enter a description of the book')}
@@ -307,8 +343,8 @@ function BookDetailsPage() {
                 <input
                   id="keywords"
                   type="text"
-                  value={keywords}
-                  onChange={(e) => setKeywords(e.target.value)}
+                  value={form.keywords}
+                  onChange={(e) => setForm(prev => ({ ...prev, keywords: e.target.value }))}
                   style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
                   className="w-full px-3 py-2 border rounded-md"
                   placeholder={t('book.keywords.placeholder', 'Comma-separated keywords')}
@@ -321,8 +357,8 @@ function BookDetailsPage() {
                 <input
                   id="categories"
                   type="text"
-                  value={categories}
-                  onChange={(e) => setCategories(e.target.value)}
+                  value={form.categories}
+                  onChange={(e) => setForm(prev => ({ ...prev, categories: e.target.value }))}
                   style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
                   className="w-full px-3 py-2 border rounded-md"
                   placeholder={t('book.categories.placeholder', 'Comma-separated categories')}
@@ -344,8 +380,8 @@ function BookDetailsPage() {
                 <input
                   id="seriesName"
                   type="text"
-                  value={seriesName}
-                  onChange={(e) => setSeriesName(e.target.value)}
+                  value={form.seriesName}
+                  onChange={(e) => setForm(prev => ({ ...prev, seriesName: e.target.value }))}
                   style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
                   className="w-full px-3 py-2 border rounded-md"
                   placeholder={t('book.seriesName.placeholder', 'Enter series name')}
@@ -359,8 +395,8 @@ function BookDetailsPage() {
                   id="seriesNumber"
                   type="number"
                   min={1}
-                  value={seriesNumber}
-                  onChange={(e) => setSeriesNumber(e.target.value)}
+                  value={form.seriesNumber}
+                  onChange={(e) => setForm(prev => ({ ...prev, seriesNumber: e.target.value }))}
                   style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
                   className="w-full px-3 py-2 border rounded-md"
                   placeholder={t('book.seriesNumber.placeholder', 'Enter number in series')}
@@ -378,8 +414,8 @@ function BookDetailsPage() {
               <input
                 id="digitalVoiceDisclosure"
                 type="checkbox"
-                checked={digitalVoiceDisclosureChecked}
-                onChange={(e) => setDigitalVoiceDisclosureChecked(e.target.checked)}
+                checked={form.digitalVoiceDisclosureChecked}
+                onChange={(e) => setForm(prev => ({ ...prev, digitalVoiceDisclosureChecked: e.target.checked }))}
                 className="h-4 w-4"
                 style={{ accentColor: 'var(--accent)' }}
                 required
@@ -403,8 +439,8 @@ function BookDetailsPage() {
                 <input
                   id="publisher"
                   type="text"
-                  value={publisher}
-                  onChange={(e) => setPublisher(e.target.value)}
+                  value={form.publisher}
+                  onChange={(e) => setForm(prev => ({ ...prev, publisher: e.target.value }))}
                   style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
                   className="w-full px-3 py-2 border rounded-md"
                   placeholder={t('book.publisher.placeholder', 'Publisher name')}
@@ -418,8 +454,8 @@ function BookDetailsPage() {
                 <input
                   id="isbn"
                   type="text"
-                  value={isbn}
-                  onChange={(e) => setIsbn(e.target.value)}
+                  value={form.isbn}
+                  onChange={(e) => setForm(prev => ({ ...prev, isbn: e.target.value }))}
                   style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
                   className="w-full px-3 py-2 border rounded-md"
                   placeholder={t('book.isbn.placeholder', 'ISBN number')}

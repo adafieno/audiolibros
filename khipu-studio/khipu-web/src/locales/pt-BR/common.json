@@ -91,7 +91,6 @@
   "languages.de-DE": { "string": "Deutsch", "comment": "Nome do idioma" },
   "languages.it-IT": { "string": "Italiano", "comment": "Nome do idioma" },
   "languages.pt-BR": { "string": "Português (Brasil)", "comment": "Nome do idioma" },
-  /* Lista de idiomas genéricos (desktop) */
   "languages.ar": { "string": "Árabe", "comment": "Nome do idioma" },
   "languages.bg": { "string": "Búlgaro", "comment": "Nome do idioma" },
   "languages.ca": { "string": "Catalão", "comment": "Nome do idioma" },
