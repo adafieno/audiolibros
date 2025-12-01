@@ -229,10 +229,10 @@
   ,"book.loading": { "string": "Loading book details...", "comment": "Book loading message" }
   ,"book.coverImage.panelTitle": { "string": "Cover Image", "comment": "Cover panel title" }
   ,"book.coverImage.label": { "string": "Book Cover", "comment": "Cover label" }
-  ,"book.coverImage.select": { "string": "Select Cover Image", "comment": "Select button label" }
-  ,"book.coverImage.change": { "string": "Change Cover Image", "comment": "Change button label" }
+  ,"book.coverImage.upload": { "string": "Upload Image", "comment": "Upload button label" }
+  ,"book.coverImage.change": { "string": "Change Image", "comment": "Change button label" }
   ,"book.coverImage.remove": { "string": "Remove", "comment": "Remove button label" }
-  ,"book.coverImage.requirements": { "string": "Requirements: Square image 2000–4000px. Preferred 3000×3000px. Formats: PNG or JPG.", "comment": "Cover requirements text" }
+  ,"book.coverImage.requirements": { "string": "Requirements: JPEG format, 3000×3000 pixels", "comment": "Cover requirements text" }
   ,"book.coverImage.previewAlt": { "string": "Cover image preview", "comment": "Preview alt text" }
   ,"book.coverImage.placeholder": { "string": "No cover selected", "comment": "Placeholder text when no cover" }
 }

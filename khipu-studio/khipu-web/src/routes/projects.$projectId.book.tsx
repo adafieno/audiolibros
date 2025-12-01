@@ -63,6 +63,8 @@ function BookDetailsPage() {
 
   useEffect(() => {
     if (!project) return;
+    // Prevent reinitializing form on every project refetch
+    if (initializedRef.current) return;
     const book = project.settings?.book || {};
     const next: FormState = {
       title: project.title || '',
@@ -82,8 +84,8 @@ function BookDetailsPage() {
       digitalVoiceDisclosureChecked: !!book.digital_voice_disclosure,
       coverImageUrl: book.cover_image_b64 ? `data:image/jpeg;base64,${book.cover_image_b64}` : (book.cover_image_url || project.cover_image_url || ''),
     };
+    // Mark initialized and apply state once (defer to next tick)
     initializedRef.current = true;
-    // Defer state application to avoid synchronous setState lint warning
     setTimeout(() => setForm(next), 0);
   }, [project]);
 
@@ -130,7 +132,13 @@ function BookDetailsPage() {
           },
         },
       };
-      updateMutation.mutate(update);
+      // Skip autosave if the only change is transient data URL cover preview
+      const onlyCoverDataUrl = update.settings?.book?.cover_image_b64 &&
+        !update.title && !update.subtitle && !update.authors && !update.narrators && !update.translators && !update.adaptors && !update.language && !update.description && !update.publisher && !update.isbn && !update.cover_image_url &&
+        !update.settings?.book?.keywords && !update.settings?.book?.categories && !update.settings?.book?.series_name && !update.settings?.book?.series_number && !update.settings?.book?.digital_voice_disclosure && !update.settings?.book?.cover_image_url;
+      if (!onlyCoverDataUrl) {
+        updateMutation.mutate(update);
+      }
       const complete =
         form.title.trim() &&
         form.authors.split(',').map(a => a.trim()).filter(Boolean).length > 0 &&
@@ -309,7 +317,7 @@ function BookDetailsPage() {
                 )}
               </div>
             </div>
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('book.coverImage.requirements', 'Requirements: JPEG format, 3000×3000 pixels')}</p>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('book.coverImage.requirements')}</p>
           </div>
         </section>
         <div className="flex justify-end pt-2" style={{ minHeight: 24, color: 'var(--text-muted)' }}>{updateMutation.isPending ? t('book.saving', 'Saving…') : null}</div>
