@@ -5,7 +5,7 @@ import { projectsApi, type ProjectUpdate } from '../lib/projects';
 import { useTranslation } from 'react-i18next';
 import { setStepCompleted } from '../store/project';
 import { ImageSelectorWeb } from '../components/ImageSelectorWeb';
-import { getGroupedLocales, getLocaleDisplayName } from '../data/languages';
+import { SUPPORTED_LOCALES, getLocaleDisplayName } from '../data/languages';
 
 export const Route = createFileRoute('/projects/$projectId/book')({
   component: BookDetailsPage,
@@ -141,7 +141,22 @@ function BookDetailsPage() {
         digital_voice_disclosure: form.digitalVoiceDisclosureChecked ? t('book.digitalVoiceDisclosure.defaultText') : undefined,
         cover_image: form.coverImage || undefined,
       };
-      const merged = { ...payload, ...extras } as unknown as ProjectUpdate;
+      const merged: ProjectUpdate = {
+        ...payload,
+        language: extras.language,
+        settings: {
+          ...(project?.settings || {}),
+          book: {
+            ...(project?.settings?.book || {}),
+            keywords: extras.keywords,
+            categories: extras.categories,
+            series_name: extras.series_name,
+            series_number: extras.series_number,
+            digital_voice_disclosure: extras.digital_voice_disclosure,
+            cover_image: extras.cover_image,
+          },
+        },
+      };
       updateMutation.mutate(merged);
       const hasTitle = form.title.trim().length > 0;
       const authorList = form.authors.split(',').map(a => a.trim()).filter(Boolean);
@@ -153,7 +168,7 @@ function BookDetailsPage() {
       setStepCompleted('book', bookComplete);
     }, 800);
     return () => { if (autosaveTimer.current) window.clearTimeout(autosaveTimer.current); };
-  }, [form, t, updateMutation]);
+  }, [form, t, updateMutation, project]);
 
   if (isLoading) {
     return (
@@ -164,32 +179,28 @@ function BookDetailsPage() {
     );
   }
 
-  const groupedLocales = getGroupedLocales();
+  // Build groups matching desktop ordering, with localization-friendly labels
+  const byCode = new Map(SUPPORTED_LOCALES.map(l => [l.code, l]));
+  const groupDefs: { key: string; label: string; codes: string[] }[] = [
+    { key: 'spanish', label: t('languages.group.spanish', '🇪🇸 Spanish'), codes: ['es-ES','es-MX','es-AR','es-PE','es-CO','es-CL','es-VE','es-EC','es-GT','es-CR','es-PA','es-UY','es-PY','es-BO','es-SV','es-HN','es-NI','es-DO','es-PR','es-CU','es-GQ','es-US'] },
+    { key: 'english', label: t('languages.group.english', '🇺🇸 English'), codes: ['en-US','en-GB','en-AU','en-CA','en-IN','en-IE','en-ZA','en-NZ','en-SG','en-HK','en-PH','en-KE','en-NG','en-TZ'] },
+    { key: 'portuguese', label: t('languages.group.portuguese', '🇵🇹 Portuguese'), codes: ['pt-BR','pt-PT'] },
+    { key: 'french', label: t('languages.group.french', '🇫🇷 French'), codes: ['fr-FR','fr-CA','fr-BE','fr-CH'] },
+    { key: 'german', label: t('languages.group.german', '🇩🇪 German'), codes: ['de-DE','de-AT','de-CH'] },
+    { key: 'italian', label: t('languages.group.italian', '🇮🇹 Italian'), codes: ['it-IT'] },
+    { key: 'chinese', label: t('languages.group.chinese', '🇨🇳 Chinese'), codes: ['zh-CN','zh-TW','zh-HK'] },
+    { key: 'japanese', label: t('languages.group.japanese', '🇯🇵 Japanese'), codes: ['ja-JP'] },
+    { key: 'korean', label: t('languages.group.korean', '🇰🇷 Korean'), codes: ['ko-KR'] },
+    { key: 'arabic', label: t('languages.group.arabic', '🇸🇦 Arabic'), codes: ['ar-SA','ar-EG','ar-AE','ar-JO','ar-LB','ar-MA','ar-TN','ar-DZ','ar-IQ','ar-KW','ar-BH','ar-QA','ar-OM','ar-YE','ar-SY','ar-LY'] },
+    { key: 'otherEuropean', label: t('languages.group.otherEuropean', '🇪🇺 Other European'), codes: ['ru-RU','nl-NL','nl-BE','sv-SE','nb-NO','da-DK','fi-FI','pl-PL','cs-CZ','sk-SK','hu-HU','ro-RO','bg-BG','hr-HR','sl-SI','lt-LT','lv-LV','et-EE','mt-MT','el-GR','tr-TR','uk-UA'] },
+    { key: 'regionalEuropean', label: t('languages.group.regionalEuropean', '🏴 Regional European'), codes: ['ca-ES','eu-ES','gl-ES'] },
+    { key: 'otherLanguages', label: t('languages.group.otherLanguages', '🌏 Other Languages'), codes: ['hi-IN','th-TH','vi-VN','id-ID','he-IL'] },
+  ];
 
   return (
     <div>
       <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border p-6">
-              {/* Cover Image */}
-              <div>
-                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
-                  {t('book.coverImage.label', 'Cover Image')}
-                </label>
-                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                  <ImageSelectorWeb
-                    value={form.coverImage}
-                    onChange={(url) => setForm(prev => ({ ...prev, coverImage: url || '' }))}
-                    onUpload={async (variants) => {
-                      // Placeholder cloud upload: integrate your storage API here.
-                      // Example: upload to project storage and return a public/base URL.
-                      // For now, return the first variant as object URL to keep preview working.
-                      if (variants[0]) {
-                        return URL.createObjectURL(variants[0].blob);
-                      }
-                      return undefined;
-                    }}
-                  />
-                </div>
-              </div>
+              {/* Header and intro */}
 
         <h1 className="text-2xl font-bold mb-2" style={{ color: 'var(--text)' }}>
           {t('book.title', 'Book Details')}
@@ -244,28 +255,33 @@ function BookDetailsPage() {
                   placeholder={t('book.subtitle.placeholder', 'Enter the book subtitle')}
                 />
               </div>
-                <div>
-                  <label htmlFor="language" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
-                    {t('book.language.label', 'Book Language / Locale')} <span style={{ color: 'var(--error)' }}>*</span>
-                  </label>
-                  <select
-                    id="language"
-                    value={form.language}
-                    onChange={(e) => setForm(prev => ({ ...prev, language: e.target.value }))}
-                    required
-                    style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                    className="w-full px-3 py-2 border rounded-md"
-                  >
-                    <option value="">{t('book.language.placeholder', 'Select book language')}</option>
-                    {Object.entries(groupedLocales).map(([group, locales]) => (
-                      <optgroup key={group} label={group}>
-                        {locales.map(loc => (
-                          <option key={loc.code} value={loc.code}>{getLocaleDisplayName(loc.code)}</option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
-                </div>
+
+              <div>
+                <label htmlFor="language" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
+                  {t('book.language.label', 'Book Language / Locale')} <span style={{ color: 'var(--error)' }}>*</span>
+                </label>
+                <select
+                  id="language"
+                  value={form.language}
+                  onChange={(e) => setForm(prev => ({ ...prev, language: e.target.value }))}
+                  required
+                  style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                  className="w-full px-3 py-2 border rounded-md mb-3"
+                >
+                  <option value="">{t('book.language.placeholder', 'Select book language')}</option>
+                  {groupDefs.map(group => (
+                    <optgroup key={group.key} label={group.label}>
+                      {group.codes.map(code => {
+                        const loc = byCode.get(code);
+                        if (!loc) return null;
+                        return (
+                          <option key={code} value={code}>{getLocaleDisplayName(code)}</option>
+                        );
+                      })}
+                    </optgroup>
+                  ))}
+                </select>
+              </div>
 
             </div>
             <div>
@@ -282,7 +298,7 @@ function BookDetailsPage() {
                   }}
                 />
                 <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                  {t('book.coverImage.requirements', 'Requisitos: formato JPEG/PNG, 3000×3000 píxeles (acepta 2000–4000px).')}
+                  {t('book.coverImage.requirements', 'Requirements: Square image 2000–4000px. Preferred 3000×3000px. Formats: PNG or JPG.')}
                 </p>
               </div>
             </div>

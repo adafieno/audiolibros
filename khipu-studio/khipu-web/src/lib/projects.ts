@@ -47,6 +47,7 @@ export interface ProjectUpdate {
   status?: 'draft' | 'in_progress' | 'review' | 'completed' | 'published';
   settings?: Record<string, any>;
   workflow_completed?: Record<string, boolean>;
+  cover_image_url?: string;
 }
 
 export interface ProjectsListResponse {
