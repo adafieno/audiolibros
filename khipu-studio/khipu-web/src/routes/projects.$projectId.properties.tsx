@@ -446,7 +446,9 @@ function ProjectPropertiesPage() {
                     type="button"
                     onClick={async () => {
                       try {
+                        console.log('[IPA] Requesting IPA for word:', word);
                         const result = await projectsApi.suggestIpa(projectId, word);
+                        console.log('[IPA] Received result:', result);
                         if (result.success && result.ipa) {
                           const newMap = { ...settings.pronunciationMap, [word]: result.ipa };
                           updateSettings(['pronunciationMap'], newMap);
@@ -454,10 +456,11 @@ function ProjectPropertiesPage() {
                             alert(`${t('project.suggestIpaConfirm', 'Suggested examples:')} ${result.examples.join(', ')}`);
                           }
                         } else {
+                          console.log('[IPA] Request failed or no IPA returned:', result);
                           alert(result.error || t('project.suggestIpaError', 'Could not suggest IPA. Please enter manually.'));
                         }
                       } catch (err) {
-                        console.error('IPA suggestion error:', err);
+                        console.error('[IPA] Error calling suggestIpa:', err);
                         alert(t('project.suggestIpaError', 'Could not suggest IPA. Please enter manually.'));
                       }
                     }}

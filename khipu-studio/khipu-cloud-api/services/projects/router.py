@@ -452,6 +452,16 @@ async def suggest_ipa(
     db: AsyncSession = Depends(get_db)
 ):
     """Suggest IPA transcription for a word using the project's language and LLM."""
+    print(f"[IPA] suggest_ipa called for project {project_id}, word: {request.word}")
+    
+    # TEMPORARY: Return test response to verify endpoint works
+    return SuggestIPAResponse(
+        success=True,
+        ipa="TEST-IPA",
+        source="test",
+        error=None
+    )
+    
     # Get project
     result = await db.execute(
         select(Project).where(Project.id == project_id)
@@ -476,6 +486,9 @@ async def suggest_ipa(
     pronunciation_map = settings.get("pronunciationMap", {})
     language = project.language or "en-US"
     
+    print(f"[IPA] Project language: {language}")
+    print(f"[IPA] Existing pronunciation map: {pronunciation_map}")
+    
     # Check if word already exists in pronunciation map
     if word in pronunciation_map:
         existing_ipa = pronunciation_map[word]
@@ -492,12 +505,18 @@ async def suggest_ipa(
     
     try:
         # Load IPA tables
+        # router.py is in khipu-cloud-api/services/projects/
+        # We need to go up to khipu-studio root, then into py/resources
         resources_dir = Path(__file__).resolve().parents[3] / "py" / "resources"
         default_table_path = resources_dir / "ipa_table.json"
         table = {}
         
         if default_table_path.exists():
             table = json.loads(default_table_path.read_text(encoding="utf-8") or "{}")
+        else:
+            print(f"IPA table not found at: {default_table_path}")
+            print(f"Router file location: {Path(__file__).resolve()}")
+            print(f"Resources dir: {resources_dir}")
         
         # Try language-specific tables
         if language:
@@ -509,11 +528,17 @@ async def suggest_ipa(
         
         # Check if word exists in table
         word_lower = word.lower()
+        print(f"[IPA] Checking table for word: {word_lower}")
+        print(f"[IPA] Table has {len(table)} entries")
+        print(f"[IPA] Word in table: {word_lower in table}")
+        
         if word_lower in table:
             entry = table[word_lower]
+            print(f"[IPA] Found entry: {entry}")
             if isinstance(entry, str):
                 ipa_result = entry
                 if ipa_result:  # Make sure IPA is not empty
+                    print(f"[IPA] Returning string IPA: {ipa_result}")
                     return SuggestIPAResponse(
                         success=True,
                         ipa=ipa_result,
@@ -522,6 +547,7 @@ async def suggest_ipa(
             elif isinstance(entry, dict):
                 ipa_result = entry.get("ipa", "")
                 if ipa_result:  # Make sure IPA is not empty
+                    print(f"[IPA] Returning dict IPA: {ipa_result}")
                     return SuggestIPAResponse(
                         success=True,
                         ipa=ipa_result,
