@@ -66,20 +66,23 @@ function SettingsPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold" style={{ color: 'var(--text)' }}>{t('settings.title')}</h1>
-        <p className="mt-2" style={{ color: 'var(--text-muted)' }}>{t('settings.description')}</p>
+    <div className="p-6">
+      <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border p-6 mb-6">
+        <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text)' }}>{t('settings.title')}</h1>
+        <p style={{ color: 'var(--text-muted)' }}>{t('settings.description')}</p>
       </div>
 
+      {/* Two-column layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        
+        {/* LEFT COLUMN */}
+        <div className="space-y-6">
+
       {/* Appearance Section */}
-      <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border mb-6">
-        <div className="p-6 border-b" style={{ borderColor: 'var(--border)' }}>
-          <h2 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>{t('settings.theme')}</h2>
-          <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>{t('settings.themeDescription')}</p>
-        </div>
-        <div className="p-6">
-          <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text)' }}>{t('settings.theme')}</label>
+      <section>
+        <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text)' }}>{t('settings.theme')}</h3>
+        <p className="text-sm mb-3" style={{ color: 'var(--text-muted)' }}>{t('settings.themeDescription')}</p>
+        <div>
           <div className="grid grid-cols-3 gap-4">
             {(['system', 'light', 'dark'] as const).map((theme) => (
               <button
@@ -105,18 +108,13 @@ function SettingsPage() {
             ))}
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Language Section */}
-      <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border mb-6">
-        <div className="p-6 border-b" style={{ borderColor: 'var(--border)' }}>
-          <h2 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>{t('settings.language')}</h2>
-          <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>{t('settings.languageDescription')}</p>
-        </div>
-        <div className="p-6">
-          <label className="block text-sm font-medium mb-3" style={{ color: 'var(--text)' }}>
-            {t('settings.languageLabel')}
-          </label>
+      <section>
+        <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text)' }}>{t('settings.language')}</h3>
+        <p className="text-sm mb-3" style={{ color: 'var(--text-muted)' }}>{t('settings.languageDescription')}</p>
+        <div>
           <div className="space-y-3">
             {[
               { code: 'en-US' as const, name: 'English (US)', flag: '🇺🇸' },
@@ -144,21 +142,24 @@ function SettingsPage() {
             ))}
           </div>
         </div>
-      </div>
+      </section>
+
+        </div>
+
+        {/* RIGHT COLUMN */}
+        <div className="space-y-6">
 
       {/* Admin Section - Only visible to admins */}
       {isAdmin && (
-        <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--warning)' }} className="rounded-lg shadow border-2 mb-6">
-          <div className="p-6 border-b" style={{ borderColor: 'var(--border)', backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
-            <div className="flex items-center gap-2">
-              <span className="text-xl">🔐</span>
-              <h2 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>{t('settings.admin')}</h2>
-            </div>
-            <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>
-              {t('settings.adminDescription')}
-            </p>
+        <section>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xl">🔐</span>
+            <h3 className="text-lg font-semibold" style={{ color: 'var(--text)' }}>{t('settings.admin')}</h3>
           </div>
-          <div className="p-6 space-y-4">
+          <p className="text-sm mb-3" style={{ color: 'var(--text-muted)' }}>
+            {t('settings.adminDescription')}
+          </p>
+          <div className="space-y-4">
             <div className="flex items-center justify-between p-4 rounded-lg" style={{ backgroundColor: 'var(--bg)' }}>
               <div>
                 <h3 className="text-sm font-medium" style={{ color: 'var(--text)' }}>{t('settings.userManagement')}</h3>
@@ -207,19 +208,17 @@ function SettingsPage() {
               </button>
             </div>
           </div>
-        </div>
+        </section>
       )}
 
-      {/* Project Owner Section - Visible to project owners when viewing project settings */}
-      <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border mb-6">
-        <div className="p-6 border-b" style={{ borderColor: 'var(--border)' }}>
-          <div className="flex items-center gap-2">
-            <span className="text-xl">👤</span>
-            <h2 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>{t('settings.account')}</h2>
-          </div>
-          <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>{t('settings.accountDescription')}</p>
+      {/* Account Section */}
+      <section>
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-xl">👤</span>
+          <h3 className="text-lg font-semibold" style={{ color: 'var(--text)' }}>{t('settings.account')}</h3>
         </div>
-        <div className="p-6 space-y-4">
+        <p className="text-sm mb-3" style={{ color: 'var(--text-muted)' }}>{t('settings.accountDescription')}</p>
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>{t('settings.email')}</p>
@@ -238,6 +237,9 @@ function SettingsPage() {
               <p className="text-sm mt-1 capitalize" style={{ color: 'var(--text-muted)' }}>{user?.role}</p>
             </div>
           </div>
+        </div>
+      </section>
+
         </div>
       </div>
     </div>

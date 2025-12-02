@@ -26,12 +26,13 @@ function ProjectsIndexPage() {
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+    <div className="p-6">
+      {/* Header in panel */}
+      <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border p-6 mb-6">
+        <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold" style={{ color: 'var(--text)' }}>{t('projects.title')}</h1>
-            <p className="mt-2" style={{ color: 'var(--text-muted)' }}>
+            <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text)' }}>{t('projects.title')}</h1>
+            <p style={{ color: 'var(--text-muted)' }}>
               {t('projects.welcome', { name: user?.full_name || user?.email })}
             </p>
           </div>
@@ -43,9 +44,11 @@ function ProjectsIndexPage() {
             {t('projects.newProject')}
           </Link>
         </div>
+      </div>
 
-        {/* Filters */}
-        <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border p-4 mb-6">
+      {/* Filters in section */}
+      <section className="mb-6">
+        <h3 className="text-lg font-semibold mb-3" style={{ color: 'var(--text)' }}>{t('projects.filters', 'Filters')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="search" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
@@ -81,7 +84,7 @@ function ProjectsIndexPage() {
               </select>
             </div>
           </div>
-        </div>
+      </section>
 
         {/* Projects List */}
         {isLoading && (
