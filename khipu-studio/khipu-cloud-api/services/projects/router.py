@@ -1,6 +1,7 @@
 """Projects Service Router."""
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from uuid import UUID  # noqa: F401 (may be used elsewhere or kept for consistency)
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, or_
 from sqlalchemy.orm import selectinload
@@ -16,7 +17,7 @@ from shared.schemas.projects import (
 )
 from shared.schemas.project_members import (
     ProjectMemberAdd,
-    ProjectMemberUpdate,
+    
     ProjectMemberResponse,
 )
 from shared.auth import get_current_active_user
@@ -24,8 +25,7 @@ from shared.auth.permissions import (
     Permission,
     UserRole,
     require_project_permission,
-    require_tenant_admin,
-    get_user_project_role,
+    
     ROLE_PERMISSIONS,
 )
 
@@ -459,6 +459,7 @@ async def suggest_ipa(
     )
     project = result.scalar_one_or_none()
     
+
     if not project:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -476,6 +477,25 @@ async def suggest_ipa(
     settings = project.settings or {}
     pronunciation_map = settings.get("pronunciationMap", {})
     language = project.language or "en-US"
+
+    # Validate settings structure for OpenAI credentials early
+    creds_section = (
+        settings.get("creds", {})
+        .get("llm", {})
+        .get("openai", {})
+        if isinstance(settings, dict)
+        else {}
+    )
+    if not (isinstance(creds_section, dict) and creds_section.get("apiKey")):
+        return SuggestIPAResponse(
+            success=False,
+            error=(
+                "OpenAI API key missing in project settings. Expected at "
+                "creds.llm.openai.apiKey. Update Project Properties (LLM credentials)."
+            ),
+            source="config",
+            error_code="MissingOpenAIKey"
+        )
     
     # Check if word already exists in pronunciation map
     if word in pronunciation_map:
@@ -491,111 +511,12 @@ async def suggest_ipa(
 
     # LLM-based IPA suggestion (OpenAI-first; model and key from project settings)
     try:
-        from openai import AsyncOpenAI
-        import os
-        import httpx
-        import pkg_resources
-        
-        print(f"[IPA-LLM] Attempting LLM for word: {word}")
-        try:
-            print(f"[IPA-LLM] Runtime versions -> httpx={httpx.__version__}, openai={pkg_resources.get_distribution('openai').version}")
-        except Exception as _e:
-            print(f"[IPA-LLM] Could not print runtime versions: {_e}")
-
-        # Extract OpenAI creds from project settings
-        creds = settings.get("creds", {}).get("llm", {}) if isinstance(settings, dict) else {}
-        openai_cfg = creds.get("openai", {}) if isinstance(creds, dict) else {}
-        api_key = openai_cfg.get("apiKey")
-        base_url = openai_cfg.get("baseUrl")  # optional
-        
-        if not api_key:
-            print("[IPA-LLM] Missing OpenAI API key in project settings.")
-            return SuggestIPAResponse(
-                success=False,
-                error=(
-                    "OpenAI API key not configured in Project Properties. "
-                    "Add it under LLM credentials to enable IPA suggestions."
-                ),
-                source="config",
-                error_code="MissingOpenAIKey"
-            )
-        
-        # Get LLM configuration from project settings
-        llm_settings = settings.get("llm", {}) if isinstance(settings, dict) else {}
-        llm_engine = llm_settings.get("engine", {}) if isinstance(llm_settings, dict) else {}
-        llm_model = llm_engine.get("model", "gpt-4o")
-        
-        print(f"[IPA-LLM] Using model: {llm_model}")
-        
-        # Build concise prompt
-        system_message = (
-            "You are a concise expert phonetics assistant. Given a single word "
-            "and an optional language/locale, respond with only the IPA "
-            "transcription for that word. Do NOT include explanations, markup, "
-            "or additional text—only the IPA characters. If unsure, return "
-            "an empty string. Use the IPA standard for the language when possible."
-        )
-        
-        user_message = (
-            f"Provide the IPA transcription (only the IPA) for the single word: "
-            f'"{word}". '
-            f"Book locale: {language}. "
-            f"If book locale is empty, use locale inferred from the word. "
-            f"Respond with a single short line containing only the IPA. "
-            f"Do not include explanations or extra text."
-        )
-        
-        messages = []
-        messages.append({"role": "system", "content": system_message})
-        messages.append({"role": "user", "content": user_message})
-
-        # Create OpenAI async client
-        client_kwargs = {"api_key": api_key}
-        if base_url:
-            client_kwargs["base_url"] = base_url
-        client = AsyncOpenAI(**client_kwargs)
-
-        print(f"[IPA-LLM] Calling OpenAI Chat Completions (model={llm_model})...")
-        response = await client.chat.completions.create(
-            model=llm_model,
-            messages=messages,
-            temperature=0.0,
-            max_tokens=80,
-        )
-        print(f"[IPA-LLM] Got response from OpenAI")
-
-        # Extract IPA from response
-        raw_ipa = response.choices[0].message.content.strip() if response.choices else ""
-        print(f"[IPA-LLM] Raw IPA: {raw_ipa}")
-        
-        # Clean up IPA: remove slashes, brackets, quotes
-        import re
-        ipa = raw_ipa
-        if ipa.startswith("/") and ipa.endswith("/") and len(ipa) > 2:
-            ipa = ipa[1:-1].strip()
-        elif ipa.startswith("[") and ipa.endswith("]") and len(ipa) > 2:
-            ipa = ipa[1:-1].strip()
-        
-        # Try to find IPA between slashes
-        match = re.search(r"/([^/]+)/", ipa)
-        if match:
-            ipa = match.group(1).strip()
-        
-        # Remove quotes and extra whitespace
-        ipa = ipa.strip().strip('"').strip("'").strip()
-        
-        if ipa:
-            return SuggestIPAResponse(
-                success=True,
-                ipa=ipa,
-                source="llm"
-            )
-        # Empty result from LLM
-        return SuggestIPAResponse(
-            success=False,
-            error="LLM returned an empty IPA result.",
-            source="llm"
-        )
+                from services.llm_client import fetch_ipa
+                print(f"[IPA-LLM] Attempting LLM for word: {word}")
+                ipa, err, err_code = await fetch_ipa(word, language, settings)
+                if ipa:
+                    return SuggestIPAResponse(success=True, ipa=ipa, source="llm")
+                return SuggestIPAResponse(success=False, error=err or "IPA not generated", source="llm", error_code=err_code)
     except Exception as e:
         import traceback
         # Try to classify OpenAI error for clearer UX
