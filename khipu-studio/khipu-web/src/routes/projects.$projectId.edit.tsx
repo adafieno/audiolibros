@@ -53,7 +53,7 @@ function ProjectEditPage() {
       narrators?: string[];
       language: string;
       description?: string;
-      status: 'draft' | 'in_progress' | 'review' | 'completed' | 'published';
+      status: 'draft' | 'in_progress' | 'review' | 'completed' | 'published' | 'archived';
     }) => projectsApi.update(projectId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project', projectId] });
@@ -64,7 +64,7 @@ function ProjectEditPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateMutation.mutate({
+    const payload = {
       title: formData.title,
       subtitle: formData.subtitle || undefined,
       authors: formData.authors
@@ -75,8 +75,11 @@ function ProjectEditPage() {
         : undefined,
       language: formData.language,
       description: formData.description || undefined,
-      status: formData.status as 'draft' | 'in_progress' | 'review' | 'completed' | 'published',
-    });
+      status: formData.status,
+    };
+    console.log('[EDIT FORM] Submitting update with payload:', payload);
+    console.log('[EDIT FORM] Narrators field:', formData.narrators, '→', payload.narrators);
+    updateMutation.mutate(payload);
   };
 
   if (isLoading) {

@@ -16,11 +16,13 @@ export interface Project {
   publish_date?: string;
   isbn?: string;
   cover_image_url?: string;
-  status: 'draft' | 'in_progress' | 'review' | 'completed' | 'published';
+  status: 'draft' | 'in_progress' | 'review' | 'completed' | 'published' | 'archived';
   settings?: Record<string, unknown>;
   workflow_completed?: Record<string, boolean>;
   created_at: string;
   updated_at: string;
+  completed_at?: string;
+  archived_at?: string;
 }
 
 export interface ProjectCreate {
@@ -44,7 +46,7 @@ export interface ProjectUpdate {
   publisher?: string;
   publish_date?: string;
   isbn?: string;
-  status?: 'draft' | 'in_progress' | 'review' | 'completed' | 'published';
+  status?: 'draft' | 'in_progress' | 'review' | 'completed' | 'published' | 'archived';
   settings?: Record<string, unknown>;
   workflow_completed?: Record<string, boolean>;
   cover_image_url?: string;

@@ -224,6 +224,12 @@ async def update_project(
     
     update_data = project_data.model_dump(exclude_unset=True)
     
+    # DEBUG: Log update data
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"[UPDATE PROJECT] Received update_data: {update_data}")
+    logger.info(f"[UPDATE PROJECT] Current project narrators: {project.narrators}")
+    
     # Status validation logic
     if 'status' in update_data:
         new_status = update_data['status']
@@ -278,8 +284,14 @@ async def update_project(
     for field, value in update_data.items():
         setattr(project, field, value)
     
+    # DEBUG: Log after update
+    logger.info(f"[UPDATE PROJECT] After setattr, project narrators: {project.narrators}")
+    
     await db.commit()
     await db.refresh(project)
+    
+    # DEBUG: Log after commit
+    logger.info(f"[UPDATE PROJECT] After commit/refresh, project narrators: {project.narrators}")
     
     return project
 

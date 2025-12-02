@@ -34,6 +34,7 @@ function BookDetailsPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const initializedRef = useRef(false);
+  const lastProjectIdRef = useRef<string | null>(null);
   const autosaveTimer = useRef<number | null>(null);
   const lastSavedHashRef = useRef<string>('');
   const tRef = useRef(t);
@@ -46,6 +47,15 @@ function BookDetailsPage() {
     queryKey: ['project', projectId],
     queryFn: () => projectsApi.get(projectId),
   });
+  
+  // Reset initialization when project ID changes (navigating between projects)
+  useEffect(() => {
+    if (project && project.id !== lastProjectIdRef.current) {
+      console.log('[BOOK DETAILS] Project ID changed, resetting initialization');
+      initializedRef.current = false;
+      lastProjectIdRef.current = project.id;
+    }
+  }, [project]);
 
   // Keep project ref updated
   useEffect(() => {
@@ -74,9 +84,13 @@ function BookDetailsPage() {
   });
 
   useEffect(() => {
+    console.log('[BOOK DETAILS] useEffect triggered, project:', !!project, 'initialized:', initializedRef.current);
     if (!project) return;
     // Prevent reinitializing form on every project refetch
-    if (initializedRef.current) return;
+    if (initializedRef.current) {
+      console.log('[BOOK DETAILS] Skipping re-initialization (already initialized)');
+      return;
+    }
     const book = (project.settings?.book || {}) as {
       keywords?: string[];
       categories?: string[];
@@ -86,6 +100,10 @@ function BookDetailsPage() {
       cover_image_b64?: string;
       cover_image_url?: string;
     };
+    
+    console.log('[BOOK DETAILS] Re-initializing form from project data');
+    console.log('[BOOK DETAILS] project.narrators from server:', project.narrators);
+    
     const next: FormState = {
       title: project.title || '',
       subtitle: project.subtitle || '',
@@ -104,9 +122,9 @@ function BookDetailsPage() {
       digitalVoiceDisclosureChecked: !!book.digital_voice_disclosure,
       coverImageUrl: book.cover_image_b64 ? `data:image/jpeg;base64,${book.cover_image_b64}` : (book.cover_image_url || project.cover_image_url || ''),
     };
-    // Mark initialized and apply state once (defer to next tick)
+    // Mark initialized and apply state synchronously
     initializedRef.current = true;
-    setTimeout(() => setForm(next), 0);
+    setForm(next);
   }, [project]);
 
   const updateMutation = useMutation({
@@ -157,6 +175,11 @@ function BookDetailsPage() {
           },
         },
       };
+      
+      console.log('[BOOK DETAILS] Autosave update payload:', update);
+      console.log('[BOOK DETAILS] Narrators field:', form.narrators, '→', update.narrators);
+      console.log('[BOOK DETAILS] Full form state:', form);
+      
       // Skip autosave if the only change is transient data URL cover preview
       const bookSettings = update.settings?.book as {
         cover_image_b64?: string;
