@@ -26,7 +26,7 @@ function ProjectEditPage() {
     narrators: '',
     language: 'en-US',
     description: '',
-    status: 'draft' as 'draft' | 'in_progress' | 'review' | 'completed' | 'published',
+    status: 'draft' as 'draft' | 'in_progress' | 'review' | 'completed' | 'published' | 'archived',
   });
 
   const [formInitialized, setFormInitialized] = useState(false);
@@ -207,15 +207,43 @@ function ProjectEditPage() {
               <select
                 id="status"
                 value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value as 'draft' | 'in_progress' | 'review' | 'completed' | 'published' })}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value as 'draft' | 'in_progress' | 'review' | 'completed' | 'published' | 'archived' })}
                 style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
                 className="mt-1 block w-full rounded-md border shadow-sm focus:outline-none focus:ring-2"
+                disabled={!!project.archived_at}
               >
-                <option value="draft">{t('projects.statusDraft')}</option>
+                {/* Draft can only be shown, not selected */}
+                {project.status === 'draft' && <option value="draft">{t('projects.statusDraft')}</option>}
+                
+                {/* In Progress: always available, or auto-set when user edits */}
                 <option value="in_progress">{t('projects.statusInProgress')}</option>
-                <option value="review">{t('projects.statusReview')}</option>
-                <option value="completed">{t('projects.statusCompleted')}</option>
+                
+                {/* Review: Pending implementation */}
+                <option value="review" disabled>{t('projects.statusReview')} (Coming Soon)</option>
+                
+                {/* Completed: only if all workflow steps are done */}
+                {(() => {
+                  const workflow = project.workflow_completed || {};
+                  const allStepsComplete = ['project', 'manuscript', 'casting', 'characters', 'planning', 'voice', 'export']
+                    .every(step => workflow[step] === true);
+                  return allStepsComplete ? (
+                    <option value="completed">{t('projects.statusCompleted')}</option>
+                  ) : null;
+                })()}
+                
+                {/* Published: only if status is completed */}
+                {(project.status === 'completed' || project.status === 'published') && (
+                  <option value="published">{t('projects.statusPublished')}</option>
+                )}
+                
+                {/* Archived: always available */}
+                <option value="archived">{t('projects.statusArchived', 'Archived')}</option>
               </select>
+              {project.archived_at && (
+                <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>
+                  {t('projects.archivedReadOnly', 'This project is archived and read-only. Contact an admin to restore it.')}
+                </p>
+              )}
             </div>
 
             <div>

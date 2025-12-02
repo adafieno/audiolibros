@@ -84,6 +84,8 @@ async def list_projects(
     page_size: int = Query(20, ge=1, le=100),
     status_filter: Optional[str] = Query(None, alias="status"),
     search: Optional[str] = None,
+    show_archived: bool = Query(False, description="Include archived projects"),
+    archived_only: bool = Query(False, description="Show only archived projects"),
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -93,6 +95,8 @@ async def list_projects(
     - **Tenant admins** see all projects in their tenant
     - **Creators** see projects they own or are members of
     - **Reviewers** see projects they are assigned to
+    
+    By default, archived projects are excluded unless show_archived or archived_only is True.
     """
     # Base query for tenant
     if current_user.role == UserRole.ADMIN:
@@ -125,8 +129,14 @@ async def list_projects(
             )
         )
     
-    # Only show non-archived by default
-    query = query.where(Project.archived_at.is_(None))
+    # Handle archived filter
+    if archived_only:
+        # Show only archived projects
+        query = query.where(Project.archived_at.isnot(None))
+    elif not show_archived:
+        # Default: exclude archived projects
+        query = query.where(Project.archived_at.is_(None))
+    # If show_archived is True, no filter (show all)
     
     # Get total count
     count_query = select(func.count()).select_from(query.subquery())
@@ -205,10 +215,114 @@ async def update_project(
     # Check permission
     await require_project_permission(current_user, project, Permission.WRITE, db)
     
-    # Update fields
+    # Archived projects are read-only (except for admins who can unarchive)
+    if project.archived_at and current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot modify archived projects. Contact an admin to restore."
+        )
+    
     update_data = project_data.model_dump(exclude_unset=True)
+    
+    # Status validation logic
+    if 'status' in update_data:
+        new_status = update_data['status']
+        current_status = project.status
+        workflow = update_data.get('workflow_completed', project.workflow_completed) or {}
+        
+        # Cannot set status back to 'draft' via UI
+        if new_status == 'draft':
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot set status to 'draft' manually"
+            )
+        
+        # 'completed' requires all workflow steps to be completed
+        if new_status == 'completed':
+            required_steps = ['project', 'manuscript', 'casting', 'characters', 'planning', 'voice', 'export']
+            missing_steps = [step for step in required_steps if not workflow.get(step)]
+            if missing_steps:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Cannot mark as completed. Missing workflow steps: {', '.join(missing_steps)}"
+                )
+        
+        # 'published' requires status to be 'completed' first
+        if new_status == 'published' and current_status not in ['completed', 'published']:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Project must be 'completed' before it can be published"
+            )
+        
+        # Set completed_at timestamp when marking as completed
+        if new_status == 'completed' and current_status != 'completed':
+            from datetime import datetime
+            project.completed_at = datetime.utcnow()
+    
+    # Handle archiving
+    if 'status' in update_data and update_data['status'] == 'archived':
+        from datetime import datetime
+        project.archived_at = datetime.utcnow()
+        update_data.pop('status')  # Don't update status field, use archived_at instead
+    
+    # Auto-transition to 'in_progress' if currently 'draft' and any field is being updated
+    # (except workflow_completed or settings which don't constitute "editing")
+    if project.status == 'draft' and 'status' not in update_data:
+        # Check if any content fields are being updated
+        content_fields = ['title', 'subtitle', 'authors', 'narrators', 'translators', 
+                         'adaptors', 'language', 'description', 'publisher', 'publish_date', 'isbn']
+        if any(field in update_data for field in content_fields):
+            project.status = 'in_progress'
+    
+    # Update fields
     for field, value in update_data.items():
         setattr(project, field, value)
+    
+    await db.commit()
+    await db.refresh(project)
+    
+    return project
+
+
+@router.post("/{project_id}/unarchive", response_model=ProjectResponse)
+async def unarchive_project(
+    project_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Unarchive a project and set status to 'in_progress'.
+    Only admins can unarchive projects.
+    """
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can unarchive projects"
+        )
+    
+    result = await db.execute(
+        select(Project).where(
+            Project.id == project_id,
+            Project.tenant_id == current_user.tenant_id
+        )
+    )
+    project = result.scalar_one_or_none()
+    
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Project not found"
+        )
+    
+    if not project.archived_at:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Project is not archived"
+        )
+    
+    # Unarchive and set status to in_progress
+    project.archived_at = None
+    project.status = 'in_progress'
     
     await db.commit()
     await db.refresh(project)
