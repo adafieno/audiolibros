@@ -33,7 +33,9 @@ function ProjectEditPage() {
 
   // Initialize form when project loads
   if (project && !formInitialized) {
-    setFormData({
+    console.log('[EDIT FORM] Initializing form from project');
+    console.log('[EDIT FORM] project.narrators:', project.narrators);
+    const initialData = {
       title: project.title || '',
       subtitle: project.subtitle || '',
       authors: project.authors?.join(', ') || '',
@@ -41,7 +43,9 @@ function ProjectEditPage() {
       language: project.language || 'en-US',
       description: project.description || '',
       status: project.status || 'draft',
-    });
+    };
+    console.log('[EDIT FORM] Initial narrators value:', initialData.narrators);
+    setFormData(initialData);
     setFormInitialized(true);
   }
 
@@ -55,7 +59,9 @@ function ProjectEditPage() {
       description?: string;
       status: 'draft' | 'in_progress' | 'review' | 'completed' | 'published' | 'archived';
     }) => projectsApi.update(projectId, data),
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('[EDIT FORM] Save successful, response:', data);
+      console.log('[EDIT FORM] Response narrators:', data.narrators);
       queryClient.invalidateQueries({ queryKey: ['project', projectId] });
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       navigate({ to: `/projects/${projectId}` });

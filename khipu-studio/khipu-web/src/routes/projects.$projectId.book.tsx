@@ -35,6 +35,16 @@ function BookDetailsPage() {
   const queryClient = useQueryClient();
   const initializedRef = useRef(false);
   const lastProjectIdRef = useRef<string | null>(null);
+  
+  // Reset initialization when URL project ID changes (not when project object changes)
+  useEffect(() => {
+    if (projectId !== lastProjectIdRef.current) {
+      console.log('[BOOK DETAILS] URL Project ID changed, resetting initialization');
+      initializedRef.current = false;
+      lastProjectIdRef.current = projectId;
+    }
+  }, [projectId]);
+  
   const autosaveTimer = useRef<number | null>(null);
   const lastSavedHashRef = useRef<string>('');
   const tRef = useRef(t);
@@ -42,20 +52,12 @@ function BookDetailsPage() {
   const settingsRef = useRef<Project['settings'] | undefined>(undefined);
   const projectRef = useRef<Project | undefined>(undefined);
   const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const { data: project, isLoading } = useQuery<Project>({
     queryKey: ['project', projectId],
     queryFn: () => projectsApi.get(projectId),
   });
-  
-  // Reset initialization when project ID changes (navigating between projects)
-  useEffect(() => {
-    if (project && project.id !== lastProjectIdRef.current) {
-      console.log('[BOOK DETAILS] Project ID changed, resetting initialization');
-      initializedRef.current = false;
-      lastProjectIdRef.current = project.id;
-    }
-  }, [project]);
 
   // Keep project ref updated
   useEffect(() => {
@@ -129,12 +131,16 @@ function BookDetailsPage() {
 
   const updateMutation = useMutation({
     mutationFn: (data: ProjectUpdate) => projectsApi.update(projectId, data),
-    onSuccess: () => {
+    onSuccess: (response) => {
+      console.log('[BOOK DETAILS] Mutation success, server returned:', response);
+      console.log('[BOOK DETAILS] Response narrators:', response.narrators);
+      setSaving(false);
       queryClient.invalidateQueries({ queryKey: ['project', projectId] });
       queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
     onError: (err: unknown) => {
       const e = err as { response?: { data?: { detail?: string } }; message?: string };
+      setSaving(false);
       setError(e.response?.data?.detail || e.message || t('book.saveError', 'Failed to save book details'));
     },
   });
@@ -152,10 +158,10 @@ function BookDetailsPage() {
       const update: ProjectUpdate = {
         title: form.title || undefined,
         subtitle: form.subtitle || undefined,
-        authors: form.authors ? form.authors.split(',').map(a => a.trim()).filter(Boolean) : undefined,
-        narrators: form.narrators ? form.narrators.split(',').map(n => n.trim()).filter(Boolean) : undefined,
-        translators: form.translators ? form.translators.split(',').map(tr => tr.trim()).filter(Boolean) : undefined,
-        adaptors: form.adaptors ? form.adaptors.split(',').map(ad => ad.trim()).filter(Boolean) : undefined,
+        authors: form.authors ? form.authors.split(',').map(a => a.trim()).filter(Boolean) : [],
+        narrators: form.narrators ? form.narrators.split(',').map(n => n.trim()).filter(Boolean) : [],
+        translators: form.translators ? form.translators.split(',').map(tr => tr.trim()).filter(Boolean) : [],
+        adaptors: form.adaptors ? form.adaptors.split(',').map(ad => ad.trim()).filter(Boolean) : [],
         language: form.language || undefined,
         description: form.description || undefined,
         publisher: form.publisher || undefined,
@@ -212,6 +218,7 @@ function BookDetailsPage() {
       const hash = JSON.stringify(update);
       const changed = hash !== lastSavedHashRef.current;
       if (!onlyCoverDataUrl && changed) {
+        setSaving(true);
         lastSavedHashRef.current = hash;
         mutateRef.current(update);
       }
@@ -254,7 +261,12 @@ function BookDetailsPage() {
       <div className="rounded-lg border shadow mb-6 p-6" style={{ background: 'var(--panel)', borderColor: 'var(--border)' }}>
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text)' }}>{t('book.title', 'Book Details')}</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text)' }}>{t('book.title', 'Book Details')}</h1>
+              {saving && (
+                <span className="text-sm" style={{ color: 'var(--text-muted)' }}>Saving...</span>
+              )}
+            </div>
             <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('book.description', 'Enter the book metadata and publishing information that will appear in the audiobook.')}</p>
           </div>
           {isComplete ? (
