@@ -181,6 +181,8 @@
   "manuscript.updateError": { "string": "Failed to update chapter", "comment": "Update error" },
   "manuscript.deleteError": { "string": "Failed to delete chapter", "comment": "Delete error" },
   "manuscript.loadError": { "string": "Failed to load chapters", "comment": "Load error" },
+  "manuscript.selectChapter": { "string": "Select a chapter to view its content", "comment": "Select chapter prompt" },
+  "manuscript.noContent": { "string": "This chapter has no content yet.", "comment": "No content message" },
   "projectForm.createError": { "string": "Failed to create project", "comment": "Project create error" },
   "projectForm.updateError": { "string": "Failed to update project", "comment": "Project update error" },
   "projectForm.saveChanges": { "string": "Save Changes", "comment": "Save changes button" }

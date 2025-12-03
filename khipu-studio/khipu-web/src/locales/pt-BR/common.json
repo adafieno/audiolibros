@@ -233,5 +233,7 @@
   "manuscript.createError": { "string": "Falha ao criar capítulo", "comment": "Erro de criação" },
   "manuscript.updateError": { "string": "Falha ao atualizar capítulo", "comment": "Erro de atualização" },
   "manuscript.deleteError": { "string": "Falha ao excluir capítulo", "comment": "Erro de exclusão" },
-  "manuscript.loadError": { "string": "Falha ao carregar capítulos", "comment": "Erro de carregamento" }
+  "manuscript.loadError": { "string": "Falha ao carregar capítulos", "comment": "Erro de carregamento" },
+  "manuscript.selectChapter": { "string": "Selecione um capítulo para ver seu conteúdo", "comment": "Solicitação de seleção de capítulo" },
+  "manuscript.noContent": { "string": "Este capítulo ainda não tem conteúdo.", "comment": "Mensagem sem conteúdo" }
 }

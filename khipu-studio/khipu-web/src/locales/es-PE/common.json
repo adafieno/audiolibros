@@ -232,5 +232,7 @@
   "manuscript.createError": { "string": "Error al crear cap\u00edtulo", "comment": "Error de creaci\u00f3n" },
   "manuscript.updateError": { "string": "Error al actualizar cap\u00edtulo", "comment": "Error de actualizaci\u00f3n" },
   "manuscript.deleteError": { "string": "Error al eliminar cap\u00edtulo", "comment": "Error de eliminaci\u00f3n" },
-  "manuscript.loadError": { "string": "Error al cargar cap\u00edtulos", "comment": "Error de carga" }
+  "manuscript.loadError": { "string": "Error al cargar cap\u00edtulos", "comment": "Error de carga" },
+  "manuscript.selectChapter": { "string": "Selecciona un cap\u00edtulo para ver su contenido", "comment": "Solicitud de selección de capítulo" },
+  "manuscript.noContent": { "string": "Este cap\u00edtulo a\u00fan no tiene contenido.", "comment": "Mensaje sin contenido" }
 }

@@ -2,7 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { getChapters, createChapter, updateChapter, deleteChapter, type Chapter, type UpdateChapterData } from '../api/chapters'
+import { getChapters, getChapter, createChapter, updateChapter, deleteChapter, type Chapter, type UpdateChapterData } from '../api/chapters'
 import { projectsApi } from '../lib/projects'
 import { setStepCompleted } from '../store/project'
 
@@ -17,6 +17,7 @@ function ManuscriptPage() {
   const [editingChapter, setEditingChapter] = useState<Chapter | null>(null)
   const [showChapterForm, setShowChapterForm] = useState(false)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null)
 
   // Fetch project
   const { data: project } = useQuery({
@@ -30,14 +31,25 @@ function ManuscriptPage() {
     queryFn: () => getChapters(projectId),
   })
 
+  // Fetch selected chapter content
+  const { data: selectedChapter } = useQuery({
+    queryKey: ['chapter', projectId, selectedChapterId],
+    queryFn: () => selectedChapterId ? getChapter(projectId, selectedChapterId) : null,
+    enabled: !!selectedChapterId,
+  })
+
   // Update workflow completion for manuscript when all chapters are complete
   useEffect(() => {
     const items = chaptersData?.items || []
     // Manuscript completion (import existence) requires at least one chapter
     const manuscriptImported = items.length > 0
     setStepCompleted('manuscript', manuscriptImported)
-    // Planning completion will later check all chapters marked complete; keep separate
-  }, [chaptersData])
+    
+    // Auto-select first chapter if none selected
+    if (items.length > 0 && !selectedChapterId) {
+      setSelectedChapterId(items[0].id)
+    }
+  }, [chaptersData, selectedChapterId])
 
   // Create chapter mutation
   const createMutation = useMutation({
@@ -146,14 +158,15 @@ function ManuscriptPage() {
   const chapters = chaptersData?.items || []
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)' }}>
       {/* Header */}
       <div style={{ 
         background: 'var(--bg-secondary)', 
         borderBottom: '1px solid var(--border)',
-        padding: '1.5rem 2rem'
+        padding: '1.5rem 2rem',
+        flexShrink: 0
       }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
           <Link
             to="/projects/$projectId"
             params={{ projectId }}
@@ -225,105 +238,170 @@ function ManuscriptPage() {
 
       {/* Content */}
       <div style={{ 
-        maxWidth: '1400px', 
+        flex: 1,
+        display: 'flex',
+        overflow: 'hidden',
+        maxWidth: '1600px',
+        width: '100%',
         margin: '0 auto',
-        padding: '2rem'
+        padding: '1.5rem'
       }}>
-        {chapters.length === 0 ? (
-          <div style={{
-            padding: '4rem 2rem',
-            textAlign: 'center',
-            background: 'var(--bg-secondary)',
-            borderRadius: '12px',
-            border: '1px dashed var(--border)'
-          }}>
-            <h2 style={{ 
-              fontSize: '1.25rem', 
-              fontWeight: '600', 
-              margin: '0 0 0.5rem 0',
-              color: 'var(--text)'
-            }}>
-              {t('manuscript.noChapters')}
-            </h2>
-            <p style={{ 
-              margin: '0 0 1.5rem 0', 
-              color: 'var(--text-secondary)'
-            }}>
-              {t('manuscript.noChaptersDesc')}
-            </p>
-            <button
-              onClick={() => setShowChapterForm(true)}
-              style={{
-                padding: '0.75rem 1.5rem',
-                background: 'var(--accent)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontWeight: '500',
-                fontSize: '0.875rem'
-              }}
-            >
-              {t('manuscript.addChapter')}
-            </button>
-          </div>
-        ) : (
+        {/* Left: Chapter List */}
+        <aside style={{ 
+          width: '320px',
+          flexShrink: 0,
+          borderRight: '1px solid var(--border)', 
+          paddingRight: '1.5rem',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden'
+        }}>
           <div style={{ 
-            display: 'grid', 
-            gap: '1rem'
+            overflow: 'auto', 
+            flex: 1
           }}>
-            {chapters.map((chapter, index) => (
-              <div
-                key={chapter.id}
-                style={{
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '8px',
-                  padding: '1.5rem',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start',
-                  gap: '1rem'
-                }}
-              >
-                <div style={{ flex: 1 }}>
-                  <h3 style={{ 
+            {chapters.length === 0 ? (
+              <div style={{
+                padding: '2rem 1rem',
+                textAlign: 'center',
+                color: 'var(--text-secondary)'
+              }}>
+                <p style={{ margin: '0 0 1rem 0' }}>
+                  {t('manuscript.noChapters')}
+                </p>
+                <button
+                  onClick={() => setShowChapterForm(true)}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    background: 'var(--accent)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem'
+                  }}
+                >
+                  {t('manuscript.addChapter')}
+                </button>
+              </div>
+            ) : (
+              <ul style={{ 
+                listStyle: 'none', 
+                padding: 0, 
+                margin: 0, 
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.5rem'
+              }}>
+                {chapters.map((chapter, index) => {
+                  const isSelected = chapter.id === selectedChapterId
+                  return (
+                    <li key={chapter.id}>
+                      <button
+                        onClick={() => setSelectedChapterId(chapter.id)}
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '0.75rem',
+                          borderRadius: '6px',
+                          border: '1px solid var(--border)',
+                          background: isSelected ? 'var(--accent)' : 'var(--bg-secondary)',
+                          color: isSelected ? 'white' : 'var(--text)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        <div style={{ 
+                          fontWeight: 600, 
+                          fontSize: '0.875rem',
+                          marginBottom: '0.25rem'
+                        }}>
+                          {t('manuscript.chapter', { number: index + 1 })}: {chapter.title}
+                        </div>
+                        <div style={{ 
+                          fontSize: '0.75rem',
+                          opacity: isSelected ? 0.9 : 0.7,
+                          display: 'flex',
+                          gap: '0.75rem'
+                        }}>
+                          <span>{t('manuscript.words', { count: chapter.word_count })}</span>
+                          {chapter.is_complete && (
+                            <span>✓ {t('manuscript.complete')}</span>
+                          )}
+                        </div>
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </div>
+        </aside>
+
+        {/* Right: Chapter Preview */}
+        <section style={{ 
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          paddingLeft: '1.5rem',
+          overflow: 'hidden'
+        }}>
+          {selectedChapter ? (
+            <div style={{ 
+              border: '1px solid var(--border)', 
+              borderRadius: '8px', 
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              height: '100%',
+              background: 'var(--bg-secondary)'
+            }}>
+              {/* Chapter header */}
+              <div style={{ 
+                padding: '1rem 1.5rem', 
+                borderBottom: '1px solid var(--border)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                background: 'var(--bg)',
+                flexShrink: 0
+              }}>
+                <div>
+                  <h2 style={{ 
                     fontSize: '1.125rem', 
                     fontWeight: '600', 
-                    margin: '0 0 0.5rem 0',
+                    margin: '0 0 0.25rem 0',
                     color: 'var(--text)'
                   }}>
-                    {t('manuscript.chapter', { number: index + 1 })}: {chapter.title}
-                  </h3>
+                    {selectedChapter.title}
+                  </h2>
                   <div style={{ 
-                    display: 'flex', 
-                    gap: '1.5rem', 
-                    fontSize: '0.875rem',
-                    color: 'var(--text-secondary)',
-                    marginBottom: '0.5rem'
-                  }}>
-                    <span>{t('manuscript.words', { count: chapter.word_count })}</span>
-                    <span>{t('manuscript.characters', { count: chapter.character_count })}</span>
-                  </div>
-                  <span style={{
-                    display: 'inline-block',
-                    padding: '0.25rem 0.75rem',
-                    borderRadius: '12px',
                     fontSize: '0.75rem',
-                    fontWeight: '500',
-                    background: chapter.is_complete ? 'var(--success-bg, #d1fae5)' : 'var(--warning-bg, #fef3c7)',
-                    color: chapter.is_complete ? 'var(--success, #065f46)' : 'var(--warning, #92400e)'
+                    color: 'var(--text-secondary)',
+                    display: 'flex',
+                    gap: '1rem'
                   }}>
-                    {chapter.is_complete ? t('manuscript.complete') : t('manuscript.incomplete')}
-                  </span>
+                    <span>{t('manuscript.words', { count: selectedChapter.word_count })}</span>
+                    <span>{t('manuscript.characters', { count: selectedChapter.character_count })}</span>
+                    <span style={{
+                      padding: '0.125rem 0.5rem',
+                      borderRadius: '12px',
+                      fontSize: '0.75rem',
+                      fontWeight: '500',
+                      background: selectedChapter.is_complete ? 'var(--success-bg, #d1fae5)' : 'var(--warning-bg, #fef3c7)',
+                      color: selectedChapter.is_complete ? 'var(--success, #065f46)' : 'var(--warning, #92400e)'
+                    }}>
+                      {selectedChapter.is_complete ? t('manuscript.complete') : t('manuscript.incomplete')}
+                    </span>
+                  </div>
                 </div>
                 
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <button
-                    onClick={() => setEditingChapter(chapter)}
+                    onClick={() => setEditingChapter(selectedChapter)}
                     style={{
                       padding: '0.5rem 1rem',
-                      background: 'var(--bg)',
+                      background: 'var(--bg-secondary)',
                       color: 'var(--text)',
                       border: '1px solid var(--border)',
                       borderRadius: '6px',
@@ -334,7 +412,7 @@ function ManuscriptPage() {
                     {t('manuscript.edit')}
                   </button>
                   <button
-                    onClick={() => setDeleteConfirmId(chapter.id)}
+                    onClick={() => setDeleteConfirmId(selectedChapter.id)}
                     style={{
                       padding: '0.5rem 1rem',
                       background: 'var(--error-bg, #fee2e2)',
@@ -349,9 +427,42 @@ function ManuscriptPage() {
                   </button>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+              
+              {/* Chapter content */}
+              <div style={{ 
+                flex: 1, 
+                padding: '1.5rem', 
+                overflow: 'auto',
+                background: 'var(--bg)'
+              }}>
+                <pre style={{ 
+                  fontSize: '0.875rem', 
+                  lineHeight: '1.6', 
+                  color: 'var(--text)', 
+                  whiteSpace: 'pre-wrap',
+                  wordWrap: 'break-word',
+                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                  margin: 0
+                }}>
+                  {selectedChapter.content || t('manuscript.noContent')}
+                </pre>
+              </div>
+            </div>
+          ) : (
+            <div style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--text-secondary)',
+              fontStyle: 'italic'
+            }}>
+              {chapters.length > 0 
+                ? t('manuscript.selectChapter') 
+                : t('manuscript.noChaptersDesc')}
+            </div>
+          )}
+        </section>
       </div>
 
       {/* Chapter Form Modal */}
