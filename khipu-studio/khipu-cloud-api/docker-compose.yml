@@ -39,6 +39,7 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
+      - ..:/workspace  # Mount parent directory to access py/ folder
     env_file:
       - .env
     environment:

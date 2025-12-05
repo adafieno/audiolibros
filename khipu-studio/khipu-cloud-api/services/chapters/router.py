@@ -369,27 +369,42 @@ async def parse_manuscript(
         output_dir = temp_dir / "parsed"
         output_dir.mkdir(exist_ok=True)
         
-        # Call the manuscript parser
-        parser_script = Path(__file__).parent.parent.parent.parent / "py" / "ingest" / "manuscript_parser.py"
-        
-        # Use the virtual environment's Python
+        # Call the manuscript parser script directly
         import sys
         python_executable = sys.executable
         
-        if manuscript_file.suffix.lower() in ['.docx', '.doc']:
-            cmd = [
-                python_executable, str(parser_script),
-                "--docx", str(manuscript_file),
-                "--out-dir", str(output_dir)
-            ]
-        else:  # .txt
-            cmd = [
-                python_executable, str(parser_script),
-                "--txt", str(manuscript_file),
-                "--out-dir", str(output_dir)
-            ]
+        # Get repo root and parser script path
+        # In Docker, /workspace is the parent directory, /app is khipu-cloud-api
+        repo_root = Path("/workspace") if Path("/workspace/py").exists() else Path(__file__).parent.parent.parent.parent
+        parser_script = repo_root / "py" / "ingest" / "manuscript_parser.py"
         
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+        print(f"[PARSE] __file__ = {__file__}")
+        print(f"[PARSE] repo_root = {repo_root}")
+        print(f"[PARSE] parser_script = {parser_script}")
+        print(f"[PARSE] parser_script exists? {parser_script.exists()}")
+        
+        # Prepare output paths
+        chapters_dir = output_dir / "chapters_txt"
+        structure_out = output_dir / "narrative.structure.json"
+        chapters_dir.mkdir(exist_ok=True)
+        
+        cmd = [
+            python_executable, str(parser_script),
+            "--in", str(manuscript_file),
+            "--out-chapters", str(chapters_dir),
+            "--out-structure", str(structure_out),
+            "--min-words", "20"
+        ]
+        
+        print(f"[PARSE] Running command: {' '.join(cmd)}")
+        print(f"[PARSE] Working directory: {repo_root}")
+        
+        # Add repo root to PYTHONPATH so py.ingest module can be found
+        import os
+        env = os.environ.copy()
+        env['PYTHONPATH'] = str(repo_root)
+        
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60, cwd=str(repo_root), env=env)
         
         if result.returncode != 0:
             raise HTTPException(

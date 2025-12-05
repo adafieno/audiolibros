@@ -510,7 +510,7 @@ function ManuscriptPage() {
                 >
                   <div style={{ fontWeight: 500, marginBottom: '0.25rem' }}>{chapter.title}</div>
                   <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>
-                    {chapter.word_count} {t('manuscript.words', 'words')}
+                    {t('manuscript.words', { count: chapter.word_count })}
                   </div>
                 </button>
               ))
@@ -537,10 +537,10 @@ function ManuscriptPage() {
                 </h2>
                 <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
                   <span>
-                    {selectedChapter.word_count} {t('manuscript.words', 'words')}
+                    {t('manuscript.words', { count: selectedChapter.word_count })}
                   </span>
                   <span>
-                    {selectedChapter.character_count} {t('manuscript.characters', 'characters')}
+                    {t('manuscript.characters', { count: selectedChapter.character_count })}
                   </span>
                 </div>
               </div>
