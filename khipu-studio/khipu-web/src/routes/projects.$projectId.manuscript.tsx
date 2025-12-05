@@ -7,6 +7,20 @@ import { projectsApi } from '../lib/projects'
 import { setStepCompleted } from '../store/project'
 import { sanitizeTextForTTS, hasProblematicCharacters } from '../lib/text-sanitizer'
 
+type ChapterType = 'chapter' | 'intro' | 'prologue' | 'epilogue' | 'credits' | 'outro'
+
+function getChapterTypeLabel(chapterType: ChapterType): string {
+  const labels: Record<ChapterType, string> = {
+    chapter: 'Chapter',
+    intro: 'Intro',
+    prologue: 'Prologue',
+    epilogue: 'Epilogue',
+    credits: 'Credits',
+    outro: 'Outro',
+  }
+  return labels[chapterType] || 'Chapter'
+}
+
 export const Route = createFileRoute('/projects/$projectId/manuscript')({
   component: ManuscriptPage,
 })
@@ -51,13 +65,28 @@ function ManuscriptPage() {
   useEffect(() => {
     const items = chaptersData?.items || []
     const manuscriptImported = items.length > 0
+    
+    // Update local state
     setStepCompleted('manuscript', manuscriptImported)
+    
+    // Persist to database if manuscript is complete and not already marked
+    if (manuscriptImported && project && !project.workflow_completed?.manuscript) {
+      const updatedWorkflow = {
+        ...project.workflow_completed,
+        manuscript: true
+      }
+      projectsApi.update(projectId, { workflow_completed: updatedWorkflow })
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: ['project', projectId] })
+        })
+        .catch(error => console.error('Failed to update workflow:', error))
+    }
     
     // Auto-select first chapter if none selected
     if (items.length > 0 && !selectedChapterId) {
       setSelectedChapterId(items[0].id)
     }
-  }, [chaptersData, selectedChapterId])
+  }, [chaptersData, selectedChapterId, project, projectId, queryClient])
 
   // Handle file upload and parsing
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -254,6 +283,7 @@ function ManuscriptPage() {
 
   const chapters = chaptersData?.items || []
   const isProcessing = uploading || parsing
+  const manuscriptComplete = chapters.length > 0
 
   return (
     <div style={{ padding: '1.5rem' }}>
@@ -272,9 +302,26 @@ function ManuscriptPage() {
       >
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
           <div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem', color: 'var(--text)' }}>
-              {t('manuscript.title', 'Manuscript')}
-            </h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
+              <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0, color: 'var(--text)' }}>
+                {t('manuscript.title', 'Manuscript')}
+              </h1>
+              {manuscriptComplete && (
+                <span style={{ 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  padding: '0.25rem 0.75rem', 
+                  borderRadius: '9999px', 
+                  fontSize: '0.875rem', 
+                  fontWeight: 500,
+                  boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+                  background: '#22c55e', 
+                  color: '#052e12' 
+                }}>
+                  {t('project.completed', 'Completed')}
+                </span>
+              )}
+            </div>
             <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: 0 }}>
               {t('manuscript.description', 'Upload your manuscript document and manage chapters.')}
             </p>
@@ -491,29 +538,51 @@ function ManuscriptPage() {
                 {t('manuscript.noChapters', 'No chapters yet. Import a document to get started.')}
               </p>
             ) : (
-              chapters.map((chapter, index) => (
-                <button
-                  key={chapter.id}
-                  onClick={() => setSelectedChapterId(chapter.id)}
-                  style={{
-                    width: '100%',
-                    textAlign: 'left',
-                    padding: '0.75rem',
-                    borderRadius: '0.375rem',
-                    marginBottom: '0.25rem',
-                    background: selectedChapterId === chapter.id ? 'var(--accent)' : 'transparent',
-                    color: selectedChapterId === chapter.id ? '#fff' : 'var(--text)',
-                    border: 'none',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.2s',
-                  }}
-                >
-                  <div style={{ fontWeight: 500, marginBottom: '0.25rem' }}>{chapter.title}</div>
-                  <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>
-                    {t('manuscript.words', { count: chapter.word_count })}
-                  </div>
-                </button>
-              ))
+              chapters.map((chapter, index) => {
+                const chapterType = (chapter as any).chapter_type as ChapterType || 'chapter'
+                const isSpecial = chapterType !== 'chapter'
+                
+                return (
+                  <button
+                    key={chapter.id}
+                    onClick={() => setSelectedChapterId(chapter.id)}
+                    style={{
+                      width: '100%',
+                      textAlign: 'left',
+                      padding: '0.75rem',
+                      borderRadius: '0.375rem',
+                      marginBottom: '0.25rem',
+                      background: selectedChapterId === chapter.id ? 'var(--accent)' : 'transparent',
+                      color: selectedChapterId === chapter.id ? '#fff' : 'var(--text)',
+                      border: 'none',
+                      cursor: 'pointer',
+                      transition: 'background-color 0.2s',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                      <span style={{ fontWeight: 500, flex: 1 }}>{chapter.title}</span>
+                      {isSpecial && (
+                        <span
+                          style={{
+                            fontSize: '0.625rem',
+                            fontWeight: 600,
+                            padding: '0.125rem 0.375rem',
+                            borderRadius: '0.25rem',
+                            background: 'var(--accent)',
+                            color: '#fff',
+                            textTransform: 'uppercase',
+                          }}
+                        >
+                          {getChapterTypeLabel(chapterType)}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>
+                      {t('manuscript.words', { count: chapter.word_count })}
+                    </div>
+                  </button>
+                )
+              })
             )}
           </div>
         </div>
@@ -532,9 +601,40 @@ function ManuscriptPage() {
               }}
             >
               <div style={{ marginBottom: '1.5rem' }}>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text)', marginBottom: '0.5rem', margin: 0 }}>
-                  {selectedChapter.title}
-                </h2>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text)', margin: 0 }}>
+                    {selectedChapter.title}
+                  </h2>
+                  <select
+                    value={selectedChapter.chapter_type || 'chapter'}
+                    onChange={async (e) => {
+                      const newType = e.target.value
+                      try {
+                        await updateChapter(projectId, selectedChapter.id, { chapter_type: newType })
+                        queryClient.invalidateQueries({ queryKey: ['chapters', projectId] })
+                        queryClient.invalidateQueries({ queryKey: ['chapter', projectId, selectedChapterId] })
+                      } catch (error) {
+                        console.error('Failed to update chapter type:', error)
+                      }
+                    }}
+                    style={{
+                      padding: '0.375rem 0.75rem',
+                      borderRadius: '0.375rem',
+                      border: '1px solid var(--border)',
+                      background: 'var(--panel)',
+                      color: 'var(--text)',
+                      fontSize: '0.875rem',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <option value="chapter">Chapter</option>
+                    <option value="intro">Intro</option>
+                    <option value="prologue">Prologue</option>
+                    <option value="epilogue">Epilogue</option>
+                    <option value="credits">Credits</option>
+                    <option value="outro">Outro</option>
+                  </select>
+                </div>
                 <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
                   <span>
                     {t('manuscript.words', { count: selectedChapter.word_count })}

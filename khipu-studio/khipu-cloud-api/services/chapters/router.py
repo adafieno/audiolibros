@@ -420,6 +420,19 @@ async def parse_manuscript(
                 detail="Parser did not generate chapter files"
             )
         
+        # Read structure.json to get chapter metadata including chapter_type
+        structure_file = output_dir / "structure.json"
+        structure_data = {}
+        if structure_file.exists():
+            structure_content = structure_file.read_text(encoding='utf-8')
+            print(f"[PARSE] structure.json content: {structure_content[:500]}")
+            structure_data = json.loads(structure_content)
+            print(f"[PARSE] Parsed structure data keys: {structure_data.keys()}")
+            if 'chapters' in structure_data:
+                print(f"[PARSE] Chapters in structure: {list(structure_data['chapters'].keys())[:5]}")
+        else:
+            print(f"[PARSE] structure.json not found at {structure_file}")
+        
         # Delete existing chapters for this project
         result = await db.execute(
             select(Chapter).where(Chapter.project_id == project_id)
@@ -435,12 +448,23 @@ async def parse_manuscript(
         for idx, chapter_file in enumerate(chapter_files):
             content = chapter_file.read_text(encoding='utf-8')
             title = f"Chapter {idx + 1}"  # Simple title, could be extracted from content
+            chapter_type = "chapter"  # Default type
             
-            # Extract title from first line if it looks like a title
-            lines = content.strip().split('\n')
-            if lines and len(lines[0]) < 100 and not lines[0].endswith('.'):
-                title = lines[0].strip()
-                content = '\n'.join(lines[1:]).strip()
+            # Get metadata from structure.json if available
+            if structure_data and 'chapters' in structure_data:
+                chapter_info = structure_data['chapters'].get(str(idx), {})
+                print(f"[PARSE] Chapter {idx} info: {chapter_info}")
+                if 'title' in chapter_info:
+                    title = chapter_info['title']
+                if 'chapterType' in chapter_info:
+                    chapter_type = chapter_info['chapterType']
+                    print(f"[PARSE] Setting chapter {idx} type to: {chapter_type}")
+            else:
+                # Fallback: Extract title from first line if it looks like a title
+                lines = content.strip().split('\n')
+                if lines and len(lines[0]) < 100 and not lines[0].endswith('.'):
+                    title = lines[0].strip()
+                    content = '\n'.join(lines[1:]).strip()
             
             word_count = count_words(content)
             character_count = count_characters(content)
@@ -450,6 +474,7 @@ async def parse_manuscript(
                 title=title,
                 content=content,
                 order=idx,
+                chapter_type=chapter_type,
                 is_complete=True,
                 word_count=word_count,
                 character_count=character_count

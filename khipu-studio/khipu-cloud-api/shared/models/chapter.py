@@ -21,6 +21,7 @@ class Chapter(Base):
     # Chapter metadata
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    chapter_type: Mapped[str] = mapped_column(String(50), nullable=False, server_default="chapter")
     
     # Chapter content
     content: Mapped[str] = mapped_column(Text, nullable=False, default="")

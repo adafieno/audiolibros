@@ -8,6 +8,7 @@ export interface Chapter {
   title: string
   content: string
   order: number
+  chapter_type: string
   is_complete: boolean
   word_count: number
   character_count: number
@@ -26,6 +27,7 @@ export interface UpdateChapterData {
   title?: string
   content?: string
   order?: number
+  chapter_type?: string
   is_complete?: boolean
 }
 

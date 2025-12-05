@@ -10,6 +10,7 @@ class ChapterBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=500)
     content: str = Field(default="")
     order: int = Field(default=0, ge=0)
+    chapter_type: str = Field(default="chapter")
     is_complete: bool = Field(default=False)
 
 
@@ -23,6 +24,7 @@ class ChapterUpdate(BaseModel):
     title: Optional[str] = Field(None, min_length=1, max_length=500)
     content: Optional[str] = None
     order: Optional[int] = Field(None, ge=0)
+    chapter_type: Optional[str] = None
     is_complete: Optional[bool] = None
 
 
