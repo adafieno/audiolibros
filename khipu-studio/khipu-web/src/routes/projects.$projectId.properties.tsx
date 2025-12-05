@@ -241,20 +241,20 @@ function ProjectPropertiesPage() {
   return (
     <div className="p-6">
       <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border p-6 mb-6">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text)' }}>
+        <div>
+          <div className="flex items-center gap-3 mb-1">
+            <h1 className="text-2xl font-bold" style={{ color: 'var(--text)', margin: 0 }}>
               {t('projectProperties.title', 'Project Properties')}
             </h1>
-            <p style={{ color: 'var(--text-muted)' }}>
-              {t('projectProperties.description', 'Configure technical settings for TTS, LLM, and export options.')}
-            </p>
+            {isComplete && (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium shadow" style={{ background: '#22c55e', color: '#052e12' }}>
+                {t('project.completed', 'Completed')}
+              </span>
+            )}
           </div>
-          {isComplete ? (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium shadow" style={{ background: '#22c55e', color: '#052e12' }}>
-              {t('project.completed', 'Completed')}
-            </span>
-          ) : null}
+          <p style={{ color: 'var(--text-muted)', margin: 0 }}>
+            {t('projectProperties.description', 'Configure technical settings for TTS, LLM, and export options.')}
+          </p>
         </div>
       </div>
 

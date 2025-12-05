@@ -40,6 +40,12 @@ function ManuscriptPage() {
     appliedRules: string[]
     sanitizedText: string
   } | null>(null)
+  const [bulkSanitizationModal, setBulkSanitizationModal] = useState<{
+    chapters: Array<{ id: string; title: string; changes: number; sanitized: string; issues: string[] }>
+    totalChanges: number
+    totalIssues: number
+  } | null>(null)
+  const [applyingSanitization, setApplyingSanitization] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Fetch project
@@ -92,6 +98,10 @@ function ManuscriptPage() {
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
+
+    // Clear any existing state before starting new upload
+    setBulkSanitizationModal(null)
+    setSelectedChapterId(null) // Clear selected chapter as it will be invalid after reimport
 
     // Validate file type
     const validTypes = ['.docx', '.doc', '.txt']
@@ -151,16 +161,21 @@ function ManuscriptPage() {
       setParsing(false)
       setStatusMessage(t('manuscript.chaptersDetected', { count: parseResult.data?.chapters_detected || 0 }))
       
-      // Refresh chapters list
-      queryClient.invalidateQueries({ queryKey: ['chapters', projectId] })
+      // Refresh chapters list and wait for it to complete
+      const freshChapters = await queryClient.refetchQueries({ queryKey: ['chapters', projectId] })
       
       // Clear file input
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
       }
 
-      // Clear status message after 3 seconds
-      setTimeout(() => setStatusMessage(''), 3000)
+      // Automatically check TTS compatibility for all chapters
+      // Use the freshly fetched data directly
+      setTimeout(async () => {
+        // Force another refetch to be absolutely sure we have the latest data
+        await queryClient.invalidateQueries({ queryKey: ['chapters', projectId] })
+        checkAllChaptersSanitization()
+      }, 500)
 
     } catch (error) {
       console.error('Error uploading/parsing manuscript:', error)
@@ -170,7 +185,92 @@ function ManuscriptPage() {
     }
   }
 
-  // Check text sanitization for TTS compatibility
+  // Check TTS compatibility for all chapters
+  const checkAllChaptersSanitization = async () => {
+    if (!project || !chaptersData?.items) return
+
+    const allChapters = chaptersData.items
+    if (allChapters.length === 0) return
+
+    console.log('[TTS Check] Starting check for', allChapters.length, 'chapters')
+    console.log('[TTS Check] Sample chapter content length:', allChapters[0]?.content?.length)
+
+    setCheckingSanitization(true)
+    try {
+      const language = project.language || 'en-US'
+      const chaptersToSanitize: Array<{ id: string; title: string; changes: number; sanitized: string; issues: string[] }> = []
+      let totalChanges = 0
+      let totalIssues = 0
+
+      // Check each chapter
+      for (const chapter of allChapters) {
+        const text = chapter.content || ''
+        console.log(`[TTS Check] Checking chapter "${chapter.title}" - content length: ${text.length}`)
+        const checkResult = hasProblematicCharacters(text, language)
+        
+        console.log(`[TTS Check] Chapter "${chapter.title}" - has problems: ${checkResult.hasProblems}, issues: ${checkResult.issues.length}`)
+        
+        if (checkResult.hasProblems) {
+          const sanitizeResult = sanitizeTextForTTS(text, { language })
+          
+          // Find first quote character to debug
+          const quoteMatch = text.match(/["""'']/);
+          const quoteDebug = quoteMatch ? {
+            char: quoteMatch[0],
+            code: quoteMatch[0].charCodeAt(0).toString(16),
+            position: text.indexOf(quoteMatch[0])
+          } : null;
+          
+          console.log(`[TTS Check] Chapter "${chapter.title}" - sanitization result:`, {
+            changes: sanitizeResult.changes,
+            oldLength: text.length,
+            newLength: sanitizeResult.sanitized.length,
+            areSame: text === sanitizeResult.sanitized,
+            firstIssue: checkResult.issues[0],
+            quoteDebug,
+            oldSample: text.substring(0, 200),
+            newSample: sanitizeResult.sanitized.substring(0, 200)
+          })
+          
+          // Only add if sanitization actually changes the content
+          if (sanitizeResult.changes > 0 && text !== sanitizeResult.sanitized) {
+            console.log(`[TTS Check] Chapter "${chapter.title}" needs ${sanitizeResult.changes} changes`)
+            chaptersToSanitize.push({
+              id: chapter.id,
+              title: chapter.title,
+              changes: sanitizeResult.changes,
+              sanitized: sanitizeResult.sanitized,
+              issues: checkResult.issues,
+            })
+            totalChanges += sanitizeResult.changes
+            totalIssues += checkResult.issues.length
+          }
+        }
+      }
+
+      console.log(`[TTS Check] Check complete - ${chaptersToSanitize.length} chapters need sanitization`)
+
+      if (chaptersToSanitize.length === 0) {
+        setStatusMessage(t('manuscript.noTTSIssues', 'No TTS compatibility issues found!'))
+        setTimeout(() => setStatusMessage(''), 3000)
+      } else {
+        // Show confirmation modal
+        setBulkSanitizationModal({
+          chapters: chaptersToSanitize,
+          totalChanges,
+          totalIssues,
+        })
+      }
+    } catch (error) {
+      console.error('Error checking bulk sanitization:', error)
+      setStatusMessage(t('manuscript.sanitizationCheckError', 'Error checking TTS compatibility'))
+      setTimeout(() => setStatusMessage(''), 3000)
+    } finally {
+      setCheckingSanitization(false)
+    }
+  }
+
+  // Check text sanitization for TTS compatibility (single chapter)
   const checkTextSanitization = async () => {
     if (!selectedChapter || !project) return
 
@@ -231,6 +331,57 @@ function ManuscriptPage() {
       console.error('Error applying sanitization:', error)
       setStatusMessage(t('manuscript.sanitizationApplyError', 'Error applying sanitization'))
       setTimeout(() => setStatusMessage(''), 3000)
+    }
+  }
+
+  // Apply bulk sanitization to all chapters with issues
+  const applyBulkSanitization = async () => {
+    if (!bulkSanitizationModal) return
+
+    setApplyingSanitization(true)
+    try {
+      console.log('[TTS Sanitization] Applying sanitization to chapters:', bulkSanitizationModal.chapters.map(c => ({ id: c.id, title: c.title, changes: c.changes })))
+      
+      // Update all chapters in parallel
+      const updatePromises = bulkSanitizationModal.chapters.map(async (chapter) => {
+        console.log(`[TTS Sanitization] Updating chapter ${chapter.title} (${chapter.id})`)
+        console.log(`[TTS Sanitization] Sanitized content length: ${chapter.sanitized.length}`)
+        
+        const result = await updateChapter(projectId, chapter.id, {
+          content: chapter.sanitized,
+        })
+        
+        console.log(`[TTS Sanitization] Chapter ${chapter.title} updated successfully`)
+        return result
+      })
+
+      const results = await Promise.all(updatePromises)
+      console.log(`[TTS Sanitization] All ${results.length} chapters updated successfully`)
+
+      // Clear modal first to prevent re-use of stale data
+      const sanitizedCount = bulkSanitizationModal.chapters.length
+      setBulkSanitizationModal(null)
+
+      // Refresh all chapter data and wait for refetch
+      await queryClient.refetchQueries({ queryKey: ['chapters', projectId] })
+      if (selectedChapterId) {
+        await queryClient.refetchQueries({ queryKey: ['chapter', projectId, selectedChapterId] })
+      }
+      
+      console.log('[TTS Sanitization] Chapter data refetched from server')
+
+      setStatusMessage(
+        t('manuscript.bulkSanitizationApplied', `TTS sanitization applied to ${sanitizedCount} chapters!`)
+      )
+      setTimeout(() => setStatusMessage(''), 3000)
+    } catch (error) {
+      console.error('[TTS Sanitization] Error applying bulk sanitization:', error)
+      // Clear modal on error to force fresh check next time
+      setBulkSanitizationModal(null)
+      setStatusMessage(t('manuscript.bulkSanitizationError', 'Error applying sanitization to chapters'))
+      setTimeout(() => setStatusMessage(''), 3000)
+    } finally {
+      setApplyingSanitization(false)
     }
   }
 
@@ -353,25 +504,25 @@ function ManuscriptPage() {
               {uploading ? t('manuscript.uploading') : parsing ? t('manuscript.parsing') : t('manuscript.importDocx')}
             </label>
             
-            {chapters.length > 0 && selectedChapter && (
+            {chapters.length > 0 && (
               <button
-                onClick={checkTextSanitization}
+                onClick={checkAllChaptersSanitization}
                 disabled={checkingSanitization}
                 style={{
                   padding: '0.5rem 1rem',
                   borderRadius: '0.375rem',
                   fontSize: '0.875rem',
                   fontWeight: 500,
-                  background: 'var(--panel)',
-                  color: 'var(--text)',
+                  background: 'var(--accent)',
+                  color: '#fff',
                   cursor: checkingSanitization ? 'not-allowed' : 'pointer',
-                  border: '1px solid var(--border)',
+                  border: 'none',
                   whiteSpace: 'nowrap',
                 }}
               >
                 {checkingSanitization
                   ? t('manuscript.checking', 'Checking...')
-                  : t('manuscript.checkTTS', 'Check TTS Compatibility')}
+                  : t('manuscript.checkTTS', 'Check for TTS Compatibility')}
               </button>
             )}
           </div>
@@ -493,6 +644,125 @@ function ManuscriptPage() {
                 )}
               </div>
             </details>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Sanitization Modal */}
+      {bulkSanitizationModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => !applyingSanitization && setBulkSanitizationModal(null)}
+        >
+          <div
+            style={{
+              maxWidth: '600px',
+              width: '90%',
+              background: 'var(--panel)',
+              borderRadius: '12px',
+              border: '1px solid var(--border)',
+              padding: '2rem',
+              maxHeight: '80vh',
+              overflow: 'auto',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text)', margin: '0 0 0.5rem 0' }}>
+              {t('manuscript.ttsIssuesDetected', 'TTS Compatibility Issues Detected')}
+            </h3>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+              {t('manuscript.bulkSanitizationMessage', `Found ${bulkSanitizationModal.totalIssues} TTS compatibility issues across ${bulkSanitizationModal.chapters.length} chapters. Would you like to apply ${bulkSanitizationModal.totalChanges} automatic fixes?`)}
+            </p>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.75rem' }}>
+                {t('manuscript.affectedChapters', 'Affected Chapters:')}
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {bulkSanitizationModal.chapters.map((chapter) => (
+                  <details
+                    key={chapter.id}
+                    style={{
+                      background: 'var(--bg-secondary)',
+                      borderRadius: '6px',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <summary
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '0.75rem',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                      }}
+                    >
+                      <span style={{ fontWeight: 500, color: 'var(--text)' }}>{chapter.title}</span>
+                      <span style={{ color: 'var(--text-muted)' }}>
+                        {chapter.issues.length} {t('manuscript.issues', 'issues')} • {chapter.changes} {t('manuscript.changes', 'changes')}
+                      </span>
+                    </summary>
+                    <div style={{ padding: '0 0.75rem 0.75rem 0.75rem' }}>
+                      <ul style={{ listStyleType: 'disc', paddingLeft: '1.5rem', margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        {chapter.issues.map((issue, idx) => (
+                          <li key={idx} style={{ marginBottom: '0.25rem' }}>
+                            {issue}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </details>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setBulkSanitizationModal(null)}
+                disabled={applyingSanitization}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '8px',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  background: 'var(--bg-secondary)',
+                  color: 'var(--text)',
+                  cursor: applyingSanitization ? 'not-allowed' : 'pointer',
+                  border: '1px solid var(--border)',
+                  opacity: applyingSanitization ? 0.5 : 1,
+                }}
+              >
+                {t('manuscript.cancel', 'Cancel')}
+              </button>
+              <button
+                onClick={applyBulkSanitization}
+                disabled={applyingSanitization}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '8px',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  background: '#22c55e',
+                  color: '#052e12',
+                  cursor: applyingSanitization ? 'not-allowed' : 'pointer',
+                  border: 'none',
+                  opacity: applyingSanitization ? 0.5 : 1,
+                }}
+              >
+                {applyingSanitization 
+                  ? t('manuscript.applying', 'Applying...') 
+                  : t('manuscript.applyToAll', 'Apply to All Chapters')}
+              </button>
+            </div>
           </div>
         </div>
       )}

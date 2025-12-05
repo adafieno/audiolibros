@@ -117,8 +117,21 @@ def _paragraphs_from_docx(infile: Path) -> List[Tuple[str, str, Dict[str, bool]]
     doc = docx.Document(str(infile))
     out: List[Tuple[str, str, Dict[str, bool]]] = []
 
+    # Debug: Check for smart quotes in first paragraphs
+    debug_count = 0
     for p in doc.paragraphs:
         t = _strip_bom(p.text or "")
+        
+        # Debug logging for first few paragraphs with quotes
+        if debug_count < 5 and ('"' in t or '"' in t or '"' in t or '\u201C' in t or '\u201D' in t):
+            jlog("debug_quotes", 
+                 text_sample=t[:200], 
+                 has_ascii_quote='"' in t,
+                 has_left_smart='\u201C' in t or '"' in t,
+                 has_right_smart='\u201D' in t or '"' in t,
+                 char_codes=[hex(ord(c)) for c in t if c in '""\u201C\u201D'])
+            debug_count += 1
+        
         style = ""
         try:
             style = getattr(p.style, "name", "") or ""

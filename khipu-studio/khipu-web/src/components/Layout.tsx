@@ -2,7 +2,9 @@ import { Link, useLocation, useNavigate, useParams } from '@tanstack/react-route
 import { useAuth } from '../hooks/useAuthHook';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { projectsApi } from '../lib/projects';
+import { getChapters } from '../api/chapters';
 import { setProjectState, useProjectState, isStepAvailable, isStepCompleted } from '../store/project';
 import type { ReactNode } from 'react';
 
@@ -52,23 +54,59 @@ export function Layout({ children }: LayoutProps) {
     enabled: !!projectId,
   });
 
-  // Keep centralized store in sync with fetched project
-  if (projectId && project) {
-    setProjectState({
-      currentProjectId: projectId,
-      root: project.root,
-      workflowCompleted: project.workflow_completed,
-    });
-  }
+  // Query chapters to determine if manuscript is complete
+  const { data: chaptersData } = useQuery({
+    queryKey: ['chapters', projectId],
+    queryFn: () => getChapters(projectId!),
+    enabled: !!projectId,
+  });
+
+  // Sync project state from database to local store, and update manuscript completion
+  useEffect(() => {
+    if (projectId && project) {
+      const manuscriptComplete = (chaptersData?.items?.length || 0) > 0;
+      const updatedWorkflow = {
+        ...project.workflow_completed,
+        manuscript: manuscriptComplete,
+      };
+      
+      console.log('[Layout] Syncing project state:', {
+        projectId,
+        workflowCompleted: updatedWorkflow,
+        fullWorkflow: JSON.stringify(updatedWorkflow),
+        chaptersCount: chaptersData?.items?.length || 0
+      });
+      
+      setProjectState({
+        currentProjectId: projectId,
+        root: project.root,
+        workflowCompleted: updatedWorkflow,
+      });
+
+      // Update database if manuscript completion changed
+      if (manuscriptComplete && !project.workflow_completed?.manuscript) {
+        projectsApi.update(projectId, { workflow_completed: updatedWorkflow })
+          .catch(error => console.error('[Layout] Failed to update workflow:', error));
+      }
+    }
+  }, [projectId, project, chaptersData]);
 
   // Build navigation items - always show workflow routes if we have a project loaded
   const navItems: NavItem[] = [homeRoute];
   
   if (projectState.currentProjectId) {
     // Add workflow routes when we have a project loaded
-    const availableRoutes = projectRoutes.filter((route) =>
-      isStepAvailable(route.workflowStep, projectState.workflowCompleted)
-    );
+    const availableRoutes = projectRoutes.filter((route) => {
+      const available = isStepAvailable(route.workflowStep, projectState.workflowCompleted);
+      if (route.to === 'casting') {
+        console.log('[Layout] Casting availability check:', {
+          available,
+          workflowCompleted: projectState.workflowCompleted,
+          manuscriptComplete: projectState.workflowCompleted?.manuscript
+        });
+      }
+      return available;
+    });
     navItems.push(...availableRoutes);
   }
   

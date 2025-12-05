@@ -259,21 +259,19 @@ function BookDetailsPage() {
   return (
     <div className="p-6">
       <div className="rounded-lg border shadow mb-6 p-6" style={{ background: 'var(--panel)', borderColor: 'var(--border)' }}>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text)' }}>{t('book.title', 'Book Details')}</h1>
-              {saving && (
-                <span className="text-sm" style={{ color: 'var(--text-muted)' }}>Saving...</span>
-              )}
-            </div>
-            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('book.description', 'Enter the book metadata and publishing information that will appear in the audiobook.')}</p>
+        <div>
+          <div className="flex items-center gap-3 mb-1">
+            <h1 className="text-2xl font-bold" style={{ color: 'var(--text)', margin: 0 }}>{t('book.title', 'Book Details')}</h1>
+            {isComplete && (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium shadow" style={{ background: '#22c55e', color: '#052e12' }}>
+                {t('project.completed', 'Completed')}
+              </span>
+            )}
+            {saving && (
+              <span className="text-sm" style={{ color: 'var(--text-muted)' }}>Saving...</span>
+            )}
           </div>
-          {isComplete ? (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium shadow" style={{ background: '#22c55e', color: '#052e12' }}>
-              {t('project.completed', 'Completed')}
-            </span>
-          ) : null}
+          <p className="text-sm" style={{ color: 'var(--text-muted)', margin: 0 }}>{t('book.description', 'Enter the book metadata and publishing information that will appear in the audiobook.')}</p>
         </div>
       </div>
       {error && (

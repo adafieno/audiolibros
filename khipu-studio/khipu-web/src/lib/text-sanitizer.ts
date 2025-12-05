@@ -21,9 +21,10 @@ export interface SanitizationOptions {
  * Common problematic characters and sequences for TTS engines
  */
 const TTS_PROBLEMATIC_RULES: SanitizationRule[] = [
-  // Unicode quotation marks -> ASCII equivalents (including U+201C and U+201D)
-  { pattern: /[""""\u201C\u201D]/g, replacement: '"', description: 'Smart quotes to straight quotes' },
-  { pattern: /['']/g, replacement: "'", description: 'Smart apostrophes to straight apostrophes' },
+  // Most common smart quotes (U+201C LEFT DOUBLE QUOTATION MARK, U+201D RIGHT DOUBLE QUOTATION MARK)
+  { pattern: /[\u201C\u201D]/g, replacement: '"', description: 'Smart double quotes to straight quotes' },
+  // Most common smart apostrophes (U+2018 LEFT SINGLE QUOTATION MARK, U+2019 RIGHT SINGLE QUOTATION MARK)
+  { pattern: /[\u2018\u2019]/g, replacement: "'", description: 'Smart single quotes to straight quotes' },
   
   // Ellipsis -> three periods
   { pattern: /…/g, replacement: '...', description: 'Ellipsis to three dots' },

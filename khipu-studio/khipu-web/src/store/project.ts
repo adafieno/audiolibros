@@ -57,9 +57,8 @@ export function isStepAvailable(step: string | undefined, workflowCompleted?: Wo
   switch (step) {
     case 'book':
     case 'project':
-      return true; // Always available when project loaded
     case 'manuscript':
-      return workflowCompleted.book === true && workflowCompleted.project === true; // After book & project config
+      return true; // Always available when project loaded
     case 'casting':
       return workflowCompleted.manuscript === true; // After manuscript imported
     case 'characters':
@@ -67,11 +66,11 @@ export function isStepAvailable(step: string | undefined, workflowCompleted?: Wo
     case 'planning':
       return workflowCompleted.characters === true; // After all characters voiced
     case 'voice':
-      return workflowCompleted.planning === true; // After planning (chapters marked complete)
+      return workflowCompleted.characters === true; // Parallel with planning
     case 'export':
       return workflowCompleted.voice === true; // After full audio generated
     case 'cost':
-      return workflowCompleted.book === true && workflowCompleted.project === true; // Visible when book + project complete
+      return true; // Always visible for tracking costs
     default:
       return false;
   }

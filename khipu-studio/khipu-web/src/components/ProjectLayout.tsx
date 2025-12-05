@@ -1,8 +1,10 @@
 import { Link, useParams, useLocation, useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { projectsApi } from '../lib/projects';
 import { useAuth } from '../hooks/useAuthHook';
+import { setProjectState } from '../store/project';
 import type { ReactNode } from 'react';
 
 const STRIP_W = 88;
@@ -25,7 +27,7 @@ const projectRoutes: RouteItem[] = [
   { to: 'characters', key: 'nav.characters', icon: '🎭', workflowStep: 'characters' },
   { to: 'planning', key: 'nav.planning', icon: '🪄', workflowStep: 'planning' },
   { to: 'voice', key: 'nav.voice', icon: '🎙️', workflowStep: 'voice' },
-  { to: 'packaging', key: 'nav.packaging', icon: '📦', workflowStep: 'voice' },
+  { to: 'export', key: 'nav.packaging', icon: '📦', workflowStep: 'export' },
   { to: 'cost', key: 'nav.cost', icon: '💰' },
 ];
 
@@ -83,10 +85,32 @@ export function ProjectLayout({ children }: { children: ReactNode }) {
     enabled: !!projectId,
   });
 
+  // Sync workflow state from database to local state
+  useEffect(() => {
+    if (projectId) {
+      console.log('[ProjectLayout] Syncing project state:', {
+        projectId,
+        workflowCompleted: project?.workflow_completed
+      });
+      setProjectState({ 
+        currentProjectId: projectId,
+        workflowCompleted: project?.workflow_completed 
+      });
+    }
+  }, [projectId, project?.workflow_completed]);
+
   // Filter available routes based on workflow progression
-  const availableProjectRoutes = projectRoutes.filter((route) =>
-    isStepAvailable(route.workflowStep, project?.workflow_completed)
-  );
+  const availableProjectRoutes = projectRoutes.filter((route) => {
+    const available = isStepAvailable(route.workflowStep, project?.workflow_completed);
+    if (route.to === 'casting') {
+      console.log('[ProjectLayout] Casting availability check:', {
+        available,
+        workflowCompleted: project?.workflow_completed,
+        manuscriptComplete: project?.workflow_completed?.manuscript
+      });
+    }
+    return available;
+  });
 
   const routes: RouteItem[] = [homeRoute, ...availableProjectRoutes, settingsRoute];
 

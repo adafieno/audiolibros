@@ -206,15 +206,35 @@ async def update_chapter(
     
     # Update fields
     update_data = chapter_data.model_dump(exclude_unset=True)
+    
+    # Debug logging for content updates
+    if "content" in update_data:
+        print(f"[CHAPTER UPDATE] Updating chapter {chapter_id} content")
+        print(f"[CHAPTER UPDATE] Old content length: {len(chapter.content) if chapter.content else 0}")
+        print(f"[CHAPTER UPDATE] New content length: {len(update_data['content']) if update_data['content'] else 0}")
+        print(f"[CHAPTER UPDATE] Contents are equal: {chapter.content == update_data['content']}")
+        print(f"[CHAPTER UPDATE] Old first 100 chars: {repr(chapter.content[:100]) if chapter.content else 'None'}")
+        print(f"[CHAPTER UPDATE] New first 100 chars: {repr(update_data['content'][:100]) if update_data['content'] else 'None'}")
+    
     for field, value in update_data.items():
         if field == "content" and value is not None:
+            # Force update by explicitly marking as modified
+            chapter.content = value
             # Recalculate word and character counts when content changes
             chapter.word_count = count_words(value)
             chapter.character_count = count_characters(value)
-        setattr(chapter, field, value)
+        else:
+            setattr(chapter, field, value)
     
+    # Force flush to database
+    await db.flush()
     await db.commit()
     await db.refresh(chapter)
+    
+    # Verify the update
+    if "content" in update_data:
+        print(f"[CHAPTER UPDATE] After commit - content length: {len(chapter.content) if chapter.content else 0}")
+        print(f"[CHAPTER UPDATE] After commit first 100 chars: {repr(chapter.content[:100]) if chapter.content else 'None'}")
     
     return chapter
 

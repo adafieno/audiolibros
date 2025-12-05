@@ -16,10 +16,14 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
 import { Route as ProjectsProjectIdRouteImport } from './routes/projects.$projectId'
 import { Route as ProjectsProjectIdIndexRouteImport } from './routes/projects.$projectId.index'
+import { Route as ProjectsProjectIdVoiceRouteImport } from './routes/projects.$projectId.voice'
 import { Route as ProjectsProjectIdPropertiesRouteImport } from './routes/projects.$projectId.properties'
+import { Route as ProjectsProjectIdPlanningRouteImport } from './routes/projects.$projectId.planning'
 import { Route as ProjectsProjectIdManuscriptRouteImport } from './routes/projects.$projectId.manuscript'
 import { Route as ProjectsProjectIdExportRouteImport } from './routes/projects.$projectId.export'
 import { Route as ProjectsProjectIdEditRouteImport } from './routes/projects.$projectId.edit'
+import { Route as ProjectsProjectIdCharactersRouteImport } from './routes/projects.$projectId.characters'
+import { Route as ProjectsProjectIdCastingRouteImport } from './routes/projects.$projectId.casting'
 import { Route as ProjectsProjectIdBookRouteImport } from './routes/projects.$projectId.book'
 
 const SettingsRoute = SettingsRouteImport.update({
@@ -57,10 +61,21 @@ const ProjectsProjectIdIndexRoute = ProjectsProjectIdIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ProjectsProjectIdRoute,
 } as any)
+const ProjectsProjectIdVoiceRoute = ProjectsProjectIdVoiceRouteImport.update({
+  id: '/voice',
+  path: '/voice',
+  getParentRoute: () => ProjectsProjectIdRoute,
+} as any)
 const ProjectsProjectIdPropertiesRoute =
   ProjectsProjectIdPropertiesRouteImport.update({
     id: '/properties',
     path: '/properties',
+    getParentRoute: () => ProjectsProjectIdRoute,
+  } as any)
+const ProjectsProjectIdPlanningRoute =
+  ProjectsProjectIdPlanningRouteImport.update({
+    id: '/planning',
+    path: '/planning',
     getParentRoute: () => ProjectsProjectIdRoute,
   } as any)
 const ProjectsProjectIdManuscriptRoute =
@@ -79,6 +94,18 @@ const ProjectsProjectIdEditRoute = ProjectsProjectIdEditRouteImport.update({
   path: '/edit',
   getParentRoute: () => ProjectsProjectIdRoute,
 } as any)
+const ProjectsProjectIdCharactersRoute =
+  ProjectsProjectIdCharactersRouteImport.update({
+    id: '/characters',
+    path: '/characters',
+    getParentRoute: () => ProjectsProjectIdRoute,
+  } as any)
+const ProjectsProjectIdCastingRoute =
+  ProjectsProjectIdCastingRouteImport.update({
+    id: '/casting',
+    path: '/casting',
+    getParentRoute: () => ProjectsProjectIdRoute,
+  } as any)
 const ProjectsProjectIdBookRoute = ProjectsProjectIdBookRouteImport.update({
   id: '/book',
   path: '/book',
@@ -93,10 +120,14 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId': typeof ProjectsProjectIdRouteWithChildren
   '/projects/': typeof ProjectsIndexRoute
   '/projects/$projectId/book': typeof ProjectsProjectIdBookRoute
+  '/projects/$projectId/casting': typeof ProjectsProjectIdCastingRoute
+  '/projects/$projectId/characters': typeof ProjectsProjectIdCharactersRoute
   '/projects/$projectId/edit': typeof ProjectsProjectIdEditRoute
   '/projects/$projectId/export': typeof ProjectsProjectIdExportRoute
   '/projects/$projectId/manuscript': typeof ProjectsProjectIdManuscriptRoute
+  '/projects/$projectId/planning': typeof ProjectsProjectIdPlanningRoute
   '/projects/$projectId/properties': typeof ProjectsProjectIdPropertiesRoute
+  '/projects/$projectId/voice': typeof ProjectsProjectIdVoiceRoute
   '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -105,10 +136,14 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/projects': typeof ProjectsIndexRoute
   '/projects/$projectId/book': typeof ProjectsProjectIdBookRoute
+  '/projects/$projectId/casting': typeof ProjectsProjectIdCastingRoute
+  '/projects/$projectId/characters': typeof ProjectsProjectIdCharactersRoute
   '/projects/$projectId/edit': typeof ProjectsProjectIdEditRoute
   '/projects/$projectId/export': typeof ProjectsProjectIdExportRoute
   '/projects/$projectId/manuscript': typeof ProjectsProjectIdManuscriptRoute
+  '/projects/$projectId/planning': typeof ProjectsProjectIdPlanningRoute
   '/projects/$projectId/properties': typeof ProjectsProjectIdPropertiesRoute
+  '/projects/$projectId/voice': typeof ProjectsProjectIdVoiceRoute
   '/projects/$projectId': typeof ProjectsProjectIdIndexRoute
 }
 export interface FileRoutesById {
@@ -120,10 +155,14 @@ export interface FileRoutesById {
   '/projects/$projectId': typeof ProjectsProjectIdRouteWithChildren
   '/projects/': typeof ProjectsIndexRoute
   '/projects/$projectId/book': typeof ProjectsProjectIdBookRoute
+  '/projects/$projectId/casting': typeof ProjectsProjectIdCastingRoute
+  '/projects/$projectId/characters': typeof ProjectsProjectIdCharactersRoute
   '/projects/$projectId/edit': typeof ProjectsProjectIdEditRoute
   '/projects/$projectId/export': typeof ProjectsProjectIdExportRoute
   '/projects/$projectId/manuscript': typeof ProjectsProjectIdManuscriptRoute
+  '/projects/$projectId/planning': typeof ProjectsProjectIdPlanningRoute
   '/projects/$projectId/properties': typeof ProjectsProjectIdPropertiesRoute
+  '/projects/$projectId/voice': typeof ProjectsProjectIdVoiceRoute
   '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -136,10 +175,14 @@ export interface FileRouteTypes {
     | '/projects/$projectId'
     | '/projects/'
     | '/projects/$projectId/book'
+    | '/projects/$projectId/casting'
+    | '/projects/$projectId/characters'
     | '/projects/$projectId/edit'
     | '/projects/$projectId/export'
     | '/projects/$projectId/manuscript'
+    | '/projects/$projectId/planning'
     | '/projects/$projectId/properties'
+    | '/projects/$projectId/voice'
     | '/projects/$projectId/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -148,10 +191,14 @@ export interface FileRouteTypes {
     | '/settings'
     | '/projects'
     | '/projects/$projectId/book'
+    | '/projects/$projectId/casting'
+    | '/projects/$projectId/characters'
     | '/projects/$projectId/edit'
     | '/projects/$projectId/export'
     | '/projects/$projectId/manuscript'
+    | '/projects/$projectId/planning'
     | '/projects/$projectId/properties'
+    | '/projects/$projectId/voice'
     | '/projects/$projectId'
   id:
     | '__root__'
@@ -162,10 +209,14 @@ export interface FileRouteTypes {
     | '/projects/$projectId'
     | '/projects/'
     | '/projects/$projectId/book'
+    | '/projects/$projectId/casting'
+    | '/projects/$projectId/characters'
     | '/projects/$projectId/edit'
     | '/projects/$projectId/export'
     | '/projects/$projectId/manuscript'
+    | '/projects/$projectId/planning'
     | '/projects/$projectId/properties'
+    | '/projects/$projectId/voice'
     | '/projects/$projectId/'
   fileRoutesById: FileRoutesById
 }
@@ -227,11 +278,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsProjectIdIndexRouteImport
       parentRoute: typeof ProjectsProjectIdRoute
     }
+    '/projects/$projectId/voice': {
+      id: '/projects/$projectId/voice'
+      path: '/voice'
+      fullPath: '/projects/$projectId/voice'
+      preLoaderRoute: typeof ProjectsProjectIdVoiceRouteImport
+      parentRoute: typeof ProjectsProjectIdRoute
+    }
     '/projects/$projectId/properties': {
       id: '/projects/$projectId/properties'
       path: '/properties'
       fullPath: '/projects/$projectId/properties'
       preLoaderRoute: typeof ProjectsProjectIdPropertiesRouteImport
+      parentRoute: typeof ProjectsProjectIdRoute
+    }
+    '/projects/$projectId/planning': {
+      id: '/projects/$projectId/planning'
+      path: '/planning'
+      fullPath: '/projects/$projectId/planning'
+      preLoaderRoute: typeof ProjectsProjectIdPlanningRouteImport
       parentRoute: typeof ProjectsProjectIdRoute
     }
     '/projects/$projectId/manuscript': {
@@ -255,6 +320,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsProjectIdEditRouteImport
       parentRoute: typeof ProjectsProjectIdRoute
     }
+    '/projects/$projectId/characters': {
+      id: '/projects/$projectId/characters'
+      path: '/characters'
+      fullPath: '/projects/$projectId/characters'
+      preLoaderRoute: typeof ProjectsProjectIdCharactersRouteImport
+      parentRoute: typeof ProjectsProjectIdRoute
+    }
+    '/projects/$projectId/casting': {
+      id: '/projects/$projectId/casting'
+      path: '/casting'
+      fullPath: '/projects/$projectId/casting'
+      preLoaderRoute: typeof ProjectsProjectIdCastingRouteImport
+      parentRoute: typeof ProjectsProjectIdRoute
+    }
     '/projects/$projectId/book': {
       id: '/projects/$projectId/book'
       path: '/book'
@@ -267,19 +346,27 @@ declare module '@tanstack/react-router' {
 
 interface ProjectsProjectIdRouteChildren {
   ProjectsProjectIdBookRoute: typeof ProjectsProjectIdBookRoute
+  ProjectsProjectIdCastingRoute: typeof ProjectsProjectIdCastingRoute
+  ProjectsProjectIdCharactersRoute: typeof ProjectsProjectIdCharactersRoute
   ProjectsProjectIdEditRoute: typeof ProjectsProjectIdEditRoute
   ProjectsProjectIdExportRoute: typeof ProjectsProjectIdExportRoute
   ProjectsProjectIdManuscriptRoute: typeof ProjectsProjectIdManuscriptRoute
+  ProjectsProjectIdPlanningRoute: typeof ProjectsProjectIdPlanningRoute
   ProjectsProjectIdPropertiesRoute: typeof ProjectsProjectIdPropertiesRoute
+  ProjectsProjectIdVoiceRoute: typeof ProjectsProjectIdVoiceRoute
   ProjectsProjectIdIndexRoute: typeof ProjectsProjectIdIndexRoute
 }
 
 const ProjectsProjectIdRouteChildren: ProjectsProjectIdRouteChildren = {
   ProjectsProjectIdBookRoute: ProjectsProjectIdBookRoute,
+  ProjectsProjectIdCastingRoute: ProjectsProjectIdCastingRoute,
+  ProjectsProjectIdCharactersRoute: ProjectsProjectIdCharactersRoute,
   ProjectsProjectIdEditRoute: ProjectsProjectIdEditRoute,
   ProjectsProjectIdExportRoute: ProjectsProjectIdExportRoute,
   ProjectsProjectIdManuscriptRoute: ProjectsProjectIdManuscriptRoute,
+  ProjectsProjectIdPlanningRoute: ProjectsProjectIdPlanningRoute,
   ProjectsProjectIdPropertiesRoute: ProjectsProjectIdPropertiesRoute,
+  ProjectsProjectIdVoiceRoute: ProjectsProjectIdVoiceRoute,
   ProjectsProjectIdIndexRoute: ProjectsProjectIdIndexRoute,
 }
 
