@@ -82,7 +82,7 @@ function ManuscriptPage() {
 
       const token = localStorage.getItem('access_token')
       const uploadResponse = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/projects/${projectId}/manuscript/upload`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/v1/projects/${projectId}/chapters/manuscript/upload`,
         {
           method: 'POST',
           headers: {
@@ -102,7 +102,7 @@ function ManuscriptPage() {
 
       // Parse manuscript to detect chapters
       const parseResponse = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/projects/${projectId}/manuscript/parse`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/v1/projects/${projectId}/chapters/manuscript/parse`,
         {
           method: 'POST',
           headers: {

@@ -274,6 +274,7 @@ async def upload_manuscript(
     db: AsyncSession = Depends(get_db)
 ):
     """Upload a manuscript file (DOCX or TXT). Stores temporarily for parsing. Requires WRITE permission."""
+    print(f"[UPLOAD] Starting upload for project {project_id}, file: {file.filename}")
     # Get project
     result = await db.execute(
         select(Project).where(
@@ -309,6 +310,7 @@ async def upload_manuscript(
     file_path = temp_dir / file.filename
     content = await file.read()
     file_path.write_bytes(content)
+    print(f"[UPLOAD] File saved successfully to {file_path}")
     
     return {
         "message": "File uploaded successfully",
@@ -324,6 +326,7 @@ async def parse_manuscript(
     db: AsyncSession = Depends(get_db)
 ):
     """Parse uploaded manuscript and create chapters from detected structure. Requires WRITE permission."""
+    print(f"[PARSE] Starting parse for project {project_id}")
     # Get project
     result = await db.execute(
         select(Project).where(
@@ -369,15 +372,19 @@ async def parse_manuscript(
         # Call the manuscript parser
         parser_script = Path(__file__).parent.parent.parent.parent / "py" / "ingest" / "manuscript_parser.py"
         
+        # Use the virtual environment's Python
+        import sys
+        python_executable = sys.executable
+        
         if manuscript_file.suffix.lower() in ['.docx', '.doc']:
             cmd = [
-                "python", str(parser_script),
+                python_executable, str(parser_script),
                 "--docx", str(manuscript_file),
                 "--out-dir", str(output_dir)
             ]
         else:  # .txt
             cmd = [
-                "python", str(parser_script),
+                python_executable, str(parser_script),
                 "--txt", str(manuscript_file),
                 "--out-dir", str(output_dir)
             ]
@@ -453,6 +460,9 @@ async def parse_manuscript(
             detail="Manuscript parsing timed out"
         )
     except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"ERROR parsing manuscript: {error_details}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error parsing manuscript: {str(e)}"
