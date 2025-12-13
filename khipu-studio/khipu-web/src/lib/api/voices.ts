@@ -29,6 +29,11 @@ export const voicesApi = {
   getAvailableVoices: async (): Promise<VoiceInventory> => {
     try {
       const response = await api.get(`/voices`);
+      // If backend returns empty voices, use local inventory as fallback
+      if (!response.data.voices || response.data.voices.length === 0) {
+        console.log('Backend returned empty voices, using local inventory');
+        return comprehensiveVoices as VoiceInventory;
+      }
       return response.data;
     } catch (error: unknown) {
       // If endpoint doesn't exist yet, use local comprehensive voice inventory

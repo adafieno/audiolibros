@@ -23,7 +23,7 @@ function LoginComponent() {
 
     try {
       await login({ email, password });
-      navigate({ to: '/' });
+      navigate({ to: '/projects' });
     } catch (err: any) {
       const errorMessage = err.response?.data?.detail || err.message || t('auth.invalidCredentials');
       setError(errorMessage);

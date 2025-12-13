@@ -12,7 +12,6 @@ import {
   filterVoicesByLanguage,
   filterVoicesByGender,
   filterVoicesByLocale,
-  getAuditionText,
 } from '../lib/voice-utils';
 
 export const Route = createFileRoute('/projects/$projectId/casting')({
@@ -116,8 +115,8 @@ function CastingPage() {
       let audioUrl = audioCache.get(voice.id);
       
       if (!audioUrl) {
-        const auditionText = getAuditionText(voice.locale);
-        const blob = await voicesApi.auditionVoice(projectId, voice.id, auditionText);
+        // Don't pass text - let backend select locale-specific text
+        const blob = await voicesApi.auditionVoice(projectId, voice.id);
         audioUrl = URL.createObjectURL(blob);
         audioCache.set(voice.id, audioUrl);
       }

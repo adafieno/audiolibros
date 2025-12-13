@@ -1,7 +1,6 @@
 """
 Azure TTS service for voice audition
 """
-import os
 import logging
 from typing import Optional
 import aiohttp
@@ -29,6 +28,8 @@ async def generate_audio(
     voice_id: str,
     text: str,
     locale: str,
+    azure_key: str,
+    azure_region: str,
     style: Optional[str] = None,
     style_degree: Optional[float] = None,
     rate_pct: Optional[int] = None,
@@ -41,6 +42,8 @@ async def generate_audio(
         voice_id: Azure voice ID (e.g., "es-AR-ElenaNeural")
         text: Text to synthesize
         locale: Voice locale (e.g., "es-AR")
+        azure_key: Azure TTS subscription key
+        azure_region: Azure region (e.g., "eastus")
         style: Optional speaking style
         style_degree: Optional style intensity (0.01-2.0)
         rate_pct: Optional speech rate percentage (-100 to 200)
@@ -49,12 +52,8 @@ async def generate_audio(
     Returns:
         Audio data as bytes (WAV format)
     """
-    # Get credentials from environment
-    azure_key = os.getenv("AZURE_TTS_KEY")
-    azure_region = os.getenv("AZURE_TTS_REGION")
-    
     if not azure_key or not azure_region:
-        raise ValueError("Azure TTS credentials not configured. Set AZURE_TTS_KEY and AZURE_TTS_REGION environment variables.")
+        raise ValueError("Azure TTS credentials not configured in project settings. Please add Azure key and region in Project Settings.")
     
     logger.info(f"Generating audio for voice {voice_id}")
     
