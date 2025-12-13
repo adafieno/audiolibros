@@ -11,9 +11,13 @@
   --text-muted: #8b949e;
   --accent: #58a6ff;
   --accent-hover: #1f6feb;
+  --accent-subtle: rgba(88, 166, 255, 0.1);
   --success: #3fb950;
+  --success-subtle: rgba(63, 185, 80, 0.1);
   --warning: #d29922;
+  --warning-subtle: rgba(210, 153, 34, 0.1);
   --error: #f85149;
+  --error-subtle: rgba(248, 81, 73, 0.1);
 }
 
 :root[data-theme="light"] {
@@ -26,9 +30,13 @@
   --text-muted: #6b7280;
   --accent: #2563eb;
   --accent-hover: #1d4ed8;
+  --accent-subtle: rgba(37, 99, 235, 0.1);
   --success: #10b981;
+  --success-subtle: rgba(16, 185, 129, 0.1);
   --warning: #f59e0b;
+  --warning-subtle: rgba(245, 158, 11, 0.1);
   --error: #ef4444;
+  --error-subtle: rgba(239, 68, 68, 0.1);
 }
 
 @layer base {
