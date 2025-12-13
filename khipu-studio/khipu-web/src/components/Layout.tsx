@@ -195,7 +195,7 @@ export function Layout({ children }: LayoutProps) {
                       top: '2px',
                       right: '2px',
                       fontSize: '10px',
-                      color: 'var(--success)',
+                      color: isActive ? 'white' : 'var(--success)',
                       fontWeight: 'bold',
                     }}
                   >
