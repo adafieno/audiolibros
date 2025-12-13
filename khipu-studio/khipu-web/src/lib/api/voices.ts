@@ -88,7 +88,7 @@ export const voicesApi = {
     } catch (error: unknown) {
       // If endpoint doesn't exist, throw error to show message to user
       console.warn('Voice audition API not available:', error);
-      throw new Error('Voice audition not available - TTS backend not configured');
+      throw new Error('Voice audition requires TTS backend. Please configure Azure TTS credentials in the server to enable audio preview.');
     }
   }
 };

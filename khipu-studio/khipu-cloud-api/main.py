@@ -11,6 +11,7 @@ from shared.db.database import engine, Base
 from services.auth.router import router as auth_router
 from services.projects.router import router as projects_router
 from services.chapters.router import router as chapters_router
+from services.voices.router import router as voices_router
 
 # Configure logging
 logging.basicConfig(
@@ -59,6 +60,7 @@ app.add_middleware(
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(projects_router, prefix="/api/v1/projects", tags=["Projects"])
 app.include_router(chapters_router, prefix="/api/v1/projects/{project_id}/chapters", tags=["Chapters"])
+app.include_router(voices_router, prefix="/api/v1/projects", tags=["Voices"])
 
 
 @app.get("/")

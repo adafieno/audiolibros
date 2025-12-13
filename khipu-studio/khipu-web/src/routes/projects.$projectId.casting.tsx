@@ -134,8 +134,8 @@ function CastingPage() {
       };
 
       audio.onerror = () => {
-        setMessage(t('casting.auditionFailed', 'Audition failed'));
-        setTimeout(() => setMessage(''), 3000);
+        setMessage(t('casting.auditionFailed', 'Failed to play audio'));
+        setTimeout(() => setMessage(''), 5000);
         setAuditioningVoices(prev => {
           const newSet = new Set(prev);
           newSet.delete(voice.id);
@@ -144,8 +144,11 @@ function CastingPage() {
       };
     } catch (error) {
       console.error('Audition error:', error);
-      setMessage(t('casting.auditionFailed', 'Audition failed'));
-      setTimeout(() => setMessage(''), 3000);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : t('casting.auditionFailed', 'Audition failed');
+      setMessage(errorMessage);
+      setTimeout(() => setMessage(''), 5000);
       setAuditioningVoices(prev => {
         const newSet = new Set(prev);
         newSet.delete(voice.id);
@@ -496,15 +499,30 @@ function CastingPage() {
       {message && (
         <div
           style={{
-            padding: '12px',
+            padding: '16px',
             marginBottom: '16px',
-            borderRadius: '4px',
-            backgroundColor: 'var(--error-subtle)',
-            color: 'var(--error)',
+            borderRadius: '8px',
+            backgroundColor: message.toLowerCase().includes('requires') || message.toLowerCase().includes('configure')
+              ? 'var(--warning-subtle)'
+              : 'var(--error-subtle)',
+            color: message.toLowerCase().includes('requires') || message.toLowerCase().includes('configure')
+              ? 'var(--warning)'
+              : 'var(--error)',
             fontSize: '14px',
+            border: '1px solid',
+            borderColor: message.toLowerCase().includes('requires') || message.toLowerCase().includes('configure')
+              ? 'var(--warning)'
+              : 'var(--error)',
           }}
         >
-          {message}
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+            <span style={{ fontSize: '18px', lineHeight: '1' }}>
+              {message.toLowerCase().includes('requires') || message.toLowerCase().includes('configure') ? '⚠️' : '❌'}
+            </span>
+            <div style={{ flex: 1 }}>
+              {message}
+            </div>
+          </div>
         </div>
       )}
 

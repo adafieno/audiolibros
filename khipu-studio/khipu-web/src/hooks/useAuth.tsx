@@ -23,6 +23,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const loadUser = async () => {
       const token = localStorage.getItem('access_token');
       console.log('Loading user on mount, has token:', !!token);
+      
+      // Emergency timeout to prevent infinite loading
+      const timeoutId = setTimeout(() => {
+        console.warn('Auth loading timeout - forcing loading to false');
+        setIsLoading(false);
+      }, 5000);
+      
       if (token) {
         try {
           const userData = await authApi.getCurrentUser();
@@ -32,9 +39,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.error('Failed to load user:', error);
           localStorage.removeItem('access_token');
           localStorage.removeItem('refresh_token');
+          setUser(null);
+        } finally {
+          clearTimeout(timeoutId);
+          setIsLoading(false);
         }
+      } else {
+        clearTimeout(timeoutId);
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     loadUser();
