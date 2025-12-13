@@ -184,6 +184,7 @@ class AuditionRequest(BaseModel):
 class ProjectVoiceSettings(BaseModel):
     """Project voice settings"""
     selectedVoiceIds: list[str] = []
+    selectedLanguages: list[str] = []
 
 
 @router.get("/voices")
@@ -223,9 +224,16 @@ async def get_project_voice_settings(
         
         # Get voice settings from project.settings
         voice_settings = project.settings.get("voices", {})
-        selected_voices = voice_settings.get("selectedVoiceIds", [])
+        selected_voice_ids = voice_settings.get("selectedVoiceIds", [])
+        selected_languages = voice_settings.get("selectedLanguages", [])
         
-        return {"selectedVoiceIds": selected_voices}
+        logger.info(f"Loading voice settings for project {project_id}")
+        logger.info(f"Returning: voiceIds count={len(selected_voice_ids)}, languages={selected_languages}")
+        
+        return {
+            "selectedVoiceIds": selected_voice_ids,
+            "selectedLanguages": selected_languages
+        }
         
     except HTTPException:
         raise
@@ -252,6 +260,9 @@ async def update_project_voice_settings(
         Updated voice settings
     """
     try:
+        logger.info(f"Updating voice settings for project {project_id}")
+        logger.info(f"Received: voiceIds={settings.selectedVoiceIds}, languages={settings.selectedLanguages}")
+        
         result = await db.execute(select(Project).where(Project.id == project_id))
         project = result.scalar_one_or_none()
         
@@ -266,6 +277,7 @@ async def update_project_voice_settings(
             project.settings["voices"] = {}
         
         project.settings["voices"]["selectedVoiceIds"] = settings.selectedVoiceIds
+        project.settings["voices"]["selectedLanguages"] = settings.selectedLanguages
         
         # Mark as modified for SQLAlchemy to detect the change
         from sqlalchemy.orm.attributes import flag_modified
@@ -273,7 +285,12 @@ async def update_project_voice_settings(
         
         await db.commit()
         
-        return {"selectedVoiceIds": settings.selectedVoiceIds}
+        logger.info(f"Saved: voiceIds count={len(settings.selectedVoiceIds)}, languages={settings.selectedLanguages}")
+        
+        return {
+            "selectedVoiceIds": settings.selectedVoiceIds,
+            "selectedLanguages": settings.selectedLanguages
+        }
         
     except HTTPException:
         raise

@@ -21,6 +21,7 @@ export interface VoiceInventory {
 
 export interface ProjectVoiceSettings {
   selectedVoiceIds: string[];
+  selectedLanguages?: string[];
   ttsEngine?: TtsEngine;
 }
 

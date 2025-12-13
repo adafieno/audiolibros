@@ -31,6 +31,7 @@ function CastingPage() {
   const [auditioningVoices, setAuditioningVoices] = useState<Set<string>>(new Set());
   const [message, setMessage] = useState('');
   const [audioCache] = useState(new Map<string, string>());
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Queries
   const { data: project } = useQuery({
@@ -48,42 +49,72 @@ function CastingPage() {
     queryFn: () => voicesApi.getProjectVoiceSettings(projectId),
   });
 
-  // Initialize selected voices from project settings
+  // Initialize selected voices and languages from project settings
   useEffect(() => {
-    if (projectVoiceSettings?.selectedVoiceIds) {
+    // Only initialize once
+    if (isInitialized) return;
+    if (!project || !projectVoiceSettings) return;
+    
+    console.log('Initializing from project settings:', projectVoiceSettings);
+    
+    if (projectVoiceSettings.selectedVoiceIds) {
+      console.log('Loading voices:', projectVoiceSettings.selectedVoiceIds);
       setSelectedVoices(new Set(projectVoiceSettings.selectedVoiceIds));
     }
-  }, [projectVoiceSettings]);
-
-  // Initialize selected languages with project language
-  useEffect(() => {
-    if (project?.language && selectedLanguages.length === 0) {
+    
+    if (projectVoiceSettings.selectedLanguages && projectVoiceSettings.selectedLanguages.length > 0) {
+      console.log('Loading languages:', projectVoiceSettings.selectedLanguages);
+      setSelectedLanguages(projectVoiceSettings.selectedLanguages);
+    } else if (project.language) {
+      // Only set default project language if no saved languages
       const primaryLang = getLanguageFromLocale(project.language);
+      console.log('No saved languages, using project default:', primaryLang);
       setSelectedLanguages([primaryLang]);
     }
-  }, [project, selectedLanguages.length]);
+    
+    setIsInitialized(true);
+  }, [projectVoiceSettings, project, isInitialized]);
 
   // Auto-save mutation
   const saveVoicesMutation = useMutation({
-    mutationFn: (voiceIds: string[]) =>
-      voicesApi.updateProjectVoiceSettings(projectId, {
+    mutationFn: ({ voiceIds, languages }: { voiceIds: string[], languages: string[] }) => {
+      console.log('Mutation starting with:', { voiceIds, languages });
+      return voicesApi.updateProjectVoiceSettings(projectId, {
         selectedVoiceIds: voiceIds,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projectVoices', projectId] });
+        selectedLanguages: languages,
+      });
+    },
+    onSuccess: (data) => {
+      console.log('Save successful, response:', data);
+      // Don't invalidate query here to prevent re-initialization race condition
+      // The local state is already the source of truth
+    },
+    onError: (error) => {
+      console.error('Save failed:', error);
     },
   });
 
   // Auto-save when selection changes (debounced)
   useEffect(() => {
-    if (selectedVoices.size === 0) return;
-
+    // Don't save during initial load
+    if (!isInitialized) return;
+    
+    console.log('Auto-save triggered:', {
+      voiceCount: selectedVoices.size,
+      languages: selectedLanguages
+    });
+    
+    // Save even if arrays are empty (user might have cleared selections)
     const timeoutId = setTimeout(() => {
-      saveVoicesMutation.mutate(Array.from(selectedVoices));
+      console.log('Saving voice settings...');
+      saveVoicesMutation.mutate({
+        voiceIds: Array.from(selectedVoices),
+        languages: selectedLanguages
+      });
     }, 1500);
 
     return () => clearTimeout(timeoutId);
-  }, [selectedVoices]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedVoices, selectedLanguages, isInitialized]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Complete workflow mutation
   const completeWorkflowMutation = useMutation({
@@ -159,10 +190,13 @@ function CastingPage() {
   const handleVoiceToggle = (voiceId: string) => {
     const newSelected = new Set(selectedVoices);
     if (newSelected.has(voiceId)) {
+      console.log('Deselecting voice:', voiceId);
       newSelected.delete(voiceId);
     } else {
+      console.log('Selecting voice:', voiceId);
       newSelected.add(voiceId);
     }
+    console.log('New voice count:', newSelected.size);
     setSelectedVoices(newSelected);
   };
 
@@ -255,6 +289,7 @@ function CastingPage() {
               value=""
               onChange={e => {
                 if (e.target.value && !selectedLanguages.includes(e.target.value)) {
+                  console.log('Adding language:', e.target.value);
                   setSelectedLanguages([...selectedLanguages, e.target.value]);
                 }
                 e.target.value = '';
