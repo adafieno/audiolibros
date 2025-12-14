@@ -28,6 +28,7 @@ function CastingPage() {
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
   const [selectedLocales, setSelectedLocales] = useState<string[]>([]);
+  const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [auditioningVoices, setAuditioningVoices] = useState<Set<string>>(new Set());
   const [message, setMessage] = useState('');
   const [audioCache] = useState(new Map<string, string>());
@@ -48,6 +49,42 @@ function CastingPage() {
     queryKey: ['projectVoices', projectId],
     queryFn: () => voicesApi.getProjectVoiceSettings(projectId),
   });
+
+  // Auto-update language filters based on selected voices
+  useEffect(() => {
+    if (!voiceInventory || !project) return;
+    
+    // Get book's default language
+    const bookLanguage = project.language ? getLanguageFromLocale(project.language) : null;
+    
+    // Get languages of all selected voices
+    const selectedVoiceLanguages = new Set<string>();
+    selectedVoices.forEach(voiceId => {
+      const voice = voiceInventory.voices.find(v => v.id === voiceId);
+      if (voice) {
+        const voiceLang = getLanguageFromLocale(voice.locale);
+        selectedVoiceLanguages.add(voiceLang);
+      }
+    });
+    
+    // Build new language list: book language + languages with selections + manually added languages
+    const newLanguages = new Set(selectedLanguages);
+    
+    // Always include book language
+    if (bookLanguage) {
+      newLanguages.add(bookLanguage);
+    }
+    
+    // Add languages that have selected voices
+    selectedVoiceLanguages.forEach(lang => newLanguages.add(lang));
+    
+    const newLanguageArray = Array.from(newLanguages);
+    
+    // Only update if changed to avoid infinite loops
+    if (JSON.stringify(newLanguageArray.sort()) !== JSON.stringify(selectedLanguages.sort())) {
+      setSelectedLanguages(newLanguageArray);
+    }
+  }, [selectedVoices, voiceInventory, project]); // Don't include selectedLanguages in deps
 
   // Initialize selected voices and languages from project settings
   useEffect(() => {
@@ -233,9 +270,19 @@ function CastingPage() {
 
   // Filter voices
   let availableVoices = filterVoicesByEngine(voiceInventory.voices, projectEngine);
-  availableVoices = filterVoicesByLanguage(availableVoices, selectedLanguages);
+  
+  // When showing selected only, don't filter by language - show all selected voices
+  if (!showSelectedOnly) {
+    availableVoices = filterVoicesByLanguage(availableVoices, selectedLanguages);
+  }
+  
   availableVoices = filterVoicesByGender(availableVoices, selectedGenders);
   availableVoices = filterVoicesByLocale(availableVoices, selectedLocales);
+  
+  // Filter by selection status
+  if (showSelectedOnly) {
+    availableVoices = availableVoices.filter(v => selectedVoices.has(v.id));
+  }
 
   // Get filter options
   const availableLanguageOptions = getAvailableLanguages(
@@ -254,6 +301,24 @@ function CastingPage() {
       ).map(v => v.locale)
     ),
   ].sort();
+  
+  // Get book's default language
+  const bookLanguage = project.language ? getLanguageFromLocale(project.language) : null;
+  
+  // Get languages that have selected voices (cannot be removed)
+  const languagesWithSelections = new Set<string>();
+  selectedVoices.forEach(voiceId => {
+    const voice = voiceInventory.voices.find(v => v.id === voiceId);
+    if (voice) {
+      const voiceLang = getLanguageFromLocale(voice.locale);
+      languagesWithSelections.add(voiceLang);
+    }
+  });
+  
+  // Function to check if a language can be removed
+  const canRemoveLanguage = (lang: string) => {
+    return lang !== bookLanguage && !languagesWithSelections.has(lang);
+  };
 
   return (
     <div className="p-6">
@@ -321,212 +386,235 @@ function CastingPage() {
         </p>
       </div>
 
-      {/* Voice Count and Filters */}
-      <div style={{ marginBottom: '16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-            <h3 style={{ fontSize: '1.1rem', margin: 0 }}>
-              {t('casting.availableVoices', 'Available Voices')} ({availableVoices.length})
-            </h3>
-            
-            {/* Filter Tags */}
-            {(selectedLanguages.length > 0 || selectedGenders.length > 0 || selectedLocales.length > 0) && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-                {selectedLanguages.map(lang => (
-                  <span
-                    key={`lang-${lang}`}
+      {/* Language Filter Tags */}
+      {(selectedLanguages.length > 0 || selectedGenders.length > 0 || selectedLocales.length > 0) && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginBottom: '16px' }}>
+          {selectedLanguages.map(lang => {
+            const isRemovable = canRemoveLanguage(lang);
+            return (
+              <span
+                key={`lang-${lang}`}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '6px 12px',
+                  backgroundColor: isRemovable ? 'var(--accent)' : 'var(--success)',
+                  color: 'white',
+                  borderRadius: '16px',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                }}
+              >
+                {t(`languages.${lang}`, lang.toUpperCase())}
+                {isRemovable && (
+                  <button
+                    onClick={() => setSelectedLanguages(selectedLanguages.filter(l => l !== lang))}
                     style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      padding: '4px 8px',
-                      backgroundColor: 'var(--accent)',
+                      background: 'none',
+                      border: 'none',
                       color: 'white',
-                      borderRadius: '4px',
-                      fontSize: '12px',
+                      cursor: 'pointer',
+                      fontSize: '16px',
+                      padding: '0',
+                      lineHeight: '1',
                     }}
                   >
-                    {t(`languages.${lang}`, lang.toUpperCase())}
-                    <button
-                      onClick={() => setSelectedLanguages(selectedLanguages.filter(l => l !== lang))}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: 'white',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        padding: '0',
-                      }}
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-                {selectedGenders.map(gender => (
-                  <span
-                    key={`gender-${gender}`}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      padding: '4px 8px',
-                      backgroundColor: 'var(--accent)',
-                      color: 'white',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                    }}
-                  >
-                    {gender === 'M'
-                      ? t('casting.male', 'Male')
-                      : gender === 'F'
-                      ? t('casting.female', 'Female')
-                      : t('casting.neutral', 'Neutral')}
-                    <button
-                      onClick={() => setSelectedGenders(selectedGenders.filter(g => g !== gender))}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: 'white',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        padding: '0',
-                      }}
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-                {selectedLocales.map(locale => (
-                  <span
-                    key={`locale-${locale}`}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      padding: '4px 8px',
-                      backgroundColor: 'var(--accent)',
-                      color: 'white',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                    }}
-                  >
-                    {locale}
-                    <button
-                      onClick={() => setSelectedLocales(selectedLocales.filter(l => l !== locale))}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: 'white',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        padding: '0',
-                      }}
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
+                    ×
+                  </button>
+                )}
+              </span>
+            );
+          })}
+          {selectedGenders.map(gender => (
+            <span
+              key={`gender-${gender}`}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '4px 8px',
+                backgroundColor: 'var(--accent)',
+                color: 'white',
+                borderRadius: '4px',
+                fontSize: '12px',
+              }}
+            >
+              {gender === 'M'
+                ? t('casting.male', 'Male')
+                : gender === 'F'
+                ? t('casting.female', 'Female')
+                : t('casting.neutral', 'Neutral')}
+              <button
+                onClick={() => setSelectedGenders(selectedGenders.filter(g => g !== gender))}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  padding: '0',
+                }}
+              >
+                ×
+              </button>
+            </span>
+          ))}
+          {selectedLocales.map(locale => (
+            <span
+              key={`locale-${locale}`}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '4px 8px',
+                backgroundColor: 'var(--accent)',
+                color: 'white',
+                borderRadius: '4px',
+                fontSize: '12px',
+              }}
+            >
+              {locale}
+              <button
+                onClick={() => setSelectedLocales(selectedLocales.filter(l => l !== locale))}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  padding: '0',
+                }}
+              >
+                ×
+              </button>
+            </span>
+          ))}
         </div>
-      </div>
+      )}
 
       {/* Filters Row */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginBottom: '16px' }}>
-        {/* Gender Filter */}
-        <select
-          value=""
-          onChange={e => {
-            if (e.target.value && !selectedGenders.includes(e.target.value)) {
-              setSelectedGenders([...selectedGenders, e.target.value]);
-            }
-            e.target.value = '';
-          }}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
+        {/* Show Selected Toggle */}
+        <label
           style={{
-            padding: '8px 12px',
-            border: '1px solid var(--border)',
-            borderRadius: '4px',
-            backgroundColor: 'var(--panel)',
-            color: 'var(--text)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            cursor: 'pointer',
             fontSize: '14px',
+            color: 'var(--text)',
           }}
         >
-          <option value="">
-            {t('casting.filterGender', 'Filter Gender')}
-          </option>
-          {availableGenders
-            .filter(gender => !selectedGenders.includes(gender))
-            .map(gender => (
-              <option key={gender} value={gender}>
-                {gender === 'M'
-                  ? t('casting.male', 'Male')
-                  : gender === 'F'
-                  ? t('casting.female', 'Female')
-                  : t('casting.neutral', 'Neutral')}
-              </option>
-            ))}
-        </select>
-
-        {/* Locale Filter */}
-        <select
-          value=""
-          onChange={e => {
-            if (e.target.value && !selectedLocales.includes(e.target.value)) {
-              setSelectedLocales([...selectedLocales, e.target.value]);
-            }
-            e.target.value = '';
-          }}
-          style={{
-            padding: '8px 12px',
-            border: '1px solid var(--border)',
-            borderRadius: '4px',
-            backgroundColor: 'var(--panel)',
-            color: 'var(--text)',
-            fontSize: '14px',
-          }}
-        >
-          <option value="">
-            {t('casting.filterLocale', 'Filter Locale')}
-          </option>
-          {availableLocales
-            .filter(locale => !selectedLocales.includes(locale))
-            .map(locale => (
-              <option key={locale} value={locale}>
-                {locale}
-              </option>
-            ))}
-        </select>
+          <input
+            type="checkbox"
+            checked={showSelectedOnly}
+            onChange={(e) => setShowSelectedOnly(e.target.checked)}
+            style={{
+              width: '16px',
+              height: '16px',
+              cursor: 'pointer',
+            }}
+          />
+          {t('casting.showSelectedOnly', 'Show selected only')} ({selectedVoices.size})
+        </label>
         
-        <button
-          onClick={() => handleSelectAll(availableVoices)}
-          style={{
-            padding: '8px 16px',
-            border: '1px solid var(--border)',
-            borderRadius: '4px',
-            backgroundColor: 'var(--panel)',
-            color: 'var(--text)',
-            fontSize: '14px',
-            cursor: 'pointer',
-          }}
-        >
-          {t('casting.selectAll', 'Select All')}
-        </button>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          {/* Select/Deselect All Buttons */}
+          <button
+            onClick={() => handleSelectAll(availableVoices)}
+            style={{
+              padding: '8px 16px',
+              border: '1px solid var(--border)',
+              borderRadius: '4px',
+              backgroundColor: 'var(--panel)',
+              color: 'var(--text)',
+              fontSize: '14px',
+              cursor: 'pointer',
+            }}
+          >
+            {t('casting.selectAll', 'Select All')}
+          </button>
 
-        <button
-          onClick={() => handleDeselectAll(availableVoices)}
-          style={{
-            padding: '8px 16px',
-            border: '1px solid var(--border)',
-            borderRadius: '4px',
-            backgroundColor: 'var(--panel)',
-            color: 'var(--text)',
-            fontSize: '14px',
-            cursor: 'pointer',
-          }}
-        >
-          {t('casting.deselectAll', 'Deselect All')}
-        </button>
+          <button
+            onClick={() => handleDeselectAll(availableVoices)}
+            style={{
+              padding: '8px 16px',
+              border: '1px solid var(--border)',
+              borderRadius: '4px',
+              backgroundColor: 'var(--panel)',
+              color: 'var(--text)',
+              fontSize: '14px',
+              cursor: 'pointer',
+            }}
+          >
+            {t('casting.deselectAll', 'Deselect All')}
+          </button>
+          
+          {/* Gender Filter */}
+          <select
+            value=""
+            onChange={e => {
+              if (e.target.value && !selectedGenders.includes(e.target.value)) {
+                setSelectedGenders([...selectedGenders, e.target.value]);
+              }
+              e.target.value = '';
+            }}
+            style={{
+              padding: '8px 12px',
+              border: '1px solid var(--border)',
+              borderRadius: '4px',
+              backgroundColor: 'var(--panel)',
+              color: 'var(--text)',
+              fontSize: '14px',
+            }}
+          >
+            <option value="">
+              {t('casting.filterGender', 'Filter Gender')}
+            </option>
+            {availableGenders
+              .filter(gender => !selectedGenders.includes(gender))
+              .map(gender => (
+                <option key={gender} value={gender}>
+                  {gender === 'M'
+                    ? t('casting.male', 'Male')
+                    : gender === 'F'
+                    ? t('casting.female', 'Female')
+                    : t('casting.neutral', 'Neutral')}
+                </option>
+              ))}
+          </select>
+
+          {/* Locale Filter */}
+          <select
+            value=""
+            onChange={e => {
+              if (e.target.value && !selectedLocales.includes(e.target.value)) {
+                setSelectedLocales([...selectedLocales, e.target.value]);
+              }
+              e.target.value = '';
+            }}
+            style={{
+              padding: '8px 12px',
+              border: '1px solid var(--border)',
+              borderRadius: '4px',
+              backgroundColor: 'var(--panel)',
+              color: 'var(--text)',
+              fontSize: '14px',
+            }}
+          >
+            <option value="">
+              {t('casting.filterLocale', 'Filter Locale')}
+            </option>
+            {availableLocales
+              .filter(locale => !selectedLocales.includes(locale))
+              .map(locale => (
+                <option key={locale} value={locale}>
+                  {locale}
+                </option>
+              ))}
+          </select>
+        </div>
       </div>
 
       {/* Message */}
