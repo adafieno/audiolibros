@@ -187,8 +187,6 @@ function CastingPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project', projectId] });
-      setMessage(t('casting.completed', 'Voice Casting completed!'));
-      setTimeout(() => setMessage(''), 3000);
     },
   });
 
@@ -644,15 +642,21 @@ function CastingPage() {
             padding: '16px',
             marginBottom: '16px',
             borderRadius: '8px',
-            backgroundColor: message.toLowerCase().includes('requires') || message.toLowerCase().includes('configure')
+            backgroundColor: message.toLowerCase().includes('completed')
+              ? 'rgba(16, 185, 129, 0.1)'
+              : message.toLowerCase().includes('requires') || message.toLowerCase().includes('configure')
               ? 'var(--warning-subtle)'
               : 'var(--error-subtle)',
-            color: message.toLowerCase().includes('requires') || message.toLowerCase().includes('configure')
+            color: message.toLowerCase().includes('completed')
+              ? 'var(--success)'
+              : message.toLowerCase().includes('requires') || message.toLowerCase().includes('configure')
               ? 'var(--warning)'
               : 'var(--error)',
             fontSize: '14px',
             border: '1px solid',
-            borderColor: message.toLowerCase().includes('requires') || message.toLowerCase().includes('configure')
+            borderColor: message.toLowerCase().includes('completed')
+              ? 'var(--success)'
+              : message.toLowerCase().includes('requires') || message.toLowerCase().includes('configure')
               ? 'var(--warning)'
               : 'var(--error)',
           }}
