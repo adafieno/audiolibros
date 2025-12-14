@@ -153,6 +153,26 @@ function CastingPage() {
     return () => clearTimeout(timeoutId);
   }, [selectedVoices, selectedLanguages, isInitialized]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Auto-complete when at least one voice from book's main language is selected
+  useEffect(() => {
+    if (!project?.language || !voiceInventory || !isInitialized) return;
+    
+    const bookLanguage = getLanguageFromLocale(project.language);
+    
+    // Check if at least one voice from book's language is selected
+    const hasBookLanguageVoice = Array.from(selectedVoices).some(voiceId => {
+      const voice = voiceInventory.voices.find(v => v.id === voiceId);
+      if (!voice) return false;
+      const voiceLang = getLanguageFromLocale(voice.locale);
+      return voiceLang === bookLanguage;
+    });
+    
+    // Auto-complete if condition is met and not already completed
+    if (hasBookLanguageVoice && !project.workflow_completed?.casting) {
+      completeWorkflowMutation.mutate();
+    }
+  }, [selectedVoices, project, voiceInventory, isInitialized]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Complete workflow mutation
   const completeWorkflowMutation = useMutation({
     mutationFn: async () => {
@@ -167,7 +187,7 @@ function CastingPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project', projectId] });
-      setMessage(t('casting.completed', 'Casting completed!'));
+      setMessage(t('casting.completed', 'Voice Casting completed!'));
       setTimeout(() => setMessage(''), 3000);
     },
   });
@@ -260,7 +280,7 @@ function CastingPage() {
   if (!voiceInventory || !project) {
     return (
       <div className="p-6" style={{ color: 'var(--text)' }}>
-        {t('casting.loadError', 'Failed to load casting data')}
+        {t('casting.loadError', 'Failed to load voice casting data')}
       </div>
     );
   }
@@ -330,7 +350,7 @@ function CastingPage() {
         <div className="flex justify-between items-start">
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <h1 className="text-2xl font-bold" style={{ color: 'var(--text)', margin: 0 }}>
-              {t('casting.title', 'Casting')}
+              {t('casting.title', 'Voice Casting')}
             </h1>
             {project?.workflow_completed?.casting && (
               <span
