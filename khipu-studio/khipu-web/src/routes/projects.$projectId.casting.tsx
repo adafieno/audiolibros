@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { voicesApi, type Voice, type VoiceInventory } from '../lib/api/voices';
+import { voicesApi, type Voice } from '../lib/api/voices';
 import { projectsApi } from '../lib/projects';
 import { setStepCompleted } from '../store/project';
 import { Button } from '../components/Button';
@@ -32,14 +32,13 @@ function CastingPage() {
   const [selectedLocales, setSelectedLocales] = useState<string[]>([]);
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [auditioningVoices, setAuditioningVoices] = useState<Set<string>>(new Set());
-  const [message, setMessage] = useState('');
   const [audioCache] = useState(new Map<string, string>());
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Queries
   const { data: project } = useQuery({
     queryKey: ['project', projectId],
-    queryFn: () => projectsApi.getById(projectId),
+    queryFn: () => projectsApi.get(projectId),
   });
 
   const { data: voiceInventory, isLoading: isLoadingVoices } = useQuery({
@@ -221,8 +220,7 @@ function CastingPage() {
       };
 
       audio.onerror = () => {
-        setMessage(t('casting.auditionFailed', 'Failed to play audio'));
-        setTimeout(() => setMessage(''), 5000);
+        console.error('Failed to play audio');
         setAuditioningVoices(prev => {
           const newSet = new Set(prev);
           newSet.delete(voice.id);
@@ -234,8 +232,7 @@ function CastingPage() {
       const errorMessage = error instanceof Error 
         ? error.message 
         : t('casting.auditionFailed', 'Audition failed');
-      setMessage(errorMessage);
-      setTimeout(() => setMessage(''), 5000);
+      console.error(errorMessage);
       setAuditioningVoices(prev => {
         const newSet = new Set(prev);
         newSet.delete(voice.id);
@@ -286,7 +283,7 @@ function CastingPage() {
   }
 
   // Get project's TTS engine from settings
-  const projectEngine = project.settings?.tts?.engine?.name || 'azure';
+  const projectEngine = (project.settings as any)?.tts?.engine?.name || 'azure';
 
   // Filter voices
   let availableVoices = filterVoicesByEngine(voiceInventory.voices, projectEngine);
