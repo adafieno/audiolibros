@@ -5,6 +5,9 @@ import { useTranslation } from 'react-i18next';
 import { projectsApi, type ProjectUpdate, type Project } from '../lib/projects';
 import { SUPPORTED_LOCALES, getLocaleDisplayName } from '../data/languages';
 import { setStepCompleted } from '../store/project';
+import { TextInput } from '../components/TextInput';
+import { Select } from '../components/Select';
+import { Button } from '../components/Button';
 
 export const Route = createFileRoute('/projects/$projectId/book')({
   component: BookDetailsPage,
@@ -286,15 +289,15 @@ function BookDetailsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
                 <label htmlFor="title" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>{t('book.title.label', 'Book Title')} <span style={{ color: 'var(--error)' }}>*</span></label>
-                <input id="title" value={form.title} required onChange={e => setForm(p => ({ ...p, title: e.target.value }))} className="w-full px-3 py-2 border rounded" style={{ background: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }} placeholder={t('book.title.placeholder', 'Enter the book title')} />
+                <TextInput id="title" value={form.title} required onChange={e => setForm(p => ({ ...p, title: e.target.value }))} style={{ width: '100%' }} placeholder={t('book.title.placeholder', 'Enter the book title')} />
               </div>
               <div>
                 <label htmlFor="subtitle" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>{t('book.subtitle.label', 'Subtitle')}</label>
-                <input id="subtitle" value={form.subtitle} onChange={e => setForm(p => ({ ...p, subtitle: e.target.value }))} className="w-full px-3 py-2 border rounded" style={{ background: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }} placeholder={t('book.subtitle.placeholder', 'Enter the book subtitle')} />
+                <TextInput id="subtitle" value={form.subtitle} onChange={e => setForm(p => ({ ...p, subtitle: e.target.value }))} style={{ width: '100%' }} placeholder={t('book.subtitle.placeholder', 'Enter the book subtitle')} />
               </div>
               <div>
                 <label htmlFor="language" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>{t('book.language.label', 'Book Language / Locale')} <span style={{ color: 'var(--error)' }}>*</span></label>
-                <select id="language" required value={form.language} onChange={e => setForm(p => ({ ...p, language: e.target.value }))} className="w-full px-3 py-2 border rounded" style={{ background: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}>
+                <Select id="language" required value={form.language} onChange={e => setForm(p => ({ ...p, language: e.target.value }))} style={{ width: '100%' }}>
                   <option value="">{t('book.language.placeholder', 'Select book language')}</option>
                   {groupDefs.map(g => (
                     <optgroup key={g.key} label={g.label}>
@@ -305,23 +308,23 @@ function BookDetailsPage() {
                       })}
                     </optgroup>
                   ))}
-                </select>
+                </Select>
               </div>
               <div>
                 <label htmlFor="authors" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>{t('book.authors.label', 'Authors')}</label>
-                <input id="authors" value={form.authors} onChange={e => setForm(p => ({ ...p, authors: e.target.value }))} className="w-full px-3 py-2 border rounded" style={{ background: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }} placeholder={t('book.authors.placeholder', 'Comma-separated list')} />
+                <TextInput id="authors" value={form.authors} onChange={e => setForm(p => ({ ...p, authors: e.target.value }))} style={{ width: '100%' }} placeholder={t('book.authors.placeholder', 'Comma-separated list')} />
               </div>
               <div>
                 <label htmlFor="narrators" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>{t('book.narrators.label', 'Narrators')}</label>
-                <input id="narrators" value={form.narrators} onChange={e => setForm(p => ({ ...p, narrators: e.target.value }))} className="w-full px-3 py-2 border rounded" style={{ background: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }} placeholder={t('book.narrators.placeholder', 'Comma-separated list')} />
+                <TextInput id="narrators" value={form.narrators} onChange={e => setForm(p => ({ ...p, narrators: e.target.value }))} style={{ width: '100%' }} placeholder={t('book.narrators.placeholder', 'Comma-separated list')} />
               </div>
               <div>
                 <label htmlFor="translators" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>{t('book.translators.label', 'Translators')}</label>
-                <input id="translators" value={form.translators} onChange={e => setForm(p => ({ ...p, translators: e.target.value }))} className="w-full px-3 py-2 border rounded" style={{ background: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }} placeholder={t('book.translators.placeholder', 'Comma-separated list')} />
+                <TextInput id="translators" value={form.translators} onChange={e => setForm(p => ({ ...p, translators: e.target.value }))} style={{ width: '100%' }} placeholder={t('book.translators.placeholder', 'Comma-separated list')} />
               </div>
               <div>
                 <label htmlFor="adaptors" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>{t('book.adaptors.label', 'Adaptors')}</label>
-                <input id="adaptors" value={form.adaptors} onChange={e => setForm(p => ({ ...p, adaptors: e.target.value }))} className="w-full px-3 py-2 border rounded" style={{ background: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }} placeholder={t('book.adaptors.placeholder', 'Comma-separated list')} />
+                <TextInput id="adaptors" value={form.adaptors} onChange={e => setForm(p => ({ ...p, adaptors: e.target.value }))} style={{ width: '100%' }} placeholder={t('book.adaptors.placeholder', 'Comma-separated list')} />
               </div>
               <div className="md:col-span-2">
                 <label htmlFor="description" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>{t('book.description.label', 'Description')} <span style={{ color: 'var(--error)' }}>*</span></label>
@@ -329,19 +332,19 @@ function BookDetailsPage() {
               </div>
               <div>
                 <label htmlFor="keywords" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>{t('book.keywords.label', 'Keywords')}</label>
-                <input id="keywords" value={form.keywords} onChange={e => setForm(p => ({ ...p, keywords: e.target.value }))} className="w-full px-3 py-2 border rounded" style={{ background: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }} placeholder={t('book.keywords.placeholder', 'Comma-separated')} />
+                <TextInput id="keywords" value={form.keywords} onChange={e => setForm(p => ({ ...p, keywords: e.target.value }))} style={{ width: '100%' }} placeholder={t('book.keywords.placeholder', 'Comma-separated')} />
               </div>
               <div>
                 <label htmlFor="categories" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>{t('book.categories.label', 'Categories')}</label>
-                <input id="categories" value={form.categories} onChange={e => setForm(p => ({ ...p, categories: e.target.value }))} className="w-full px-3 py-2 border rounded" style={{ background: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }} placeholder={t('book.categories.placeholder', 'Comma-separated')} />
+                <TextInput id="categories" value={form.categories} onChange={e => setForm(p => ({ ...p, categories: e.target.value }))} style={{ width: '100%' }} placeholder={t('book.categories.placeholder', 'Comma-separated')} />
               </div>
               <div>
                 <label htmlFor="seriesName" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>{t('book.seriesName.label', 'Series Name')}</label>
-                <input id="seriesName" value={form.seriesName} onChange={e => setForm(p => ({ ...p, seriesName: e.target.value }))} className="w-full px-3 py-2 border rounded" style={{ background: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }} placeholder={t('book.seriesName.placeholder', 'Enter the series name')} />
+                <TextInput id="seriesName" value={form.seriesName} onChange={e => setForm(p => ({ ...p, seriesName: e.target.value }))} style={{ width: '100%' }} placeholder={t('book.seriesName.placeholder', 'Enter the series name')} />
               </div>
               <div>
                 <label htmlFor="seriesNumber" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>{t('book.seriesNumber.label', 'Series Number')}</label>
-                <input id="seriesNumber" value={form.seriesNumber} onChange={e => setForm(p => ({ ...p, seriesNumber: e.target.value }))} className="w-full px-3 py-2 border rounded" style={{ background: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }} placeholder={t('book.seriesNumber.placeholder', 'Enter the series number')} />
+                <TextInput id="seriesNumber" value={form.seriesNumber} onChange={e => setForm(p => ({ ...p, seriesNumber: e.target.value }))} style={{ width: '100%' }} placeholder={t('book.seriesNumber.placeholder', 'Enter the series number')} />
               </div>
               <div className="md:col-span-2 flex items-center gap-2">
                 <input id="dvDisclosure" type="checkbox" checked={form.digitalVoiceDisclosureChecked} onChange={e => setForm(p => ({ ...p, digitalVoiceDisclosureChecked: e.target.checked }))} />
@@ -349,11 +352,11 @@ function BookDetailsPage() {
               </div>
               <div>
                 <label htmlFor="publisher" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>{t('book.publisher.label', 'Publisher')}</label>
-                <input id="publisher" value={form.publisher} onChange={e => setForm(p => ({ ...p, publisher: e.target.value }))} className="w-full px-3 py-2 border rounded" style={{ background: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }} placeholder={t('book.publisher.placeholder', 'Publisher name')} />
+                <TextInput id="publisher" value={form.publisher} onChange={e => setForm(p => ({ ...p, publisher: e.target.value }))} style={{ width: '100%' }} placeholder={t('book.publisher.placeholder', 'Publisher name')} />
               </div>
               <div>
                 <label htmlFor="isbn" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>{t('book.isbn.label', 'ISBN')}</label>
-                <input id="isbn" value={form.isbn} onChange={e => setForm(p => ({ ...p, isbn: e.target.value }))} className="w-full px-3 py-2 border rounded" style={{ background: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }} placeholder={t('book.isbn.placeholder', 'ISBN number')} />
+                <TextInput id="isbn" value={form.isbn} onChange={e => setForm(p => ({ ...p, isbn: e.target.value }))} style={{ width: '100%' }} placeholder={t('book.isbn.placeholder', 'ISBN number')} />
               </div>
             </div>
           </div>
@@ -394,13 +397,21 @@ function BookDetailsPage() {
                     },
                   });
                 }} />
-                <button type="button" className="px-3 py-1 text-sm rounded shadow-sm" style={{ background: 'var(--accent)', color: '#fff' }} onClick={() => document.getElementById('coverFileInput')?.click()}>
+                <Button
+                  variant="primary"
+                  size="compact"
+                  onClick={() => document.getElementById('coverFileInput')?.click()}
+                >
                   {form.coverImageUrl ? t('book.coverImage.change', 'Change Image') : t('book.coverImage.upload', 'Upload Image')}
-                </button>
+                </Button>
                 {form.coverImageUrl && (
-                  <button type="button" className="px-3 py-1 text-sm rounded" style={{ background: '#ef4444', color: '#fff' }} onClick={() => setForm(p => ({ ...p, coverImageUrl: '' }))}>
+                  <Button
+                    variant="danger"
+                    size="compact"
+                    onClick={() => setForm(p => ({ ...p, coverImageUrl: '' }))}
+                  >
                     {t('book.coverImage.remove', 'Remove')}
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>

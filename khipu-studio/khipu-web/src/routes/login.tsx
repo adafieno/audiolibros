@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, type FormEvent } from 'react';
 import { useAuth } from '../hooks/useAuthHook';
 import { useTranslation } from 'react-i18next';
+import { TextInput } from '../components/TextInput';
 
 export const Route = createFileRoute('/login')({
   component: LoginComponent,
@@ -52,14 +53,13 @@ function LoginComponent() {
               <label htmlFor="email" className="sr-only">
                 {t('auth.email')}
               </label>
-              <input
+              <TextInput
                 id="email"
                 name="email"
                 type="email"
                 autoComplete="email"
                 required
-                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border rounded-t-md focus:outline-none focus:ring-2 focus:z-10 sm:text-sm"
+                style={{ width: '100%', borderRadius: '8px 8px 0 0' }}
                 placeholder={t('auth.email')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -69,14 +69,13 @@ function LoginComponent() {
               <label htmlFor="password" className="sr-only">
                 {t('auth.password')}
               </label>
-              <input
+              <TextInput
                 id="password"
                 name="password"
                 type="password"
                 autoComplete="current-password"
                 required
-                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border rounded-b-md focus:outline-none focus:ring-2 focus:z-10 sm:text-sm"
+                style={{ width: '100%', borderRadius: '0 0 8px 8px' }}
                 placeholder={t('auth.password')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

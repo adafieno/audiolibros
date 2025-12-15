@@ -3,6 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { projectsApi } from '../lib/projects';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { TextInput } from '../components/TextInput';
+import { Select } from '../components/Select';
+import { Button } from '../components/Button';
 
 export const Route = createFileRoute('/projects/$projectId/edit')({
   component: ProjectEditPage,
@@ -129,14 +132,13 @@ function ProjectEditPage() {
               <label htmlFor="title" className="block text-sm font-medium" style={{ color: 'var(--text)' }}>
                 {t('projectForm.title')} <span style={{ color: 'var(--error)' }}>*</span>
               </label>
-              <input
+              <TextInput
                 type="text"
                 id="title"
                 required
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                className="mt-1 block w-full rounded-md border shadow-sm focus:outline-none focus:ring-2"
+                style={{ width: '100%', marginTop: '0.25rem' }}
                 placeholder={t('projectForm.titlePlaceholder')}
               />
             </div>
@@ -145,13 +147,12 @@ function ProjectEditPage() {
               <label htmlFor="subtitle" className="block text-sm font-medium" style={{ color: 'var(--text)' }}>
                 {t('projectForm.subtitle')}
               </label>
-              <input
+              <TextInput
                 type="text"
                 id="subtitle"
                 value={formData.subtitle}
                 onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                className="mt-1 block w-full rounded-md border shadow-sm focus:outline-none focus:ring-2"
+                style={{ width: '100%', marginTop: '0.25rem' }}
                 placeholder={t('projectForm.subtitlePlaceholder')}
               />
             </div>
@@ -160,14 +161,13 @@ function ProjectEditPage() {
               <label htmlFor="authors" className="block text-sm font-medium" style={{ color: 'var(--text)' }}>
                 {t('projectForm.authors')}
               </label>
-              <input
+              <TextInput
                 type="text"
                 id="authors"
                 value={formData.authors}
                 onChange={(e) => setFormData({ ...formData, authors: e.target.value })}
                 placeholder={t('projectForm.authorsPlaceholder')}
-                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                className="mt-1 block w-full rounded-md border shadow-sm focus:outline-none focus:ring-2"
+                style={{ width: '100%', marginTop: '0.25rem' }}
               />
             </div>
 
@@ -175,14 +175,13 @@ function ProjectEditPage() {
               <label htmlFor="narrators" className="block text-sm font-medium" style={{ color: 'var(--text)' }}>
                 {t('projectForm.narrators')}
               </label>
-              <input
+              <TextInput
                 type="text"
                 id="narrators"
                 value={formData.narrators}
                 onChange={(e) => setFormData({ ...formData, narrators: e.target.value })}
                 placeholder={t('projectForm.narratorsPlaceholder')}
-                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                className="mt-1 block w-full rounded-md border shadow-sm focus:outline-none focus:ring-2"
+                style={{ width: '100%', marginTop: '0.25rem' }}
               />
             </div>
 
@@ -190,12 +189,11 @@ function ProjectEditPage() {
               <label htmlFor="language" className="block text-sm font-medium" style={{ color: 'var(--text)' }}>
                 {t('projectForm.language')}
               </label>
-              <select
+              <Select
                 id="language"
                 value={formData.language}
                 onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                className="mt-1 block w-full rounded-md border shadow-sm focus:outline-none focus:ring-2"
+                style={{ width: '100%', marginTop: '0.25rem' }}
               >
                 <option value="en-US">{t('languages.en-US')}</option>
                 <option value="en-GB">{t('languages.en-GB')}</option>
@@ -206,19 +204,18 @@ function ProjectEditPage() {
                 <option value="de-DE">{t('languages.de-DE')}</option>
                 <option value="it-IT">{t('languages.it-IT')}</option>
                 <option value="pt-BR">{t('languages.pt-BR')}</option>
-              </select>
+              </Select>
             </div>
 
             <div>
               <label htmlFor="status" className="block text-sm font-medium" style={{ color: 'var(--text)' }}>
                 {t('projects.status')}
               </label>
-              <select
+              <Select
                 id="status"
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as 'draft' | 'in_progress' | 'review' | 'completed' | 'published' | 'archived' })}
-                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                className="mt-1 block w-full rounded-md border shadow-sm focus:outline-none focus:ring-2"
+                style={{ width: '100%', marginTop: '0.25rem' }}
                 disabled={!!project.archived_at}
               >
                 {/* Draft can only be shown, not selected */}
@@ -247,7 +244,7 @@ function ProjectEditPage() {
                 
                 {/* Archived: always available */}
                 <option value="archived">{t('projects.statusArchived', 'Archived')}</option>
-              </select>
+              </Select>
               {project.archived_at && (
                 <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>
                   {t('projects.archivedReadOnly', 'This project is archived and read-only. Contact an admin to restore it.')}
@@ -281,22 +278,19 @@ function ProjectEditPage() {
             )}
 
             <div className="flex justify-end gap-3">
-              <button
-                type="button"
+              <Button
+                variant="secondary"
                 onClick={() => navigate({ to: `/projects/${projectId}` })}
-                style={{ borderColor: 'var(--border)', color: 'var(--text)' }}
-                className="px-4 py-2 border rounded-md hover:opacity-80"
               >
                 {t('projectForm.cancel')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
                 type="submit"
                 disabled={updateMutation.isPending}
-                style={{ backgroundColor: 'var(--accent)', color: 'white' }}
-                className="px-4 py-2 rounded-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {updateMutation.isPending ? t('projectForm.saving') : t('projectForm.saveChanges')}
-              </button>
+              </Button>
             </div>
           </form>
         </div>

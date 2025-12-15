@@ -6,6 +6,7 @@ import { voicesApi, type Voice, type VoiceInventory } from '../lib/api/voices';
 import { projectsApi } from '../lib/projects';
 import { setStepCompleted } from '../store/project';
 import { Button } from '../components/Button';
+import { Select } from '../components/Select';
 import {
   getLanguageFromLocale,
   getAvailableLanguages,
@@ -389,7 +390,7 @@ function CastingPage() {
             </Button>
             
             {/* Gender Filter */}
-            <select
+            <Select
               value=""
               onChange={e => {
                 if (e.target.value && !selectedGenders.includes(e.target.value)) {
@@ -397,14 +398,7 @@ function CastingPage() {
                 }
                 e.target.value = '';
               }}
-              style={{
-                padding: '8px 12px',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                backgroundColor: 'var(--panel)',
-                color: 'var(--text)',
-                fontSize: '14px',
-              }}
+              style={{ minWidth: '150px' }}
             >
               <option value="">
                 {t('casting.filterGender', 'Filter Gender')}
@@ -420,10 +414,10 @@ function CastingPage() {
                       : t('casting.neutral', 'Neutral')}
                   </option>
                 ))}
-            </select>
+            </Select>
 
             {/* Locale Filter */}
-            <select
+            <Select
               value=""
               onChange={e => {
                 if (e.target.value && !selectedLocales.includes(e.target.value)) {
@@ -431,14 +425,7 @@ function CastingPage() {
                 }
                 e.target.value = '';
               }}
-              style={{
-                padding: '8px 12px',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                backgroundColor: 'var(--panel)',
-                color: 'var(--text)',
-                fontSize: '14px',
-              }}
+              style={{ minWidth: '150px' }}
             >
               <option value="">
                 {t('casting.filterLocale', 'Filter Locale')}
@@ -450,10 +437,10 @@ function CastingPage() {
                     {locale}
                   </option>
                 ))}
-            </select>
+            </Select>
             
             {/* Language Selector */}
-            <select
+            <Select
               value=""
               onChange={e => {
                 if (e.target.value && !selectedLanguages.includes(e.target.value)) {
@@ -462,14 +449,7 @@ function CastingPage() {
                 }
                 e.target.value = '';
               }}
-              style={{
-                padding: '8px 12px',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                backgroundColor: 'var(--panel)',
-                color: 'var(--text)',
-                fontSize: '14px',
-              }}
+              style={{ minWidth: '150px' }}
             >
               <option value="">
                 {t('casting.addLanguage', '+ Add Language')}
@@ -481,7 +461,7 @@ function CastingPage() {
                     {t(`languages.${lang}`, lang.toUpperCase())}
                   </option>
                 ))}
-            </select>
+            </Select>
           </div>
         </div>
       </div>

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { projectsApi } from '../lib/projects';
 import { setStepCompleted } from '../store/project';
+import { Button } from '../components/Button';
 
 export const Route = createFileRoute('/projects/$projectId/export')({
   component: ExportPage,
@@ -37,13 +38,12 @@ function ExportPage() {
         </div>
       )}
 
-      <button
+      <Button
+        variant="primary"
         onClick={markExportComplete}
-        style={{ backgroundColor: 'var(--accent)', color: 'white' }}
-        className="px-4 py-2 rounded-md hover:opacity-90"
       >
         {t('export.markComplete', 'Mark Export Complete')}
-      </button>
+      </Button>
     </div>
   );
 }

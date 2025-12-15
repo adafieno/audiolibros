@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { Button } from '../components/Button';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuthHook';
 import { useTranslation } from 'react-i18next';
@@ -167,9 +168,12 @@ function SettingsPage() {
                   {t('settings.userManagementDesc')}
                 </p>
               </div>
-              <button style={{ backgroundColor: 'var(--accent)', color: 'white' }} className="px-4 py-2 text-sm rounded-md hover:opacity-80">
+              <Button
+                variant="primary"
+                size="compact"
+              >
                 {t('settings.manageUsers')}
-              </button>
+              </Button>
             </div>
 
             <div className="flex items-center justify-between p-4 rounded-lg" style={{ backgroundColor: 'var(--bg)' }}>

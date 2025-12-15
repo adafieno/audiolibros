@@ -1,9 +1,13 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { projectsApi } from '../lib/projects';
 import { useAuth } from '../hooks/useAuthHook';
 import { useTranslation } from 'react-i18next';
+import { Button } from '../components/Button';
+import { TextInput } from '../components/TextInput';
+import { Select } from '../components/Select';
+import { StatusPill, type ProjectStatus } from '../components/StatusPill';
 
 export const Route = createFileRoute('/projects/')({
   component: ProjectsIndexPage,
@@ -13,6 +17,7 @@ function ProjectsIndexPage() {
   console.log('ProjectsIndexPage rendering');
   const { user } = useAuth();
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<string>('');
 
@@ -38,33 +43,21 @@ function ProjectsIndexPage() {
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0, flexWrap: 'wrap', alignItems: 'center' }}>
             {/* Search input */}
-            <input
+            <TextInput
               id="search"
               type="text"
               placeholder={t('projects.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              style={{ 
-                backgroundColor: 'var(--panel)', 
-                borderColor: 'var(--border)', 
-                color: 'var(--text)',
-                width: '200px'
-              }}
-              className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={{ width: '200px' }}
             />
             
             {/* Status filter */}
-            <select
+            <Select
               id="status"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              style={{ 
-                backgroundColor: 'var(--panel)', 
-                borderColor: 'var(--border)', 
-                color: 'var(--text)',
-                minWidth: '150px'
-              }}
-              className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={{ minWidth: '150px' }}
             >
               <option value="">{t('projects.allStatuses')}</option>
               <option value="draft">{t('projects.statusDraft')}</option>
@@ -72,16 +65,15 @@ function ProjectsIndexPage() {
               <option value="review">{t('projects.statusReview')}</option>
               <option value="completed">{t('projects.statusCompleted')}</option>
               <option value="published">{t('projects.statusPublished')}</option>
-            </select>
+            </Select>
             
             {/* New Project button */}
-            <Link
-              to="/projects/new"
-              style={{ backgroundColor: 'var(--accent)', color: 'white' }}
-              className="px-4 py-2 rounded-lg hover:opacity-90 transition-colors"
+            <Button
+              variant="primary"
+              onClick={() => navigate({ to: '/projects/new' })}
             >
               {t('projects.newProject')}
-            </Link>
+            </Button>
           </div>
         </div>
       </div>
@@ -119,13 +111,12 @@ function ProjectsIndexPage() {
             <h3 className="mt-2 text-sm font-medium" style={{ color: 'var(--text)' }}>{t('projects.noProjects')}</h3>
             <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>{t('projects.noProjectsDesc')}</p>
             <div className="mt-6">
-              <Link
-                to="/projects/new"
-                style={{ backgroundColor: 'var(--accent)', color: 'white' }}
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md hover:opacity-90"
+              <Button
+                variant="primary"
+                onClick={() => navigate({ to: '/projects/new' })}
               >
                 {t('projects.newProject')}
-              </Link>
+              </Button>
             </div>
           </div>
         )}
@@ -144,19 +135,13 @@ function ProjectsIndexPage() {
                   <h3 className="text-lg font-semibold line-clamp-2" style={{ color: 'var(--text)' }}>
                     {project.title}
                   </h3>
-                  <span
-                    className={`ml-2 px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${
-                      project.status === 'completed'
-                        ? 'bg-green-100 text-green-800'
-                        : project.status === 'in_progress'
-                        ? 'bg-blue-100 text-blue-800'
-                        : project.status === 'review'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}
+                  <StatusPill 
+                    type="project-status" 
+                    status={project.status as ProjectStatus}
+                    style={{ marginLeft: '8px' }}
                   >
                     {project.status.replace('_', ' ')}
-                  </span>
+                  </StatusPill>
                 </div>
 
                 {project.subtitle && (
@@ -191,16 +176,12 @@ function ProjectsIndexPage() {
           <div className="mt-8 flex justify-center">
             <div className="flex gap-2">
               {Array.from({ length: data.pages }, (_, i) => i + 1).map((page) => (
-                <button
+                <Button
                   key={page}
-                  className={`px-4 py-2 rounded-md ${
-                    page === data.page
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-700 hover:bg-gray-50'
-                  }`}
+                  variant={page === data.page ? 'primary' : 'secondary'}
                 >
                   {page}
-                </button>
+                </Button>
               ))}
             </div>
           </div>

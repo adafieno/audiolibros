@@ -4,6 +4,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { projectsApi } from '../lib/projects';
 import { setStepCompleted } from '../store/project';
 import { useTranslation } from 'react-i18next';
+import { TextInput } from '../components/TextInput';
+import { Select } from '../components/Select';
+import { Button } from '../components/Button';
 
 export const Route = createFileRoute('/projects/$projectId/properties')({
   component: ProjectPropertiesPage,
@@ -27,18 +30,15 @@ function PasswordField({
     <label>
       <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>{label}</div>
       <div style={{ position: 'relative' }}>
-        <input
+        <TextInput
           type={showPassword ? 'text' : 'password'}
           value={value}
           placeholder={placeholder}
           onChange={(e) => onChange(e.target.value)}
           style={{ 
-            backgroundColor: 'var(--panel)', 
-            borderColor: 'var(--border)', 
-            color: 'var(--text)',
-            paddingRight: '36px'
+            paddingRight: '36px',
+            width: '100%'
           }}
-          className="w-full px-3 py-2 border rounded-md"
         />
         <button
           type="button"
@@ -283,72 +283,66 @@ function ProjectPropertiesPage() {
                 <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
                   {t('project.sentencePause', 'Sentence Pause')}
                 </div>
-                <input
+                <TextInput
                   type="number"
-                  value={settings.pauses?.sentenceMs ?? 500}
+                  value={String(settings.pauses?.sentenceMs ?? 500)}
                   onChange={(e) => updateSettings(['pauses', 'sentenceMs'], parseInt(e.target.value))}
-                  style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                  className="w-full px-3 py-2 border rounded-md"
+                  style={{ width: '100%' }}
                 />
               </label>
               <label>
                 <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
                   {t('project.paragraphPause', 'Paragraph Pause')}
                 </div>
-                <input
+                <TextInput
                   type="number"
-                  value={settings.pauses?.paragraphMs ?? 1000}
+                  value={String(settings.pauses?.paragraphMs ?? 1000)}
                   onChange={(e) => updateSettings(['pauses', 'paragraphMs'], parseInt(e.target.value))}
-                  style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                  className="w-full px-3 py-2 border rounded-md"
+                  style={{ width: '100%' }}
                 />
               </label>
               <label>
                 <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
                   {t('project.chapterPause', 'Chapter Pause')}
                 </div>
-                <input
+                <TextInput
                   type="number"
-                  value={settings.pauses?.chapterMs ?? 3000}
+                  value={String(settings.pauses?.chapterMs ?? 3000)}
                   onChange={(e) => updateSettings(['pauses', 'chapterMs'], parseInt(e.target.value))}
-                  style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                  className="w-full px-3 py-2 border rounded-md"
+                  style={{ width: '100%' }}
                 />
               </label>
               <label>
                 <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
                   {t('project.commaPause', 'Comma Pause')}
                 </div>
-                <input
+                <TextInput
                   type="number"
-                  value={settings.pauses?.commaMs ?? 300}
+                  value={String(settings.pauses?.commaMs ?? 300)}
                   onChange={(e) => updateSettings(['pauses', 'commaMs'], parseInt(e.target.value))}
-                  style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                  className="w-full px-3 py-2 border rounded-md"
+                  style={{ width: '100%' }}
                 />
               </label>
               <label>
                 <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
                   {t('project.colonPause', 'Colon Pause')}
                 </div>
-                <input
+                <TextInput
                   type="number"
-                  value={settings.pauses?.colonMs ?? 400}
+                  value={String(settings.pauses?.colonMs ?? 400)}
                   onChange={(e) => updateSettings(['pauses', 'colonMs'], parseInt(e.target.value))}
-                  style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                  className="w-full px-3 py-2 border rounded-md"
+                  style={{ width: '100%' }}
                 />
               </label>
               <label>
                 <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
                   {t('project.semicolonPause', 'Semi-colon Pause')}
                 </div>
-                <input
+                <TextInput
                   type="number"
-                  value={settings.pauses?.semicolonMs ?? 350}
+                  value={String(settings.pauses?.semicolonMs ?? 350)}
                   onChange={(e) => updateSettings(['pauses', 'semicolonMs'], parseInt(e.target.value))}
-                  style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                  className="w-full px-3 py-2 border rounded-md"
+                  style={{ width: '100%' }}
                 />
               </label>
             </div>
@@ -424,26 +418,27 @@ function ProjectPropertiesPage() {
             <div className="space-y-2">
               {Object.entries(settings.pronunciationMap || {}).map(([word, ipa]) => (
                 <div key={word} className="flex gap-2 items-center">
-                  <input
+                  <TextInput
                     type="text"
                     value={word}
                     disabled
-                    style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)', opacity: 0.7 }}
-                    className="w-32 px-2 py-1 border rounded text-sm"
+                    size="compact"
+                    style={{ width: '128px', opacity: 0.7 }}
                   />
-                  <input
+                  <TextInput
                     type="text"
                     value={ipa}
                     onChange={(e) => {
                       const newMap = { ...settings.pronunciationMap, [word]: e.target.value };
                       updateSettings(['pronunciationMap'], newMap);
                     }}
-                    style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                    className="w-48 px-2 py-1 border rounded text-sm"
+                    size="compact"
+                    style={{ width: '192px' }}
                     placeholder={t('project.ipaPlaceholder', 'IPA notation')}
                   />
-                  <button
-                    type="button"
+                  <Button
+                    variant="secondary"
+                    size="compact"
                     onClick={async () => {
                       try {
                         console.log('[IPA] Requesting IPA for word:', word);
@@ -464,35 +459,33 @@ function ProjectPropertiesPage() {
                         alert(t('project.suggestIpaError', 'Could not suggest IPA. Please enter manually.'));
                       }
                     }}
-                    style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                    className="px-3 py-1 border rounded text-sm hover:opacity-80"
                   >
                     {t('project.suggestIPA', 'Suggest IPA')}
-                  </button>
-                  <button
-                    type="button"
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="compact"
                     onClick={() => {
                       const newMap = { ...settings.pronunciationMap };
                       delete newMap[word];
                       updateSettings(['pronunciationMap'], newMap);
                     }}
-                    style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: 'var(--error)', color: 'var(--error)' }}
-                    className="px-3 py-1 border rounded text-sm hover:opacity-80"
                   >
                     {t('project.removeWord', 'Remove')}
-                  </button>
+                  </Button>
                 </div>
               ))}
               <div className="flex gap-2 items-center">
-                <input
+                <TextInput
                   type="text"
                   id="newPronWord"
-                  style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                  className="w-32 px-2 py-1 border rounded text-sm"
+                  size="compact"
+                  style={{ width: '128px' }}
                   placeholder={t('project.wordPlaceholder', 'Word')}
                 />
-                <button
-                  type="button"
+                <Button
+                  variant="primary"
+                  size="compact"
                   onClick={() => {
                     const input = document.getElementById('newPronWord') as HTMLInputElement;
                     const word = input?.value?.trim();
@@ -502,11 +495,9 @@ function ProjectPropertiesPage() {
                       input.value = '';
                     }
                   }}
-                  style={{ backgroundColor: '#22c55e', borderColor: '#16a34a', color: 'white' }}
-                  className="px-3 py-1 border rounded text-sm hover:opacity-90"
                 >
                   {t('project.addWord', 'Add Word')}
-                </button>
+                </Button>
               </div>
             </div>
           </section>
@@ -522,7 +513,7 @@ function ProjectPropertiesPage() {
               {t('project.llm', 'LLM Engine')}
             </h3>
             <div className="grid grid-cols-[140px_1fr] gap-2 items-center mb-4">
-              <select
+              <Select
                 value={settings.llm?.engine?.name || 'openai'}
                 onChange={(e) => {
                   const name = e.target.value;
@@ -534,19 +525,17 @@ function ProjectPropertiesPage() {
                     updateSettings(['llm', 'engine'], { name: 'anthropic', model: settings.llm?.engine?.model || 'claude-3-opus' });
                   }
                 }}
-                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                className="px-3 py-2 border rounded-md"
+                style={{ minWidth: '140px' }}
               >
                 <option value="openai">OpenAI</option>
                 <option value="azure-openai">Azure OpenAI</option>
                 <option value="anthropic">Anthropic</option>
-              </select>
-              <input
+              </Select>
+              <TextInput
                 type="text"
                 value={settings.llm?.engine?.model || ''}
                 onChange={(e) => updateSettings(['llm', 'engine', 'model'], e.target.value)}
-                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                className="px-3 py-2 border rounded-md"
+                style={{ minWidth: '200px' }}
                 placeholder="gpt-4o"
               />
             </div>
@@ -568,12 +557,11 @@ function ProjectPropertiesPage() {
                     <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
                       {t('project.openaiBaseUrl', 'OpenAI Base URL (optional)')}
                     </div>
-                    <input
+                    <TextInput
                       type="text"
                       value={settings.creds?.llm?.openai?.baseUrl || ''}
                       onChange={(e) => updateSettings(['creds', 'llm', 'openai', 'baseUrl'], e.target.value)}
-                      style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                      className="w-full px-3 py-2 border rounded-md"
+                      style={{ width: '100%' }}
                       placeholder="https://api.openai.com/v1"
                     />
                   </label>
@@ -588,7 +576,7 @@ function ProjectPropertiesPage() {
               {t('project.tts', 'TTS Engine')}
             </h3>
             <div className="grid grid-cols-[140px_1fr] gap-2 items-center mb-3">
-              <select
+              <Select
                 value={settings.tts?.engine?.name || 'azure'}
                 onChange={(e) => {
                   const name = e.target.value;
@@ -600,19 +588,17 @@ function ProjectPropertiesPage() {
                     updateSettings(['tts', 'engine'], { name: 'openai', voice: settings.tts?.engine?.voice || '' });
                   }
                 }}
-                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                className="px-3 py-2 border rounded-md"
+                style={{ minWidth: '140px' }}
               >
                 <option value="azure">Azure</option>
                 <option value="elevenlabs">ElevenLabs</option>
                 <option value="openai">OpenAI TTS</option>
-              </select>
-              <input
+              </Select>
+              <TextInput
                 type="text"
                 value={settings.tts?.engine?.voice || ''}
                 onChange={(e) => updateSettings(['tts', 'engine', 'voice'], e.target.value)}
-                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                className="px-3 py-2 border rounded-md"
+                style={{ minWidth: '200px' }}
                 placeholder="es-PE-CamilaNeural"
               />
             </div>
@@ -637,12 +623,11 @@ function ProjectPropertiesPage() {
                     <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
                       {t('project.azureRegion', 'Azure Region')}
                     </div>
-                    <input
+                    <TextInput
                       type="text"
                       value={settings.creds?.tts?.azure?.region || ''}
                       onChange={(e) => updateSettings(['creds', 'tts', 'azure', 'region'], e.target.value)}
-                      style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                      className="w-full px-3 py-2 border rounded-md"
+                      style={{ width: '100%' }}
                       placeholder="eastus"
                     />
                   </label>
