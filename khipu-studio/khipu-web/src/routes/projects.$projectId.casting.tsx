@@ -376,18 +376,42 @@ function CastingPage() {
           <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0, flexWrap: 'wrap' }}>
             {/* Select/Deselect All Buttons */}
             <Button
-              variant="secondary"
+              variant="primary"
               onClick={() => handleSelectAll(availableVoices)}
             >
               {t('casting.selectAll', 'Select All')}
             </Button>
 
             <Button
-              variant="secondary"
+              variant="primary"
               onClick={() => handleDeselectAll(availableVoices)}
             >
               {t('casting.deselectAll', 'Deselect All')}
             </Button>
+            
+            {/* Add Language Button */}
+            <Select
+              value=""
+              onChange={e => {
+                if (e.target.value && !selectedLanguages.includes(e.target.value)) {
+                  console.log('Adding language:', e.target.value);
+                  setSelectedLanguages([...selectedLanguages, e.target.value]);
+                }
+                e.target.value = '';
+              }}
+              style={{ minWidth: '150px' }}
+            >
+              <option value="">
+                {t('casting.addLanguage', '+ Add Language')}
+              </option>
+              {availableLanguageOptions
+                .filter(lang => !selectedLanguages.includes(lang))
+                .map(lang => (
+                  <option key={lang} value={lang}>
+                    {t(`languages.${lang}`, lang.toUpperCase())}
+                  </option>
+                ))}
+            </Select>
             
             {/* Gender Filter */}
             <Select
@@ -435,30 +459,6 @@ function CastingPage() {
                 .map(locale => (
                   <option key={locale} value={locale}>
                     {locale}
-                  </option>
-                ))}
-            </Select>
-            
-            {/* Language Selector */}
-            <Select
-              value=""
-              onChange={e => {
-                if (e.target.value && !selectedLanguages.includes(e.target.value)) {
-                  console.log('Adding language:', e.target.value);
-                  setSelectedLanguages([...selectedLanguages, e.target.value]);
-                }
-                e.target.value = '';
-              }}
-              style={{ minWidth: '150px' }}
-            >
-              <option value="">
-                {t('casting.addLanguage', '+ Add Language')}
-              </option>
-              {availableLanguageOptions
-                .filter(lang => !selectedLanguages.includes(lang))
-                .map(lang => (
-                  <option key={lang} value={lang}>
-                    {t(`languages.${lang}`, lang.toUpperCase())}
                   </option>
                 ))}
             </Select>
@@ -687,7 +687,7 @@ function CastingPage() {
                     {/* Audition Button */}
                     <div style={{ marginTop: '12px' }}>
                       <Button
-                        variant="primary"
+                        variant="secondary"
                         size="compact"
                         onClick={e => {
                           e.preventDefault();

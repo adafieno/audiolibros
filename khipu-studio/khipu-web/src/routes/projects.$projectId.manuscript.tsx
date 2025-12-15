@@ -557,36 +557,18 @@ function ManuscriptPage() {
                 </p>
               </div>
               <div style={{ display: 'flex', gap: '0.75rem' }}>
-                <button
+                <Button
+                  variant="primary"
                   onClick={applySanitization}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    borderRadius: '8px',
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    background: '#22c55e',
-                    color: '#052e12',
-                    cursor: 'pointer',
-                    border: 'none',
-                  }}
                 >
                   {t('manuscript.applySanitization', 'Apply Sanitization')}
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="secondary"
                   onClick={() => setSanitizationPreview(null)}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    borderRadius: '8px',
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    background: 'var(--panel)',
-                    color: 'var(--text)',
-                    cursor: 'pointer',
-                    border: '1px solid var(--border)',
-                  }}
                 >
                   {t('manuscript.dismiss', 'Dismiss')}
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -711,42 +693,23 @@ function ManuscriptPage() {
             </div>
 
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => setBulkSanitizationModal(null)}
                 disabled={applyingSanitization}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '8px',
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  background: 'var(--bg-secondary)',
-                  color: 'var(--text)',
-                  cursor: applyingSanitization ? 'not-allowed' : 'pointer',
-                  border: '1px solid var(--border)',
-                  opacity: applyingSanitization ? 0.5 : 1,
-                }}
               >
                 {t('manuscript.cancel', 'Cancel')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
                 onClick={applyBulkSanitization}
                 disabled={applyingSanitization}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '8px',
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  background: '#22c55e',
-                  color: '#052e12',
-                  cursor: applyingSanitization ? 'not-allowed' : 'pointer',
-                  border: 'none',
-                  opacity: applyingSanitization ? 0.5 : 1,
-                }}
+                loading={applyingSanitization}
               >
                 {applyingSanitization 
                   ? t('manuscript.applying', 'Applying...') 
                   : t('manuscript.applyToAll', 'Apply to All Chapters')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

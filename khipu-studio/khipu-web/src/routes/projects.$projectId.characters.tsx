@@ -309,7 +309,7 @@ function CharactersPage() {
             
             {characters.length > 0 && (
               <Button
-                variant="success"
+                variant="primary"
                 onClick={handleAssignVoices}
                 disabled={isAssigningVoices || characters.length === 0}
                 loading={isAssigningVoices}
@@ -319,7 +319,7 @@ function CharactersPage() {
             )}
             
             <Button
-              variant="secondary"
+              variant="primary"
               onClick={() => createMutation.mutate()}
               disabled={createMutation.isPending}
               loading={createMutation.isPending}
@@ -603,13 +603,13 @@ function CharactersPage() {
               <div className="flex gap-2 pt-2">
                 {character.voiceAssignment?.voiceId && (
                   <Button
-                    variant="primary"
+                    variant="secondary"
                     size="compact"
                     onClick={() => handleAudition(character)}
                     disabled={playingAudio === character.id}
                     loading={playingAudio === character.id}
                   >
-                    {t('characters.audition', 'Audition')}
+                    {t('characters.audition', '▶ Audition')}
                   </Button>
                 )}
                 <Button
