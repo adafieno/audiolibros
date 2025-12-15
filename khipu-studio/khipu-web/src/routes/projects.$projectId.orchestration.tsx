@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { ChapterPlan } from '../types/planning';
 import { planningApi } from '../api/planning';
+import { getChapters } from '../api/chapters';
 
 export const Route = createFileRoute('/projects/$projectId/orchestration')({
   component: OrchestrationPage,
@@ -15,12 +16,25 @@ function OrchestrationPage() {
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // Query to fetch chapters
+  const { data: chaptersData } = useQuery({
+    queryKey: ['chapters', projectId],
+    queryFn: () => getChapters(projectId),
+  });
+
   // Query to fetch plan for selected chapter
   const { data: plan, isLoading, refetch } = useQuery({
     queryKey: ['plan', projectId, selectedChapterId],
     queryFn: async () => {
       if (!selectedChapterId) return null;
-      return await planningApi.getPlan(projectId, selectedChapterId);
+      try {
+        return await planningApi.getPlan(projectId, selectedChapterId);
+      } catch (error: any) {
+        if (error.message.includes('404')) {
+          return null; // No plan exists yet
+        }
+        throw error;
+      }
     },
     enabled: !!selectedChapterId,
   });
@@ -65,7 +79,11 @@ function OrchestrationPage() {
             style={{ background: 'var(--input)', borderColor: 'var(--border)', color: 'var(--text)' }}
           >
             <option value="">{t('orchestration.chooseChapter', 'Choose a chapter...')}</option>
-            {/* TODO: Load actual chapters from project */}
+            {chaptersData?.items.map((chapter) => (
+              <option key={chapter.id} value={chapter.id}>
+                {chapter.title}
+              </option>
+            ))}
           </select>
         </div>
 
