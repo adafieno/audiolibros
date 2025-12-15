@@ -29,62 +29,62 @@ function ProjectsIndexPage() {
     <div className="p-6">
       {/* Header in panel */}
       <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border p-6 mb-6">
-        <div className="flex justify-between items-center">
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
           <div>
-            <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text)' }}>{t('projects.title')}</h1>
-            <p style={{ color: 'var(--text-muted)' }}>
+            <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text)', margin: 0 }}>{t('projects.title')}</h1>
+            <p className="text-sm" style={{ color: 'var(--text-muted)', margin: 0 }}>
               {t('projects.welcome', { name: user?.full_name || user?.email })}
             </p>
           </div>
-          <Link
-            to="/projects/new"
-            style={{ backgroundColor: 'var(--accent)', color: 'white' }}
-            className="px-4 py-2 rounded-lg hover:opacity-90 transition-colors"
-          >
-            {t('projects.newProject')}
-          </Link>
+          <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0, flexWrap: 'wrap', alignItems: 'center' }}>
+            {/* Search input */}
+            <input
+              id="search"
+              type="text"
+              placeholder={t('projects.searchPlaceholder')}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ 
+                backgroundColor: 'var(--panel)', 
+                borderColor: 'var(--border)', 
+                color: 'var(--text)',
+                width: '200px'
+              }}
+              className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            
+            {/* Status filter */}
+            <select
+              id="status"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              style={{ 
+                backgroundColor: 'var(--panel)', 
+                borderColor: 'var(--border)', 
+                color: 'var(--text)',
+                minWidth: '150px'
+              }}
+              className="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">{t('projects.allStatuses')}</option>
+              <option value="draft">{t('projects.statusDraft')}</option>
+              <option value="in_progress">{t('projects.statusInProgress')}</option>
+              <option value="review">{t('projects.statusReview')}</option>
+              <option value="completed">{t('projects.statusCompleted')}</option>
+              <option value="published">{t('projects.statusPublished')}</option>
+            </select>
+            
+            {/* New Project button */}
+            <Link
+              to="/projects/new"
+              style={{ backgroundColor: 'var(--accent)', color: 'white' }}
+              className="px-4 py-2 rounded-lg hover:opacity-90 transition-colors"
+            >
+              {t('projects.newProject')}
+            </Link>
+          </div>
         </div>
       </div>
-
-      {/* Filters in section */}
-      <section className="mb-6">
-        <h3 className="text-lg font-semibold mb-3" style={{ color: 'var(--text)' }}>{t('projects.filters', 'Filters')}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="search" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
-                {t('projects.search')}
-              </label>
-              <input
-                id="search"
-                type="text"
-                placeholder={t('projects.searchPlaceholder')}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label htmlFor="status" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
-                {t('projects.status')}
-              </label>
-              <select
-                id="status"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)', color: 'var(--text)' }}
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">{t('projects.allStatuses')}</option>
-                <option value="draft">{t('projects.statusDraft')}</option>
-                <option value="in_progress">{t('projects.statusInProgress')}</option>
-                <option value="review">{t('projects.statusReview')}</option>
-                <option value="completed">{t('projects.statusCompleted')}</option>
-                <option value="published">{t('projects.statusPublished')}</option>
-              </select>
-            </div>
-          </div>
-      </section>
 
         {/* Projects List */}
         {isLoading && (
