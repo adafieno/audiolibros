@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { charactersApi, type Character, type VoiceAssignment } from '../lib/api/characters';
@@ -70,6 +70,28 @@ function CharactersPage() {
       queryClient.invalidateQueries({ queryKey: ['characters', projectId] });
     },
   });
+
+  // Check if all characters are assigned and update workflow completion
+  useEffect(() => {
+    if (!project || !characters || characters.length === 0) return;
+
+    const allAssigned = characters.every(c => c.voiceAssignment?.voiceId);
+    const currentlyComplete = project.workflow_completed?.characters || false;
+
+    // Update workflow completion if status changed
+    if (allAssigned !== currentlyComplete) {
+      projectsApi.update(projectId, {
+        workflow_completed: {
+          ...project.workflow_completed,
+          characters: allAssigned,
+        },
+      })
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+        })
+        .catch(error => console.error('Failed to update workflow completion:', error));
+    }
+  }, [characters, project, projectId, queryClient]);
 
   // Detection handler
   const handleDetection = async () => {
