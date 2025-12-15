@@ -16,15 +16,15 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
 import { Route as ProjectsProjectIdRouteImport } from './routes/projects.$projectId'
 import { Route as ProjectsProjectIdIndexRouteImport } from './routes/projects.$projectId.index'
-import { Route as ProjectsProjectIdVoiceRouteImport } from './routes/projects.$projectId.voice'
 import { Route as ProjectsProjectIdPropertiesRouteImport } from './routes/projects.$projectId.properties'
-import { Route as ProjectsProjectIdPlanningRouteImport } from './routes/projects.$projectId.planning'
+import { Route as ProjectsProjectIdOrchestrationRouteImport } from './routes/projects.$projectId.orchestration'
 import { Route as ProjectsProjectIdManuscriptRouteImport } from './routes/projects.$projectId.manuscript'
 import { Route as ProjectsProjectIdExportRouteImport } from './routes/projects.$projectId.export'
 import { Route as ProjectsProjectIdEditRouteImport } from './routes/projects.$projectId.edit'
 import { Route as ProjectsProjectIdCharactersRouteImport } from './routes/projects.$projectId.characters'
 import { Route as ProjectsProjectIdCastingRouteImport } from './routes/projects.$projectId.casting'
 import { Route as ProjectsProjectIdBookRouteImport } from './routes/projects.$projectId.book'
+import { Route as ProjectsProjectIdAudioProductionRouteImport } from './routes/projects.$projectId.audio-production'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
@@ -61,21 +61,16 @@ const ProjectsProjectIdIndexRoute = ProjectsProjectIdIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ProjectsProjectIdRoute,
 } as any)
-const ProjectsProjectIdVoiceRoute = ProjectsProjectIdVoiceRouteImport.update({
-  id: '/voice',
-  path: '/voice',
-  getParentRoute: () => ProjectsProjectIdRoute,
-} as any)
 const ProjectsProjectIdPropertiesRoute =
   ProjectsProjectIdPropertiesRouteImport.update({
     id: '/properties',
     path: '/properties',
     getParentRoute: () => ProjectsProjectIdRoute,
   } as any)
-const ProjectsProjectIdPlanningRoute =
-  ProjectsProjectIdPlanningRouteImport.update({
-    id: '/planning',
-    path: '/planning',
+const ProjectsProjectIdOrchestrationRoute =
+  ProjectsProjectIdOrchestrationRouteImport.update({
+    id: '/orchestration',
+    path: '/orchestration',
     getParentRoute: () => ProjectsProjectIdRoute,
   } as any)
 const ProjectsProjectIdManuscriptRoute =
@@ -111,6 +106,12 @@ const ProjectsProjectIdBookRoute = ProjectsProjectIdBookRouteImport.update({
   path: '/book',
   getParentRoute: () => ProjectsProjectIdRoute,
 } as any)
+const ProjectsProjectIdAudioProductionRoute =
+  ProjectsProjectIdAudioProductionRouteImport.update({
+    id: '/audio-production',
+    path: '/audio-production',
+    getParentRoute: () => ProjectsProjectIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -119,15 +120,15 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/projects/$projectId': typeof ProjectsProjectIdRouteWithChildren
   '/projects/': typeof ProjectsIndexRoute
+  '/projects/$projectId/audio-production': typeof ProjectsProjectIdAudioProductionRoute
   '/projects/$projectId/book': typeof ProjectsProjectIdBookRoute
   '/projects/$projectId/casting': typeof ProjectsProjectIdCastingRoute
   '/projects/$projectId/characters': typeof ProjectsProjectIdCharactersRoute
   '/projects/$projectId/edit': typeof ProjectsProjectIdEditRoute
   '/projects/$projectId/export': typeof ProjectsProjectIdExportRoute
   '/projects/$projectId/manuscript': typeof ProjectsProjectIdManuscriptRoute
-  '/projects/$projectId/planning': typeof ProjectsProjectIdPlanningRoute
+  '/projects/$projectId/orchestration': typeof ProjectsProjectIdOrchestrationRoute
   '/projects/$projectId/properties': typeof ProjectsProjectIdPropertiesRoute
-  '/projects/$projectId/voice': typeof ProjectsProjectIdVoiceRoute
   '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -135,15 +136,15 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/settings': typeof SettingsRoute
   '/projects': typeof ProjectsIndexRoute
+  '/projects/$projectId/audio-production': typeof ProjectsProjectIdAudioProductionRoute
   '/projects/$projectId/book': typeof ProjectsProjectIdBookRoute
   '/projects/$projectId/casting': typeof ProjectsProjectIdCastingRoute
   '/projects/$projectId/characters': typeof ProjectsProjectIdCharactersRoute
   '/projects/$projectId/edit': typeof ProjectsProjectIdEditRoute
   '/projects/$projectId/export': typeof ProjectsProjectIdExportRoute
   '/projects/$projectId/manuscript': typeof ProjectsProjectIdManuscriptRoute
-  '/projects/$projectId/planning': typeof ProjectsProjectIdPlanningRoute
+  '/projects/$projectId/orchestration': typeof ProjectsProjectIdOrchestrationRoute
   '/projects/$projectId/properties': typeof ProjectsProjectIdPropertiesRoute
-  '/projects/$projectId/voice': typeof ProjectsProjectIdVoiceRoute
   '/projects/$projectId': typeof ProjectsProjectIdIndexRoute
 }
 export interface FileRoutesById {
@@ -154,15 +155,15 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/projects/$projectId': typeof ProjectsProjectIdRouteWithChildren
   '/projects/': typeof ProjectsIndexRoute
+  '/projects/$projectId/audio-production': typeof ProjectsProjectIdAudioProductionRoute
   '/projects/$projectId/book': typeof ProjectsProjectIdBookRoute
   '/projects/$projectId/casting': typeof ProjectsProjectIdCastingRoute
   '/projects/$projectId/characters': typeof ProjectsProjectIdCharactersRoute
   '/projects/$projectId/edit': typeof ProjectsProjectIdEditRoute
   '/projects/$projectId/export': typeof ProjectsProjectIdExportRoute
   '/projects/$projectId/manuscript': typeof ProjectsProjectIdManuscriptRoute
-  '/projects/$projectId/planning': typeof ProjectsProjectIdPlanningRoute
+  '/projects/$projectId/orchestration': typeof ProjectsProjectIdOrchestrationRoute
   '/projects/$projectId/properties': typeof ProjectsProjectIdPropertiesRoute
-  '/projects/$projectId/voice': typeof ProjectsProjectIdVoiceRoute
   '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -174,15 +175,15 @@ export interface FileRouteTypes {
     | '/settings'
     | '/projects/$projectId'
     | '/projects/'
+    | '/projects/$projectId/audio-production'
     | '/projects/$projectId/book'
     | '/projects/$projectId/casting'
     | '/projects/$projectId/characters'
     | '/projects/$projectId/edit'
     | '/projects/$projectId/export'
     | '/projects/$projectId/manuscript'
-    | '/projects/$projectId/planning'
+    | '/projects/$projectId/orchestration'
     | '/projects/$projectId/properties'
-    | '/projects/$projectId/voice'
     | '/projects/$projectId/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -190,15 +191,15 @@ export interface FileRouteTypes {
     | '/login'
     | '/settings'
     | '/projects'
+    | '/projects/$projectId/audio-production'
     | '/projects/$projectId/book'
     | '/projects/$projectId/casting'
     | '/projects/$projectId/characters'
     | '/projects/$projectId/edit'
     | '/projects/$projectId/export'
     | '/projects/$projectId/manuscript'
-    | '/projects/$projectId/planning'
+    | '/projects/$projectId/orchestration'
     | '/projects/$projectId/properties'
-    | '/projects/$projectId/voice'
     | '/projects/$projectId'
   id:
     | '__root__'
@@ -208,15 +209,15 @@ export interface FileRouteTypes {
     | '/settings'
     | '/projects/$projectId'
     | '/projects/'
+    | '/projects/$projectId/audio-production'
     | '/projects/$projectId/book'
     | '/projects/$projectId/casting'
     | '/projects/$projectId/characters'
     | '/projects/$projectId/edit'
     | '/projects/$projectId/export'
     | '/projects/$projectId/manuscript'
-    | '/projects/$projectId/planning'
+    | '/projects/$projectId/orchestration'
     | '/projects/$projectId/properties'
-    | '/projects/$projectId/voice'
     | '/projects/$projectId/'
   fileRoutesById: FileRoutesById
 }
@@ -278,13 +279,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsProjectIdIndexRouteImport
       parentRoute: typeof ProjectsProjectIdRoute
     }
-    '/projects/$projectId/voice': {
-      id: '/projects/$projectId/voice'
-      path: '/voice'
-      fullPath: '/projects/$projectId/voice'
-      preLoaderRoute: typeof ProjectsProjectIdVoiceRouteImport
-      parentRoute: typeof ProjectsProjectIdRoute
-    }
     '/projects/$projectId/properties': {
       id: '/projects/$projectId/properties'
       path: '/properties'
@@ -292,11 +286,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsProjectIdPropertiesRouteImport
       parentRoute: typeof ProjectsProjectIdRoute
     }
-    '/projects/$projectId/planning': {
-      id: '/projects/$projectId/planning'
-      path: '/planning'
-      fullPath: '/projects/$projectId/planning'
-      preLoaderRoute: typeof ProjectsProjectIdPlanningRouteImport
+    '/projects/$projectId/orchestration': {
+      id: '/projects/$projectId/orchestration'
+      path: '/orchestration'
+      fullPath: '/projects/$projectId/orchestration'
+      preLoaderRoute: typeof ProjectsProjectIdOrchestrationRouteImport
       parentRoute: typeof ProjectsProjectIdRoute
     }
     '/projects/$projectId/manuscript': {
@@ -341,32 +335,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsProjectIdBookRouteImport
       parentRoute: typeof ProjectsProjectIdRoute
     }
+    '/projects/$projectId/audio-production': {
+      id: '/projects/$projectId/audio-production'
+      path: '/audio-production'
+      fullPath: '/projects/$projectId/audio-production'
+      preLoaderRoute: typeof ProjectsProjectIdAudioProductionRouteImport
+      parentRoute: typeof ProjectsProjectIdRoute
+    }
   }
 }
 
 interface ProjectsProjectIdRouteChildren {
+  ProjectsProjectIdAudioProductionRoute: typeof ProjectsProjectIdAudioProductionRoute
   ProjectsProjectIdBookRoute: typeof ProjectsProjectIdBookRoute
   ProjectsProjectIdCastingRoute: typeof ProjectsProjectIdCastingRoute
   ProjectsProjectIdCharactersRoute: typeof ProjectsProjectIdCharactersRoute
   ProjectsProjectIdEditRoute: typeof ProjectsProjectIdEditRoute
   ProjectsProjectIdExportRoute: typeof ProjectsProjectIdExportRoute
   ProjectsProjectIdManuscriptRoute: typeof ProjectsProjectIdManuscriptRoute
-  ProjectsProjectIdPlanningRoute: typeof ProjectsProjectIdPlanningRoute
+  ProjectsProjectIdOrchestrationRoute: typeof ProjectsProjectIdOrchestrationRoute
   ProjectsProjectIdPropertiesRoute: typeof ProjectsProjectIdPropertiesRoute
-  ProjectsProjectIdVoiceRoute: typeof ProjectsProjectIdVoiceRoute
   ProjectsProjectIdIndexRoute: typeof ProjectsProjectIdIndexRoute
 }
 
 const ProjectsProjectIdRouteChildren: ProjectsProjectIdRouteChildren = {
+  ProjectsProjectIdAudioProductionRoute: ProjectsProjectIdAudioProductionRoute,
   ProjectsProjectIdBookRoute: ProjectsProjectIdBookRoute,
   ProjectsProjectIdCastingRoute: ProjectsProjectIdCastingRoute,
   ProjectsProjectIdCharactersRoute: ProjectsProjectIdCharactersRoute,
   ProjectsProjectIdEditRoute: ProjectsProjectIdEditRoute,
   ProjectsProjectIdExportRoute: ProjectsProjectIdExportRoute,
   ProjectsProjectIdManuscriptRoute: ProjectsProjectIdManuscriptRoute,
-  ProjectsProjectIdPlanningRoute: ProjectsProjectIdPlanningRoute,
+  ProjectsProjectIdOrchestrationRoute: ProjectsProjectIdOrchestrationRoute,
   ProjectsProjectIdPropertiesRoute: ProjectsProjectIdPropertiesRoute,
-  ProjectsProjectIdVoiceRoute: ProjectsProjectIdVoiceRoute,
   ProjectsProjectIdIndexRoute: ProjectsProjectIdIndexRoute,
 }
 

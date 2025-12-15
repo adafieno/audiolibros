@@ -5,7 +5,7 @@ export type WorkflowCompleted = Record<string, boolean>;
 export interface ProjectState {
   currentProjectId?: string;
   root?: unknown;
-  workflowCompleted?: WorkflowCompleted; // keys: book, project, manuscript, casting, characters, planning, voice, export, cost
+  workflowCompleted?: WorkflowCompleted; // keys: book, project, manuscript, casting, characters, orchestration, audio-production, export, cost
 }
 
 const state: ProjectState = {};
@@ -63,12 +63,12 @@ export function isStepAvailable(step: string | undefined, workflowCompleted?: Wo
       return workflowCompleted.manuscript === true; // After manuscript imported
     case 'characters':
       return workflowCompleted.casting === true; // After casting voices selected
-    case 'planning':
+    case 'orchestration':
       return workflowCompleted.characters === true; // After all characters voiced
-    case 'voice':
-      return workflowCompleted.characters === true; // Parallel with planning
+    case 'audio-production':
+      return workflowCompleted.orchestration === true; // After orchestration complete
     case 'export':
-      return workflowCompleted.voice === true; // After full audio generated
+      return workflowCompleted['audio-production'] === true; // After full audio generated
     case 'cost':
       return true; // Always visible for tracking costs
     default:
