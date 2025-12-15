@@ -37,6 +37,7 @@ class Chapter(Base):
     
     # Relationships
     project: Mapped["Project"] = relationship("Project", back_populates="chapters")
+    plan: Mapped["ChapterPlan"] = relationship("ChapterPlan", back_populates="chapter", uselist=False, cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<Chapter {self.title} (Project: {self.project_id})>"
