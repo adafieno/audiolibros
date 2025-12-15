@@ -346,28 +346,33 @@ function CastingPage() {
         className="rounded-lg border shadow mb-6 p-6"
         style={{ background: 'var(--panel)', borderColor: 'var(--border)' }}
       >
-        <div className="flex justify-between items-start">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <h1 className="text-2xl font-bold" style={{ color: 'var(--text)', margin: 0 }}>
-              {t('casting.title', 'Voice Casting')}
-            </h1>
-            {project?.workflow_completed?.casting && (
-              <span
-                style={{
-                  display: 'inline-block',
-                  padding: '4px 12px',
-                  borderRadius: '12px',
-                  fontSize: '12px',
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
+              <h1 className="text-2xl font-bold" style={{ color: 'var(--text)', margin: 0 }}>
+                {t('casting.title', 'Voice Casting')}
+              </h1>
+              {project?.workflow_completed?.casting && (
+                <span style={{ 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  padding: '0.25rem 0.75rem', 
+                  borderRadius: '9999px', 
+                  fontSize: '0.875rem', 
                   fontWeight: 500,
-                  backgroundColor: 'var(--success)',
-                  color: 'white',
-                }}
-              >
-                ✓ {t('workflow.completed', 'Completed')}
-              </span>
-            )}
+                  boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+                  background: '#22c55e', 
+                  color: '#052e12' 
+                }}>
+                  {t('project.completed', 'Completed')}
+                </span>
+              )}
+            </div>
+            <p className="text-sm" style={{ color: 'var(--text-muted)', margin: 0 }}>
+              {t('casting.description', 'Select voices for characters and narration.')}
+            </p>
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0, flexWrap: 'wrap' }}>
             {/* Select/Deselect All Buttons */}
             <Button
               variant="secondary"
@@ -479,9 +484,6 @@ function CastingPage() {
             </select>
           </div>
         </div>
-        <p className="text-sm mt-2" style={{ color: 'var(--text-muted)', margin: '8px 0 0 0' }}>
-          {t('casting.description', 'Select voices for characters and narration.')}
-        </p>
       </div>
 
       {/* Language Filter Tags */}

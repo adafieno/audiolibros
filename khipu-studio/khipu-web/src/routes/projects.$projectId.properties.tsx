@@ -252,7 +252,7 @@ function ProjectPropertiesPage() {
               </span>
             )}
           </div>
-          <p style={{ color: 'var(--text-muted)', margin: 0 }}>
+          <p className="text-sm" style={{ color: 'var(--text-muted)', margin: 0 }}>
             {t('projectProperties.description', 'Configure technical settings for TTS, LLM, and export options.')}
           </p>
         </div>
