@@ -4,6 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { charactersApi, type Character, type VoiceAssignment } from '../lib/api/characters';
 import { voicesApi } from '../lib/api/voices';
+import { projectsApi } from '../lib/projects';
+import { Button } from '../components/Button';
 
 export const Route = createFileRoute('/projects/$projectId/characters')({
   component: CharactersPage,
@@ -13,6 +15,12 @@ function CharactersPage() {
   const { t } = useTranslation();
   const { projectId } = Route.useParams();
   const queryClient = useQueryClient();
+  
+  // Fetch project
+  const { data: project } = useQuery({
+    queryKey: ['project', projectId],
+    queryFn: () => projectsApi.get(projectId),
+  });
   
   // Fetch characters
   const { data: characters = [], isLoading } = useQuery({
@@ -26,10 +34,18 @@ function CharactersPage() {
     queryFn: () => voicesApi.getAvailableVoices(),
   });
 
-  const availableVoices = voiceInventory?.voices || [];
+  // Filter to only selected voices from casting module
+  const selectedVoiceIds = project?.settings?.voices?.selectedVoiceIds || [];
+  const availableVoices = (voiceInventory?.voices || []).filter(
+    voice => selectedVoiceIds.includes(voice.id)
+  );
 
-  // State for inline editing
   const [editingFields, setEditingFields] = useState<Set<string>>(new Set());
+  const [isDetecting, setIsDetecting] = useState(false);
+  const [isAssigningVoices, setIsAssigningVoices] = useState(false);
+  const [detectionProgress, setDetectionProgress] = useState('');
+  const [assignmentProgress, setAssignmentProgress] = useState('');
+  const [playingAudio, setPlayingAudio] = useState<string | null>(null);
 
   // Mutations
   const createMutation = useMutation({
@@ -54,6 +70,111 @@ function CharactersPage() {
       queryClient.invalidateQueries({ queryKey: ['characters', projectId] });
     },
   });
+
+  // Detection handler
+  const handleDetection = async () => {
+    setIsDetecting(true);
+    setDetectionProgress('Analyzing manuscript with AI...');
+    try {
+      const result = await charactersApi.detectCharacters(projectId);
+      setDetectionProgress(`Found ${result.count} characters`);
+      console.log(`Detected ${result.count} characters`);
+      // Refresh the character list
+      await queryClient.invalidateQueries({ queryKey: ['characters', projectId] });
+      setTimeout(() => setDetectionProgress(''), 2000);
+    } catch (error: any) {
+      console.error('Character detection failed:', error);
+      setDetectionProgress('');
+      alert(error.response?.data?.detail || 'Character detection failed. Please ensure chapters are uploaded and OpenAI API key is configured.');
+    } finally {
+      setIsDetecting(false);
+    }
+  };
+
+  // Voice assignment handler
+  const handleAssignVoices = async () => {
+    setIsAssigningVoices(true);
+    setAssignmentProgress('Matching characters to voices with AI...');
+    try {
+      const result = await charactersApi.assignVoices(projectId);
+      setAssignmentProgress(`Assigned voices to ${result.count} characters`);
+      console.log(`Assigned voices to ${result.count} characters`);
+      // Refresh the character list
+      await queryClient.invalidateQueries({ queryKey: ['characters', projectId] });
+      
+      // Auto-complete workflow if all characters have voice assignments
+      const allAssigned = result.characters.every(c => c.voiceAssignment?.voiceId);
+      if (allAssigned && project) {
+        await projectsApi.update(projectId, {
+          workflow_completed: {
+            ...project.workflow_completed,
+            characters: true,
+          },
+        });
+        await queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+      }
+      
+      setTimeout(() => setAssignmentProgress(''), 2000);
+    } catch (error: any) {
+      console.error('Voice assignment failed:', error);
+      setAssignmentProgress('');
+      alert(error.response?.data?.detail || 'Voice assignment failed. Please ensure characters are detected first.');
+    } finally {
+      setIsAssigningVoices(false);
+    }
+  };
+
+  // Audition handler
+  const handleAudition = async (character: Character) => {
+    if (!character.voiceAssignment?.voiceId) {
+      alert('Please assign a voice to this character first');
+      return;
+    }
+
+    const characterId = character.id;
+    setPlayingAudio(characterId);
+
+    try {
+      // Use character description or a default text
+      const auditionText = character.description || `Hola, soy ${character.name}`;
+      
+      // Get rate and pitch from voice assignment
+      const ratePct = character.voiceAssignment.rate_pct ?? 0;
+      const pitchPct = character.voiceAssignment.pitch_pct ?? 0;
+      
+      const audioBlob = await voicesApi.auditionVoice(
+        projectId,
+        character.voiceAssignment.voiceId,
+        auditionText,
+        ratePct,
+        pitchPct
+      );
+
+      // Play the audio
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      
+      // Apply prosody settings if available
+      // Note: This would need backend support to apply rate/pitch
+      
+      audio.onended = () => {
+        setPlayingAudio(null);
+        URL.revokeObjectURL(audioUrl);
+      };
+      
+      audio.onerror = () => {
+        setPlayingAudio(null);
+        URL.revokeObjectURL(audioUrl);
+        alert('Failed to play audio');
+      };
+
+      await audio.play();
+    } catch (error: any) {
+      console.error('Audition failed:', error);
+      setPlayingAudio(null);
+      alert(error.message || 'Voice audition failed. Please ensure TTS is configured.');
+    }
+  };
 
   // Inline editing helpers
   const startEditing = (fieldId: string) => {
@@ -128,43 +249,100 @@ function CharactersPage() {
     <div className="p-6">
       {/* Header */}
       <div className="rounded-lg border shadow mb-6 p-6" style={{ background: 'var(--panel)', borderColor: 'var(--border)' }}>
-        <div>
-          <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text)', margin: 0 }}>
-            {t('characters.title', 'Characters')}
-          </h1>
-          <p className="text-sm" style={{ color: 'var(--text-muted)', margin: 0 }}>
-            {t('characters.description', 'Manage character voices and assignments')}
-          </p>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
+              <h1 className="text-2xl font-bold" style={{ color: 'var(--text)', margin: 0 }}>
+                {t('characters.title', 'Characters')}
+              </h1>
+              {project?.workflow_completed?.characters && (
+                <span style={{ 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  padding: '0.25rem 0.75rem', 
+                  borderRadius: '9999px', 
+                  fontSize: '0.875rem', 
+                  fontWeight: 500,
+                  boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+                  background: '#22c55e', 
+                  color: '#052e12' 
+                }}>
+                  {t('project.completed', 'Completed')}
+                </span>
+              )}
+            </div>
+            <p className="text-sm" style={{ color: 'var(--text-muted)', margin: 0 }}>
+              {t('characters.description', 'Manage character voices and assignments')}
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0, flexWrap: 'wrap' }}>
+            <Button
+              variant="primary"
+              onClick={handleDetection}
+              disabled={isDetecting}
+              loading={isDetecting}
+            >
+              {t('characters.detectRefresh', 'Detect / Refresh')}
+            </Button>
+            
+            {characters.length > 0 && (
+              <Button
+                variant="success"
+                onClick={handleAssignVoices}
+                disabled={isAssigningVoices || characters.length === 0}
+                loading={isAssigningVoices}
+              >
+                {t('characters.assignVoices', 'Assign Voices')}
+              </Button>
+            )}
+            
+            <Button
+              variant="secondary"
+              onClick={() => createMutation.mutate()}
+              disabled={createMutation.isPending}
+              loading={createMutation.isPending}
+            >
+              {t('characters.add', 'Add Character')}
+            </Button>
+            
+            {characters.length > 0 && (
+              <>
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    const sorted = [...characters].sort((a, b) => (b.frequency || 0) - (a.frequency || 0));
+                    queryClient.setQueryData(['characters', projectId], sorted);
+                  }}
+                  disabled={characters.length === 0}
+                >
+                  {t('characters.sortByProbability', 'Sort by Probability')}
+                </Button>
+                
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    const sorted = [...characters].sort((a, b) => a.name.localeCompare(b.name));
+                    queryClient.setQueryData(['characters', projectId], sorted);
+                  }}
+                  disabled={characters.length === 0}
+                >
+                  {t('characters.sortAlphabetically', 'Sort Alphabetically')}
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Action buttons */}
-      <div className="mb-6 flex gap-2">
-        <button
-          onClick={() => createMutation.mutate()}
-          disabled={createMutation.isPending}
-          className="px-4 py-2 rounded-md font-medium transition-colors disabled:opacity-50"
-          style={{
-            background: 'var(--accent)',
-            color: 'var(--text)',
-          }}
-        >
-          {createMutation.isPending ? t('common.adding', 'Adding...') : t('characters.add', 'Add Character')}
-        </button>
-        
-        {/* Coming soon buttons */}
-        <button
-          disabled
-          className="px-4 py-2 rounded-md font-medium transition-colors opacity-50 cursor-not-allowed"
-          style={{
-            background: 'var(--muted)',
-            color: 'var(--text-muted)',
-          }}
-          title="Character detection is available in the desktop version"
-        >
-          {t('characters.detectRefresh', 'Detect / Refresh')}
-        </button>
-      </div>
+      {/* Progress indicator */}
+      {(detectionProgress || assignmentProgress) && (
+        <div className="mb-4 p-3 rounded-md" style={{ background: 'var(--accent)', color: 'var(--text)' }}>
+          <div className="flex items-center gap-2">
+            <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+            <span>{detectionProgress || assignmentProgress}</span>
+          </div>
+        </div>
+      )}
 
       {/* Characters grid */}
       {characters.length === 0 ? (
@@ -173,10 +351,7 @@ function CharactersPage() {
             {t('characters.noCharactersYet', 'No characters yet')}
           </p>
           <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
-            {t('characters.addManually', 'Add characters manually using the button above')}
-          </p>
-          <p className="text-xs px-8" style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>
-            Note: Automatic character detection from manuscript is available in the desktop version of Khipu Studio
+            {t('characters.addManually', 'Click "Detect / Refresh" to automatically extract characters from your manuscript, or add them manually')}
           </p>
         </div>
       ) : (
@@ -220,10 +395,10 @@ function CharactersPage() {
                 )}
               </div>
 
-              {/* Frequency */}
+              {/* Probability */}
               {character.frequency !== undefined && character.frequency > 0 && (
                 <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                  {t('characters.frequency', 'Frequency')}: {character.frequency.toFixed(1)}%
+                  {t('characters.probability', 'Probability')}: {character.frequency.toFixed(1)}%
                 </div>
               )}
 
@@ -300,66 +475,130 @@ function CharactersPage() {
                     <option key={voice.id} value={voice.id}>
                       {voice.id} ({voice.gender}, {voice.locale})
                     </option>
-                  ))}
-                </select>
+                  ))}                </select>
 
-                {/* Prosody Controls */}
+                {/* Style Selection (if voice supports styles) */}
+                {character.voiceAssignment?.voiceId && availableVoices.find(v => v.id === character.voiceAssignment?.voiceId)?.styles && availableVoices.find(v => v.id === character.voiceAssignment?.voiceId)!.styles.length > 0 && (
+                    <select
+                      value={character.voiceAssignment?.style || 'default'}
+                      onChange={(e) =>
+                        handleProsodyUpdate(character.id, character, {
+                          style: e.target.value,
+                        })
+                      }
+                      className="w-full px-2 py-1.5 text-sm border rounded"
+                      style={{
+                        background: 'var(--panel)',
+                        color: 'var(--text)',
+                        borderColor: 'var(--border)',
+                      }}
+                    >
+                      <option value="">{t('characters.defaultStyle', 'Default Style')}</option>
+                      {availableVoices.find(v => v.id === character.voiceAssignment?.voiceId)!.styles.map((style) => (
+                        <option key={style} value={style}>
+                          {style.charAt(0).toUpperCase() + style.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+                )}
+
+                {/* Prosody Controls - Side by Side */}
                 {character.voiceAssignment?.voiceId && (
-                  <div className="space-y-2 pt-2">
-                    {/* Rate */}
-                    <div>
-                      <label className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {t('characters.rate', 'Rate')}: {character.voiceAssignment.rate_pct || 0}%
-                      </label>
-                      <input
-                        type="range"
-                        min="-50"
-                        max="50"
-                        value={character.voiceAssignment.rate_pct || 0}
-                        onChange={(e) =>
-                          handleProsodyUpdate(character.id, character, {
-                            rate_pct: parseInt(e.target.value),
-                          })
-                        }
-                        className="w-full"
-                      />
+                  <>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      {/* Rate */}
+                      <div>
+                        <label style={{ color: 'var(--text-muted)' }}>
+                          {t('characters.rate', 'Rate')}: {character.voiceAssignment.rate_pct ?? 0}%
+                        </label>
+                        <input
+                          type="range"
+                          min="-50"
+                          max="50"
+                          value={character.voiceAssignment.rate_pct ?? 0}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value, 10);
+                            handleProsodyUpdate(character.id, character, {
+                              rate_pct: value,
+                            });
+                          }}
+                          className="w-full"
+                        />
+                      </div>
+
+                      {/* Pitch */}
+                      <div>
+                        <label style={{ color: 'var(--text-muted)' }}>
+                          {t('characters.pitch', 'Pitch')}: {character.voiceAssignment.pitch_pct ?? 0}%
+                        </label>
+                        <input
+                          type="range"
+                          min="-50"
+                          max="50"
+                          value={character.voiceAssignment.pitch_pct ?? 0}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value, 10);
+                            handleProsodyUpdate(character.id, character, {
+                              pitch_pct: value,
+                            });
+                          }}
+                          className="w-full"
+                        />
+                      </div>
                     </div>
 
-                    {/* Pitch */}
-                    <div>
-                      <label className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {t('characters.pitch', 'Pitch')}: {character.voiceAssignment.pitch_pct || 0}%
-                      </label>
-                      <input
-                        type="range"
-                        min="-50"
-                        max="50"
-                        value={character.voiceAssignment.pitch_pct || 0}
-                        onChange={(e) =>
-                          handleProsodyUpdate(character.id, character, {
-                            pitch_pct: parseInt(e.target.value),
-                          })
-                        }
-                        className="w-full"
-                      />
+                    {/* Style Degree - only show if style is selected */}
+                    {character.voiceAssignment?.style && (
+                      <div className="text-xs mt-2">
+                        <label style={{ color: 'var(--text-muted)' }}>
+                          {t('characters.intensity', 'Intensity')}: {Math.round((character.voiceAssignment?.styledegree || 0.6) * 100)}%
+                        </label>
+                        <input
+                          type="range"
+                          min="10"
+                          max="100"
+                          value={Math.round((character.voiceAssignment?.styledegree || 0.6) * 100)}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value, 10) / 100;
+                            handleProsodyUpdate(character.id, character, {
+                              styledegree: value,
+                            });
+                          }}
+                          className="w-full"
+                        />
+                      </div>
+                    )}
+
+                    {/* Method indicator */}
+                    <div className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
+                      {t('characters.method', 'Method')}: {character.voiceAssignment?.method === 'llm_auto' ? t('characters.methodAutoAssigned', 'Auto-assigned') : t('characters.methodManual', 'Manual')}
                     </div>
-                  </div>
+                  </>
                 )}
               </div>
 
               {/* Action buttons */}
               <div className="flex gap-2 pt-2">
-                <button
+                {character.voiceAssignment?.voiceId && (
+                  <Button
+                    variant="primary"
+                    size="compact"
+                    onClick={() => handleAudition(character)}
+                    disabled={playingAudio === character.id}
+                    loading={playingAudio === character.id}
+                  >
+                    {t('characters.audition', 'Audition')}
+                  </Button>
+                )}
+                <Button
+                  variant="danger"
+                  size="compact"
                   onClick={() => deleteMutation.mutate(character.id)}
                   disabled={deleteMutation.isPending}
-                  className="px-3 py-1.5 text-sm rounded transition-colors disabled:opacity-50"
-                  style={{
-                    background: 'var(--error)',
-                    color: 'white',
-                  }}
+                  loading={deleteMutation.isPending}
                 >
                   {t('characters.remove', 'Remove')}
-                </button>
+                </Button>
               </div>
             </div>
           ))}

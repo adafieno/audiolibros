@@ -6,6 +6,7 @@ import { getChapters, getChapter, updateChapter, type Chapter } from '../api/cha
 import { projectsApi } from '../lib/projects'
 import { setStepCompleted } from '../store/project'
 import { sanitizeTextForTTS, hasProblematicCharacters } from '../lib/text-sanitizer'
+import { Button } from '../components/Button'
 
 type ChapterType = 'chapter' | 'intro' | 'prologue' | 'epilogue' | 'credits' | 'outro'
 
@@ -487,43 +488,27 @@ function ManuscriptPage() {
               style={{ display: 'none' }}
               id={`manuscript-upload-${projectId}`}
             />
-            <label
-              htmlFor={`manuscript-upload-${projectId}`}
-              style={{
-                padding: '0.5rem 1rem',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                background: isProcessing ? 'var(--bg-secondary)' : 'var(--accent)',
-                color: isProcessing ? 'var(--text-secondary)' : '#fff',
-                cursor: isProcessing ? 'not-allowed' : 'pointer',
-                border: 'none',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {uploading ? t('manuscript.uploading') : parsing ? t('manuscript.parsing') : t('manuscript.importDocx')}
+            <label htmlFor={`manuscript-upload-${projectId}`}>
+              <Button
+                variant="primary"
+                disabled={isProcessing}
+                loading={uploading || parsing}
+                as="span"
+                style={{ cursor: isProcessing ? 'not-allowed' : 'pointer' }}
+              >
+                {uploading ? t('manuscript.uploading') : parsing ? t('manuscript.parsing') : t('manuscript.importDocx')}
+              </Button>
             </label>
             
             {chapters.length > 0 && (
-              <button
+              <Button
+                variant="primary"
                 onClick={checkAllChaptersSanitization}
                 disabled={checkingSanitization}
-                style={{
-                  padding: '0.5rem 1rem',
-                  borderRadius: '0.375rem',
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  background: 'var(--accent)',
-                  color: '#fff',
-                  cursor: checkingSanitization ? 'not-allowed' : 'pointer',
-                  border: 'none',
-                  whiteSpace: 'nowrap',
-                }}
+                loading={checkingSanitization}
               >
-                {checkingSanitization
-                  ? t('manuscript.checking', 'Checking...')
-                  : t('manuscript.checkTTS', 'Check for TTS Compatibility')}
-              </button>
+                {t('manuscript.checkTTS', 'Check for TTS Compatibility')}
+              </Button>
             )}
           </div>
         </div>

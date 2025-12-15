@@ -82,12 +82,14 @@ export const voicesApi = {
   auditionVoice: async (
     projectId: string,
     voiceId: string,
-    text?: string
+    text?: string,
+    ratePct?: number,
+    pitchPct?: number
   ): Promise<Blob> => {
     try {
       const response = await api.post(
         `/projects/${projectId}/voices/${voiceId}/audition`,
-        { text },
+        { text, rate_pct: ratePct, pitch_pct: pitchPct },
         { responseType: 'blob' }
       );
       return response.data;

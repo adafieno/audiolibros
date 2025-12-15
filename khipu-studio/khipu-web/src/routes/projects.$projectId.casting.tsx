@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { voicesApi, type Voice, type VoiceInventory } from '../lib/api/voices';
 import { projectsApi } from '../lib/projects';
 import { setStepCompleted } from '../store/project';
+import { Button } from '../components/Button';
 import {
   getLanguageFromLocale,
   getAvailableLanguages,
@@ -366,7 +367,86 @@ function CastingPage() {
               </span>
             )}
           </div>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            {/* Select/Deselect All Buttons */}
+            <Button
+              variant="secondary"
+              onClick={() => handleSelectAll(availableVoices)}
+            >
+              {t('casting.selectAll', 'Select All')}
+            </Button>
+
+            <Button
+              variant="secondary"
+              onClick={() => handleDeselectAll(availableVoices)}
+            >
+              {t('casting.deselectAll', 'Deselect All')}
+            </Button>
+            
+            {/* Gender Filter */}
+            <select
+              value=""
+              onChange={e => {
+                if (e.target.value && !selectedGenders.includes(e.target.value)) {
+                  setSelectedGenders([...selectedGenders, e.target.value]);
+                }
+                e.target.value = '';
+              }}
+              style={{
+                padding: '8px 12px',
+                border: '1px solid var(--border)',
+                borderRadius: '4px',
+                backgroundColor: 'var(--panel)',
+                color: 'var(--text)',
+                fontSize: '14px',
+              }}
+            >
+              <option value="">
+                {t('casting.filterGender', 'Filter Gender')}
+              </option>
+              {availableGenders
+                .filter(gender => !selectedGenders.includes(gender))
+                .map(gender => (
+                  <option key={gender} value={gender}>
+                    {gender === 'M'
+                      ? t('casting.male', 'Male')
+                      : gender === 'F'
+                      ? t('casting.female', 'Female')
+                      : t('casting.neutral', 'Neutral')}
+                  </option>
+                ))}
+            </select>
+
+            {/* Locale Filter */}
+            <select
+              value=""
+              onChange={e => {
+                if (e.target.value && !selectedLocales.includes(e.target.value)) {
+                  setSelectedLocales([...selectedLocales, e.target.value]);
+                }
+                e.target.value = '';
+              }}
+              style={{
+                padding: '8px 12px',
+                border: '1px solid var(--border)',
+                borderRadius: '4px',
+                backgroundColor: 'var(--panel)',
+                color: 'var(--text)',
+                fontSize: '14px',
+              }}
+            >
+              <option value="">
+                {t('casting.filterLocale', 'Filter Locale')}
+              </option>
+              {availableLocales
+                .filter(locale => !selectedLocales.includes(locale))
+                .map(locale => (
+                  <option key={locale} value={locale}>
+                    {locale}
+                  </option>
+                ))}
+            </select>
+            
             {/* Language Selector */}
             <select
               value=""
@@ -511,167 +591,6 @@ function CastingPage() {
         </div>
       )}
 
-      {/* Filters Row */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
-        {/* Show Selected Toggle */}
-        <label
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            color: 'var(--text)',
-          }}
-        >
-          <input
-            type="checkbox"
-            checked={showSelectedOnly}
-            onChange={(e) => setShowSelectedOnly(e.target.checked)}
-            style={{
-              width: '16px',
-              height: '16px',
-              cursor: 'pointer',
-            }}
-          />
-          {t('casting.showSelectedOnly', 'Show selected only')} ({selectedVoices.size})
-        </label>
-        
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          {/* Select/Deselect All Buttons */}
-          <button
-            onClick={() => handleSelectAll(availableVoices)}
-            style={{
-              padding: '8px 16px',
-              border: '1px solid var(--border)',
-              borderRadius: '4px',
-              backgroundColor: 'var(--panel)',
-              color: 'var(--text)',
-              fontSize: '14px',
-              cursor: 'pointer',
-            }}
-          >
-            {t('casting.selectAll', 'Select All')}
-          </button>
-
-          <button
-            onClick={() => handleDeselectAll(availableVoices)}
-            style={{
-              padding: '8px 16px',
-              border: '1px solid var(--border)',
-              borderRadius: '4px',
-              backgroundColor: 'var(--panel)',
-              color: 'var(--text)',
-              fontSize: '14px',
-              cursor: 'pointer',
-            }}
-          >
-            {t('casting.deselectAll', 'Deselect All')}
-          </button>
-          
-          {/* Gender Filter */}
-          <select
-            value=""
-            onChange={e => {
-              if (e.target.value && !selectedGenders.includes(e.target.value)) {
-                setSelectedGenders([...selectedGenders, e.target.value]);
-              }
-              e.target.value = '';
-            }}
-            style={{
-              padding: '8px 12px',
-              border: '1px solid var(--border)',
-              borderRadius: '4px',
-              backgroundColor: 'var(--panel)',
-              color: 'var(--text)',
-              fontSize: '14px',
-            }}
-          >
-            <option value="">
-              {t('casting.filterGender', 'Filter Gender')}
-            </option>
-            {availableGenders
-              .filter(gender => !selectedGenders.includes(gender))
-              .map(gender => (
-                <option key={gender} value={gender}>
-                  {gender === 'M'
-                    ? t('casting.male', 'Male')
-                    : gender === 'F'
-                    ? t('casting.female', 'Female')
-                    : t('casting.neutral', 'Neutral')}
-                </option>
-              ))}
-          </select>
-
-          {/* Locale Filter */}
-          <select
-            value=""
-            onChange={e => {
-              if (e.target.value && !selectedLocales.includes(e.target.value)) {
-                setSelectedLocales([...selectedLocales, e.target.value]);
-              }
-              e.target.value = '';
-            }}
-            style={{
-              padding: '8px 12px',
-              border: '1px solid var(--border)',
-              borderRadius: '4px',
-              backgroundColor: 'var(--panel)',
-              color: 'var(--text)',
-              fontSize: '14px',
-            }}
-          >
-            <option value="">
-              {t('casting.filterLocale', 'Filter Locale')}
-            </option>
-            {availableLocales
-              .filter(locale => !selectedLocales.includes(locale))
-              .map(locale => (
-                <option key={locale} value={locale}>
-                  {locale}
-                </option>
-              ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Message */}
-      {message && (
-        <div
-          style={{
-            padding: '16px',
-            marginBottom: '16px',
-            borderRadius: '8px',
-            backgroundColor: message.toLowerCase().includes('completed')
-              ? 'rgba(16, 185, 129, 0.1)'
-              : message.toLowerCase().includes('requires') || message.toLowerCase().includes('configure')
-              ? 'var(--warning-subtle)'
-              : 'var(--error-subtle)',
-            color: message.toLowerCase().includes('completed')
-              ? 'var(--success)'
-              : message.toLowerCase().includes('requires') || message.toLowerCase().includes('configure')
-              ? 'var(--warning)'
-              : 'var(--error)',
-            fontSize: '14px',
-            border: '1px solid',
-            borderColor: message.toLowerCase().includes('completed')
-              ? 'var(--success)'
-              : message.toLowerCase().includes('requires') || message.toLowerCase().includes('configure')
-              ? 'var(--warning)'
-              : 'var(--error)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-            <span style={{ fontSize: '18px', lineHeight: '1' }}>
-              {message.toLowerCase().includes('requires') || message.toLowerCase().includes('configure') ? '⚠️' : '❌'}
-            </span>
-            <div style={{ flex: 1 }}>
-              {message}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Voice Grid */}
       <div style={{ marginBottom: '24px' }}>
         <div
@@ -685,13 +604,38 @@ function CastingPage() {
           <h3 style={{ fontSize: '1.1rem', color: 'var(--text)', margin: 0 }}>
             {t('casting.voicesTitle', 'Available Voices')} ({availableVoices.length})
           </h3>
-          {selectedVoices.size > 0 && (
-            <span style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
-              {t('casting.selectedCount', '{{count}} voices selected', {
-                count: selectedVoices.size,
-              })}
-            </span>
-          )}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+            {/* Show Selected Toggle */}
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                color: 'var(--text)',
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={showSelectedOnly}
+                onChange={(e) => setShowSelectedOnly(e.target.checked)}
+                style={{
+                  width: '16px',
+                  height: '16px',
+                  cursor: 'pointer',
+                }}
+              />
+              {t('casting.showSelectedOnly', 'Show selected only')} ({selectedVoices.size})
+            </label>
+            {selectedVoices.size > 0 && (
+              <span style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
+                {t('casting.selectedCount', '{{count}} voices selected', {
+                  count: selectedVoices.size,
+                })}
+              </span>
+            )}
+          </div>
         </div>
 
         {availableVoices.length === 0 ? (
@@ -760,26 +704,19 @@ function CastingPage() {
 
                     {/* Audition Button */}
                     <div style={{ marginTop: '12px' }}>
-                      <button
+                      <Button
+                        variant="primary"
+                        size="compact"
                         onClick={e => {
                           e.preventDefault();
                           e.stopPropagation();
                           handleAudition(voice);
                         }}
                         disabled={auditioningVoices.has(voice.id)}
-                        className="px-3 py-1 rounded text-sm"
-                        style={{
-                          backgroundColor: 'var(--accent)',
-                          color: 'white',
-                          border: 'none',
-                          cursor: auditioningVoices.has(voice.id) ? 'wait' : 'pointer',
-                          opacity: auditioningVoices.has(voice.id) ? 0.6 : 1,
-                        }}
+                        loading={auditioningVoices.has(voice.id)}
                       >
-                        {auditioningVoices.has(voice.id)
-                          ? t('casting.audition.loading', 'Playing...')
-                          : t('casting.audition.button', '▶ Audition')}
-                      </button>
+                        {t('casting.audition.button', '▶ Audition')}
+                      </Button>
                     </div>
                   </div>
                 </label>

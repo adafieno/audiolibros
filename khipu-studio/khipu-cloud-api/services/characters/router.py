@@ -3,7 +3,6 @@ Characters service router
 """
 import logging
 import uuid
-from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -240,3 +239,228 @@ async def delete_character(
     logger.info(f"✅ Deleted character {character_id} for project {project_id}")
     
     return {"message": "Character deleted successfully"}
+
+
+@router.post("/projects/{project_id}/characters/detect")
+async def detect_characters(
+    project_id: str,
+    current_user = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+) -> dict:
+    """
+    Detect characters from manuscript chapters using LLM analysis
+    
+    Args:
+        project_id: Project ID
+        current_user: Current authenticated user
+        db: Database session
+        
+    Returns:
+        Detection results with character count
+    """
+    logger.info(f"🔍 Starting LLM-based character detection for project {project_id}")
+    
+    # Get project
+    result = await db.execute(
+        select(Project).where(Project.id == project_id)
+    )
+    project = result.scalar_one_or_none()
+    
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Get OpenAI API key from project settings (same structure as llm_client.py)
+    api_key = None
+    model = "gpt-4o-mini"  # Default model
+    
+    if project.settings:
+        creds = project.settings.get("creds", {}).get("llm", {}).get("openai", {})
+        api_key = creds.get("apiKey")
+        llm_settings = project.settings.get("llm", {})
+        llm_engine = llm_settings.get("engine", {})
+        model = llm_engine.get("model", model)
+    
+    if not api_key:
+        # Fall back to environment variable
+        import os
+        api_key = os.environ.get("OPENAI_API_KEY")
+    
+    if not api_key:
+        raise HTTPException(
+            status_code=400,
+            detail="OpenAI API key not configured. Please add it to project settings at creds.llm.openai.apiKey"
+        )
+    
+    # Get chapters
+    from shared.models import Chapter
+    chapters_result = await db.execute(
+        select(Chapter)
+        .where(Chapter.project_id == project_id)
+        .order_by(Chapter.order)
+    )
+    chapters = chapters_result.scalars().all()
+    
+    if not chapters:
+        raise HTTPException(
+            status_code=400, 
+            detail="No chapters found. Please upload manuscript first."
+        )
+    
+    logger.info(f"Found {len(chapters)} chapters to analyze with LLM")
+    
+    # Convert chapters to dict format for detection
+    chapters_data = [
+        {
+            "content": chapter.content,
+            "title": chapter.title,
+            "order": chapter.order
+        }
+        for chapter in chapters
+    ]
+    
+    # Run LLM-based detection
+    from services.characters.detection import detect_characters_from_chapters
+    detected_characters = await detect_characters_from_chapters(chapters_data, api_key, model)
+    
+    logger.info(f"LLM detection complete: {len(detected_characters)} characters found")
+    
+    # Initialize settings if needed
+    if project.settings is None:
+        project.settings = {}
+    
+    # Store detected characters
+    project.settings["characters"] = detected_characters
+    
+    # Mark as modified
+    from sqlalchemy.orm import attributes
+    attributes.flag_modified(project, "settings")
+    
+    # Save
+    await db.commit()
+    await db.refresh(project)
+    
+    logger.info(f"✅ Saved {len(detected_characters)} characters for project {project_id}")
+    logger.info(f"   Verification: project.settings has {len(project.settings.get('characters', []))} characters after commit")
+    
+    return {
+        "message": "LLM-based character detection complete",
+        "count": len(detected_characters),
+        "characters": detected_characters
+    }
+
+
+@router.post("/projects/{project_id}/characters/assign-voices")
+async def assign_voices_to_characters(
+    project_id: str,
+    current_user = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+) -> dict:
+    """
+    Use LLM to automatically assign voices to characters based on traits
+    
+    Args:
+        project_id: Project ID
+        current_user: Current authenticated user
+        db: Database session
+        
+    Returns:
+        Assignment results with updated characters
+    """
+    logger.info(f"🎤 Starting LLM-based voice assignment for project {project_id}")
+    
+    # Get project
+    result = await db.execute(
+        select(Project).where(Project.id == project_id)
+    )
+    project = result.scalar_one_or_none()
+    
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Get OpenAI API key from project settings (same structure as llm_client.py)
+    api_key = None
+    model = "gpt-4o-mini"
+    
+    if project.settings:
+        creds = project.settings.get("creds", {}).get("llm", {}).get("openai", {})
+        api_key = creds.get("apiKey")
+        llm_settings = project.settings.get("llm", {})
+        llm_engine = llm_settings.get("engine", {})
+        model = llm_engine.get("model", model)
+    
+    if not api_key:
+        import os
+        api_key = os.environ.get("OPENAI_API_KEY")
+    
+    if not api_key:
+        raise HTTPException(
+            status_code=400,
+            detail="OpenAI API key not configured"
+        )
+    
+    # Get current characters
+    if not project.settings:
+        logger.error("   Project settings is None or empty")
+        raise HTTPException(
+            status_code=400,
+            detail="No project settings found. Please configure the project first."
+        )
+    
+    characters = project.settings.get("characters", [])
+    logger.info(f"   project.settings keys: {list(project.settings.keys())}")
+    logger.info(f"   Found {len(characters)} characters in project settings")
+    
+    if not characters or len(characters) == 0:
+        logger.error("   No characters found in project.settings['characters']")
+        raise HTTPException(
+            status_code=400,
+            detail="No characters found. Run character detection first."
+        )
+    
+    # Get available voices from project settings or use defaults
+    available_voices = []
+    if project.settings and "voices" in project.settings:
+        voices_settings = project.settings["voices"]
+        # Check if it's the new format with selectedVoiceIds
+        if isinstance(voices_settings, dict) and "selectedVoiceIds" in voices_settings:
+            selected_voice_ids = voices_settings.get("selectedVoiceIds", [])
+            logger.info(f"   Found {len(selected_voice_ids)} selected voices in project settings")
+            # Build voice objects from IDs (simplified - just use the IDs)
+            available_voices = [
+                {"id": vid, "name": vid.split("-")[-1].replace("Neural", ""), "gender": "N", "age": "adult", "style": "neutral"}
+                for vid in selected_voice_ids
+            ]
+    
+    if not available_voices:
+        # Use default voice inventory for Spanish
+        logger.info("   No voices configured, using default Spanish voices")
+        available_voices = [
+            {"id": "es-ES-AlvaroNeural", "name": "Alvaro", "gender": "M", "age": "adult", "style": "neutral"},
+            {"id": "es-ES-ElviraNeural", "name": "Elvira", "gender": "F", "age": "adult", "style": "neutral"},
+            {"id": "es-MX-DaliaNeural", "name": "Dalia", "gender": "F", "age": "adult", "style": "friendly"},
+            {"id": "es-MX-JorgeNeural", "name": "Jorge", "gender": "M", "age": "adult", "style": "friendly"},
+        ]
+    
+    # Use LLM to assign voices
+    from services.characters.voice_assignment import assign_voices_with_llm
+    assigned_characters = await assign_voices_with_llm(
+        characters, 
+        available_voices, 
+        api_key, 
+        model
+    )
+    
+    # Update project
+    project.settings["characters"] = assigned_characters
+    
+    from sqlalchemy.orm import attributes
+    attributes.flag_modified(project, "settings")
+    await db.commit()
+    
+    logger.info(f"✅ Assigned voices to {len(assigned_characters)} characters")
+    
+    return {
+        "message": "Voice assignment complete",
+        "count": len(assigned_characters),
+        "characters": assigned_characters
+    }

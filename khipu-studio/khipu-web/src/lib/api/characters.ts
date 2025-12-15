@@ -80,5 +80,25 @@ export const charactersApi = {
     characterId: string
   ): Promise<void> => {
     await api.delete(`/projects/${projectId}/characters/${characterId}`);
-  }
+  },
+
+  // Detect characters from manuscript
+  detectCharacters: async (projectId: string): Promise<{
+    message: string;
+    count: number;
+    characters: Character[];
+  }> => {
+    const response = await api.post(`/projects/${projectId}/characters/detect`);
+    return response.data;
+  },
+
+  // Assign voices to characters using LLM
+  assignVoices: async (projectId: string): Promise<{
+    message: string;
+    count: number;
+    characters: Character[];
+  }> => {
+    const response = await api.post(`/projects/${projectId}/characters/assign-voices`);
+    return response.data;
+  },
 };
