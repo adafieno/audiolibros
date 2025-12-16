@@ -18,7 +18,7 @@ function OrchestrationPage() {
   const { projectId } = Route.useParams();
   const queryClient = useQueryClient();
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
-  const [selectedSegmentId, setSelectedSegmentId] = useState<number | null>(null);
+  const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);  // Changed to string (UUID)
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Query to fetch chapters
@@ -60,7 +60,7 @@ function OrchestrationPage() {
   };
 
   const [filterNoCharacter, setFilterNoCharacter] = useState(false);
-  const selectedSegment = plan?.segments.find(s => s.segment_id === selectedSegmentId);
+  const selectedSegment = plan?.segments.find(s => s.id === selectedSegmentId);
 
   // Query to fetch characters
   const { data: characters } = useQuery({
@@ -71,7 +71,8 @@ function OrchestrationPage() {
   // Mutation to update plan segments
   const updatePlanMutation = useMutation({
     mutationFn: async (segments: Array<{
-      segment_id: number;
+      id: string;
+      order: number;
       start_idx: number;
       end_idx: number;
       delimiter: string;
@@ -87,12 +88,21 @@ function OrchestrationPage() {
     },
   });
 
-  const handleVoiceChange = (segmentId: number, voice: string) => {
+  const handleVoiceChange = (segmentId: string, voice: string) => {
     if (!plan) return;
     const updatedSegments = plan.segments.map(seg => 
-      seg.segment_id === segmentId ? { ...seg, voice } : seg
+      seg.id === segmentId ? { ...seg, voice } : seg
     );
     updatePlanMutation.mutate(updatedSegments);
+  };
+
+  // Helper to normalize voice name to match available character names (case-insensitive)
+  const normalizeVoice = (voice: string | null | undefined): string => {
+    if (!voice || !characters) return '';
+    const matchedCharacter = characters.find(
+      c => c.name.toLowerCase() === voice.toLowerCase()
+    );
+    return matchedCharacter ? matchedCharacter.name : voice;
   };
 
   const [isAssigning, setIsAssigning] = useState(false);
@@ -307,11 +317,11 @@ function OrchestrationPage() {
                 <tbody>
                   {plan.segments.map((segment) => (
                     <tr
-                      key={segment.segment_id}
-                      onClick={() => setSelectedSegmentId(segment.segment_id)}
+                      key={segment.id}
+                      onClick={() => setSelectedSegmentId(segment.id)}
                       className="cursor-pointer transition-colors"
                       style={{
-                        background: selectedSegmentId === segment.segment_id ? 'rgba(59, 130, 246, 0.5)' : 'transparent',
+                        background: selectedSegmentId === segment.id ? 'rgba(59, 130, 246, 0.5)' : 'transparent',
                         borderBottom: `1px solid var(--border)`
                       }}
                     >
@@ -324,7 +334,7 @@ function OrchestrationPage() {
                         </button>
                       </td>
                       <td className="py-2 px-2 font-mono" style={{ color: 'var(--text)' }}>
-                        {segment.segment_id}
+                        {segment.order}
                       </td>
                       <td className="py-2 px-2" style={{ color: 'var(--text)' }}>
                         {segment.delimiter}
@@ -341,8 +351,8 @@ function OrchestrationPage() {
                       <td className="py-2 px-2">
                         <Select
                           size="compact"
-                          value={segment.voice || ''}
-                          onChange={(e) => handleVoiceChange(segment.segment_id, e.target.value)}
+                          value={normalizeVoice(segment.voice)}
+                          onChange={(e) => handleVoiceChange(segment.id, e.target.value)}
                           onClick={(e) => e.stopPropagation()}
                           style={{ width: '100%' }}
                         >
@@ -391,7 +401,14 @@ function OrchestrationPage() {
                   <div>
                     <span style={{ color: 'var(--text-muted)' }}>ID:</span>
                     {' '}
-                    <span className="font-mono" style={{ color: 'var(--text)' }}>{selectedSegment.segment_id}</span>
+                    <span className="font-mono text-xs" style={{ color: 'var(--text)' }} title={selectedSegment.id}>
+                      {selectedSegment.id.substring(0, 8)}...
+                    </span>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-muted)' }}>Order:</span>
+                    {' '}
+                    <span className="font-mono" style={{ color: 'var(--text)' }}>{selectedSegment.order}</span>
                   </div>
                 </div>
 

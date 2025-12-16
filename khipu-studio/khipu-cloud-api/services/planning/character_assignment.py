@@ -109,11 +109,11 @@ async def assign_characters_with_llm(
     logger.info(f"📋 Using model: {model}")
     logger.info(f"👥 Available characters: {available_characters}")
     
-    # Prepare segments for LLM (include only relevant fields)
+    # Prepare segments for LLM (use 'order' for sequential reference, keep 'id' for identity)
     segments_for_llm = []
     for seg in segments:
         segments_for_llm.append({
-            "segment_id": seg["segment_id"],
+            "order": seg["order"],  # Use order (0, 1, 2...) for LLM - easier to reference
             "text": seg["text"],
             "start_idx": seg.get("start_idx", 0),
             "end_idx": seg.get("end_idx", 0)
@@ -230,37 +230,52 @@ Return a JSON object with this exact structure:
                         individual_result = json.loads(individual_content)
                         
                         # Extract the assignment object
-                        if isinstance(individual_result, dict) and "segment_id" in individual_result:
+                        if isinstance(individual_result, dict) and "order" in individual_result:
                             assignments_list.append(individual_result)
-                            logger.info(f"✅ Processed segment {seg['segment_id']} individually")
+                            logger.info(f"✅ Processed segment at order {seg['order']} individually")
                         else:
-                            logger.warning(f"⚠️ Invalid individual response for segment {seg['segment_id']}")
+                            logger.warning(f"⚠️ Invalid individual response for segment at order {seg['order']}")
                             # Add fallback assignment
                             assignments_list.append({
-                                "segment_id": seg["segment_id"],
+                                "order": seg["order"],
                                 "assigned_character": "narrador",
                                 "confidence": 0.5,
                                 "reasoning": "Fallback due to invalid response"
                             })
                     except Exception as e:
-                        logger.error(f"❌ Failed to process segment {seg['segment_id']}: {e}")
+                        logger.error(f"❌ Failed to process segment at order {seg['order']}: {e}")
                         # Add fallback assignment
                         assignments_list.append({
-                            "segment_id": seg["segment_id"],
+                            "order": seg["order"],
                             "assigned_character": "narrador",
                             "confidence": 0.3,
                             "reasoning": "Fallback due to error"
                         })
         
-        # Create assignment map
+        # Create order-to-id mapping (LLM uses order, we need to map to stable id)
+        order_to_id = {seg["order"]: seg["id"] for seg in segments}
+        
+        # Create assignment map (keyed by segment id for stable identity)
         assignment_map = {}
+        logger.info(f"🔍 Building assignment_map from {len(assignments_list)} assignments")
         for assignment in assignments_list:
-            if isinstance(assignment, dict) and "segment_id" in assignment and "assigned_character" in assignment:
-                seg_id = assignment["segment_id"]
+            if isinstance(assignment, dict) and "order" in assignment and "assigned_character" in assignment:
+                order = assignment["order"]
                 character = assignment["assigned_character"]
+                seg_id = order_to_id.get(order)  # Map order to stable UUID
+                if not seg_id:
+                    logger.warning(f"⚠️ Order {order} not found in segments")
+                    continue
+                logger.debug(f"   Processing assignment: order={order}, id={seg_id}, character={character}")
+                
+                # Skip empty or None assignments
+                if not character or not character.strip():
+                    logger.warning(f"⚠️ Segment at order {order} (id {seg_id}) has empty assigned_character, using narrador as default")
+                    assignment_map[seg_id] = NARRATOR_NAME
+                    continue
                 
                 # Case-insensitive matching: find the actual character name from available list
-                character_lower = character.lower()
+                character_lower = character.lower().strip()
                 actual_character = None
                 for avail_char in available_characters:
                     if avail_char.lower() == character_lower:
@@ -273,20 +288,32 @@ Return a JSON object with this exact structure:
                 else:
                     assignment_map[seg_id] = character
                     
-                logger.info(f"   ✅ Segment {seg_id}: {character} → {assignment_map[seg_id]}")
+                logger.info(f"   ✅ Order {order} (id {seg_id[:8]}...): {character} → {assignment_map[seg_id]}")
         
-        # Apply assignments to segments
+        # Apply assignments to segments (using stable id)
         updated_segments = []
-        for seg in segments:
-            seg_id = seg["segment_id"]
+        logger.info(f"🔍 Applying assignments to {len(segments)} segments")
+        logger.info(f"🔍 Assignment_map has {len(assignment_map)} entries")
+        for idx, seg in enumerate(segments):
+            seg_id = seg["id"]  # Use stable UUID
+            order = seg["order"]
             assigned_character = assignment_map.get(seg_id, NARRATOR_NAME)
+            if idx < 5 or idx >= len(segments) - 3:  # Log first 5 and last 3
+                logger.debug(f"   Segment order={order}, id={seg_id[:8]}..., assigned={assigned_character}, in_map={seg_id in assignment_map}")
+            
+            # Ensure we never assign empty strings - use NARRATOR_NAME as fallback
+            if not assigned_character or not assigned_character.strip():
+                assigned_character = NARRATOR_NAME
             
             # Create updated segment with assignment
             updated_seg = {**seg}
-            updated_seg["voice"] = assigned_character if assigned_character else None
+            updated_seg["voice"] = assigned_character
             updated_segments.append(updated_seg)
         
+        # Log a few sample assignments for debugging
         logger.info(f"✅ Successfully assigned characters to {len(updated_segments)} segments")
+        logger.info(f"📝 Sample assignments: seg 80={updated_segments[50]['voice'] if len(updated_segments) > 50 else 'N/A'}, seg 86={updated_segments[56]['voice'] if len(updated_segments) > 56 else 'N/A'}, seg 90={updated_segments[60]['voice'] if len(updated_segments) > 60 else 'N/A'}")
+        logger.info(f"📝 Assignment map keys: {sorted(assignment_map.keys())[:10]}... (showing first 10)")
         return updated_segments
         
     except Exception as e:

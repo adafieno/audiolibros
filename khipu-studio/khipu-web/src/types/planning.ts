@@ -3,7 +3,8 @@
  */
 
 export interface Segment {
-  segment_id: number;
+  id: string;           // UUID for stable identity
+  order: number;        // Sequential ordering: 0, 1, 2, 3...
   start_idx: number;
   end_idx: number;
   delimiter: string;
@@ -11,11 +12,13 @@ export interface Segment {
   originalText?: string;
   voice?: string;
   needsRevision?: boolean;
+  segment_id?: number;  // DEPRECATED: Legacy field, use 'order' instead
 }
 
 export interface PlanRow {
   rowKey: string;
-  segmentId: number;
+  segmentId: string;    // UUID
+  order: number;        // Display order
   start: number;
   end: number;
   length: number;

@@ -2,6 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import attributes
 from uuid import UUID
 import logging
 
@@ -60,6 +61,10 @@ async def generate_plan(
         existing_plan.segments = segments
         existing_plan.is_complete = False
         existing_plan.completed_at = None
+        
+        # Mark the JSONB field as modified so SQLAlchemy detects the change
+        attributes.flag_modified(existing_plan, 'segments')
+        
         await db.commit()
         await db.refresh(existing_plan)
         return existing_plan
@@ -125,6 +130,9 @@ async def update_plan(
     
     # Update segments
     plan.segments = update_data.segments
+    
+    # Mark the JSONB field as modified so SQLAlchemy detects the change
+    attributes.flag_modified(plan, 'segments')
     
     await db.commit()
     await db.refresh(plan)
@@ -196,6 +204,9 @@ async def assign_characters_to_segments(
         
         # Update the plan with new assignments
         plan.segments = updated_segments
+        
+        # Mark the JSONB field as modified so SQLAlchemy detects the change
+        attributes.flag_modified(plan, 'segments')
         
         await db.commit()
         await db.refresh(plan)

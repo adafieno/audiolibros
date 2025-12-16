@@ -2,6 +2,7 @@
 Text segmentation service for breaking down chapter text into manageable chunks.
 Simple segmentation: splits on newline and em-dash (matching desktop app logic).
 """
+import uuid
 from typing import List, Dict, Any
 
 # Azure TTS limits (for reference, not enforced in this simple segmenter)
@@ -36,7 +37,8 @@ def segment_text(text: str, max_kb: int = AZURE_MAX_KB, split_on_em_dash: bool =
     Returns:
         List of segment dictionaries with structure:
         {
-            'segment_id': int,
+            'id': str (UUID),           # Stable identifier
+            'order': int,               # Sequential: 0, 1, 2, 3...
             'start_idx': int,
             'end_idx': int,
             'text': str,
@@ -49,13 +51,15 @@ def segment_text(text: str, max_kb: int = AZURE_MAX_KB, split_on_em_dash: bool =
     n = len(text)
     start = 0
     i = 0
-    segment_id = 1
+    order = 0
     
     def add_segment(start_idx: int, end_idx: int, delim: str):
+        nonlocal order
         if end_idx > start_idx:  # Only add non-empty segments
             segment_text = text[start_idx:end_idx]
             segments.append({
-                'segment_id': segment_id,
+                'id': str(uuid.uuid4()),  # UUID for stable identity
+                'order': order,           # Sequential ordering
                 'start_idx': start_idx,
                 'end_idx': end_idx - 1,  # Make end_idx inclusive for consistency
                 'text': segment_text,
@@ -63,6 +67,7 @@ def segment_text(text: str, max_kb: int = AZURE_MAX_KB, split_on_em_dash: bool =
                 'voice': None,
                 'needsRevision': False
             })
+            order += 1
     
     while i < n:
         ch = text[i]
@@ -71,13 +76,11 @@ def segment_text(text: str, max_kb: int = AZURE_MAX_KB, split_on_em_dash: bool =
         if ch == "\r":
             if i + 1 < n and text[i + 1] == "\n":
                 add_segment(start, i, "newline")
-                segment_id += 1
                 i += 2
                 start = i
                 continue
             else:
                 add_segment(start, i, "newline")
-                segment_id += 1
                 i += 1
                 start = i
                 continue
@@ -85,7 +88,6 @@ def segment_text(text: str, max_kb: int = AZURE_MAX_KB, split_on_em_dash: bool =
         # Handle \n (Unix line ending)
         if ch == "\n":
             add_segment(start, i, "newline")
-            segment_id += 1
             i += 1
             start = i
             continue
@@ -93,7 +95,6 @@ def segment_text(text: str, max_kb: int = AZURE_MAX_KB, split_on_em_dash: bool =
         # Handle em-dash
         if split_on_em_dash and ch == EM_DASH:
             add_segment(start, i, "em-dash")
-            segment_id += 1
             i += 1
             start = i
             continue
@@ -107,29 +108,30 @@ def segment_text(text: str, max_kb: int = AZURE_MAX_KB, split_on_em_dash: bool =
     return segments
 
 
-def merge_segments(segments: List[Dict[str, Any]], segment_ids: List[int]) -> List[Dict[str, Any]]:
+def merge_segments(segments: List[Dict[str, Any]], segment_ids: List[str]) -> List[Dict[str, Any]]:
     """
-    Merge consecutive segments by their IDs.
+    Merge consecutive segments by their IDs (UUIDs).
     """
     if len(segment_ids) < 2:
         return segments
     
-    # Sort IDs to ensure consecutive merge
-    segment_ids = sorted(segment_ids)
-    
-    # Find segments to merge
-    to_merge = [s for s in segments if s['segment_id'] in segment_ids]
+    # Find segments to merge (maintain order)
+    to_merge = [s for s in segments if s['id'] in segment_ids]
     if len(to_merge) != len(segment_ids):
         raise ValueError("Some segment IDs not found")
+    
+    # Sort by order to ensure consecutive merge
+    to_merge = sorted(to_merge, key=lambda s: s['order'])
     
     # Verify they are consecutive
     for i in range(len(to_merge) - 1):
         if to_merge[i]['end_idx'] + 1 != to_merge[i + 1]['start_idx']:
             raise ValueError("Segments must be consecutive to merge")
     
-    # Create merged segment
+    # Create merged segment with new UUID but keeping first order
     merged = {
-        'segment_id': to_merge[0]['segment_id'],
+        'id': str(uuid.uuid4()),  # New UUID for merged segment
+        'order': to_merge[0]['order'],
         'start_idx': to_merge[0]['start_idx'],
         'end_idx': to_merge[-1]['end_idx'],
         'text': ''.join(s['text'] for s in to_merge),
@@ -144,25 +146,26 @@ def merge_segments(segments: List[Dict[str, Any]], segment_ids: List[int]) -> Li
     merged_added = False
     
     for seg in segments:
-        if seg['segment_id'] in skip_ids:
+        if seg['id'] in skip_ids:
             if not merged_added:
                 result.append(merged)
                 merged_added = True
         else:
             result.append(seg)
     
-    # Renumber segments
-    for i, seg in enumerate(result, 1):
-        seg['segment_id'] = i
+    # Renumber order to be sequential
+    for i, seg in enumerate(result):
+        seg['order'] = i
     
     return result
 
 
-def split_segment(segments: List[Dict[str, Any]], segment_id: int, split_position: int) -> List[Dict[str, Any]]:
+def split_segment(segments: List[Dict[str, Any]], segment_id: str, split_position: int) -> List[Dict[str, Any]]:
     """
     Split a segment at a given position within its text.
+    segment_id: UUID of the segment to split
     """
-    segment = next((s for s in segments if s['segment_id'] == segment_id), None)
+    segment = next((s for s in segments if s['id'] == segment_id), None)
     if not segment:
         raise ValueError(f"Segment {segment_id} not found")
     
@@ -184,9 +187,10 @@ def split_segment(segments: List[Dict[str, Any]], segment_id: int, split_positio
     
     delimiter = 'space'
     
-    # Create two new segments
+    # Create two new segments with new UUIDs
     first_segment = {
-        'segment_id': segment['segment_id'],
+        'id': str(uuid.uuid4()),
+        'order': segment['order'],
         'start_idx': segment['start_idx'],
         'end_idx': segment['start_idx'] + actual_split - 1,
         'text': text[:actual_split],
@@ -196,7 +200,8 @@ def split_segment(segments: List[Dict[str, Any]], segment_id: int, split_positio
     }
     
     second_segment = {
-        'segment_id': segment['segment_id'] + 1,
+        'id': str(uuid.uuid4()),
+        'order': segment['order'] + 1,
         'start_idx': segment['start_idx'] + actual_split,
         'end_idx': segment['end_idx'],
         'text': text[actual_split:],
@@ -208,14 +213,14 @@ def split_segment(segments: List[Dict[str, Any]], segment_id: int, split_positio
     # Rebuild segments list
     result = []
     for seg in segments:
-        if seg['segment_id'] == segment_id:
+        if seg['id'] == segment_id:
             result.append(first_segment)
             result.append(second_segment)
         else:
             result.append(seg)
     
-    # Renumber segments
-    for i, seg in enumerate(result, 1):
-        seg['segment_id'] = i
+    # Renumber order to be sequential
+    for i, seg in enumerate(result):
+        seg['order'] = i
     
     return result
