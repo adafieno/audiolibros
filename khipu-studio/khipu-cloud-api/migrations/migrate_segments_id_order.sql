@@ -1,3 +1,4 @@
+-- PostgreSQL Migration Script
 -- Migration: Add id and order fields to segments, separate identity from ordering
 -- This script transforms segment_id (used for both identity and ordering) into:
 --   - id: UUID for stable identity

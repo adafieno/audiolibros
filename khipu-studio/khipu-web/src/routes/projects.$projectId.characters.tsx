@@ -6,6 +6,7 @@ import { charactersApi, type Character, type VoiceAssignment } from '../lib/api/
 import { voicesApi } from '../lib/api/voices';
 import { projectsApi } from '../lib/projects';
 import { Button } from '../components/Button';
+import { ProgressBar } from '../components/ProgressBar';
 
 export const Route = createFileRoute('/projects/$projectId/characters')({
   component: CharactersPage,
@@ -358,12 +359,10 @@ function CharactersPage() {
 
       {/* Progress indicator */}
       {(detectionProgress || assignmentProgress) && (
-        <div className="mb-4 p-3 rounded-md" style={{ background: 'var(--accent)', color: 'var(--text)' }}>
-          <div className="flex items-center gap-2">
-            <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
-            <span>{detectionProgress || assignmentProgress}</span>
-          </div>
-        </div>
+        <ProgressBar 
+          message={detectionProgress || assignmentProgress} 
+          steps={3}
+        />
       )}
 
       {/* Characters grid */}

@@ -8,6 +8,7 @@ import { charactersApi } from '../lib/api/characters';
 import { voicesApi } from '../lib/api/voices';
 import { Button } from '../components/Button';
 import { Select } from '../components/Select';
+import { ProgressBar } from '../components/ProgressBar';
 
 export const Route = createFileRoute('/projects/$projectId/orchestration')({
   component: OrchestrationPage,
@@ -20,6 +21,8 @@ function OrchestrationPage() {
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);  // Changed to string (UUID)
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState('');
+  const [assignmentProgress, setAssignmentProgress] = useState('');
 
   // Query to fetch chapters
   const { data: chaptersData } = useQuery({
@@ -41,12 +44,16 @@ function OrchestrationPage() {
     if (!selectedChapterId) return;
     
     setIsGenerating(true);
+    setGenerationProgress('Analyzing chapter and generating segments with AI...');
     try {
       await planningApi.generatePlan(projectId, selectedChapterId);
       await refetch();
       setSelectedSegmentId(null);
+      setGenerationProgress('Plan generated successfully');
+      setTimeout(() => setGenerationProgress(''), 2000);
     } catch (error) {
       console.error('Failed to generate plan:', error);
+      setGenerationProgress('');
     } finally {
       setIsGenerating(false);
     }
@@ -118,6 +125,7 @@ function OrchestrationPage() {
     if (!plan || !selectedChapterId) return;
     
     setIsAssigning(true);
+    setAssignmentProgress('Matching segments to character voices with AI...');
     try {
       // Call backend endpoint to assign characters using LLM
       const updatedPlan = await planningApi.assignCharacters(projectId, selectedChapterId);
@@ -126,9 +134,12 @@ function OrchestrationPage() {
       await queryClient.invalidateQueries({ queryKey: ['plan', projectId, selectedChapterId] });
       
       console.log(`✅ Successfully assigned characters to ${updatedPlan.segments.length} segments`);
+      setAssignmentProgress(`Assigned characters to ${updatedPlan.segments.length} segments`);
+      setTimeout(() => setAssignmentProgress(''), 2000);
     } catch (error) {
       console.error('Failed to assign characters:', error);
       alert(`Failed to assign characters: ${error instanceof Error ? error.message : String(error)}`);
+      setAssignmentProgress('');
     } finally {
       setIsAssigning(false);
     }
@@ -256,6 +267,14 @@ function OrchestrationPage() {
           </div>
         </div>
       </div>
+
+      {/* Progress indicators */}
+      {(generationProgress || assignmentProgress) && (
+        <ProgressBar 
+          message={generationProgress || assignmentProgress} 
+          steps={3}
+        />
+      )}
 
       {/* Main Content */}
       <div className="flex gap-4" style={{ height: 'calc(100vh - 280px)' }}>

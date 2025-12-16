@@ -7,6 +7,7 @@ import { projectsApi } from '../lib/projects'
 import { setStepCompleted } from '../store/project'
 import { sanitizeTextForTTS, hasProblematicCharacters } from '../lib/text-sanitizer'
 import { Button } from '../components/Button'
+import { ProgressBar } from '../components/ProgressBar'
 
 type ChapterType = 'chapter' | 'intro' | 'prologue' | 'epilogue' | 'credits' | 'outro'
 
@@ -34,6 +35,7 @@ function ManuscriptPage() {
   const [uploading, setUploading] = useState(false)
   const [parsing, setParsing] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
+  const [uploadProgress, setUploadProgress] = useState('')
   const [checkingSanitization, setCheckingSanitization] = useState(false)
   const [sanitizationPreview, setSanitizationPreview] = useState<{
     issues: string[]
@@ -115,6 +117,7 @@ function ManuscriptPage() {
     try {
       setUploading(true)
       setStatusMessage(t('manuscript.uploadingFile'))
+      setUploadProgress('Uploading manuscript file...')
 
       // Upload file
       const formData = new FormData()
@@ -139,6 +142,7 @@ function ManuscriptPage() {
       setUploading(false)
       setParsing(true)
       setStatusMessage(t('manuscript.parsingDocument'))
+      setUploadProgress('Parsing document and detecting chapters with AI...')
 
       // Parse manuscript to detect chapters
       const parseResponse = await fetch(
@@ -161,6 +165,8 @@ function ManuscriptPage() {
       
       setParsing(false)
       setStatusMessage(t('manuscript.chaptersDetected', { count: parseResult.data?.chapters_detected || 0 }))
+      setUploadProgress(`Successfully detected ${parseResult.data?.chapters_detected || 0} chapters`)
+      setTimeout(() => setUploadProgress(''), 2000);
       
       // Refresh chapters list and wait for it to complete
       const freshChapters = await queryClient.refetchQueries({ queryKey: ['chapters', projectId] })
@@ -183,6 +189,7 @@ function ManuscriptPage() {
       setStatusMessage(t('manuscript.uploadError'))
       setUploading(false)
       setParsing(false)
+      setUploadProgress('')
     }
   }
 
@@ -511,6 +518,14 @@ function ManuscriptPage() {
               </Button>
             )}
           </div>
+
+          {/* Progress indicator */}
+          {uploadProgress && (
+            <ProgressBar 
+              message={uploadProgress} 
+              steps={2}
+            />
+          )}
         </div>
       </div>
 
