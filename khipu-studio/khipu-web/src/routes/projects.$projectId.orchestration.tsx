@@ -32,14 +32,7 @@ function OrchestrationPage() {
     queryKey: ['plan', projectId, selectedChapterId],
     queryFn: async () => {
       if (!selectedChapterId) return null;
-      try {
-        return await planningApi.getPlan(projectId, selectedChapterId);
-      } catch (error: unknown) {
-        if (error instanceof Error && error.message.includes('404')) {
-          return null;
-        }
-        throw error;
-      }
+      return await planningApi.getPlan(projectId, selectedChapterId);
     },
     enabled: !!selectedChapterId,
   });

@@ -64,10 +64,6 @@ export const planningApi = {
       }
     );
     
-    if (response.status === 404) {
-      return null; // No plan exists yet
-    }
-    
     if (!response.ok) {
       throw new Error('Failed to fetch plan');
     }

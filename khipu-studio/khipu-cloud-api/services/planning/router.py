@@ -82,7 +82,7 @@ async def generate_plan(
         return new_plan
 
 
-@router.get("/chapters/{chapter_id}/plan", response_model=ChapterPlanResponse)
+@router.get("/chapters/{chapter_id}/plan", response_model=ChapterPlanResponse | None)
 async def get_plan(
     chapter_id: UUID,
     project_id: UUID,
@@ -91,6 +91,7 @@ async def get_plan(
 ):
     """
     Get the existing plan for a chapter.
+    Returns null if plan doesn't exist yet (not an error, just empty state).
     """
     result = await db.execute(
         select(ChapterPlan).where(
@@ -100,9 +101,7 @@ async def get_plan(
     )
     plan = result.scalar_one_or_none()
     
-    if not plan:
-        raise HTTPException(status_code=404, detail="Plan not found")
-    
+    # Return null instead of 404 - plan not existing yet is an expected state
     return plan
 
 
