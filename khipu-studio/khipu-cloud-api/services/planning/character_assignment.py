@@ -39,13 +39,13 @@ MANDATORY OUTPUT REQUIREMENTS:
 - Return a JSON array with EXACTLY {segment_count} objects
 - Process EVERY segment listed above - DO NOT SKIP ANY
 - Each object must include all required fields
-- Copy segment_id values EXACTLY as provided
+- Copy order values EXACTLY as provided
 - If unsure about a segment, still include it with your best guess
 
 Required JSON format for ALL {segment_count} segments:
 [
   {{
-    "segment_id": "copy_exact_id_from_above",
+    "order": "copy_exact_order_from_above",
     "assigned_character": "character_name_from_available_list_or_narrador", 
     "confidence": 0.95,
     "reasoning": "brief explanation"
@@ -163,7 +163,7 @@ async def assign_characters_with_llm(
         elif isinstance(llm_response, list):
             # Response is already a list
             assignments_list = llm_response
-        elif isinstance(llm_response, dict) and 'segment_id' in llm_response:
+        elif isinstance(llm_response, dict) and 'order' in llm_response:
             # Single assignment object - wrap in array
             logger.info("Single assignment detected, wrapping in array")
             assignments_list = [llm_response]
@@ -185,13 +185,13 @@ async def assign_characters_with_llm(
         if len(assignments_list) < len(segments_for_llm):
             logger.warning(f"⚠️ LLM returned only {len(assignments_list)} assignments for {len(segments_for_llm)} segments. Processing remaining segments individually...")
             
-            # Get IDs of segments that were assigned
-            assigned_ids = {a.get("segment_id") for a in assignments_list if isinstance(a, dict) and "segment_id" in a}
+            # Get orders of segments that were assigned
+            assigned_orders = {a.get("order") for a in assignments_list if isinstance(a, dict) and "order" in a}
             
             # Process missing segments individually
             for seg in segments_for_llm:
-                if seg["segment_id"] not in assigned_ids:
-                    logger.info(f"Processing missing segment {seg['segment_id']} individually...")
+                if seg["order"] not in assigned_orders:
+                    logger.info(f"Processing missing segment order {seg['order']} individually...")
                     individual_prompt = f"""Assign the most appropriate character to this single text segment.
 
 Available Characters: {", ".join(available_characters)}
@@ -209,7 +209,7 @@ Rules:
 
 Return a JSON object with this exact structure:
 {{
-  "segment_id": "{seg['segment_id']}",
+  "order": {seg['order']},
   "assigned_character": "character_name",
   "confidence": 0.95,
   "reasoning": "brief explanation"

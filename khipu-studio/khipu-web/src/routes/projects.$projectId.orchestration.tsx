@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { planningApi } from '../api/planning';
 import { getChapters } from '../api/chapters';
@@ -61,6 +61,20 @@ function OrchestrationPage() {
 
   const [filterNoCharacter, setFilterNoCharacter] = useState(false);
   const selectedSegment = plan?.segments.find(s => s.id === selectedSegmentId);
+
+  // Auto-select first chapter on load if none selected
+  useEffect(() => {
+    if (chaptersData?.items && chaptersData.items.length > 0 && !selectedChapterId) {
+      setSelectedChapterId(chaptersData.items[0].id);
+    }
+  }, [chaptersData, selectedChapterId]);
+
+  // Auto-select first segment when plan loads
+  useEffect(() => {
+    if (plan?.segments && plan.segments.length > 0 && !selectedSegmentId) {
+      setSelectedSegmentId(plan.segments[0].id);
+    }
+  }, [plan, selectedSegmentId]);
 
   // Query to fetch characters
   const { data: characters } = useQuery({
@@ -230,7 +244,6 @@ function OrchestrationPage() {
             </label>
 
             <Button
-              size="compact"
               variant="primary"
               onClick={handleGeneratePlan}
               disabled={!selectedChapterId || isGenerating}
@@ -241,7 +254,6 @@ function OrchestrationPage() {
             </Button>
 
             <Button
-              size="compact"
               variant="primary"
               disabled={!plan || plan.segments.length === 0 || isAssigning}
               onClick={handleAssignCharacters}
@@ -470,42 +482,36 @@ function OrchestrationPage() {
                 {/* Edit Buttons */}
                 <div className="flex items-center gap-2 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
                   <Button
-                    size="compact"
                     variant="secondary"
                     disabled={!selectedSegmentId}
                   >
                     ✏️ {t('orchestration.edit', 'Edit')}
                   </Button>
                   <Button
-                    size="compact"
                     variant="secondary"
                     disabled={!selectedSegmentId}
                   >
                     ◀ {t('orchestration.merge', 'Merge')}
                   </Button>
                   <Button
-                    size="compact"
                     variant="secondary"
                     disabled={!selectedSegmentId}
                   >
                     {t('orchestration.mergeRight', 'Merge')} ▶
                   </Button>
                   <Button
-                    size="compact"
                     variant="danger"
                     disabled={!selectedSegmentId}
                   >
                     {t('orchestration.delete', 'Delete')}
                   </Button>
                   <Button
-                    size="compact"
                     variant="secondary"
                   >
                     ↶ {t('orchestration.undo', 'Undo')}
                   </Button>
                   <div className="flex-1" />
                   <Button
-                    size="compact"
                     variant="primary"
                     disabled={!selectedSegmentId || isAuditioning}
                     onClick={handleAudition}
