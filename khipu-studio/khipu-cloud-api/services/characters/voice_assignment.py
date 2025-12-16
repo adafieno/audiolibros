@@ -216,12 +216,17 @@ async def assign_voices_with_llm(
         
         logger.info(f"LLM returned {len(assignments)} voice assignments")
         
+        # Log first assignment details for debugging
+        if assignments:
+            first = assignments[0]
+            logger.info(f"First assignment sample: {first}")
+        
         # Apply assignments to characters
         assignment_map = {
             a["character_name"]: {
                 "voiceId": a["voice_id"],
-                "pitch": a.get("pitch_adjustment", 0),
-                "rate": a.get("rate_adjustment", 0),
+                "pitch_pct": a.get("pitch_adjustment", 0),
+                "rate_pct": a.get("rate_adjustment", 0),
                 "confidence": a.get("confidence", 0.5),
                 "reasoning": a.get("reasoning", ""),
                 "method": "llm_auto"
@@ -237,7 +242,7 @@ async def assign_voices_with_llm(
             
             if char_name in assignment_map:
                 char_copy["voiceAssignment"] = assignment_map[char_name]
-                logger.info(f"  ✓ {char_name} → {assignment_map[char_name]['voiceId']}")
+                logger.info(f"  ✓ {char_name} → {assignment_map[char_name]['voiceId']} (pitch: {assignment_map[char_name]['pitch_pct']}, rate: {assignment_map[char_name]['rate_pct']})")
             else:
                 logger.warning(f"  ✗ No assignment for {char_name}")
             
