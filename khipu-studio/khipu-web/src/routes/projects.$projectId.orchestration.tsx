@@ -5,6 +5,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { planningApi } from '../api/planning';
 import { getChapters } from '../api/chapters';
 import { charactersApi } from '../lib/api/characters';
+import { voicesApi } from '../lib/api/voices';
 import { Button } from '../components/Button';
 import { Select } from '../components/Select';
 
@@ -97,6 +98,50 @@ function OrchestrationPage() {
     if (!plan) return;
     // TODO: Implement LLM-based character assignment
     console.log('Assign characters clicked - LLM assignment not yet implemented');
+  };
+
+  const [isAuditioning, setIsAuditioning] = useState(false);
+  
+  const handleAudition = async () => {
+    if (!selectedSegment || isAuditioning) return;
+    
+    setIsAuditioning(true);
+    try {
+      // Get the character for the segment's voice
+      const character = characters?.find(c => c.name === selectedSegment.voice);
+      
+      // Use the voice from character's assignment, or default to a narrator voice
+      const voiceId = character?.voiceAssignment?.voiceId || 'es-MX-DaliaNeural';
+      
+      // Generate audio for the segment text
+      const audioBlob = await voicesApi.auditionVoice(
+        projectId,
+        voiceId,
+        selectedSegment.text,
+        character?.voiceAssignment?.rate_pct,
+        character?.voiceAssignment?.pitch_pct
+      );
+      
+      // Play the audio
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      
+      audio.onended = () => {
+        URL.revokeObjectURL(audioUrl);
+        setIsAuditioning(false);
+      };
+      
+      audio.onerror = () => {
+        URL.revokeObjectURL(audioUrl);
+        setIsAuditioning(false);
+        console.error('Audio playback failed');
+      };
+      
+      await audio.play();
+    } catch (error) {
+      console.error('Audition failed:', error);
+      setIsAuditioning(false);
+    }
   };
 
   return (
@@ -436,9 +481,10 @@ function OrchestrationPage() {
                   <Button
                     size="compact"
                     variant="primary"
-                    disabled={!selectedSegmentId}
+                    disabled={!selectedSegmentId || isAuditioning}
+                    onClick={handleAudition}
                   >
-                    ▶ {t('orchestration.audition', 'Audition')}
+                    {isAuditioning ? '⏸' : '▶'} {t('orchestration.audition', 'Audition')}
                   </Button>
                 </div>
               </div>
