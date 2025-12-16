@@ -360,8 +360,9 @@ function CharactersPage() {
       {/* Progress indicator */}
       {(detectionProgress || assignmentProgress) && (
         <ProgressBar 
-          message={detectionProgress || assignmentProgress} 
-          steps={3}
+          message={detectionProgress || assignmentProgress}
+          currentStep={0}
+          totalSteps={1}
         />
       )}
 

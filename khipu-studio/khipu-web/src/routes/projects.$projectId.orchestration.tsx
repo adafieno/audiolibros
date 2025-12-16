@@ -120,27 +120,76 @@ function OrchestrationPage() {
   };
 
   const [isAssigning, setIsAssigning] = useState(false);
+  const [assignmentCurrent, setAssignmentCurrent] = useState(0);
+  const [assignmentTotal, setAssignmentTotal] = useState(0);
 
   const handleAssignCharacters = async () => {
     if (!plan || !selectedChapterId) return;
     
     setIsAssigning(true);
     setAssignmentProgress('Matching segments to character voices with AI...');
+    setAssignmentCurrent(0);
+    setAssignmentTotal(plan.segments.length);
+    
     try {
-      // Call backend endpoint to assign characters using LLM
-      const updatedPlan = await planningApi.assignCharacters(projectId, selectedChapterId);
+      // Get token for SSE authentication (EventSource doesn't support custom headers)
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
       
-      // Invalidate query to refetch the plan with new assignments
-      await queryClient.invalidateQueries({ queryKey: ['plan', projectId, selectedChapterId] });
+      // Use Server-Sent Events for progress updates
+      const eventSource = new EventSource(
+        `${import.meta.env.VITE_API_BASE_URL}/api/v1/projects/${projectId}/planning/chapters/${selectedChapterId}/assign-characters/stream?project_id=${projectId}&token=${token}`
+      );
+
+      eventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        
+        console.log('SSE message received:', data);
+        
+        if (data.error) {
+          console.error('Assignment error:', data.error);
+          alert(`Failed to assign characters: ${data.error}`);
+          eventSource.close();
+          setIsAssigning(false);
+          setAssignmentProgress('');
+          return;
+        }
+        
+        // Update total if provided
+        if (data.total !== undefined) {
+          setAssignmentTotal(data.total);
+        }
+        
+        if (data.complete) {
+          setAssignmentProgress(data.message);
+          setAssignmentCurrent(data.current);
+          eventSource.close();
+          
+          // Refetch the plan
+          queryClient.invalidateQueries({ queryKey: ['plan', projectId, selectedChapterId] });
+          
+          setTimeout(() => setAssignmentProgress(''), 2000);
+          setIsAssigning(false);
+        } else {
+          setAssignmentProgress(data.message || 'Processing...');
+          setAssignmentCurrent(data.current);
+        }
+      };
+
+      eventSource.onerror = () => {
+        console.error('EventSource error');
+        eventSource.close();
+        setIsAssigning(false);
+        setAssignmentProgress('');
+        alert('Connection error during character assignment');
+      };
       
-      console.log(`✅ Successfully assigned characters to ${updatedPlan.segments.length} segments`);
-      setAssignmentProgress(`Assigned characters to ${updatedPlan.segments.length} segments`);
-      setTimeout(() => setAssignmentProgress(''), 2000);
     } catch (error) {
       console.error('Failed to assign characters:', error);
       alert(`Failed to assign characters: ${error instanceof Error ? error.message : String(error)}`);
       setAssignmentProgress('');
-    } finally {
       setIsAssigning(false);
     }
   };
@@ -265,16 +314,17 @@ function OrchestrationPage() {
               {isAssigning ? '⏳ Assigning...' : t('orchestration.assignCharacters', 'Assign Characters')}
             </Button>
           </div>
-
-          {/* Progress indicators */}
-          {(generationProgress || assignmentProgress) && (
-            <ProgressBar 
-              message={generationProgress || assignmentProgress} 
-              steps={3}
-            />
-          )}
         </div>
       </div>
+
+      {/* Progress indicators - Full width below header */}
+      {(generationProgress || assignmentProgress) && (
+        <ProgressBar 
+          message={generationProgress || assignmentProgress}
+          currentStep={assignmentCurrent}
+          totalSteps={assignmentTotal || 1}
+        />
+      )}
 
       {/* Main Content */}
       <div className="flex gap-4" style={{ height: 'calc(100vh - 280px)' }}>

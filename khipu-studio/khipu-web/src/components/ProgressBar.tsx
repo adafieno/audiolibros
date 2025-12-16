@@ -2,42 +2,34 @@ import { useEffect, useState } from 'react';
 
 interface ProgressBarProps {
   message: string;
-  steps?: number;
   currentStep?: number;
+  totalSteps?: number;
   className?: string;
 }
 
-export function ProgressBar({ message, steps = 3, currentStep, className = '' }: ProgressBarProps) {
-  const [autoStep, setAutoStep] = useState(0);
-  const effectiveStep = currentStep ?? autoStep;
-  const progress = Math.min(100, (effectiveStep / steps) * 100);
-
-  // Auto-increment for indeterminate progress
-  useEffect(() => {
-    if (currentStep !== undefined) return; // Don't auto-increment if explicit step provided
-    
-    const interval = setInterval(() => {
-      setAutoStep(prev => (prev >= steps ? 0 : prev + 1));
-    }, 800);
-    
-    return () => clearInterval(interval);
-  }, [currentStep, steps]);
+export function ProgressBar({ message, currentStep = 0, totalSteps = 100, className = '' }: ProgressBarProps) {
+  const progress = totalSteps > 0 ? Math.min(100, (currentStep / totalSteps) * 100) : 0;
 
   return (
-    <div className={`mb-4 rounded-md overflow-hidden ${className}`} style={{ background: 'var(--border)' }}>
+    <div className={`mb-4 rounded overflow-hidden relative ${className}`} style={{ background: 'var(--border)', height: '36px' }}>
       {/* Progress fill */}
       <div 
-        className="transition-all duration-500 ease-out"
+        className="absolute inset-0 transition-all duration-300 ease-out"
         style={{ 
           width: `${progress}%`,
           background: 'var(--accent)',
-          minHeight: '48px'
         }}
-      >
-        <div className="p-3 flex items-center gap-2" style={{ color: 'var(--text)' }}>
-          <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full flex-shrink-0" />
-          <span className="font-medium">{message}</span>
-        </div>
+      />
+      
+      {/* Content overlay - always visible */}
+      <div className="relative px-3 h-full flex items-center gap-2" style={{ color: 'var(--text)' }}>
+        <div className="animate-spin h-3.5 w-3.5 border-2 border-current border-t-transparent rounded-full flex-shrink-0" />
+        <span className="text-sm font-medium truncate flex-1">{message}</span>
+        {totalSteps > 1 && (
+          <span className="text-xs opacity-80 whitespace-nowrap">
+            {currentStep}/{totalSteps}
+          </span>
+        )}
       </div>
     </div>
   );

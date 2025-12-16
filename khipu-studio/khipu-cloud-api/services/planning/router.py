@@ -1,10 +1,13 @@
 """Planning/Orchestration API Router."""
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import attributes
 from uuid import UUID
 import logging
+import json
+import asyncio
 
 from shared.db.database import get_db
 from shared.models import User, ChapterPlan, Chapter, Project
@@ -137,6 +140,159 @@ async def update_plan(
     await db.refresh(plan)
     
     return plan
+
+
+
+@router.get("/chapters/{chapter_id}/assign-characters/stream")
+async def assign_characters_stream(
+    chapter_id: UUID,
+    project_id: UUID,
+    token: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Stream progress updates while assigning characters to segments using SSE.
+    Note: Token is passed as query parameter because EventSource doesn't support custom headers.
+    """
+    # Manually verify the token and get user
+    from shared.auth.jwt import verify_token
+    from shared.models import User
+    
+    try:
+        payload = verify_token(token, token_type="access")
+        if payload is None:
+            async def error_response():
+                yield f"data: {json.dumps({'error': 'Invalid token'})}\n\n"
+            return StreamingResponse(
+                error_response(),
+                media_type="text/event-stream",
+                status_code=403
+            )
+        
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            async def error_response():
+                yield f"data: {json.dumps({'error': 'Invalid token payload'})}\n\n"
+            return StreamingResponse(
+                error_response(),
+                media_type="text/event-stream",
+                status_code=403
+            )
+        
+        # Get user from database
+        result = await db.execute(select(User).where(User.id == user_id))
+        current_user = result.scalar_one_or_none()
+        
+        if current_user is None or not current_user.is_active:
+            async def error_response():
+                yield f"data: {json.dumps({'error': 'User not found or inactive'})}\n\n"
+            return StreamingResponse(
+                error_response(),
+                media_type="text/event-stream",
+                status_code=403
+            )
+    except Exception as e:
+        logger.error(f"Token verification failed: {e}")
+        async def error_response():
+            yield f"data: {json.dumps({'error': 'Authentication failed'})}\n\n"
+        return StreamingResponse(
+            error_response(),
+            media_type="text/event-stream",
+            status_code=403
+        )
+    
+    async def generate():
+        try:
+            # Get the plan
+            result = await db.execute(
+                select(ChapterPlan).where(
+                    ChapterPlan.chapter_id == chapter_id,
+                    ChapterPlan.project_id == project_id
+                )
+            )
+            plan = result.scalar_one_or_none()
+            
+            if not plan:
+                yield f"data: {json.dumps({'error': 'Plan not found'})}\n\n"
+                return
+            
+            # Get chapter and project
+            result = await db.execute(select(Chapter).where(Chapter.id == chapter_id))
+            chapter = result.scalar_one_or_none()
+            
+            result = await db.execute(select(Project).where(Project.id == project_id))
+            project = result.scalar_one_or_none()
+            
+            if not chapter or not chapter.content or not project:
+                yield f"data: {json.dumps({'error': 'Chapter or project not found'})}\n\n"
+                return
+            
+            # Extract characters
+            characters_data = project.settings.get("characters", []) if project.settings else []
+            available_characters = [char["name"] for char in characters_data if "name" in char]
+            
+            if not available_characters:
+                yield f"data: {json.dumps({'error': 'No characters found'})}\n\n"
+                return
+            
+            total_segments = len(plan.segments)
+            
+            # Send initial progress
+            logger.info(f"SSE: Starting character assignment for {total_segments} segments")
+            yield f"data: {json.dumps({'current': 0, 'total': total_segments, 'message': 'Starting character assignment...'})}\n\n"
+            
+            # Import the streaming function
+            from services.planning.character_assignment_streaming import assign_characters_streaming
+            
+            # Process segments with streaming progress
+            updated_segments = None
+            async for progress in assign_characters_streaming(
+                chapter_text=chapter.content,
+                segments=plan.segments,
+                available_characters=available_characters,
+                project_settings=project.settings or {}
+            ):
+                # Forward progress to client
+                current = progress.get('current', 0)
+                message = progress.get('message', 'Processing...')
+                
+                if progress.get('complete'):
+                    updated_segments = progress.get('segments')
+                    logger.info(f"SSE: Processing complete")
+                else:
+                    logger.debug(f"SSE: Progress {current}/{total_segments}")
+                
+                yield f"data: {json.dumps({'current': current, 'total': total_segments, 'message': message})}\n\n"
+            
+            if not updated_segments:
+                raise Exception("No segments returned from streaming function")
+            
+            logger.info(f"SSE: Updating database with {len(updated_segments)} segments...")
+            
+            # Update plan
+            plan.segments = updated_segments
+            attributes.flag_modified(plan, 'segments')
+            await db.commit()
+            await db.refresh(plan)
+            
+            # Send completion
+            logger.info(f"SSE: Sending completion message")
+            yield f"data: {json.dumps({'current': total_segments, 'total': total_segments, 'message': f'Complete! Assigned characters to {total_segments} segments', 'complete': True})}\n\n"
+            logger.info(f"SSE: Stream complete")
+            
+        except Exception as e:
+            logger.error(f"Error in character assignment stream: {e}")
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+    
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
+    )
 
 
 @router.post("/chapters/{chapter_id}/assign-characters", response_model=ChapterPlanResponse)

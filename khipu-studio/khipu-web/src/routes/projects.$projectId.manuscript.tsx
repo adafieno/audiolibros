@@ -522,8 +522,9 @@ function ManuscriptPage() {
           {/* Progress indicator */}
           {uploadProgress && (
             <ProgressBar 
-              message={uploadProgress} 
-              steps={2}
+              message={uploadProgress}
+              currentStep={uploading ? 1 : parsing ? 2 : 0}
+              totalSteps={2}
             />
           )}
         </div>

@@ -13,14 +13,59 @@ function getAuthHeaders() {
   };
 }
 
+async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...getAuthHeaders(),
+      ...options.headers,
+    },
+  });
+
+  // If 401, try to refresh token once
+  if (response.status === 401) {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (refreshToken) {
+      try {
+        const refreshResponse = await fetch(`${API_BASE}/api/v1/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh_token: refreshToken }),
+        });
+
+        if (refreshResponse.ok) {
+          const { access_token } = await refreshResponse.json();
+          localStorage.setItem('access_token', access_token);
+
+          // Retry original request with new token
+          return fetch(url, {
+            ...options,
+            headers: {
+              ...getAuthHeaders(),
+              ...options.headers,
+            },
+          });
+        }
+      } catch (error) {
+        console.error('Token refresh failed:', error);
+      }
+    }
+    
+    // If refresh failed, clear tokens and redirect to login
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    window.location.href = '/login';
+  }
+
+  return response;
+}
+
 export const planningApi = {
   /**
    * Health check for planning service
    */
   async healthCheck(): Promise<{ status: string }> {
-    const response = await fetch(`${API_BASE}/api/v1/projects/test/planning/health`, {
-      headers: getAuthHeaders(),
-    });
+    const response = await fetchWithAuth(`${API_BASE}/api/v1/projects/test/planning/health`);
     
     if (!response.ok) {
       throw new Error('Planning service health check failed');
@@ -37,11 +82,10 @@ export const planningApi = {
     chapterId: string,
     options: PlanGenerateOptions = {}
   ): Promise<ChapterPlan> {
-    const response = await fetch(
+    const response = await fetchWithAuth(
       `${API_BASE}/api/v1/projects/${projectId}/planning/chapters/${chapterId}/generate`,
       {
         method: 'POST',
-        headers: getAuthHeaders(),
         body: JSON.stringify(options),
       }
     );
@@ -57,11 +101,8 @@ export const planningApi = {
    * Get existing plan for a chapter
    */
   async getPlan(projectId: string, chapterId: string): Promise<ChapterPlan | null> {
-    const response = await fetch(
-      `${API_BASE}/api/v1/projects/${projectId}/planning/chapters/${chapterId}/plan`,
-      {
-        headers: getAuthHeaders(),
-      }
+    const response = await fetchWithAuth(
+      `${API_BASE}/api/v1/projects/${projectId}/planning/chapters/${chapterId}/plan`
     );
     
     if (!response.ok) {
@@ -79,11 +120,10 @@ export const planningApi = {
     chapterId: string,
     segments: Segment[]
   ): Promise<ChapterPlan> {
-    const response = await fetch(
+    const response = await fetchWithAuth(
       `${API_BASE}/api/v1/projects/${projectId}/planning/chapters/${chapterId}/plan`,
       {
         method: 'PUT',
-        headers: getAuthHeaders(),
         body: JSON.stringify({ segments }),
       }
     );
@@ -102,11 +142,10 @@ export const planningApi = {
     projectId: string,
     chapterId: string
   ): Promise<ChapterPlan> {
-    const response = await fetch(
+    const response = await fetchWithAuth(
       `${API_BASE}/api/v1/projects/${projectId}/planning/chapters/${chapterId}/assign-characters`,
       {
         method: 'POST',
-        headers: getAuthHeaders(),
       }
     );
     
