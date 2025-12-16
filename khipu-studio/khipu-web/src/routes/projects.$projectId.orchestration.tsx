@@ -265,16 +265,16 @@ function OrchestrationPage() {
               {isAssigning ? '⏳ Assigning...' : t('orchestration.assignCharacters', 'Assign Characters')}
             </Button>
           </div>
+
+          {/* Progress indicators */}
+          {(generationProgress || assignmentProgress) && (
+            <ProgressBar 
+              message={generationProgress || assignmentProgress} 
+              steps={3}
+            />
+          )}
         </div>
       </div>
-
-      {/* Progress indicators */}
-      {(generationProgress || assignmentProgress) && (
-        <ProgressBar 
-          message={generationProgress || assignmentProgress} 
-          steps={3}
-        />
-      )}
 
       {/* Main Content */}
       <div className="flex gap-4" style={{ height: 'calc(100vh - 280px)' }}>
