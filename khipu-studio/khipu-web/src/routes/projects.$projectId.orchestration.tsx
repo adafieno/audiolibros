@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { planningApi } from '../api/planning';
 import { getChapters } from '../api/chapters';
 import { charactersApi } from '../lib/api/characters';
@@ -16,6 +16,7 @@ export const Route = createFileRoute('/projects/$projectId/orchestration')({
 function OrchestrationPage() {
   const { t } = useTranslation();
   const { projectId } = Route.useParams();
+  const queryClient = useQueryClient();
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
   const [selectedSegmentId, setSelectedSegmentId] = useState<number | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -94,10 +95,26 @@ function OrchestrationPage() {
     updatePlanMutation.mutate(updatedSegments);
   };
 
+  const [isAssigning, setIsAssigning] = useState(false);
+
   const handleAssignCharacters = async () => {
-    if (!plan) return;
-    // TODO: Implement LLM-based character assignment
-    console.log('Assign characters clicked - LLM assignment not yet implemented');
+    if (!plan || !selectedChapterId) return;
+    
+    setIsAssigning(true);
+    try {
+      // Call backend endpoint to assign characters using LLM
+      const updatedPlan = await planningApi.assignCharacters(projectId, selectedChapterId);
+      
+      // Invalidate query to refetch the plan with new assignments
+      await queryClient.invalidateQueries({ queryKey: ['plan', projectId, selectedChapterId] });
+      
+      console.log(`✅ Successfully assigned characters to ${updatedPlan.segments.length} segments`);
+    } catch (error) {
+      console.error('Failed to assign characters:', error);
+      alert(`Failed to assign characters: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setIsAssigning(false);
+    }
   };
 
   const [isAuditioning, setIsAuditioning] = useState(false);
@@ -216,10 +233,10 @@ function OrchestrationPage() {
             <Button
               size="compact"
               variant="primary"
-              disabled={!plan || plan.segments.length === 0}
+              disabled={!plan || plan.segments.length === 0 || isAssigning}
               onClick={handleAssignCharacters}
             >
-              {t('orchestration.assignCharacters', 'Assign Characters')}
+              {isAssigning ? '⏳ Assigning...' : t('orchestration.assignCharacters', 'Assign Characters')}
             </Button>
           </div>
         </div>
@@ -338,7 +355,7 @@ function OrchestrationPage() {
                           style={{ width: '100%' }}
                         >
                           <option value="">
-                            {t('orchestration.narrator', 'narrator')}
+                            {t('orchestration.unassigned', '<Unassigned>')}
                           </option>
                           {characters?.map((character) => (
                             <option key={character.id} value={character.name}>
@@ -376,7 +393,7 @@ function OrchestrationPage() {
                     </span>
                     {' '}
                     <span style={{ color: 'var(--text)' }}>
-                      {selectedSegment.voice || t('orchestration.narrator', 'narrator')}
+                      {selectedSegment.voice || t('orchestration.unassigned', '<Unassigned>')}
                     </span>
                   </div>
                   <div>

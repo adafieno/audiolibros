@@ -3,14 +3,17 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from uuid import UUID
+import logging
 
 from shared.db.database import get_db
-from shared.models import User, ChapterPlan, Chapter
+from shared.models import User, ChapterPlan, Chapter, Project
 from shared.auth import get_current_active_user
 from .schemas import ChapterPlanResponse, PlanGenerateOptions, PlanUpdateRequest
 from .segmentation import segment_text
+from .character_assignment import assign_characters_with_llm
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.get("/health")
@@ -127,3 +130,82 @@ async def update_plan(
     await db.refresh(plan)
     
     return plan
+
+
+@router.post("/chapters/{chapter_id}/assign-characters", response_model=ChapterPlanResponse)
+async def assign_characters_to_segments(
+    chapter_id: UUID,
+    project_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    Automatically assign characters to plan segments using LLM analysis.
+    """
+    # Get the plan
+    result = await db.execute(
+        select(ChapterPlan).where(
+            ChapterPlan.chapter_id == chapter_id,
+            ChapterPlan.project_id == project_id
+        )
+    )
+    plan = result.scalar_one_or_none()
+    
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    
+    # Get the chapter for context
+    result = await db.execute(
+        select(Chapter).where(Chapter.id == chapter_id)
+    )
+    chapter = result.scalar_one_or_none()
+    
+    if not chapter or not chapter.content:
+        raise HTTPException(status_code=400, detail="Chapter content not found")
+    
+    # Get project for settings (characters and LLM config)
+    result = await db.execute(
+        select(Project).where(Project.id == project_id)
+    )
+    project = result.scalar_one_or_none()
+    
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Extract character names from project settings
+    characters_data = project.settings.get("characters", []) if project.settings else []
+    available_characters = [char["name"] for char in characters_data if "name" in char]
+    
+    if not available_characters:
+        raise HTTPException(
+            status_code=400,
+            detail="No characters found in project. Please add characters first."
+        )
+    
+    logger.info(f"🎭 Assigning characters to {len(plan.segments)} segments")
+    logger.info(f"👥 Available characters: {available_characters}")
+    
+    try:
+        # Use LLM to assign characters to segments
+        updated_segments = await assign_characters_with_llm(
+            chapter_text=chapter.content,
+            segments=plan.segments,
+            available_characters=available_characters,
+            project_settings=project.settings or {}
+        )
+        
+        # Update the plan with new assignments
+        plan.segments = updated_segments
+        
+        await db.commit()
+        await db.refresh(plan)
+        
+        logger.info(f"✅ Successfully assigned characters to plan {plan.id}")
+        return plan
+        
+    except Exception as e:
+        logger.error(f"Failed to assign characters: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to assign characters: {str(e)}"
+        )

@@ -98,4 +98,27 @@ export const planningApi = {
     
     return response.json();
   },
+
+  /**
+   * Automatically assign characters to segments using LLM
+   */
+  async assignCharacters(
+    projectId: string,
+    chapterId: string
+  ): Promise<ChapterPlan> {
+    const response = await fetch(
+      `${API_BASE}/api/v1/projects/${projectId}/planning/chapters/${chapterId}/assign-characters`,
+      {
+        method: 'POST',
+        headers: getAuthHeaders(),
+      }
+    );
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Failed to assign characters' }));
+      throw new Error(error.detail || 'Failed to assign characters');
+    }
+    
+    return response.json();
+  },
 };
