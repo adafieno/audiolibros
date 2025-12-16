@@ -122,7 +122,7 @@ async def assign_characters_with_llm(
     # Build prompt
     prompt = ASSIGNMENT_PROMPT.format(
         characters=", ".join(available_characters),
-        chapter_text=chapter_text[:5000],  # Limit context to first 5000 chars to save tokens
+        chapter_text=chapter_text,  # Use full chapter text for context (matches desktop app)
         segments=json.dumps(segments_for_llm, ensure_ascii=False, indent=2),
         segment_count=len(segments_for_llm)
     )
@@ -196,7 +196,11 @@ async def assign_characters_with_llm(
 
 Available Characters: {", ".join(available_characters)}
 
-Segment text: "{seg['text'][:200]}..."
+Chapter Text (for context):
+{chapter_text}
+
+Segment to process:
+{json.dumps(seg, ensure_ascii=False, indent=2)}
 
 Rules:
 - Use specific character names only for their actual dialogue
@@ -205,7 +209,7 @@ Rules:
 
 Return a JSON object with this exact structure:
 {{
-  "segment_id": {seg['segment_id']},
+  "segment_id": "{seg['segment_id']}",
   "assigned_character": "character_name",
   "confidence": 0.95,
   "reasoning": "brief explanation"
