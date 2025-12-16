@@ -1,6 +1,8 @@
 """
 Voice assignment service - uses LLM to match characters to voices
 """
+import os
+import json
 import logging
 from typing import Dict, List
 from openai import AsyncOpenAI
@@ -8,11 +10,11 @@ from openai import AsyncOpenAI
 logger = logging.getLogger(__name__)
 
 
-VOICE_ASSIGNMENT_PROMPT = """You are an expert casting director for audiobook production.
+VOICE_ASSIGNMENT_PROMPT = """You are an expert casting director for audiobook production with strict gender-matching requirements.
 
 Your task is to assign the most appropriate voice to each character based on:
 - Character traits (gender, age, personality, speaking style)
-- Voice characteristics (gender, age, tone, style)
+- Voice characteristics (gender, age, tone, style, pitch, rate)
 - Overall casting balance (variety and contrast)
 
 Available voices:
@@ -27,35 +29,80 @@ Return a JSON object with voice assignments:
     {{
       "character_name": "Character Name",
       "voice_id": "voice-id",
+      "pitch_adjustment": 0,
+      "rate_adjustment": 0,
       "confidence": 0.95,
       "reasoning": "Brief explanation of why this voice fits"
     }}
   ]
 }}
 
-IMPORTANT:
-- Match gender when possible (M to M, F to F)
-- Match age groups (child/teen/adult/elderly)
-- Consider personality and speaking style
-- Ensure narrator gets a clear, versatile voice
-- Provide variety - don't assign same voice to too many characters
-- Only use voices from the provided list"""
+PITCH/RATE ADJUSTMENT GUIDELINES:
+- pitch_adjustment: -50 to +50 (percentage adjustment from baseline)
+  * Negative = lower pitch (deeper, more mature)
+  * Positive = higher pitch (younger, more energetic)
+  * Child characters: +10 to +30
+  * Elderly characters: -10 to -20
+  * Default: 0 (use voice's natural pitch)
+- rate_adjustment: -50 to +50 (percentage adjustment from baseline)
+  * Negative = slower (deliberate, thoughtful)
+  * Positive = faster (energetic, excited)
+  * Calm/wise characters: -10 to -20
+  * Energetic characters: +10 to +20
+  * Default: 0 (use voice's natural rate)
+
+CRITICAL RULES (MUST FOLLOW):
+1. GENDER MATCHING IS MANDATORY:
+   - Male characters (M) → ONLY Male voices (M)
+   - Female characters (F) → ONLY Female voices (F)
+   - Neutral/Unknown (N) → Can use any voice
+2. Age matching:
+   - child → child/teen voices
+   - teen → teen/young adult voices
+   - adult → adult voices (most common)
+   - elderly → adult voices with mature quality
+3. Consider personality and speaking style for voice characteristics
+4. Narrator should get a clear, versatile, professional voice
+5. Provide variety - avoid assigning same voice to multiple characters unless necessary
+6. ONLY use voices from the provided list
+7. If no perfect match exists, prioritize gender match over other traits"""
 
 
 def format_voices_for_prompt(voices: List[Dict]) -> str:
-    """Format voices list for LLM prompt"""
+    """Format voices list for LLM prompt with complete metadata"""
     lines = []
     for voice in voices:
-        line = f"- {voice.get('id', 'unknown')}: {voice.get('name', 'Unknown')}"
+        name = voice.get('name', voice.get('id', 'unknown').split('-')[-1].replace('Neural', ''))
+        line = f"- {voice.get('id', 'unknown')}: {name}"
         
-        if 'gender' in voice:
-            line += f" (gender: {voice['gender']}"
-        if 'age' in voice:
-            line += f", age: {voice['age']}"
-        if 'style' in voice:
-            line += f", style: {voice['style']}"
-        line += ")"
+        # Build attributes list
+        attrs = []
         
+        # Gender is CRITICAL for matching
+        gender = voice.get('gender', 'N')
+        attrs.append(f"gender={gender}")
+        
+        # Age/age_hint
+        age = voice.get('age') or voice.get('age_hint', 'adult')
+        attrs.append(f"age={age}")
+        
+        # Style/tone
+        style = voice.get('style') or voice.get('tone', 'neutral')
+        if isinstance(style, list):
+            style = style[0] if style else 'neutral'
+        attrs.append(f"style={style}")
+        
+        # Pitch (if available)
+        if 'pitch' in voice:
+            attrs.append(f"pitch={voice['pitch']}")
+        
+        # Rate (if available)
+        if 'rate' in voice:
+            attrs.append(f"rate={voice['rate']}")
+        
+        line += f" ({', '.join(attrs)})"
+        
+        # Add description if available
         if 'description' in voice:
             line += f" - {voice['description']}"
         
@@ -173,6 +220,8 @@ async def assign_voices_with_llm(
         assignment_map = {
             a["character_name"]: {
                 "voiceId": a["voice_id"],
+                "pitch": a.get("pitch_adjustment", 0),
+                "rate": a.get("rate_adjustment", 0),
                 "confidence": a.get("confidence", 0.5),
                 "reasoning": a.get("reasoning", ""),
                 "method": "llm_auto"

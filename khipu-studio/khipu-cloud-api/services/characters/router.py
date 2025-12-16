@@ -2,6 +2,7 @@
 Characters service router
 """
 import logging
+import os
 import uuid
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy import select
@@ -389,7 +390,6 @@ async def assign_voices_to_characters(
         model = llm_engine.get("model", model)
     
     if not api_key:
-        import os
         api_key = os.environ.get("OPENAI_API_KEY")
     
     if not api_key:
@@ -408,10 +408,12 @@ async def assign_voices_to_characters(
     
     characters = project.settings.get("characters", [])
     logger.info(f"   project.settings keys: {list(project.settings.keys())}")
-    logger.info(f"   Found {len(characters)} characters in project settings")
+    logger.info(f"   'characters' key exists: {'characters' in project.settings}")
+    logger.info(f"   'characters' value type: {type(characters)}")
+    logger.info(f"   Found {len(characters) if isinstance(characters, list) else 0} characters in project settings")
     
-    if not characters or len(characters) == 0:
-        logger.error("   No characters found in project.settings['characters']")
+    if not characters or not isinstance(characters, list) or len(characters) == 0:
+        logger.error(f"   No valid characters found. Value: {characters if not isinstance(characters, list) or len(str(characters)) < 200 else str(characters)[:200] + '...'}")
         raise HTTPException(
             status_code=400,
             detail="No characters found. Run character detection first."
@@ -419,17 +421,40 @@ async def assign_voices_to_characters(
     
     # Get available voices from project settings or use defaults
     available_voices = []
+    voice_inventory = {}  # Map of voice_id -> full metadata
+    
+    # Load comprehensive voice inventory from JSON file
+    import json
+    voice_json_path = os.path.join(os.path.dirname(__file__), '../../data/comprehensive-azure-voices.json')
+    if os.path.exists(voice_json_path):
+        try:
+            with open(voice_json_path, 'r', encoding='utf-8') as f:
+                voice_data = json.load(f)
+                voice_inventory = {v['id']: v for v in voice_data.get('voices', [])}
+                logger.info(f"   Loaded {len(voice_inventory)} voices from comprehensive inventory")
+        except Exception as e:
+            logger.warning(f"   Could not load voice inventory: {e}")
+    
     if project.settings and "voices" in project.settings:
         voices_settings = project.settings["voices"]
         # Check if it's the new format with selectedVoiceIds
         if isinstance(voices_settings, dict) and "selectedVoiceIds" in voices_settings:
             selected_voice_ids = voices_settings.get("selectedVoiceIds", [])
             logger.info(f"   Found {len(selected_voice_ids)} selected voices in project settings")
-            # Build voice objects from IDs (simplified - just use the IDs)
-            available_voices = [
-                {"id": vid, "name": vid.split("-")[-1].replace("Neural", ""), "gender": "N", "age": "adult", "style": "neutral"}
-                for vid in selected_voice_ids
-            ]
+            # Build voice objects with full metadata from inventory
+            for vid in selected_voice_ids:
+                if vid in voice_inventory:
+                    # Use full metadata from inventory
+                    available_voices.append(voice_inventory[vid])
+                else:
+                    # Fallback: extract basic info from voice ID
+                    available_voices.append({
+                        "id": vid,
+                        "name": vid.split("-")[-1].replace("Neural", ""),
+                        "gender": "N",
+                        "age": "adult",
+                        "style": "neutral"
+                    })
     
     if not available_voices:
         # Use default voice inventory for Spanish

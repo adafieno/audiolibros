@@ -1,0 +1,1764 @@
+{
+  "voices": [
+    {
+      "id": "ar-AE-FatimaNeural",
+      "engine": "azure",
+      "locale": "ar-AE",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["uae", "gulf"],
+      "styles": ["general"],
+      "description": "UAE Arabic female voice"
+    },
+    {
+      "id": "ar-AE-HamdanNeural", 
+      "engine": "azure",
+      "locale": "ar-AE",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["uae", "gulf"],
+      "styles": ["general"],
+      "description": "UAE Arabic male voice"
+    },
+    {
+      "id": "ar-BH-AliNeural",
+      "engine": "azure", 
+      "locale": "ar-BH",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["bahrain", "gulf"],
+      "styles": ["general"],
+      "description": "Bahraini Arabic male voice"
+    },
+    {
+      "id": "ar-BH-LailaNeural",
+      "engine": "azure",
+      "locale": "ar-BH", 
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["bahrain", "gulf"],
+      "styles": ["general"],
+      "description": "Bahraini Arabic female voice"
+    },
+    {
+      "id": "ar-DZ-AminaNeural",
+      "engine": "azure",
+      "locale": "ar-DZ",
+      "gender": "F", 
+      "age_hint": "adult",
+      "accent_tags": ["algeria", "maghreb"],
+      "styles": ["general"],
+      "description": "Algerian Arabic female voice"
+    },
+    {
+      "id": "ar-DZ-IsmaelNeural",
+      "engine": "azure",
+      "locale": "ar-DZ",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["algeria", "maghreb"],
+      "styles": ["general"],
+      "description": "Algerian Arabic male voice"
+    },
+    {
+      "id": "ar-EG-SalmaNeural",
+      "engine": "azure",
+      "locale": "ar-EG",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["egypt", "egyptian"],
+      "styles": ["general"],
+      "description": "Egyptian Arabic female voice"
+    },
+    {
+      "id": "ar-EG-ShakirNeural",
+      "engine": "azure",
+      "locale": "ar-EG",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["egypt", "egyptian"],
+      "styles": ["general"],
+      "description": "Egyptian Arabic male voice"
+    },
+    {
+      "id": "ar-IQ-BasselNeural",
+      "engine": "azure",
+      "locale": "ar-IQ",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["iraq", "mesopotamian"],
+      "styles": ["general"],
+      "description": "Iraqi Arabic male voice"
+    },
+    {
+      "id": "ar-IQ-RanaNeural",
+      "engine": "azure",
+      "locale": "ar-IQ",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["iraq", "mesopotamian"],
+      "styles": ["general"],
+      "description": "Iraqi Arabic female voice"
+    },
+    {
+      "id": "ar-JO-SanaNeural",
+      "engine": "azure",
+      "locale": "ar-JO",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["jordan", "levantine"],
+      "styles": ["general"],
+      "description": "Jordanian Arabic female voice"
+    },
+    {
+      "id": "ar-JO-TaimNeural",
+      "engine": "azure",
+      "locale": "ar-JO",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["jordan", "levantine"],
+      "styles": ["general"],
+      "description": "Jordanian Arabic male voice"
+    },
+    {
+      "id": "ar-KW-FahedNeural",
+      "engine": "azure",
+      "locale": "ar-KW",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["kuwait", "gulf"],
+      "styles": ["general"],
+      "description": "Kuwaiti Arabic male voice"
+    },
+    {
+      "id": "ar-KW-NouraNeural",
+      "engine": "azure",
+      "locale": "ar-KW",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["kuwait", "gulf"],
+      "styles": ["general"],
+      "description": "Kuwaiti Arabic female voice"
+    },
+    {
+      "id": "ar-LB-LaylaNeural",
+      "engine": "azure",
+      "locale": "ar-LB",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["lebanon", "levantine"],
+      "styles": ["general"],
+      "description": "Lebanese Arabic female voice"
+    },
+    {
+      "id": "ar-LB-RamiNeural",
+      "engine": "azure",
+      "locale": "ar-LB",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["lebanon", "levantine"],
+      "styles": ["general"],
+      "description": "Lebanese Arabic male voice"
+    },
+    {
+      "id": "ar-LY-ImanNeural",
+      "engine": "azure",
+      "locale": "ar-LY",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["libya", "maghreb"],
+      "styles": ["general"],
+      "description": "Libyan Arabic female voice"
+    },
+    {
+      "id": "ar-LY-OmarNeural",
+      "engine": "azure",
+      "locale": "ar-LY",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["libya", "maghreb"],
+      "styles": ["general"],
+      "description": "Libyan Arabic male voice"
+    },
+    {
+      "id": "ar-MA-JamalNeural",
+      "engine": "azure",
+      "locale": "ar-MA",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["morocco", "maghreb"],
+      "styles": ["general"],
+      "description": "Moroccan Arabic male voice"
+    },
+    {
+      "id": "ar-MA-MounaNeural",
+      "engine": "azure",
+      "locale": "ar-MA",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["morocco", "maghreb"],
+      "styles": ["general"],
+      "description": "Moroccan Arabic female voice"
+    },
+    {
+      "id": "es-AR-ElenaNeural",
+      "engine": "azure",
+      "locale": "es-AR",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["argentina", "rioplatense"],
+      "styles": ["general"],
+      "description": "Argentinian Spanish female voice"
+    },
+    {
+      "id": "es-AR-TomasNeural",
+      "engine": "azure",
+      "locale": "es-AR",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["argentina", "rioplatense"],
+      "styles": ["general"],
+      "description": "Argentinian Spanish male voice"
+    },
+    {
+      "id": "es-BO-MarceloNeural",
+      "engine": "azure",
+      "locale": "es-BO",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["bolivia"],
+      "styles": ["general"],
+      "description": "Bolivian Spanish male voice"
+    },
+    {
+      "id": "es-BO-SofiaNeural",
+      "engine": "azure",
+      "locale": "es-BO",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["bolivia"],
+      "styles": ["empathetic", "sad"],
+      "description": "Bolivian Spanish female voice"
+    },
+    {
+      "id": "es-CL-CatalinaNeural",
+      "engine": "azure",
+      "locale": "es-CL",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["chile"],
+      "styles": ["general"],
+      "description": "Chilean Spanish female voice"
+    },
+    {
+      "id": "es-CL-LorenzoNeural",
+      "engine": "azure",
+      "locale": "es-CL",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["chile"],
+      "styles": ["general"],
+      "description": "Chilean Spanish male voice"
+    },
+    {
+      "id": "es-CO-GonzaloNeural",
+      "engine": "azure",
+      "locale": "es-CO",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["colombia"],
+      "styles": ["general"],
+      "description": "Colombian Spanish male voice"
+    },
+    {
+      "id": "es-CO-SalomeNeural",
+      "engine": "azure",
+      "locale": "es-CO",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["colombia"],
+      "styles": ["general"],
+      "description": "Colombian Spanish female voice"
+    },
+    {
+      "id": "es-CR-JuanNeural",
+      "engine": "azure",
+      "locale": "es-CR",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["costa_rica"],
+      "styles": ["general"],
+      "description": "Costa Rican Spanish male voice"
+    },
+    {
+      "id": "es-CR-MariaNeural",
+      "engine": "azure",
+      "locale": "es-CR",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["costa_rica"],
+      "styles": ["general"],
+      "description": "Costa Rican Spanish female voice"
+    },
+    {
+      "id": "es-CU-BelkysNeural",
+      "engine": "azure",
+      "locale": "es-CU",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["cuba", "caribbean"],
+      "styles": ["general"],
+      "description": "Cuban Spanish female voice"
+    },
+    {
+      "id": "es-CU-ManuelNeural",
+      "engine": "azure",
+      "locale": "es-CU",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["cuba", "caribbean"],
+      "styles": ["general"],
+      "description": "Cuban Spanish male voice"
+    },
+    {
+      "id": "es-DO-EmilioNeural",
+      "engine": "azure",
+      "locale": "es-DO",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["dominican_republic", "caribbean"],
+      "styles": ["general"],
+      "description": "Dominican Spanish male voice"
+    },
+    {
+      "id": "es-DO-RamonaNeural",
+      "engine": "azure",
+      "locale": "es-DO",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["dominican_republic", "caribbean"],
+      "styles": ["general"],
+      "description": "Dominican Spanish female voice"
+    },
+    {
+      "id": "es-EC-AndreaNeural",
+      "engine": "azure",
+      "locale": "es-EC",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["ecuador"],
+      "styles": ["serious", "empathetic", "calm"],
+      "description": "Ecuadorian Spanish female voice"
+    },
+    {
+      "id": "es-EC-LuisNeural",
+      "engine": "azure",
+      "locale": "es-EC",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["ecuador"],
+      "styles": ["serious", "shouting", "angry"],
+      "description": "Ecuadorian Spanish male voice"
+    },
+    {
+      "id": "es-ES-AbrilNeural",
+      "engine": "azure",
+      "locale": "es-ES",
+      "gender": "F",
+      "age_hint": "child",
+      "accent_tags": ["spain", "castilian"],
+      "styles": ["general"],
+      "description": "Peninsular Spanish child female voice"
+    },
+    {
+      "id": "es-ES-AlvaroNeural",
+      "engine": "azure",
+      "locale": "es-ES",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["spain", "castilian"],
+      "styles": ["general"],
+      "description": "Peninsular Spanish male voice"
+    },
+    {
+      "id": "es-ES-ArnauNeural",
+      "engine": "azure",
+      "locale": "es-ES",
+      "gender": "M",
+      "age_hint": "child",
+      "accent_tags": ["spain", "castilian"],
+      "styles": ["general"],
+      "description": "Peninsular Spanish child male voice"
+    },
+    {
+      "id": "es-ES-DarioNeural",
+      "engine": "azure",
+      "locale": "es-ES",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["spain", "castilian"],
+      "styles": ["general"],
+      "description": "Peninsular Spanish male voice"
+    },
+    {
+      "id": "es-ES-EliasNeural",
+      "engine": "azure",
+      "locale": "es-ES",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["spain", "castilian"],
+      "styles": ["general"],
+      "description": "Peninsular Spanish male voice"
+    },
+    {
+      "id": "es-ES-ElviraNeural",
+      "engine": "azure",
+      "locale": "es-ES",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["spain", "castilian"],
+      "styles": ["general"],
+      "description": "Peninsular Spanish female voice"
+    },
+    {
+      "id": "es-ES-EstrellaNeural",
+      "engine": "azure",
+      "locale": "es-ES",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["spain", "castilian"],
+      "styles": ["cheerful"],
+      "description": "Peninsular Spanish female voice"
+    },
+    {
+      "id": "es-ES-IreneNeural",
+      "engine": "azure",
+      "locale": "es-ES",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["spain", "castilian"],
+      "styles": ["general"],
+      "description": "Peninsular Spanish female voice"
+    },
+    {
+      "id": "es-ES-LaiaNeural",
+      "engine": "azure",
+      "locale": "es-ES",
+      "gender": "F",
+      "age_hint": "child",
+      "accent_tags": ["spain", "castilian"],
+      "styles": ["general"],
+      "description": "Peninsular Spanish child female voice"
+    },
+    {
+      "id": "es-ES-LiaNeural",
+      "engine": "azure",
+      "locale": "es-ES",
+      "gender": "F",
+      "age_hint": "child",
+      "accent_tags": ["spain", "castilian"],
+      "styles": ["general"],
+      "description": "Peninsular Spanish child female voice"
+    },
+    {
+      "id": "es-ES-NilNeural",
+      "engine": "azure",
+      "locale": "es-ES",
+      "gender": "M",
+      "age_hint": "child",
+      "accent_tags": ["spain", "castilian"],
+      "styles": ["general"],
+      "description": "Peninsular Spanish child male voice"
+    },
+    {
+      "id": "es-ES-SaulNeural",
+      "engine": "azure",
+      "locale": "es-ES",
+      "gender": "M",
+      "age_hint": "child",
+      "accent_tags": ["spain", "castilian"],
+      "styles": ["general"],
+      "description": "Peninsular Spanish child male voice"
+    },
+    {
+      "id": "es-ES-TeoNeural",
+      "engine": "azure",
+      "locale": "es-ES",
+      "gender": "M",
+      "age_hint": "child",
+      "accent_tags": ["spain", "castilian"],
+      "styles": ["general"],
+      "description": "Peninsular Spanish child male voice"
+    },
+    {
+      "id": "es-ES-TrianaNeural",
+      "engine": "azure",
+      "locale": "es-ES",
+      "gender": "F",
+      "age_hint": "child",
+      "accent_tags": ["spain", "castilian"],
+      "styles": ["general"],
+      "description": "Peninsular Spanish child female voice"
+    },
+    {
+      "id": "es-ES-VeraNeural",
+      "engine": "azure",
+      "locale": "es-ES",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["spain", "castilian"],
+      "styles": ["general"],
+      "description": "Peninsular Spanish female voice"
+    },
+    {
+      "id": "es-GQ-JavierNeural",
+      "engine": "azure",
+      "locale": "es-GQ",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["equatorial_guinea"],
+      "styles": ["general"],
+      "description": "Equatorial Guinea Spanish male voice"
+    },
+    {
+      "id": "es-GQ-TeresaNeural",
+      "engine": "azure",
+      "locale": "es-GQ",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["equatorial_guinea"],
+      "styles": ["general"],
+      "description": "Equatorial Guinea Spanish female voice"
+    },
+    {
+      "id": "es-GT-AndresNeural",
+      "engine": "azure",
+      "locale": "es-GT",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["guatemala", "central_american"],
+      "styles": ["general"],
+      "description": "Guatemalan Spanish male voice"
+    },
+    {
+      "id": "es-GT-MartaNeural",
+      "engine": "azure",
+      "locale": "es-GT",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["guatemala", "central_american"],
+      "styles": ["general"],
+      "description": "Guatemalan Spanish female voice"
+    },
+    {
+      "id": "es-HN-CarlosNeural",
+      "engine": "azure",
+      "locale": "es-HN",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["honduras", "central_american"],
+      "styles": ["general"],
+      "description": "Honduran Spanish male voice"
+    },
+    {
+      "id": "es-HN-KarlaNeural",
+      "engine": "azure",
+      "locale": "es-HN",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["honduras", "central_american"],
+      "styles": ["general"],
+      "description": "Honduran Spanish female voice"
+    },
+    {
+      "id": "es-MX-BeatrizNeural",
+      "engine": "azure",
+      "locale": "es-MX",
+      "gender": "F",
+      "age_hint": "child",
+      "accent_tags": ["mexico"],
+      "styles": ["general"],
+      "description": "Mexican Spanish child female voice"
+    },
+    {
+      "id": "es-MX-CandelaNeural",
+      "engine": "azure",
+      "locale": "es-MX",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["mexico"],
+      "styles": ["general"],
+      "description": "Mexican Spanish female voice"
+    },
+    {
+      "id": "es-MX-CarlotaNeural",
+      "engine": "azure",
+      "locale": "es-MX",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["mexico"],
+      "styles": ["general"],
+      "description": "Mexican Spanish female voice"
+    },
+    {
+      "id": "es-MX-CecilioNeural",
+      "engine": "azure",
+      "locale": "es-MX",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["mexico"],
+      "styles": ["general"],
+      "description": "Mexican Spanish male voice"
+    },
+    {
+      "id": "es-MX-DaliaNeural",
+      "engine": "azure",
+      "locale": "es-MX",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["mexico"],
+      "styles": ["empathetic", "cheerful", "sad"],
+      "description": "Mexican Spanish female voice with warm tone"
+    },
+    {
+      "id": "es-MX-GerardoNeural",
+      "engine": "azure",
+      "locale": "es-MX",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["mexico"],
+      "styles": ["general"],
+      "description": "Mexican Spanish male voice"
+    },
+    {
+      "id": "es-MX-JorgeNeural",
+      "engine": "azure",
+      "locale": "es-MX",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["mexico"],
+      "styles": ["curious", "deep", "confident"],
+      "description": "Mexican Spanish male voice with confident tone"
+    },
+    {
+      "id": "es-MX-LarissaNeural",
+      "engine": "azure",
+      "locale": "es-MX",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["mexico"],
+      "styles": ["general"],
+      "description": "Mexican Spanish female voice"
+    },
+    {
+      "id": "es-MX-LibertoNeural",
+      "engine": "azure",
+      "locale": "es-MX",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["mexico"],
+      "styles": ["general"],
+      "description": "Mexican Spanish male voice"
+    },
+    {
+      "id": "es-MX-LucianoNeural",
+      "engine": "azure",
+      "locale": "es-MX",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["mexico"],
+      "styles": ["general"],
+      "description": "Mexican Spanish male voice"
+    },
+    {
+      "id": "es-MX-MarinaNeural",
+      "engine": "azure",
+      "locale": "es-MX",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["mexico"],
+      "styles": ["general"],
+      "description": "Mexican Spanish female voice"
+    },
+    {
+      "id": "es-MX-NuriaNeural",
+      "engine": "azure",
+      "locale": "es-MX",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["mexico"],
+      "styles": ["general"],
+      "description": "Mexican Spanish female voice"
+    },
+    {
+      "id": "es-MX-PelayoNeural",
+      "engine": "azure",
+      "locale": "es-MX",
+      "gender": "M",
+      "age_hint": "child",
+      "accent_tags": ["mexico"],
+      "styles": ["general"],
+      "description": "Mexican Spanish child male voice"
+    },
+    {
+      "id": "es-MX-RenataNeural",
+      "engine": "azure",
+      "locale": "es-MX",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["mexico"],
+      "styles": ["general"],
+      "description": "Mexican Spanish female voice"
+    },
+    {
+      "id": "es-MX-YagoNeural",
+      "engine": "azure",
+      "locale": "es-MX",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["mexico"],
+      "styles": ["general"],
+      "description": "Mexican Spanish male voice"
+    },
+    {
+      "id": "es-NI-FedericoNeural",
+      "engine": "azure",
+      "locale": "es-NI",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["nicaragua", "central_american"],
+      "styles": ["general"],
+      "description": "Nicaraguan Spanish male voice"
+    },
+    {
+      "id": "es-NI-YolandaNeural",
+      "engine": "azure",
+      "locale": "es-NI",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["nicaragua", "central_american"],
+      "styles": ["general"],
+      "description": "Nicaraguan Spanish female voice"
+    },
+    {
+      "id": "es-PA-MargaritaNeural",
+      "engine": "azure",
+      "locale": "es-PA",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["panama", "central_american"],
+      "styles": ["general"],
+      "description": "Panamanian Spanish female voice"
+    },
+    {
+      "id": "es-PA-RobertoNeural",
+      "engine": "azure",
+      "locale": "es-PA",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["panama", "central_american"],
+      "styles": ["general"],
+      "description": "Panamanian Spanish male voice"
+    },
+    {
+      "id": "es-PE-AlexNeural",
+      "engine": "azure",
+      "locale": "es-PE",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["peru"],
+      "styles": ["narration-relaxed", "cheerful", "sad"],
+      "description": "Peruvian Spanish male voice with natural narration style"
+    },
+    {
+      "id": "es-PE-CamilaNeural",
+      "engine": "azure",
+      "locale": "es-PE",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["peru"],
+      "styles": ["general"],
+      "description": "Peruvian Spanish female voice"
+    },
+    {
+      "id": "es-PR-KarinaNeural",
+      "engine": "azure",
+      "locale": "es-PR",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["puerto_rico", "caribbean"],
+      "styles": ["general"],
+      "description": "Puerto Rican Spanish female voice"
+    },
+    {
+      "id": "es-PR-VictorNeural",
+      "engine": "azure",
+      "locale": "es-PR",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["puerto_rico", "caribbean"],
+      "styles": ["general"],
+      "description": "Puerto Rican Spanish male voice"
+    },
+    {
+      "id": "es-PY-MarioNeural",
+      "engine": "azure",
+      "locale": "es-PY",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["paraguay"],
+      "styles": ["general"],
+      "description": "Paraguayan Spanish male voice"
+    },
+    {
+      "id": "es-PY-TaniaNeural",
+      "engine": "azure",
+      "locale": "es-PY",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["paraguay"],
+      "styles": ["general"],
+      "description": "Paraguayan Spanish female voice"
+    },
+    {
+      "id": "es-SV-LorenaNeural",
+      "engine": "azure",
+      "locale": "es-SV",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["el_salvador", "central_american"],
+      "styles": ["general"],
+      "description": "Salvadoran Spanish female voice"
+    },
+    {
+      "id": "es-SV-RodrigoNeural",
+      "engine": "azure",
+      "locale": "es-SV",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["el_salvador", "central_american"],
+      "styles": ["general"],
+      "description": "Salvadoran Spanish male voice"
+    },
+    {
+      "id": "es-US-AlonsoNeural",
+      "engine": "azure",
+      "locale": "es-US",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["us_latam"],
+      "styles": ["hopeful", "serious", "chat"],
+      "description": "US Latino Spanish male voice"
+    },
+    {
+      "id": "es-US-PalomaNeural",
+      "engine": "azure",
+      "locale": "es-US",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["us_latam"],
+      "styles": ["empathetic", "calm", "sad"],
+      "description": "US Latino Spanish female voice"
+    },
+    {
+      "id": "es-UY-MateoNeural",
+      "engine": "azure",
+      "locale": "es-UY",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["uruguay", "rioplatense"],
+      "styles": ["general"],
+      "description": "Uruguayan Spanish male voice"
+    },
+    {
+      "id": "es-UY-ValentinaNeural",
+      "engine": "azure",
+      "locale": "es-UY",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["uruguay", "rioplatense"],
+      "styles": ["general"],
+      "description": "Uruguayan Spanish female voice"
+    },
+    {
+      "id": "es-VE-PaolaNeural",
+      "engine": "azure",
+      "locale": "es-VE",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["venezuela"],
+      "styles": ["general"],
+      "description": "Venezuelan Spanish female voice"
+    },
+    {
+      "id": "es-VE-SebastianNeural",
+      "engine": "azure",
+      "locale": "es-VE",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["venezuela"],
+      "styles": ["general"],
+      "description": "Venezuelan Spanish male voice"
+    },
+    {
+      "id": "en-AU-NatashaNeural",
+      "engine": "azure",
+      "locale": "en-AU",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["australia"],
+      "styles": ["general"],
+      "description": "Australian English female voice"
+    },
+    {
+      "id": "en-AU-WilliamNeural",
+      "engine": "azure",
+      "locale": "en-AU",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["australia"],
+      "styles": ["general"],
+      "description": "Australian English male voice"
+    },
+    {
+      "id": "en-CA-ClaraNeural",
+      "engine": "azure",
+      "locale": "en-CA",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["canada"],
+      "styles": ["general"],
+      "description": "Canadian English female voice"
+    },
+    {
+      "id": "en-CA-LiamNeural",
+      "engine": "azure",
+      "locale": "en-CA",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["canada"],
+      "styles": ["general"],
+      "description": "Canadian English male voice"
+    },
+    {
+      "id": "en-GB-LibbyNeural",
+      "engine": "azure",
+      "locale": "en-GB",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["uk", "british"],
+      "styles": ["general"],
+      "description": "British English female voice"
+    },
+    {
+      "id": "en-GB-MaisieNeural",
+      "engine": "azure",
+      "locale": "en-GB",
+      "gender": "F",
+      "age_hint": "child",
+      "accent_tags": ["uk", "british"],
+      "styles": ["general"],
+      "description": "British English child female voice"
+    },
+    {
+      "id": "en-GB-RyanNeural",
+      "engine": "azure",
+      "locale": "en-GB",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["uk", "british"],
+      "styles": ["chat", "cheerful"],
+      "description": "British English male voice"
+    },
+    {
+      "id": "en-GB-SoniaNeural",
+      "engine": "azure",
+      "locale": "en-GB",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["uk", "british"],
+      "styles": ["cheerful", "sad"],
+      "description": "British English female voice"
+    },
+    {
+      "id": "en-GB-ThomasNeural",
+      "engine": "azure",
+      "locale": "en-GB",
+      "gender": "M",
+      "age_hint": "child",
+      "accent_tags": ["uk", "british"],
+      "styles": ["general"],
+      "description": "British English child male voice"
+    },
+    {
+      "id": "en-HK-SamNeural",
+      "engine": "azure",
+      "locale": "en-HK",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["hong_kong"],
+      "styles": ["general"],
+      "description": "Hong Kong English male voice"
+    },
+    {
+      "id": "en-HK-YanNeural",
+      "engine": "azure",
+      "locale": "en-HK",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["hong_kong"],
+      "styles": ["general"],
+      "description": "Hong Kong English female voice"
+    },
+    {
+      "id": "en-IE-ConnorNeural",
+      "engine": "azure",
+      "locale": "en-IE",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["ireland", "irish"],
+      "styles": ["general"],
+      "description": "Irish English male voice"
+    },
+    {
+      "id": "en-IE-EmilyNeural",
+      "engine": "azure",
+      "locale": "en-IE",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["ireland", "irish"],
+      "styles": ["general"],
+      "description": "Irish English female voice"
+    },
+    {
+      "id": "en-IN-NeerjaNeural",
+      "engine": "azure",
+      "locale": "en-IN",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["india"],
+      "styles": ["general"],
+      "description": "Indian English female voice"
+    },
+    {
+      "id": "en-IN-PrabhatNeural",
+      "engine": "azure",
+      "locale": "en-IN",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["india"],
+      "styles": ["general"],
+      "description": "Indian English male voice"
+    },
+    {
+      "id": "en-KE-AsiliaNeural",
+      "engine": "azure",
+      "locale": "en-KE",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["kenya"],
+      "styles": ["general"],
+      "description": "Kenyan English female voice"
+    },
+    {
+      "id": "en-KE-ChilembaNeural",
+      "engine": "azure",
+      "locale": "en-KE",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["kenya"],
+      "styles": ["general"],
+      "description": "Kenyan English male voice"
+    },
+    {
+      "id": "en-NG-AbeoNeural",
+      "engine": "azure",
+      "locale": "en-NG",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["nigeria"],
+      "styles": ["general"],
+      "description": "Nigerian English male voice"
+    },
+    {
+      "id": "en-NG-EzinneNeural",
+      "engine": "azure",
+      "locale": "en-NG",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["nigeria"],
+      "styles": ["general"],
+      "description": "Nigerian English female voice"
+    },
+    {
+      "id": "en-NZ-MitchellNeural",
+      "engine": "azure",
+      "locale": "en-NZ",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["new_zealand"],
+      "styles": ["general"],
+      "description": "New Zealand English male voice"
+    },
+    {
+      "id": "en-NZ-MollyNeural",
+      "engine": "azure",
+      "locale": "en-NZ",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["new_zealand"],
+      "styles": ["general"],
+      "description": "New Zealand English female voice"
+    },
+    {
+      "id": "en-PH-JamesNeural",
+      "engine": "azure",
+      "locale": "en-PH",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["philippines"],
+      "styles": ["general"],
+      "description": "Philippine English male voice"
+    },
+    {
+      "id": "en-PH-RosaNeural",
+      "engine": "azure",
+      "locale": "en-PH",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["philippines"],
+      "styles": ["general"],
+      "description": "Philippine English female voice"
+    },
+    {
+      "id": "en-SG-LunaNeural",
+      "engine": "azure",
+      "locale": "en-SG",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["singapore"],
+      "styles": ["general"],
+      "description": "Singaporean English female voice"
+    },
+    {
+      "id": "en-SG-WayneNeural",
+      "engine": "azure",
+      "locale": "en-SG",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["singapore"],
+      "styles": ["general"],
+      "description": "Singaporean English male voice"
+    },
+    {
+      "id": "en-TZ-ElimuNeural",
+      "engine": "azure",
+      "locale": "en-TZ",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["tanzania"],
+      "styles": ["general"],
+      "description": "Tanzanian English male voice"
+    },
+    {
+      "id": "en-TZ-ImaniNeural",
+      "engine": "azure",
+      "locale": "en-TZ",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["tanzania"],
+      "styles": ["general"],
+      "description": "Tanzanian English female voice"
+    },
+    {
+      "id": "en-US-AIGenerate1Neural",
+      "engine": "azure",
+      "locale": "en-US",
+      "gender": "N",
+      "age_hint": "adult",
+      "accent_tags": ["us", "ai_generated"],
+      "styles": ["general"],
+      "description": "AI-generated US English voice (experimental)"
+    },
+    {
+      "id": "en-US-AIGenerate2Neural",
+      "engine": "azure",
+      "locale": "en-US",
+      "gender": "N",
+      "age_hint": "adult",
+      "accent_tags": ["us", "ai_generated"],
+      "styles": ["general"],
+      "description": "AI-generated US English voice (experimental)"
+    },
+    {
+      "id": "en-US-AmberNeural",
+      "engine": "azure",
+      "locale": "en-US",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["us"],
+      "styles": ["general"],
+      "description": "US English female voice"
+    },
+    {
+      "id": "en-US-AnaNeural",
+      "engine": "azure",
+      "locale": "en-US",
+      "gender": "F",
+      "age_hint": "child",
+      "accent_tags": ["us"],
+      "styles": ["general"],
+      "description": "US English child female voice"
+    },
+    {
+      "id": "en-US-AriaNeural",
+      "engine": "azure",
+      "locale": "en-US",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["us"],
+      "styles": ["narration-professional", "customerservice", "newscast"],
+      "description": "US English female voice, professional narrator"
+    },
+    {
+      "id": "en-US-AshleyNeural",
+      "engine": "azure",
+      "locale": "en-US",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["us"],
+      "styles": ["general"],
+      "description": "US English female voice"
+    },
+    {
+      "id": "en-US-BrandonNeural",
+      "engine": "azure",
+      "locale": "en-US",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["us"],
+      "styles": ["general"],
+      "description": "US English male voice"
+    },
+    {
+      "id": "en-US-ChristopherNeural",
+      "engine": "azure",
+      "locale": "en-US",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["us"],
+      "styles": ["general"],
+      "description": "US English male voice"
+    },
+    {
+      "id": "en-US-CoraNeural",
+      "engine": "azure",
+      "locale": "en-US",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["us"],
+      "styles": ["general"],
+      "description": "US English female voice"
+    },
+    {
+      "id": "en-US-DavisNeural",
+      "engine": "azure",
+      "locale": "en-US",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["us"],
+      "styles": ["chat", "angry", "cheerful"],
+      "description": "US English male voice with expressive range"
+    },
+    {
+      "id": "en-US-ElizabethNeural",
+      "engine": "azure",
+      "locale": "en-US",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["us"],
+      "styles": ["general"],
+      "description": "US English female voice"
+    },
+    {
+      "id": "en-US-EricNeural",
+      "engine": "azure",
+      "locale": "en-US",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["us"],
+      "styles": ["general"],
+      "description": "US English male voice"
+    },
+    {
+      "id": "en-US-GuyNeural",
+      "engine": "azure",
+      "locale": "en-US",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["us"],
+      "styles": ["newscast", "angry", "cheerful"],
+      "description": "US English male voice, newscast quality"
+    },
+    {
+      "id": "en-US-JacobNeural",
+      "engine": "azure",
+      "locale": "en-US",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["us"],
+      "styles": ["general"],
+      "description": "US English male voice"
+    },
+    {
+      "id": "en-US-JaneNeural",
+      "engine": "azure",
+      "locale": "en-US",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["us"],
+      "styles": ["angry", "cheerful", "excited", "friendly", "hopeful", "sad", "shouting", "terrified", "unfriendly", "whispering"],
+      "description": "US English female voice with multiple emotional styles"
+    },
+    {
+      "id": "en-US-JasonNeural",
+      "engine": "azure",
+      "locale": "en-US",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["us"],
+      "styles": ["angry", "cheerful", "excited", "friendly", "hopeful", "sad", "shouting", "terrified", "unfriendly", "whispering"],
+      "description": "US English male voice with multiple emotional styles"
+    },
+    {
+      "id": "en-US-JennyNeural",
+      "engine": "azure",
+      "locale": "en-US",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["us"],
+      "styles": ["assistant", "chat", "customerservice"],
+      "description": "US English female voice, assistant style"
+    },
+    {
+      "id": "en-US-MichelleNeural",
+      "engine": "azure",
+      "locale": "en-US",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["us"],
+      "styles": ["general"],
+      "description": "US English female voice"
+    },
+    {
+      "id": "en-US-MonicaNeural",
+      "engine": "azure",
+      "locale": "en-US",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["us"],
+      "styles": ["general"],
+      "description": "US English female voice"
+    },
+    {
+      "id": "en-US-NancyNeural",
+      "engine": "azure",
+      "locale": "en-US",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["us"],
+      "styles": ["angry", "cheerful", "excited", "friendly", "hopeful", "sad", "shouting", "terrified", "unfriendly", "whispering"],
+      "description": "US English female voice with multiple emotional styles"
+    },
+    {
+      "id": "en-US-RogerNeural",
+      "engine": "azure",
+      "locale": "en-US",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["us"],
+      "styles": ["angry", "cheerful", "excited", "friendly", "hopeful", "sad", "shouting", "terrified", "unfriendly", "whispering"],
+      "description": "US English male voice with multiple emotional styles"
+    },
+    {
+      "id": "en-US-SaraNeural",
+      "engine": "azure",
+      "locale": "en-US",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["us"],
+      "styles": ["angry", "cheerful", "excited", "friendly", "hopeful", "sad", "shouting", "terrified", "unfriendly", "whispering"],
+      "description": "US English female voice with multiple emotional styles"
+    },
+    {
+      "id": "en-US-SteffanNeural",
+      "engine": "azure",
+      "locale": "en-US",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["us"],
+      "styles": ["general"],
+      "description": "US English male voice"
+    },
+    {
+      "id": "en-US-TonyNeural",
+      "engine": "azure",
+      "locale": "en-US",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["us"],
+      "styles": ["angry", "cheerful", "excited", "friendly", "hopeful", "sad", "shouting", "terrified", "unfriendly", "whispering"],
+      "description": "US English male voice with multiple emotional styles"
+    },
+    {
+      "id": "en-ZA-LeahNeural",
+      "engine": "azure",
+      "locale": "en-ZA",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["south_africa"],
+      "styles": ["general"],
+      "description": "South African English female voice"
+    },
+    {
+      "id": "en-ZA-LukeNeural",
+      "engine": "azure",
+      "locale": "en-ZA",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["south_africa"],
+      "styles": ["general"],
+      "description": "South African English male voice"
+    },
+    {
+      "id": "pt-BR-AntonioNeural",
+      "engine": "azure",
+      "locale": "pt-BR",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["brazil"],
+      "styles": ["general"],
+      "description": "Brazilian Portuguese male voice"
+    },
+    {
+      "id": "pt-BR-FranciscaNeural",
+      "engine": "azure",
+      "locale": "pt-BR",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["brazil"],
+      "styles": ["calm"],
+      "description": "Brazilian Portuguese female voice"
+    },
+    {
+      "id": "pt-PT-DuarteNeural",
+      "engine": "azure",
+      "locale": "pt-PT",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["portugal"],
+      "styles": ["general"],
+      "description": "European Portuguese male voice"
+    },
+    {
+      "id": "pt-PT-RaquelNeural",
+      "engine": "azure",
+      "locale": "pt-PT",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["portugal"],
+      "styles": ["general"],
+      "description": "European Portuguese female voice"
+    },
+    {
+      "id": "fr-CA-AntoineNeural",
+      "engine": "azure",
+      "locale": "fr-CA",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["canada", "quebec"],
+      "styles": ["general"],
+      "description": "Canadian French male voice"
+    },
+    {
+      "id": "fr-CA-JeanNeural",
+      "engine": "azure",
+      "locale": "fr-CA",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["canada", "quebec"],
+      "styles": ["general"],
+      "description": "Canadian French male voice"
+    },
+    {
+      "id": "fr-CA-SylvieNeural",
+      "engine": "azure",
+      "locale": "fr-CA",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["canada", "quebec"],
+      "styles": ["general"],
+      "description": "Canadian French female voice"
+    },
+    {
+      "id": "fr-FR-DeniseNeural",
+      "engine": "azure",
+      "locale": "fr-FR",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["france"],
+      "styles": ["general"],
+      "description": "French female voice"
+    },
+    {
+      "id": "fr-FR-EloiseNeural",
+      "engine": "azure",
+      "locale": "fr-FR",
+      "gender": "F",
+      "age_hint": "child",
+      "accent_tags": ["france"],
+      "styles": ["general"],
+      "description": "French child female voice"
+    },
+    {
+      "id": "fr-FR-HenriNeural",
+      "engine": "azure",
+      "locale": "fr-FR",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["france"],
+      "styles": ["general"],
+      "description": "French male voice"
+    },
+    {
+      "id": "de-AT-IngridNeural",
+      "engine": "azure",
+      "locale": "de-AT",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["austria"],
+      "styles": ["general"],
+      "description": "Austrian German female voice"
+    },
+    {
+      "id": "de-AT-JonasNeural",
+      "engine": "azure",
+      "locale": "de-AT",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["austria"],
+      "styles": ["general"],
+      "description": "Austrian German male voice"
+    },
+    {
+      "id": "de-CH-JanNeural",
+      "engine": "azure",
+      "locale": "de-CH",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["switzerland"],
+      "styles": ["general"],
+      "description": "Swiss German male voice"
+    },
+    {
+      "id": "de-CH-LeniNeural",
+      "engine": "azure",
+      "locale": "de-CH",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["switzerland"],
+      "styles": ["general"],
+      "description": "Swiss German female voice"
+    },
+    {
+      "id": "de-DE-AmalaNeural",
+      "engine": "azure",
+      "locale": "de-DE",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["germany"],
+      "styles": ["general"],
+      "description": "German female voice"
+    },
+    {
+      "id": "de-DE-ConradNeural",
+      "engine": "azure",
+      "locale": "de-DE",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["germany"],
+      "styles": ["general"],
+      "description": "German male voice"
+    },
+    {
+      "id": "de-DE-KatjaNeural",
+      "engine": "azure",
+      "locale": "de-DE",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["germany"],
+      "styles": ["general"],
+      "description": "German female voice"
+    },
+    {
+      "id": "de-DE-KillianNeural",
+      "engine": "azure",
+      "locale": "de-DE",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["germany"],
+      "styles": ["general"],
+      "description": "German male voice"
+    },
+    {
+      "id": "it-IT-DiegoNeural",
+      "engine": "azure",
+      "locale": "it-IT",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["italy"],
+      "styles": ["general"],
+      "description": "Italian male voice"
+    },
+    {
+      "id": "it-IT-ElsaNeural",
+      "engine": "azure",
+      "locale": "it-IT",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["italy"],
+      "styles": ["general"],
+      "description": "Italian female voice"
+    },
+    {
+      "id": "it-IT-IsabellaNeural",
+      "engine": "azure",
+      "locale": "it-IT",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["italy"],
+      "styles": ["general"],
+      "description": "Italian female voice"
+    },
+    {
+      "id": "zh-CN-XiaoxiaoNeural",
+      "engine": "azure",
+      "locale": "zh-CN",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["china", "mandarin"],
+      "styles": ["general"],
+      "description": "Chinese Mandarin female voice"
+    },
+    {
+      "id": "zh-CN-YunyangNeural",
+      "engine": "azure",
+      "locale": "zh-CN",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["china", "mandarin"],
+      "styles": ["general"],
+      "description": "Chinese Mandarin male voice"
+    },
+    {
+      "id": "zh-HK-HiuGaaiNeural",
+      "engine": "azure",
+      "locale": "zh-HK",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["hong_kong", "cantonese"],
+      "styles": ["general"],
+      "description": "Hong Kong Cantonese female voice"
+    },
+    {
+      "id": "zh-HK-WanLungNeural",
+      "engine": "azure",
+      "locale": "zh-HK",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["hong_kong", "cantonese"],
+      "styles": ["general"],
+      "description": "Hong Kong Cantonese male voice"
+    },
+    {
+      "id": "zh-TW-HsiaoChenNeural",
+      "engine": "azure",
+      "locale": "zh-TW",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["taiwan", "mandarin"],
+      "styles": ["general"],
+      "description": "Taiwanese Mandarin female voice"
+    },
+    {
+      "id": "zh-TW-YunJheNeural",
+      "engine": "azure",
+      "locale": "zh-TW",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["taiwan", "mandarin"],
+      "styles": ["general"],
+      "description": "Taiwanese Mandarin male voice"
+    },
+    {
+      "id": "ja-JP-KeitaNeural",
+      "engine": "azure",
+      "locale": "ja-JP",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["japan"],
+      "styles": ["general"],
+      "description": "Japanese male voice"
+    },
+    {
+      "id": "ja-JP-NanamiNeural",
+      "engine": "azure",
+      "locale": "ja-JP",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["japan"],
+      "styles": ["general"],
+      "description": "Japanese female voice"
+    },
+    {
+      "id": "ko-KR-InJoonNeural",
+      "engine": "azure",
+      "locale": "ko-KR",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["korea"],
+      "styles": ["general"],
+      "description": "Korean male voice"
+    },
+    {
+      "id": "ko-KR-SunHiNeural",
+      "engine": "azure",
+      "locale": "ko-KR",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["korea"],
+      "styles": ["general"],
+      "description": "Korean female voice"
+    },
+    {
+      "id": "hi-IN-MadhurNeural",
+      "engine": "azure",
+      "locale": "hi-IN",
+      "gender": "M",
+      "age_hint": "adult",
+      "accent_tags": ["india"],
+      "styles": ["general"],
+      "description": "Hindi male voice"
+    },
+    {
+      "id": "hi-IN-SwaraNeural",
+      "engine": "azure",
+      "locale": "hi-IN",
+      "gender": "F",
+      "age_hint": "adult",
+      "accent_tags": ["india"],
+      "styles": ["general"],
+      "description": "Hindi female voice"
+    }
+  ]
+}
