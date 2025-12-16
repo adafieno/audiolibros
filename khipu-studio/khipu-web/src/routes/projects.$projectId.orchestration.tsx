@@ -271,17 +271,9 @@ function OrchestrationPage() {
 
             {selectedChapterId && !plan && !isLoading && (
               <div className="flex items-center justify-center h-full p-6">
-                <div className="text-center">
-                  <p style={{ color: 'var(--text-muted)' }} className="mb-4">
-                    {t('orchestration.noPlanYet', 'No plan exists for this chapter yet.')}
-                  </p>
-                  <Button
-                    onClick={handleGeneratePlan}
-                    variant="success"
-                  >
-                    {t('orchestration.generatePlan', 'Generate Plan')}
-                  </Button>
-                </div>
+                <p style={{ color: 'var(--text-muted)' }} className="text-sm text-center">
+                  {t('orchestration.noPlanYet', 'No plan exists for this chapter yet.')}
+                </p>
               </div>
             )}
 
