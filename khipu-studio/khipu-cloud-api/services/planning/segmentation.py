@@ -1,25 +1,17 @@
 """
 Text segmentation service for breaking down chapter text into manageable chunks.
-Based on Azure TTS limits and delimiter detection.
+Simple segmentation: splits on newline and em-dash (matching desktop app logic).
 """
-import re
 from typing import List, Dict, Any
 
-# Azure TTS limits
+# Azure TTS limits (for reference, not enforced in this simple segmenter)
 AZURE_MAX_KB = 100  # Hard limit in kilobytes
 AZURE_HARD_CAP_MIN = 10 * 60  # 10 minutes in seconds
 AZURE_WPM = 180  # Words per minute
 AZURE_OVERHEAD = 1.15  # 15% overhead for SSML
 
-# Delimiters for segmentation (in order of preference)
-DELIMITERS = [
-    ('EOF', r'\Z'),  # End of file
-    ('para', r'\n\n+'),  # Paragraph break (2+ newlines)
-    ('newline', r'\n'),  # Single newline
-    ('period', r'\.(?:\s|$)'),  # Period followed by space or end
-    ('comma', r',\s'),  # Comma followed by space
-    ('space', r'\s+'),  # Any whitespace
-]
+# Em-dash character
+EM_DASH = "—"
 
 
 def estimate_audio_duration(text: str) -> float:
@@ -31,41 +23,15 @@ def estimate_audio_duration(text: str) -> float:
     return duration * AZURE_OVERHEAD
 
 
-def find_best_delimiter_at_position(text: str, position: int, search_window: int = 200) -> tuple:
+def segment_text(text: str, max_kb: int = AZURE_MAX_KB, split_on_em_dash: bool = True) -> List[Dict[str, Any]]:
     """
-    Find the best delimiter near a target position.
-    Returns (delimiter_name, actual_position, matched_text)
-    """
-    start = max(0, position - search_window)
-    end = min(len(text), position + search_window)
-    search_text = text[start:end]
-    
-    # Try each delimiter type in order of preference
-    for delim_name, delim_pattern in DELIMITERS:
-        if delim_name == 'EOF':
-            if position >= len(text) - 10:  # Near end of text
-                return ('EOF', len(text), '')
-            continue
-        
-        matches = list(re.finditer(delim_pattern, search_text))
-        if matches:
-            # Find the match closest to our target position
-            target_offset = position - start
-            closest_match = min(matches, key=lambda m: abs(m.start() - target_offset))
-            actual_position = start + closest_match.end()
-            return (delim_name, actual_position, closest_match.group())
-    
-    # Fallback: break at position
-    return ('space', position, ' ')
-
-
-def segment_text(text: str, max_kb: int = AZURE_MAX_KB) -> List[Dict[str, Any]]:
-    """
-    Segment text into chunks that fit within Azure TTS limits.
+    Segment text by splitting on newlines and optionally em-dashes.
+    This matches the desktop app's simple_plan_builder.py logic.
     
     Args:
         text: The full chapter text to segment
-        max_kb: Maximum size in kilobytes (default: Azure's 100KB limit)
+        max_kb: Maximum size in kilobytes (not enforced, kept for API compatibility)
+        split_on_em_dash: Whether to split on em-dash characters (default: True)
     
     Returns:
         List of segment dictionaries with structure:
@@ -80,60 +46,63 @@ def segment_text(text: str, max_kb: int = AZURE_MAX_KB) -> List[Dict[str, Any]]:
         }
     """
     segments = []
+    n = len(text)
+    start = 0
+    i = 0
     segment_id = 1
-    current_pos = 0
-    text_length = len(text)
     
-    # Calculate max characters per segment (accounting for encoding)
-    # 1 KB = 1024 bytes, UTF-8 can use up to 4 bytes per char
-    # Use conservative estimate: 1 char ≈ 2 bytes on average
-    max_chars = (max_kb * 1024) // 2
+    def add_segment(start_idx: int, end_idx: int, delim: str):
+        if end_idx > start_idx:  # Only add non-empty segments
+            segment_text = text[start_idx:end_idx]
+            segments.append({
+                'segment_id': segment_id,
+                'start_idx': start_idx,
+                'end_idx': end_idx - 1,  # Make end_idx inclusive for consistency
+                'text': segment_text,
+                'delimiter': delim,
+                'voice': None,
+                'needsRevision': False
+            })
     
-    # Also enforce time limit
-    max_duration = AZURE_HARD_CAP_MIN
+    while i < n:
+        ch = text[i]
+        
+        # Handle \r\n (Windows line ending)
+        if ch == "\r":
+            if i + 1 < n and text[i + 1] == "\n":
+                add_segment(start, i, "newline")
+                segment_id += 1
+                i += 2
+                start = i
+                continue
+            else:
+                add_segment(start, i, "newline")
+                segment_id += 1
+                i += 1
+                start = i
+                continue
+        
+        # Handle \n (Unix line ending)
+        if ch == "\n":
+            add_segment(start, i, "newline")
+            segment_id += 1
+            i += 1
+            start = i
+            continue
+        
+        # Handle em-dash
+        if split_on_em_dash and ch == EM_DASH:
+            add_segment(start, i, "em-dash")
+            segment_id += 1
+            i += 1
+            start = i
+            continue
+        
+        i += 1
     
-    while current_pos < text_length:
-        # Calculate remaining text
-        remaining = text_length - current_pos
-        
-        if remaining <= max_chars:
-            # Last segment - take everything
-            segment_text = text[current_pos:]
-            end_pos = text_length
-            delimiter = 'EOF'
-        else:
-            # Find optimal break point
-            target_pos = current_pos + max_chars
-            
-            # Also check duration constraint
-            test_text = text[current_pos:target_pos]
-            duration = estimate_audio_duration(test_text)
-            
-            if duration > max_duration:
-                # Adjust target based on duration
-                ratio = max_duration / duration
-                target_pos = current_pos + int(max_chars * ratio * 0.9)  # 90% to be safe
-            
-            # Find best delimiter
-            delimiter, break_pos, _ = find_best_delimiter_at_position(text, target_pos)
-            
-            segment_text = text[current_pos:break_pos]
-            end_pos = break_pos
-        
-        # Create segment
-        segment = {
-            'segment_id': segment_id,
-            'start_idx': current_pos,
-            'end_idx': end_pos - 1,  # Inclusive end
-            'text': segment_text,
-            'delimiter': delimiter,
-            'voice': None,
-            'needsRevision': False
-        }
-        
-        segments.append(segment)
-        segment_id += 1
-        current_pos = end_pos
+    # Add final segment if any text remains
+    if start < n:
+        add_segment(start, n, "EOF")
     
     return segments
 
@@ -202,11 +171,18 @@ def split_segment(segments: List[Dict[str, Any]], segment_id: int, split_positio
     if split_position <= 0 or split_position >= len(text):
         raise ValueError("Invalid split position")
     
-    # Calculate absolute position in full text
-    abs_position = segment['start_idx'] + split_position
+    # Find best split point (word boundary)
+    actual_split = split_position
     
-    # Find best delimiter at split point
-    delimiter, actual_split, _ = find_best_delimiter_at_position(text, split_position, search_window=50)
+    # Try to find nearby word boundary
+    if split_position < len(text) and text[split_position] != ' ':
+        # Look backward for space
+        for i in range(split_position, max(0, split_position - 20), -1):
+            if text[i] == ' ':
+                actual_split = i
+                break
+    
+    delimiter = 'space'
     
     # Create two new segments
     first_segment = {

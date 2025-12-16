@@ -39,8 +39,8 @@ async def generate_plan(
     if not chapter:
         raise HTTPException(status_code=404, detail="Chapter not found")
     
-    if not chapter.text:
-        raise HTTPException(status_code=400, detail="Chapter has no text to segment")
+    if not chapter.content:
+        raise HTTPException(status_code=400, detail="Chapter has no content to segment")
     
     # Check if plan already exists
     result = await db.execute(
@@ -50,7 +50,7 @@ async def generate_plan(
     
     # Segment the text
     max_kb = options.maxKB if options.maxKB else 100
-    segments = segment_text(chapter.text, max_kb=max_kb)
+    segments = segment_text(chapter.content, max_kb=max_kb)
     
     if existing_plan:
         # Update existing plan

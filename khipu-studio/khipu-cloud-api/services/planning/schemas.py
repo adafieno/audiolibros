@@ -1,5 +1,5 @@
 """Pydantic schemas for planning service."""
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional, List
 from uuid import UUID

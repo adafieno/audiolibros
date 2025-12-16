@@ -1,9 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { planningApi } from '../api/planning';
 import { getChapters } from '../api/chapters';
+import { charactersApi } from '../lib/api/characters';
 import { Button } from '../components/Button';
 import { Select } from '../components/Select';
 
@@ -59,6 +60,45 @@ function OrchestrationPage() {
   const [filterNoCharacter, setFilterNoCharacter] = useState(false);
   const selectedSegment = plan?.segments.find(s => s.segment_id === selectedSegmentId);
 
+  // Query to fetch characters
+  const { data: characters } = useQuery({
+    queryKey: ['characters', projectId],
+    queryFn: () => charactersApi.getCharacters(projectId),
+  });
+
+  // Mutation to update plan segments
+  const updatePlanMutation = useMutation({
+    mutationFn: async (segments: Array<{
+      segment_id: number;
+      start_idx: number;
+      end_idx: number;
+      delimiter: string;
+      text: string;
+      voice?: string;
+      needsRevision?: boolean;
+    }>) => {
+      if (!selectedChapterId) throw new Error('No chapter selected');
+      return await planningApi.updatePlan(projectId, selectedChapterId, segments);
+    },
+    onSuccess: () => {
+      refetch();
+    },
+  });
+
+  const handleVoiceChange = (segmentId: number, voice: string) => {
+    if (!plan) return;
+    const updatedSegments = plan.segments.map(seg => 
+      seg.segment_id === segmentId ? { ...seg, voice } : seg
+    );
+    updatePlanMutation.mutate(updatedSegments);
+  };
+
+  const handleAssignCharacters = async () => {
+    if (!plan) return;
+    // TODO: Implement LLM-based character assignment
+    console.log('Assign characters clicked - LLM assignment not yet implemented');
+  };
+
   return (
     <div className="p-6">
       {/* Header */}
@@ -93,11 +133,15 @@ function OrchestrationPage() {
                 <option value="">
                   {t('orchestration.chooseChapter', 'Choose a chapter...')}
                 </option>
-                {chaptersData?.items.map((chapter) => (
-                  <option key={chapter.id} value={chapter.id}>
-                    {chapter.title}
-                  </option>
-                ))}
+                {chaptersData?.items.map((chapter) => {
+                  const chapterPlan = plan?.chapter_id === chapter.id ? plan : null;
+                  const hasCompletePlan = chapterPlan?.is_complete;
+                  return (
+                    <option key={chapter.id} value={chapter.id}>
+                      {hasCompletePlan ? '✓ ' : ''}{chapter.title}
+                    </option>
+                  );
+                })}
               </Select>
             </div>
 
@@ -115,7 +159,7 @@ function OrchestrationPage() {
 
             <Button
               size="compact"
-              variant="success"
+              variant="primary"
               onClick={handleGeneratePlan}
               disabled={!selectedChapterId || isGenerating}
             >
@@ -128,31 +172,18 @@ function OrchestrationPage() {
               size="compact"
               variant="primary"
               disabled={!plan || plan.segments.length === 0}
+              onClick={handleAssignCharacters}
             >
               {t('orchestration.assignCharacters', 'Assign Characters')}
             </Button>
-
-            {plan && (
-              <div 
-                className="px-3 py-1 rounded-full text-xs font-medium"
-                style={{ 
-                  background: plan.is_complete ? 'var(--success)' : 'var(--warning)',
-                  color: 'white'
-                }}
-              >
-                {plan.is_complete 
-                  ? `✓ ${t('orchestration.complete', 'Complete')}`
-                  : t('orchestration.incomplete', 'Incomplete')}
-              </div>
-            )}
           </div>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="flex gap-4" style={{ height: 'calc(100vh - 280px)' }}>
-        {/* Left Panel - Segments Table (40% width) */}
-        <div className="flex flex-col overflow-hidden" style={{ flex: '0 0 40%' }}>
+        {/* Left Panel - Segments Table (50% width) */}
+        <div className="flex flex-col overflow-hidden" style={{ flex: '0 0 50%' }}>
           {/* Table Header */}
           <div className="px-4 py-3 border rounded-t-lg" style={{ borderColor: 'var(--border)', background: 'var(--panel)' }}>
             <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
@@ -257,13 +288,18 @@ function OrchestrationPage() {
                         <Select
                           size="compact"
                           value={segment.voice || ''}
+                          onChange={(e) => handleVoiceChange(segment.segment_id, e.target.value)}
                           onClick={(e) => e.stopPropagation()}
                           style={{ width: '100%' }}
                         >
                           <option value="">
                             {t('orchestration.narrator', 'narrator')}
                           </option>
-                          {/* TODO: Load characters */}
+                          {characters?.map((character) => (
+                            <option key={character.id} value={character.name}>
+                              {character.name}
+                            </option>
+                          ))}
                         </Select>
                       </td>
                     </tr>
@@ -272,60 +308,12 @@ function OrchestrationPage() {
               </table>
             )}
           </div>
-
-          {/* Bottom Controls */}
-          {plan && plan.segments.length > 0 && (
-            <div className="px-4 py-3 border-x border-b rounded-b-lg flex items-center gap-2" style={{ borderColor: 'var(--border)', background: 'var(--panel)', marginTop: '-1px' }}>
-              <Button
-                size="compact"
-                variant="secondary"
-                disabled={!selectedSegmentId}
-              >
-                ✏️ {t('orchestration.edit', 'Edit')}
-              </Button>
-              <Button
-                size="compact"
-                variant="secondary"
-                disabled={!selectedSegmentId}
-              >
-                ◀ {t('orchestration.merge', 'Merge')}
-              </Button>
-              <Button
-                size="compact"
-                variant="secondary"
-                disabled={!selectedSegmentId}
-              >
-                {t('orchestration.mergeRight', 'Merge')} ▶
-              </Button>
-              <Button
-                size="compact"
-                variant="danger"
-                disabled={!selectedSegmentId}
-              >
-                {t('orchestration.delete', 'Delete')}
-              </Button>
-              <Button
-                size="compact"
-                variant="secondary"
-              >
-                ↶ {t('orchestration.undo', 'Undo')}
-              </Button>
-              <div className="flex-1" />
-              <Button
-                size="compact"
-                variant="success"
-                disabled={!selectedSegmentId}
-              >
-                {t('orchestration.audition', 'Audition')}
-              </Button>
-            </div>
-          )}
         </div>
 
-        {/* Right Panel - Segment Details (60% width) */}
+        {/* Right Panel - Segment Details (50% width) */}
         <div 
           className="flex flex-col border rounded-lg overflow-hidden"
-          style={{ flex: '0 0 60%', borderColor: 'var(--border)', background: 'var(--panel)' }}
+          style={{ flex: '0 0 50%', borderColor: 'var(--border)', background: 'var(--panel)' }}
         >
           <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
             <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
@@ -353,30 +341,41 @@ function OrchestrationPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <div style={{ color: 'var(--text-muted)' }} className="mb-1">
-                      {t('orchestration.words', 'Words')}
-                    </div>
-                    <div className="font-mono" style={{ color: 'var(--text)' }}>
-                      {selectedSegment.text.split(/\s+/).length}
-                    </div>
+                <div className="flex items-center gap-4 text-sm pb-3 mb-3" style={{ borderBottom: '1px solid var(--border)' }}>
+                  <div className="flex items-center gap-2">
+                    <span style={{ color: 'var(--text-muted)' }}>
+                      💬
+                    </span>
+                    <span className="font-mono" style={{ color: 'var(--text)' }}>
+                      {selectedSegment.text.split(/\s+/).length}/500
+                    </span>
+                    <span style={{ color: 'var(--text-muted)' }} className="text-xs">
+                      words
+                    </span>
                   </div>
-                  <div>
-                    <div style={{ color: 'var(--text-muted)' }} className="mb-1">
-                      {t('orchestration.chars', 'Characters')}
-                    </div>
-                    <div className="font-mono" style={{ color: 'var(--text)' }}>
-                      {selectedSegment.text.length}
-                    </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <span style={{ color: 'var(--text-muted)' }}>
+                      📝
+                    </span>
+                    <span className="font-mono" style={{ color: 'var(--text)' }}>
+                      {selectedSegment.text.length}/2800
+                    </span>
+                    <span style={{ color: 'var(--text-muted)' }} className="text-xs">
+                      chars
+                    </span>
                   </div>
-                  <div>
-                    <div style={{ color: 'var(--text-muted)' }} className="mb-1">
-                      Size (KB)
-                    </div>
-                    <div className="font-mono" style={{ color: 'var(--text)' }}>
-                      ~{((selectedSegment.text.length / 1024) * 2).toFixed(2)}
-                    </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <span style={{ color: 'var(--text-muted)' }}>
+                      💾
+                    </span>
+                    <span className="font-mono" style={{ color: 'var(--text)' }}>
+                      {((selectedSegment.text.length / 1024) * 2).toFixed(1)}/48
+                    </span>
+                    <span style={{ color: 'var(--text-muted)' }} className="text-xs">
+                      KB
+                    </span>
                   </div>
                 </div>
 
@@ -395,6 +394,52 @@ function OrchestrationPage() {
                   >
                     {selectedSegment.text}
                   </div>
+                </div>
+
+                {/* Edit Buttons */}
+                <div className="flex items-center gap-2 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
+                  <Button
+                    size="compact"
+                    variant="secondary"
+                    disabled={!selectedSegmentId}
+                  >
+                    ✏️ {t('orchestration.edit', 'Edit')}
+                  </Button>
+                  <Button
+                    size="compact"
+                    variant="secondary"
+                    disabled={!selectedSegmentId}
+                  >
+                    ◀ {t('orchestration.merge', 'Merge')}
+                  </Button>
+                  <Button
+                    size="compact"
+                    variant="secondary"
+                    disabled={!selectedSegmentId}
+                  >
+                    {t('orchestration.mergeRight', 'Merge')} ▶
+                  </Button>
+                  <Button
+                    size="compact"
+                    variant="danger"
+                    disabled={!selectedSegmentId}
+                  >
+                    {t('orchestration.delete', 'Delete')}
+                  </Button>
+                  <Button
+                    size="compact"
+                    variant="secondary"
+                  >
+                    ↶ {t('orchestration.undo', 'Undo')}
+                  </Button>
+                  <div className="flex-1" />
+                  <Button
+                    size="compact"
+                    variant="primary"
+                    disabled={!selectedSegmentId}
+                  >
+                    ▶ {t('orchestration.audition', 'Audition')}
+                  </Button>
                 </div>
               </div>
             ) : (
