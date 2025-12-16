@@ -295,7 +295,7 @@ function OrchestrationPage() {
                       {t('orchestration.seq', 'seq')}
                     </th>
                     <th className="text-left py-2 px-2 font-medium" style={{ color: 'var(--text-muted)', width: '60px' }}>
-                      {t('orchestration.id', 'ID')}
+                      {t('orchestration.order', '#')}
                     </th>
                     <th className="text-left py-2 px-2 font-medium" style={{ color: 'var(--text-muted)', width: '80px' }}>
                       {t('orchestration.delim', 'delim')}

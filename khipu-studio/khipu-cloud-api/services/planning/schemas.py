@@ -7,7 +7,8 @@ from uuid import UUID
 
 class SegmentSchema(BaseModel):
     """Schema for a text segment."""
-    segment_id: int
+    id: str              # UUID for stable identity
+    order: int           # Sequential ordering: 0, 1, 2, 3...
     start_idx: int
     end_idx: int
     delimiter: str
@@ -15,6 +16,7 @@ class SegmentSchema(BaseModel):
     originalText: Optional[str] = None
     voice: Optional[str] = None
     needsRevision: Optional[bool] = False
+    segment_id: Optional[int] = None  # DEPRECATED: Legacy field for backward compatibility
 
 
 class PlanGenerateOptions(BaseModel):
