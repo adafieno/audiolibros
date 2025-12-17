@@ -17,6 +17,7 @@ from shared.schemas.chapters import (
 )
 from shared.auth import get_current_active_user
 from shared.auth.permissions import Permission, require_project_permission
+from services.actions.action_logger import log_action
 
 router = APIRouter()
 
@@ -207,6 +208,12 @@ async def update_chapter(
     # Update fields
     update_data = chapter_data.model_dump(exclude_unset=True)
     
+    # Capture previous state
+    previous_state = {}
+    for field in update_data.keys():
+        if hasattr(chapter, field):
+            previous_state[field] = getattr(chapter, field)
+    
     # Debug logging for content updates
     if "content" in update_data:
         print(f"[CHAPTER UPDATE] Updating chapter {chapter_id} content")
@@ -235,6 +242,32 @@ async def update_chapter(
     if "content" in update_data:
         print(f"[CHAPTER UPDATE] After commit - content length: {len(chapter.content) if chapter.content else 0}")
         print(f"[CHAPTER UPDATE] After commit first 100 chars: {repr(chapter.content[:100]) if chapter.content else 'None'}")
+    
+    # Check what actually changed
+    actually_changed = {}
+    for field, new_value in update_data.items():
+        old_value = previous_state.get(field)
+        if old_value != new_value:
+            actually_changed[field] = new_value
+    
+    # Only log if something changed
+    if actually_changed:
+        from uuid import UUID
+        action_desc = f"Updated chapter '{chapter.title}': {list(actually_changed.keys())}"
+        await log_action(
+            db=db,
+            user=current_user,
+            project_id=UUID(project_id),
+            action_type="chapter_update",
+            action_description=action_desc,
+            resource_type="chapter",
+            resource_id=UUID(chapter_id),
+            previous_state={k: previous_state[k] for k in actually_changed.keys()},
+            new_state=actually_changed
+        )
+        print(f"[CHAPTER UPDATE] Action logged for undo/redo: {action_desc}")
+    else:
+        print(f"[CHAPTER UPDATE] No actual changes detected, skipping action log")
     
     return chapter
 

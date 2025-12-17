@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { projectsApi } from '../lib/projects';
 import { useAuth } from '../hooks/useAuthHook';
 import { setProjectState } from '../store/project';
+import { UndoRedo } from './UndoRedo';
 import type { ReactNode } from 'react';
 
 const STRIP_W = 88;
@@ -179,7 +180,14 @@ export function ProjectLayout({ children }: { children: ReactNode }) {
             <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)' }}>{t('app.title')}</div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t('app.subtitle')}</div>
           </div>
+          {/* Undo/Redo Controls - right after app title */}
+          {projectId ? (
+            <UndoRedo projectId={projectId} />
+          ) : (
+            <div style={{ color: 'var(--text-muted)', fontSize: 12, marginLeft: 24 }}>No project</div>
+          )}
         </div>
+        
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{user?.email}</div>
           <button

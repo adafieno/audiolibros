@@ -280,6 +280,17 @@ async def update_project(
         if any(field in update_data for field in content_fields):
             project.status = 'in_progress'
     
+    # Capture previous state for undo/redo
+    previous_state = {}
+    for field in update_data.keys():
+        if hasattr(project, field):
+            value = getattr(project, field)
+            # Convert to serializable format
+            if hasattr(value, '__dict__'):
+                previous_state[field] = value.__dict__
+            else:
+                previous_state[field] = value
+    
     # Update fields
     for field, value in update_data.items():
         setattr(project, field, value)
@@ -289,6 +300,59 @@ async def update_project(
     
     await db.commit()
     await db.refresh(project)
+    
+    # Log action for undo/redo ONLY if values actually changed
+    from services.actions.action_logger import log_action
+    actually_changed = {}
+    for field, new_value in update_data.items():
+        old_value = previous_state.get(field)
+        
+        # Normalize values for comparison (handle empty strings, empty lists, None, etc.)
+        def normalize_value(v):
+            if v == "" or v == [] or v == {}:
+                return None
+            return v
+        
+        old_normalized = normalize_value(old_value)
+        new_normalized = normalize_value(new_value)
+        
+        # Compare normalized values
+        if old_normalized != new_normalized:
+            actually_changed[field] = new_value
+            logger.info(f"[UPDATE PROJECT] Field '{field}' changed: {repr(old_value)} -> {repr(new_value)}")
+        else:
+            logger.info(f"[UPDATE PROJECT] Field '{field}' unchanged (both are {repr(old_normalized)})")
+    
+    # Only log if something actually changed
+    if actually_changed:
+        # Build action description
+        changed_fields = list(actually_changed.keys())
+        if len(changed_fields) == 1:
+            action_desc = f"Updated {changed_fields[0]}"
+        elif len(changed_fields) <= 3:
+            action_desc = f"Updated {', '.join(changed_fields)}"
+        else:
+            action_desc = f"Updated {len(changed_fields)} project properties"
+        
+        try:
+            await log_action(
+                db=db,
+                user=current_user,
+                project_id=project.id,
+                action_type="project_update",
+                action_description=action_desc,
+                resource_type="project",
+                resource_id=project.id,
+                previous_state={k: previous_state[k] for k in actually_changed.keys()},
+                new_state=actually_changed
+            )
+            await db.commit()
+            logger.info(f"[UPDATE PROJECT] Action logged for undo/redo: {action_desc}")
+        except Exception as log_error:
+            logger.warning(f"Failed to log project update action: {log_error}")
+            # Don't fail the update if logging fails
+    else:
+        logger.info(f"[UPDATE PROJECT] No actual changes detected, skipping action log")
     
     # DEBUG: Log after commit
     logger.info(f"[UPDATE PROJECT] After commit/refresh, project narrators: {project.narrators}")

@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from shared.db.database import get_db
 from shared.models import Project
 from shared.auth.dependencies import get_current_user
+from services.actions.action_logger import log_action
 from .schemas import CharacterCreateRequest, CharacterUpdateRequest, CharacterResponse
 
 logger = logging.getLogger(__name__)
@@ -163,8 +164,14 @@ async def update_character(
     if character is None:
         raise HTTPException(status_code=404, detail="Character not found")
     
-    # Update fields
+    # Capture previous state
+    previous_state = {}
     update_data = request.model_dump(exclude_unset=True)
+    for field in update_data.keys():
+        if field in character:
+            previous_state[field] = character[field]
+    
+    # Update fields
     for field, value in update_data.items():
         if field == "traits" and value is not None:
             character[field] = value.model_dump() if hasattr(value, "model_dump") else value
@@ -183,6 +190,33 @@ async def update_character(
     
     # Save
     await db.commit()
+    
+    # Check what actually changed
+    actually_changed = {}
+    for field, new_value in update_data.items():
+        old_value = previous_state.get(field)
+        # Compare values (handle nested dicts for traits and voiceAssignment)
+        if old_value != new_value:
+            actually_changed[field] = new_value
+    
+    # Only log if something changed
+    if actually_changed:
+        from uuid import UUID
+        action_desc = f"Updated character '{character['name']}': {list(actually_changed.keys())}"
+        await log_action(
+            db=db,
+            user=current_user,
+            project_id=UUID(project_id),
+            action_type="character_update",
+            action_description=action_desc,
+            resource_type="character",
+            resource_id=UUID(character_id),
+            previous_state={k: previous_state[k] for k in actually_changed.keys()},
+            new_state=actually_changed
+        )
+        logger.info(f"Action logged for undo/redo: {action_desc}")
+    else:
+        logger.info(f"No actual changes detected for character {character_id}, skipping action log")
     
     logger.info(f"✅ Updated character {character_id} for project {project_id}")
     

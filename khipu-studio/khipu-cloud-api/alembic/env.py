@@ -15,7 +15,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 # Import Base and all models
 from shared.db.database import Base
-from shared.models import Tenant, User, Project, ProjectMember, Chapter
+from shared.models import Tenant, User, Project, ProjectMember, Chapter, ActionHistory
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

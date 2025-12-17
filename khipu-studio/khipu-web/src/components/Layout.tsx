@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { projectsApi } from '../lib/projects';
 import { getChapters } from '../api/chapters';
 import { setProjectState, useProjectState, isStepAvailable, isStepCompleted } from '../store/project';
+import { UndoRedo } from './UndoRedo';
 import type { ReactNode } from 'react';
 
 interface LayoutProps {
@@ -129,6 +130,8 @@ export function Layout({ children }: LayoutProps) {
           </div>
         </div>
         <div className="flex items-center gap-4">
+          {/* Undo/Redo Controls */}
+          {projectId && <UndoRedo projectId={projectId} />}
           <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
             {user?.email}
           </div>

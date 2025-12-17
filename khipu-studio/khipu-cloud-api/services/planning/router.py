@@ -269,11 +269,41 @@ async def assign_characters_stream(
             
             logger.info(f"SSE: Updating database with {len(updated_segments)} segments...")
             
+            # Store previous state for undo
+            previous_segments = plan.segments.copy() if plan.segments else []
+            
+            # Check if segments actually changed
+            segments_changed = previous_segments != updated_segments
+            
             # Update plan
             plan.segments = updated_segments
             attributes.flag_modified(plan, 'segments')
             await db.commit()
             await db.refresh(plan)
+            
+            # Log the action for undo/redo ONLY if segments actually changed
+            if segments_changed:
+                from services.actions.action_logger import log_chapter_plan_update
+                try:
+                    await log_chapter_plan_update(
+                        db=db,
+                        user=current_user,
+                        project_id=project_id,
+                        chapter_id=chapter_id,
+                        plan_id=plan.id,
+                        action_description=f"Assigned characters to {len(updated_segments)} segments",
+                        previous_segments=previous_segments,
+                        new_segments=updated_segments,
+                        previous_complete=plan.is_complete,
+                        new_complete=plan.is_complete
+                    )
+                    await db.commit()
+                    logger.info(f"SSE: Action logged for undo/redo")
+                except Exception as log_error:
+                    logger.warning(f"Failed to log action: {log_error}")
+                    # Don't fail the operation if logging fails
+            else:
+                logger.info(f"SSE: No changes detected, skipping action log")
             
             # Send completion
             logger.info(f"SSE: Sending completion message")

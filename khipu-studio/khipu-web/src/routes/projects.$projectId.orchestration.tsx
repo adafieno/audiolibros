@@ -196,13 +196,14 @@ function OrchestrationPage() {
 
   const [isAuditioning, setIsAuditioning] = useState(false);
   
-  const handleAudition = async () => {
-    if (!selectedSegment || isAuditioning) return;
+  const handleAudition = async (segmentToPlay?: typeof selectedSegment) => {
+    const segment = segmentToPlay || selectedSegment;
+    if (!segment || isAuditioning) return;
     
     setIsAuditioning(true);
     try {
       // Get the character for the segment's voice
-      const character = characters?.find(c => c.name === selectedSegment.voice);
+      const character = characters?.find(c => c.name === segment.voice);
       
       // Use the voice from character's assignment, or default to a narrator voice
       const voiceId = character?.voiceAssignment?.voiceId || 'es-MX-DaliaNeural';
@@ -211,7 +212,7 @@ function OrchestrationPage() {
       const audioBlob = await voicesApi.auditionVoice(
         projectId,
         voiceId,
-        selectedSegment.text,
+        segment.text,
         character?.voiceAssignment?.rate_pct,
         character?.voiceAssignment?.pitch_pct
       );
@@ -366,7 +367,7 @@ function OrchestrationPage() {
                 <thead style={{ position: 'sticky', top: 0, background: 'var(--panel)', zIndex: 1 }}>
                   <tr style={{ borderBottom: `1px solid var(--border)` }}>
                     <th className="text-left py-2 px-2 font-medium" style={{ color: 'var(--text-muted)', width: '40px' }}>
-                      {t('orchestration.seq', 'seq')}
+                      {/* Play/Audition column */}
                     </th>
                     <th className="text-left py-2 px-2 font-medium" style={{ color: 'var(--text-muted)', width: '60px' }}>
                       {t('orchestration.order', '#')}
@@ -401,8 +402,20 @@ function OrchestrationPage() {
                     >
                       <td className="py-2 px-2">
                         <button
-                          className="w-6 h-6 flex items-center justify-center rounded"
-                          style={{ background: 'transparent', color: 'var(--text-muted)' }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedSegmentId(segment.id);
+                            handleAudition(segment);
+                          }}
+                          disabled={!segment.voice || isAuditioning}
+                          className="w-6 h-6 flex items-center justify-center rounded hover:bg-opacity-20 transition-colors"
+                          style={{ 
+                            background: 'transparent', 
+                            color: segment.voice && !isAuditioning ? 'var(--text)' : 'var(--text-muted)',
+                            cursor: segment.voice && !isAuditioning ? 'pointer' : 'not-allowed',
+                            opacity: segment.voice && !isAuditioning ? 1 : 0.5
+                          }}
+                          title={segment.voice ? t('orchestration.audition', 'Play audition') : t('orchestration.assignVoiceFirst', 'Assign a voice first')}
                         >
                           ▶
                         </button>
