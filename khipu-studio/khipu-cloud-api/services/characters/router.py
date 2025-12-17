@@ -308,12 +308,33 @@ async def detect_characters(
     api_key = None
     model = "gpt-4o-mini"  # Default model
     
+    # Get LLM configuration
+    api_key = None
+    model = "gpt-4o-mini"  # Default model
+    engine_name = "openai"  # Default engine
+    
     if project.settings:
-        creds = project.settings.get("creds", {}).get("llm", {}).get("openai", {})
-        api_key = creds.get("apiKey")
         llm_settings = project.settings.get("llm", {})
         llm_engine = llm_settings.get("engine", {})
+        engine_name = llm_engine.get("name", "openai")
         model = llm_engine.get("model", model)
+        
+        creds = project.settings.get("creds", {}).get("llm", {})
+        
+        if engine_name == "azure-openai":
+            azure_creds = creds.get("azure", {})
+            api_key = azure_creds.get("apiKey")
+            endpoint = azure_creds.get("endpoint")
+            api_version = azure_creds.get("apiVersion", "2024-10-21")
+            
+            if not api_key or not endpoint:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Azure OpenAI credentials not configured. Please add apiKey and endpoint to project settings at creds.llm.azure"
+                )
+        else:
+            openai_creds = creds.get("openai", {})
+            api_key = openai_creds.get("apiKey")
     
     if not api_key:
         # Fall back to environment variable
@@ -341,7 +362,7 @@ async def detect_characters(
             detail="No chapters found. Please upload manuscript first."
         )
     
-    logger.info(f"Found {len(chapters)} chapters to analyze with LLM")
+    logger.info(f"Found {len(chapters)} chapters to analyze with LLM (engine: {engine_name})")
     
     # Convert chapters to dict format for detection
     chapters_data = [
@@ -355,7 +376,21 @@ async def detect_characters(
     
     # Run LLM-based detection
     from services.characters.detection import detect_characters_from_chapters
-    detected_characters = await detect_characters_from_chapters(chapters_data, api_key, model)
+    
+    # Prepare parameters for detection
+    detection_kwargs = {
+        "chapters": chapters_data,
+        "api_key": api_key,
+        "model": model,
+        "engine_name": engine_name
+    }
+    
+    # Add Azure-specific parameters if using Azure OpenAI
+    if engine_name == "azure-openai":
+        detection_kwargs["azure_endpoint"] = endpoint
+        detection_kwargs["azure_api_version"] = api_version
+    
+    detected_characters = await detect_characters_from_chapters(**detection_kwargs)
     
     logger.info(f"LLM detection complete: {len(detected_characters)} characters found")
     
@@ -412,16 +447,29 @@ async def assign_voices_to_characters(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     
-    # Get OpenAI API key from project settings (same structure as llm_client.py)
+    # Get LLM configuration
     api_key = None
     model = "gpt-4o-mini"
+    engine_name = "openai"
+    endpoint = None
+    api_version = "2024-10-21"
     
     if project.settings:
-        creds = project.settings.get("creds", {}).get("llm", {}).get("openai", {})
-        api_key = creds.get("apiKey")
         llm_settings = project.settings.get("llm", {})
         llm_engine = llm_settings.get("engine", {})
+        engine_name = llm_engine.get("name", "openai")
         model = llm_engine.get("model", model)
+        
+        creds = project.settings.get("creds", {}).get("llm", {})
+        
+        if engine_name == "azure-openai":
+            azure_creds = creds.get("azure", {})
+            api_key = azure_creds.get("apiKey")
+            endpoint = azure_creds.get("endpoint")
+            api_version = azure_creds.get("apiVersion", "2024-10-21")
+        else:
+            openai_creds = creds.get("openai", {})
+            api_key = openai_creds.get("apiKey")
     
     if not api_key:
         api_key = os.environ.get("OPENAI_API_KEY")
@@ -502,12 +550,22 @@ async def assign_voices_to_characters(
     
     # Use LLM to assign voices
     from services.characters.voice_assignment import assign_voices_with_llm
-    assigned_characters = await assign_voices_with_llm(
-        characters, 
-        available_voices, 
-        api_key, 
-        model
-    )
+    
+    # Prepare parameters for voice assignment
+    assignment_kwargs = {
+        "characters": characters,
+        "available_voices": available_voices,
+        "api_key": api_key,
+        "model": model,
+        "engine_name": engine_name
+    }
+    
+    # Add Azure-specific parameters if using Azure OpenAI
+    if engine_name == "azure-openai":
+        assignment_kwargs["azure_endpoint"] = endpoint
+        assignment_kwargs["azure_api_version"] = api_version
+    
+    assigned_characters = await assign_voices_with_llm(**assignment_kwargs)
     
     # Update project
     project.settings["characters"] = assigned_characters

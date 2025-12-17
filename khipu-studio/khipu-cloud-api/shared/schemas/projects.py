@@ -40,6 +40,9 @@ class ProjectUpdate(BaseModel):
     status: Optional[str] = None
     settings: Optional[Dict[str, Any]] = None
     workflow_completed: Optional[Dict[str, Any]] = None
+    
+    # Note: Blob storage settings are stored in the settings JSON field with structure:
+    # settings.creds.storage.azure = { accountName, accessKey, containerName, endpoint }
 
 
 class ProjectResponse(ProjectBase):

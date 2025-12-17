@@ -2,8 +2,8 @@
 Character detection service - uses LLM to analyze manuscript and extract characters
 """
 import logging
-from typing import Dict, List
-from openai import AsyncOpenAI
+from typing import Dict, List, Optional
+from openai import AsyncOpenAI, AsyncAzureOpenAI
 
 logger = logging.getLogger(__name__)
 
@@ -41,27 +41,48 @@ IMPORTANT FOR AUDIOBOOKS:
 TEXT TO ANALYZE:"""
 
 
-async def detect_characters_from_chapters(chapters: List[Dict], api_key: str, model: str = "gpt-4o-mini") -> List[Dict]:
+async def detect_characters_from_chapters(
+    chapters: List[Dict], 
+    api_key: str, 
+    model: str = "gpt-4o-mini",
+    engine_name: str = "openai",
+    azure_endpoint: Optional[str] = None,
+    azure_api_version: str = "2024-10-21"
+) -> List[Dict]:
     """
     Detect characters from manuscript chapters using LLM analysis.
     
     Args:
         chapters: List of chapter dictionaries with 'content' field
-        api_key: OpenAI API key
+        api_key: OpenAI or Azure OpenAI API key
         model: LLM model to use
+        engine_name: "openai" or "azure-openai"
+        azure_endpoint: Azure OpenAI endpoint (required if engine_name is "azure-openai")
+        azure_api_version: Azure OpenAI API version
         
     Returns:
         List of detected character dictionaries
     """
     if not api_key:
-        raise ValueError("OpenAI API key not provided")
+        raise ValueError("API key not provided")
     
-    logger.info(f"Starting LLM-based character detection from {len(chapters)} chapters")
+    logger.info(f"Starting LLM-based character detection from {len(chapters)} chapters (engine: {engine_name})")
     
-    # Initialize OpenAI async client
+    # Initialize appropriate client
     import httpx
     http_client = httpx.AsyncClient(timeout=60.0)
-    client = AsyncOpenAI(api_key=api_key, http_client=http_client)
+    
+    if engine_name == "azure-openai":
+        if not azure_endpoint:
+            raise ValueError("Azure endpoint required for Azure OpenAI")
+        client = AsyncAzureOpenAI(
+            api_key=api_key,
+            azure_endpoint=azure_endpoint,
+            api_version=azure_api_version,
+            http_client=http_client
+        )
+    else:
+        client = AsyncOpenAI(api_key=api_key, http_client=http_client)
     
     # Track character appearances across chapters
     character_appearances = {}

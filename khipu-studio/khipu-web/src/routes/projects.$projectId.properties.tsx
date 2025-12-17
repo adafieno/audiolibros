@@ -122,6 +122,19 @@ type ProjectSettings = {
         apiKey?: string;
         baseUrl?: string;
       };
+      azure?: {
+        apiKey?: string;
+        endpoint?: string;
+        apiVersion?: string;
+      };
+    };
+    storage?: {
+      azure?: {
+        accountName?: string;
+        accessKey?: string;
+        containerName?: string;
+        endpoint?: string;
+      };
     };
   };
 };
@@ -568,6 +581,47 @@ function ProjectPropertiesPage() {
                 </div>
               </div>
             )}
+            
+            {/* Azure OpenAI Credentials */}
+            {settings.llm?.engine?.name === 'azure-openai' && (
+              <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
+                <h4 className="text-base font-semibold mb-3" style={{ color: 'var(--text)' }}>
+                  {t('project.azureOpenaiCredentials', 'Azure OpenAI Credentials')}
+                </h4>
+                <div className="space-y-3">
+                  <PasswordField
+                    label={t('project.azureOpenaiApiKey', 'Azure OpenAI API Key')}
+                    value={settings.creds?.llm?.azure?.apiKey || ''}
+                    onChange={(value) => updateSettings(['creds', 'llm', 'azure', 'apiKey'], value)}
+                    placeholder="••••••••"
+                  />
+                  <label>
+                    <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
+                      {t('project.azureOpenaiEndpoint', 'Azure OpenAI Endpoint')}
+                    </div>
+                    <TextInput
+                      type="text"
+                      value={settings.creds?.llm?.azure?.endpoint || ''}
+                      onChange={(e) => updateSettings(['creds', 'llm', 'azure', 'endpoint'], e.target.value)}
+                      style={{ width: '100%' }}
+                      placeholder="https://your-resource.openai.azure.com"
+                    />
+                  </label>
+                  <label>
+                    <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
+                      {t('project.azureOpenaiApiVersion', 'API Version (optional)')}
+                    </div>
+                    <TextInput
+                      type="text"
+                      value={settings.creds?.llm?.azure?.apiVersion || ''}
+                      onChange={(e) => updateSettings(['creds', 'llm', 'azure', 'apiVersion'], e.target.value)}
+                      style={{ width: '100%' }}
+                      placeholder="2024-10-21"
+                    />
+                  </label>
+                </div>
+              </div>
+            )}
           </section>
 
           {/* TTS Engine */}
@@ -634,6 +688,60 @@ function ProjectPropertiesPage() {
                 </div>
               </div>
             )}
+          </section>
+
+          {/* Azure Blob Storage Configuration */}
+          <section>
+            <h3 className="text-lg font-semibold mb-3" style={{ color: 'var(--text)' }}>
+              {t('project.azureBlobStorage', 'Azure Blob Storage')}
+            </h3>
+            <p className="text-sm mb-3" style={{ color: 'var(--text-muted)' }}>
+              {t('project.blobStorageInfo', 'Configure Azure Blob Storage for voice caching and audio file storage.')}
+            </p>
+            <div className="space-y-3">
+              <label>
+                <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
+                  {t('project.azureStorageAccountName', 'Storage Account Name')}
+                </div>
+                <TextInput
+                  type="text"
+                  value={settings.creds?.storage?.azure?.accountName || ''}
+                  onChange={(e) => updateSettings(['creds', 'storage', 'azure', 'accountName'], e.target.value)}
+                  style={{ width: '100%' }}
+                  placeholder="mystorageaccount"
+                />
+              </label>
+              <PasswordField
+                label={t('project.azureStorageAccessKey', 'Storage Access Key')}
+                value={settings.creds?.storage?.azure?.accessKey || ''}
+                onChange={(value) => updateSettings(['creds', 'storage', 'azure', 'accessKey'], value)}
+                placeholder="••••••••"
+              />
+              <label>
+                <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
+                  {t('project.azureStorageContainerName', 'Container Name')}
+                </div>
+                <TextInput
+                  type="text"
+                  value={settings.creds?.storage?.azure?.containerName || ''}
+                  onChange={(e) => updateSettings(['creds', 'storage', 'azure', 'containerName'], e.target.value)}
+                  style={{ width: '100%' }}
+                  placeholder="audio-cache"
+                />
+              </label>
+              <label>
+                <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
+                  {t('project.azureStorageEndpoint', 'Endpoint (optional)')}
+                </div>
+                <TextInput
+                  type="text"
+                  value={settings.creds?.storage?.azure?.endpoint || ''}
+                  onChange={(e) => updateSettings(['creds', 'storage', 'azure', 'endpoint'], e.target.value)}
+                  style={{ width: '100%' }}
+                  placeholder="https://mystorageaccount.blob.core.windows.net"
+                />
+              </label>
+            </div>
           </section>
 
         </div>

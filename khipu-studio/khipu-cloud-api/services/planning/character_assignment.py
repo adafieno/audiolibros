@@ -74,7 +74,7 @@ async def assign_characters_with_llm(
         Updated segments list with character assignments
     """
     try:
-        from openai import AsyncOpenAI
+        from openai import AsyncOpenAI, AsyncAzureOpenAI
     except ImportError:
         logger.error("OpenAI library not installed")
         raise HTTPException(
@@ -82,31 +82,63 @@ async def assign_characters_with_llm(
             detail="OpenAI library not installed. Install with: pip install openai"
         )
     
-    # Get OpenAI configuration
+    # Get LLM configuration
     api_key = None
     model = "gpt-4o-mini"  # Default model
+    engine_name = "openai"  # Default engine
     
     if project_settings:
-        creds = project_settings.get("creds", {}).get("llm", {}).get("openai", {})
-        api_key = creds.get("apiKey")
         llm_settings = project_settings.get("llm", {})
         llm_engine = llm_settings.get("engine", {})
+        engine_name = llm_engine.get("name", "openai")
         model = llm_engine.get("model", model)
-    
-    # Fallback to environment variable
-    if not api_key:
+        
+        creds = project_settings.get("creds", {}).get("llm", {})
+        
+        if engine_name == "azure-openai":
+            azure_creds = creds.get("azure", {})
+            api_key = azure_creds.get("apiKey")
+            endpoint = azure_creds.get("endpoint")
+            api_version = azure_creds.get("apiVersion", "2024-10-21")
+            
+            if not api_key or not endpoint:
+                logger.error("Azure OpenAI credentials not configured")
+                raise Exception(
+                    "Azure OpenAI credentials not configured. Please add apiKey and endpoint to project settings at creds.llm.azure"
+                )
+            
+            client = AsyncAzureOpenAI(
+                api_key=api_key,
+                azure_endpoint=endpoint,
+                api_version=api_version
+            )
+        else:
+            openai_creds = creds.get("openai", {})
+            api_key = openai_creds.get("apiKey")
+            
+            # Fallback to environment variable for regular OpenAI
+            if not api_key:
+                api_key = os.environ.get("OPENAI_API_KEY")
+            
+            if not api_key:
+                logger.error("OpenAI API key not configured")
+                raise Exception(
+                    "OpenAI API key not configured. Please add it to project settings at creds.llm.openai.apiKey"
+                )
+            
+            client = AsyncOpenAI(api_key=api_key)
+    else:
+        # No project settings - try environment variable
         api_key = os.environ.get("OPENAI_API_KEY")
-    
-    if not api_key:
-        logger.error("OpenAI API key not configured")
-        raise Exception(
-            "OpenAI API key not configured. Please add it to project settings at creds.llm.openai.apiKey"
-        )
-    
-    client = AsyncOpenAI(api_key=api_key)
+        if not api_key:
+            logger.error("OpenAI API key not configured")
+            raise Exception(
+                "OpenAI API key not configured. Please add it to project settings or environment variable"
+            )
+        client = AsyncOpenAI(api_key=api_key)
     
     logger.info(f"🤖 Starting LLM character assignment for {len(segments)} segments")
-    logger.info(f"📋 Using model: {model}")
+    logger.info(f"📋 Using engine: {engine_name}, model: {model}")
     logger.info(f"👥 Available characters: {available_characters}")
     
     # Prepare segments for LLM (use 'order' for sequential reference, keep 'id' for identity)

@@ -5,7 +5,7 @@ Minimal wrapper around OpenAI chat completions so the router stays lean.
 from __future__ import annotations
 from typing import Dict, Any, Optional, Tuple
 
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, AsyncAzureOpenAI
 import httpx  # noqa: F401 (version introspection in caller)
 import pkg_resources  # noqa: F401
 import re
@@ -21,15 +21,29 @@ async def fetch_ipa(word: str, language: str, settings: Dict[str, Any]) -> Tuple
 
     Returns (ipa, error_message, error_code).
     """
-    creds = settings.get("creds", {}).get("llm", {}).get("openai", {}) if isinstance(settings, dict) else {}
-    api_key = creds.get("apiKey")
-    base_url = creds.get("baseUrl")
     llm_settings = settings.get("llm", {}) if isinstance(settings, dict) else {}
     llm_engine = llm_settings.get("engine", {}) if isinstance(llm_settings, dict) else {}
+    engine_name = llm_engine.get("name", "openai")
     model = llm_engine.get("model", "gpt-4o")
 
-    if not api_key:
-        return None, "OpenAI API key missing in project settings (creds.llm.openai.apiKey).", "MissingOpenAIKey"
+    # Get credentials based on engine type
+    creds = settings.get("creds", {}).get("llm", {}) if isinstance(settings, dict) else {}
+    
+    if engine_name == "azure-openai":
+        azure_creds = creds.get("azure", {})
+        api_key = azure_creds.get("apiKey")
+        endpoint = azure_creds.get("endpoint")
+        api_version = azure_creds.get("apiVersion", "2024-10-21")
+        
+        if not api_key or not endpoint:
+            return None, "Azure OpenAI credentials missing (creds.llm.azure.apiKey and endpoint required).", "MissingAzureOpenAIKey"
+    else:
+        openai_creds = creds.get("openai", {})
+        api_key = openai_creds.get("apiKey")
+        base_url = openai_creds.get("baseUrl")
+        
+        if not api_key:
+            return None, "OpenAI API key missing in project settings (creds.llm.openai.apiKey).", "MissingOpenAIKey"
 
     system_message = (
         "You are a concise expert phonetics assistant. Given a single word "
@@ -46,15 +60,23 @@ async def fetch_ipa(word: str, language: str, settings: Dict[str, Any]) -> Tuple
         {"role": "user", "content": user_message},
     ]
 
-    # Workaround: OpenAI SDK 1.54.4 passes 'proxies' to httpx, but httpx 0.26.0 still accepts it
-    # Explicitly create an httpx client without proxies to avoid any SDK auto-detection issues
+    # Create HTTP client
     import httpx as _httpx
     http_client = _httpx.AsyncClient(timeout=60.0)
     
-    client_kwargs = {"api_key": api_key, "http_client": http_client}
-    if base_url:
-        client_kwargs["base_url"] = base_url
-    client = AsyncOpenAI(**client_kwargs)
+    # Create appropriate client based on engine
+    if engine_name == "azure-openai":
+        client = AsyncAzureOpenAI(
+            api_key=api_key,
+            azure_endpoint=endpoint,
+            api_version=api_version,
+            http_client=http_client
+        )
+    else:
+        client_kwargs = {"api_key": api_key, "http_client": http_client}
+        if base_url:
+            client_kwargs["base_url"] = base_url
+        client = AsyncOpenAI(**client_kwargs)
 
     try:
         resp = await client.chat.completions.create(

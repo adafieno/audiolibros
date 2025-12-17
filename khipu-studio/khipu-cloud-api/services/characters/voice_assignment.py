@@ -4,8 +4,8 @@ Voice assignment service - uses LLM to match characters to voices
 import os
 import json
 import logging
-from typing import Dict, List
-from openai import AsyncOpenAI
+from typing import Dict, List, Optional
+from openai import AsyncOpenAI, AsyncAzureOpenAI
 
 logger = logging.getLogger(__name__)
 
@@ -149,7 +149,10 @@ async def assign_voices_with_llm(
     characters: List[Dict],
     available_voices: List[Dict],
     api_key: str,
-    model: str = "gpt-4o-mini"
+    model: str = "gpt-4o-mini",
+    engine_name: str = "openai",
+    azure_endpoint: Optional[str] = None,
+    azure_api_version: str = "2024-10-21"
 ) -> List[Dict]:
     """
     Use LLM to assign voices to characters based on traits.
@@ -157,24 +160,38 @@ async def assign_voices_with_llm(
     Args:
         characters: List of character dictionaries
         available_voices: List of available voice dictionaries
-        api_key: OpenAI API key
+        api_key: OpenAI or Azure OpenAI API key
         model: LLM model to use
+        engine_name: "openai" or "azure-openai"
+        azure_endpoint: Azure OpenAI endpoint (required if engine_name is "azure-openai")
+        azure_api_version: Azure OpenAI API version
         
     Returns:
         Updated characters list with voice assignments
     """
     if not api_key:
-        raise ValueError("OpenAI API key not provided")
+        raise ValueError("API key not provided")
     
     if not available_voices:
         raise ValueError("No voices available for assignment")
     
-    logger.info(f"Starting LLM-based voice assignment for {len(characters)} characters")
+    logger.info(f"Starting LLM-based voice assignment for {len(characters)} characters (engine: {engine_name})")
     
-    # Initialize OpenAI async client
+    # Initialize appropriate client
     import httpx
     http_client = httpx.AsyncClient(timeout=60.0)
-    client = AsyncOpenAI(api_key=api_key, http_client=http_client)
+    
+    if engine_name == "azure-openai":
+        if not azure_endpoint:
+            raise ValueError("Azure endpoint required for Azure OpenAI")
+        client = AsyncAzureOpenAI(
+            api_key=api_key,
+            azure_endpoint=azure_endpoint,
+            api_version=azure_api_version,
+            http_client=http_client
+        )
+    else:
+        client = AsyncOpenAI(api_key=api_key, http_client=http_client)
     
     # Format data for prompt
     voices_desc = format_voices_for_prompt(available_voices)
