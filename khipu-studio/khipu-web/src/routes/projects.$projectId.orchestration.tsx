@@ -580,14 +580,9 @@ function OrchestrationPage() {
                   >
                     {t('orchestration.delete', 'Delete')}
                   </Button>
-                  <Button
-                    variant="secondary"
-                  >
-                    ↶ {t('orchestration.undo', 'Undo')}
-                  </Button>
                   <div className="flex-1" />
                   <Button
-                    variant="primary"
+                    variant="secondary"
                     disabled={!selectedSegmentId || isAuditioning}
                     onClick={handleAudition}
                   >
