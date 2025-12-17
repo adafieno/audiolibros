@@ -7,8 +7,6 @@ from sqlalchemy.orm import attributes
 from uuid import UUID
 import logging
 import json
-import asyncio
-
 from shared.db.database import get_db
 from shared.models import User, ChapterPlan, Chapter, Project
 from shared.auth import get_current_active_user

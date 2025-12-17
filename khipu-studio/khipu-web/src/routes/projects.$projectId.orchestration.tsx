@@ -23,6 +23,8 @@ function OrchestrationPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState('');
   const [assignmentProgress, setAssignmentProgress] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedText, setEditedText] = useState('');
 
   // Query to fetch chapters
   const { data: chaptersData } = useQuery({
@@ -550,41 +552,116 @@ function OrchestrationPage() {
                       maxHeight: 'none'
                     }}
                   >
-                    {selectedSegment.text}
+                    {isEditing ? (
+                      <textarea
+                        value={editedText}
+                        onChange={(e) => setEditedText(e.target.value)}
+                        style={{
+                          width: '100%',
+                          minHeight: '120px',
+                          fontSize: '14px',
+                          lineHeight: '1.6',
+                          padding: '8px',
+                          border: '2px solid var(--accent)',
+                          borderRadius: '4px',
+                          backgroundColor: 'var(--background)',
+                          color: 'var(--text)',
+                          fontFamily: 'inherit',
+                          resize: 'vertical'
+                        }}
+                      />
+                    ) : (
+                      selectedSegment.text
+                    )}
                   </div>
                 </div>
 
                 {/* Edit Buttons */}
                 <div className="flex items-center gap-2 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
-                  <Button
-                    variant="secondary"
-                    disabled={!selectedSegmentId}
-                  >
-                    ✏️ {t('orchestration.edit', 'Edit')}
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    disabled={!selectedSegmentId}
-                  >
-                    ◀ {t('orchestration.merge', 'Merge')}
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    disabled={!selectedSegmentId}
-                  >
-                    {t('orchestration.mergeRight', 'Merge')} ▶
-                  </Button>
-                  <Button
-                    variant="danger"
-                    disabled={!selectedSegmentId}
-                  >
-                    {t('orchestration.delete', 'Delete')}
-                  </Button>
+                  {!isEditing ? (
+                    <>
+                      <Button
+                        variant="secondary"
+                        disabled={!selectedSegmentId}
+                        onClick={() => {
+                          if (selectedSegment) {
+                            setIsEditing(true);
+                            setEditedText(selectedSegment.text);
+                          }
+                        }}
+                      >
+                        ✏️ {t('orchestration.edit', 'Edit')}
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        disabled={!selectedSegmentId}
+                        onClick={() => {
+                          if (confirm('Are you sure you want to merge this segment with the previous segment? This will combine both segments into one.')) {
+                            // TODO: Implement merge backward
+                            alert('Merge backward functionality coming soon');
+                          }
+                        }}
+                      >
+                        ◀ {t('orchestration.merge', 'Merge')}
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        disabled={!selectedSegmentId}
+                        onClick={() => {
+                          if (confirm('Are you sure you want to merge this segment with the next segment? This will combine both segments into one.')) {
+                            // TODO: Implement merge forward
+                            alert('Merge forward functionality coming soon');
+                          }
+                        }}
+                      >
+                        {t('orchestration.mergeRight', 'Merge')} ▶
+                      </Button>
+                      <Button
+                        variant="danger"
+                        disabled={!selectedSegmentId}
+                        onClick={() => {
+                          if (selectedSegment && confirm(`Are you sure you want to delete this segment?\n\n"${selectedSegment.text.substring(0, 50)}..."\n\nThis action cannot be undone.`)) {
+                            // TODO: Implement delete
+                            alert('Delete functionality coming soon');
+                          }
+                        }}
+                      >
+                        {t('orchestration.delete', 'Delete')}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        variant="primary"
+                        onClick={() => {
+                          // TODO: Save the edited text
+                          if (selectedSegment && plan) {
+                            const updatedSegments = plan.segments.map(seg =>
+                              seg.id === selectedSegment.id ? { ...seg, text: editedText } : seg
+                            );
+                            updatePlanMutation.mutate(updatedSegments);
+                            setIsEditing(false);
+                          }
+                        }}
+                      >
+                        💾 {t('orchestration.save', 'Save')}
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        onClick={() => {
+                          setIsEditing(false);
+                          setEditedText('');
+                        }}
+                      >
+                        ❌ {t('orchestration.cancel', 'Cancel')}
+                      </Button>
+                    </>
+                  )}
                   <div className="flex-1" />
                   <Button
                     variant="secondary"
                     disabled={!selectedSegmentId || isAuditioning}
-                    onClick={handleAudition}
+                    onClick={() => handleAudition()}
                   >
                     {isAuditioning ? '⏸' : '▶'} {t('orchestration.audition', 'Audition')}
                   </Button>

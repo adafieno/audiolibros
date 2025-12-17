@@ -1,7 +1,7 @@
 /**
  * UndoRedo Component - Global undo/redo buttons with keyboard shortcuts
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { actionsApi } from '../api/actions';
 import { useTranslation } from 'react-i18next';
@@ -44,7 +44,7 @@ export function UndoRedo({ projectId, className = '' }: UndoRedoProps) {
   const lastRedoableAction = actions.find(a => a.is_undone);
 
   // Handle undo
-  const handleUndo = async () => {
+  const handleUndo = useCallback(async () => {
     if (!lastUndoableAction || isProcessing) return;
     
     setIsProcessing(true);
@@ -65,10 +65,10 @@ export function UndoRedo({ projectId, className = '' }: UndoRedoProps) {
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [lastUndoableAction, isProcessing, queryClient, projectId, refetch, t]);
 
   // Handle redo
-  const handleRedo = async () => {
+  const handleRedo = useCallback(async () => {
     if (!lastRedoableAction || isProcessing) return;
     
     setIsProcessing(true);
@@ -89,7 +89,7 @@ export function UndoRedo({ projectId, className = '' }: UndoRedoProps) {
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [lastRedoableAction, isProcessing, queryClient, projectId, refetch, t]);
 
   // Keyboard shortcuts
   useEffect(() => {
