@@ -170,7 +170,9 @@ export default function Book() {
   };
 
   const handleImageRemove = () => {
-    updateBookMeta({ coverImage: undefined });
+    if (confirm('Are you sure you want to remove the cover image?')) {
+      updateBookMeta({ coverImage: undefined });
+    }
   };
 
   return (

@@ -216,7 +216,13 @@ function CharactersPage() {
     }
   };
   const add = () => addCharacter();
-  const remove = (id: string) => removeCharacter(id);
+  const remove = (id: string) => {
+    const character = characters.find(ch => ch.id === id);
+    const characterName = character?.name || 'this character';
+    if (confirm(`Are you sure you want to remove ${characterName}? This action cannot be undone.`)) {
+      removeCharacter(id);
+    }
+  };
 
   // Show loading while checking file existence
   if (checkingFile) {

@@ -754,6 +754,9 @@ export default function Project() {
                   }
                 }}>{t("project.suggestIPA")}</StandardButton>
                 <StandardButton onClick={async () => {
+                  if (!confirm(`Are you sure you want to remove the pronunciation entry for "${word}"?`)) {
+                    return;
+                  }
                   const current = cfg.pronunciationMap || {};
                   const newMap = { ...current };
                   delete newMap[word];

@@ -934,6 +934,10 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
     const segment = audioSegments[segmentIndex];
     if (!segment || segment.segmentType !== 'sfx') return;
     
+    if (!confirm(`Are you sure you want to delete this SFX segment? This action cannot be undone.`)) {
+      return;
+    }
+    
     try {
       // Remove the SFX segment from storage
       await audioProductionService.removeSfxSegment(selectedChapter, segment.chunkId);

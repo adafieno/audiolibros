@@ -442,7 +442,8 @@ function EditablePreview({
   const handleDeleteSegment = () => {
     if (!segments || !originalSegment) return;
 
-    if (confirm(`Are you sure you want to delete segment ${current.segmentId}? This action cannot be undone.`)) {
+    const segmentText = originalSegment.text.substring(0, 50) + (originalSegment.text.length > 50 ? '...' : '');
+    if (confirm(`Are you sure you want to delete segment ${current.segmentId}?\n\n"${segmentText}"\n\nThis action cannot be undone.`)) {
       const result = deleteSegment(segments, current.segmentId, t);
       if (result.success && result.newSegments) {
         setSegmentsWithHistory(result.newSegments);
