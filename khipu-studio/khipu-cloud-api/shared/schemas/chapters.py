@@ -36,6 +36,7 @@ class ChapterResponse(ChapterBase):
     character_count: int
     created_at: datetime
     updated_at: datetime
+    orchestration_complete: Optional[bool] = False
     
     model_config = ConfigDict(from_attributes=True)
 

@@ -113,9 +113,37 @@ async def list_chapters(
     )
     chapters = result.scalars().all()
     
+    # Get plan completion status for each chapter
+    from shared.models import ChapterPlan
+    plan_result = await db.execute(
+        select(ChapterPlan).where(
+            ChapterPlan.project_id == project_id
+        )
+    )
+    plans = {plan.chapter_id: plan for plan in plan_result.scalars().all()}
+    
+    # Add orchestration_complete status to chapters
+    chapter_responses = []
+    for chapter in chapters:
+        chapter_dict = {
+            'id': chapter.id,
+            'project_id': chapter.project_id,
+            'title': chapter.title,
+            'content': chapter.content,
+            'order': chapter.order,
+            'chapter_type': chapter.chapter_type,
+            'is_complete': chapter.is_complete,
+            'word_count': chapter.word_count,
+            'character_count': chapter.character_count,
+            'created_at': chapter.created_at,
+            'updated_at': chapter.updated_at,
+            'orchestration_complete': plans.get(chapter.id).is_complete if chapter.id in plans else False
+        }
+        chapter_responses.append(chapter_dict)
+    
     return ChapterListResponse(
-        items=chapters,
-        total=len(chapters)
+        items=chapter_responses,
+        total=len(chapter_responses)
     )
 
 

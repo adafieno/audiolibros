@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import attributes
 from uuid import UUID
+from datetime import datetime
 import logging
 import json
 from shared.db.database import get_db
@@ -269,9 +270,18 @@ async def assign_characters_stream(
             
             # Store previous state for undo
             previous_segments = plan.segments.copy() if plan.segments else []
+            previous_is_complete = plan.is_complete
             
             # Check if segments actually changed
             segments_changed = previous_segments != updated_segments
+            
+            # Check if all segments have voice assignments (chapter is complete)
+            all_assigned = all(seg.get('voice') for seg in updated_segments)
+            plan.is_complete = all_assigned
+            
+            if all_assigned and not previous_is_complete:
+                plan.completed_at = datetime.utcnow()
+                logger.info(f"✅ Chapter plan marked as complete - all {len(updated_segments)} segments have voice assignments")
             
             # Update plan
             plan.segments = updated_segments
@@ -292,7 +302,7 @@ async def assign_characters_stream(
                         action_description=f"Assigned characters to {len(updated_segments)} segments",
                         previous_segments=previous_segments,
                         new_segments=updated_segments,
-                        previous_complete=plan.is_complete,
+                        previous_complete=previous_is_complete,
                         new_complete=plan.is_complete
                     )
                     await db.commit()
@@ -302,6 +312,25 @@ async def assign_characters_stream(
                     # Don't fail the operation if logging fails
             else:
                 logger.info("SSE: No changes detected, skipping action log")
+            
+            # Check if all chapters in project are now complete
+            if plan.is_complete and not previous_is_complete:
+                # Get all chapter plans for this project
+                chapter_plans_result = await db.execute(
+                    select(ChapterPlan).where(ChapterPlan.project_id == project_id)
+                )
+                all_chapter_plans = chapter_plans_result.scalars().all()
+                
+                # Check if all chapters have complete plans
+                if all_chapter_plans and all(cp.is_complete for cp in all_chapter_plans):
+                    # Mark orchestration as complete in project workflow
+                    if not project.workflow_completed:
+                        project.workflow_completed = {}
+                    project.workflow_completed['orchestration'] = True
+                    attributes.flag_modified(project, 'workflow_completed')
+                    await db.commit()
+                    logger.info(f"✅ Orchestration module marked as complete - all {len(all_chapter_plans)} chapters complete")
+
             
             # Send completion
             logger.info("SSE: Sending completion message")

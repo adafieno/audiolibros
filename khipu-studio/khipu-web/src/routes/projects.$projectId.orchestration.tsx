@@ -276,11 +276,9 @@ function OrchestrationPage() {
                   {t('orchestration.chooseChapter', 'Choose a chapter...')}
                 </option>
                 {chaptersData?.items.map((chapter) => {
-                  const chapterPlan = plan?.chapter_id === chapter.id ? plan : null;
-                  const hasCompletePlan = chapterPlan?.is_complete;
                   return (
                     <option key={chapter.id} value={chapter.id}>
-                      {hasCompletePlan ? '✓ ' : ''}{chapter.title}
+                      {chapter.orchestration_complete ? '✓ ' : ''}{chapter.title}
                     </option>
                   );
                 })}
