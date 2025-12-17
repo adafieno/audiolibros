@@ -169,8 +169,9 @@ function OrchestrationPage() {
           setAssignmentCurrent(data.current);
           eventSource.close();
           
-          // Refetch the plan
+          // Refetch the plan and chapters list
           queryClient.invalidateQueries({ queryKey: ['plan', projectId, selectedChapterId] });
+          queryClient.invalidateQueries({ queryKey: ['chapters', projectId] });
           
           setTimeout(() => setAssignmentProgress(''), 2000);
           setIsAssigning(false);
