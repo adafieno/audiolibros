@@ -7,8 +7,7 @@ from typing import List, Dict, Any, AsyncIterator
 import json
 from services.planning.character_assignment import (
     ASSIGNMENT_PROMPT,
-    NARRATOR_NAME,
-    UNKNOWN_CHARACTER
+    NARRATOR_NAME
 )
 
 logger = logging.getLogger(__name__)

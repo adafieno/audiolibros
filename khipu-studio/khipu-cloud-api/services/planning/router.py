@@ -1,5 +1,5 @@
 """Planning/Orchestration API Router."""
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -258,7 +258,7 @@ async def assign_characters_stream(
                 
                 if progress.get('complete'):
                     updated_segments = progress.get('segments')
-                    logger.info(f"SSE: Processing complete")
+                    logger.info("SSE: Processing complete")
                 else:
                     logger.debug(f"SSE: Progress {current}/{total_segments}")
                 
@@ -298,17 +298,17 @@ async def assign_characters_stream(
                         new_complete=plan.is_complete
                     )
                     await db.commit()
-                    logger.info(f"SSE: Action logged for undo/redo")
+                    logger.info("SSE: Action logged for undo/redo")
                 except Exception as log_error:
                     logger.warning(f"Failed to log action: {log_error}")
                     # Don't fail the operation if logging fails
             else:
-                logger.info(f"SSE: No changes detected, skipping action log")
+                logger.info("SSE: No changes detected, skipping action log")
             
             # Send completion
-            logger.info(f"SSE: Sending completion message")
+            logger.info("SSE: Sending completion message")
             yield f"data: {json.dumps({'current': total_segments, 'total': total_segments, 'message': f'Complete! Assigned characters to {total_segments} segments', 'complete': True})}\n\n"
-            logger.info(f"SSE: Stream complete")
+            logger.info("SSE: Stream complete")
             
         except Exception as e:
             logger.error(f"Error in character assignment stream: {e}")

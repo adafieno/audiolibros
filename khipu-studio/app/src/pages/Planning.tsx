@@ -429,6 +429,13 @@ function EditablePreview({
   const handleMergeSegment = (direction: 'forward' | 'backward') => {
     if (!segments || !originalSegment) return;
 
+    const directionText = direction === 'forward' ? 'next' : 'previous';
+    const confirmMsg = `Are you sure you want to merge this segment with the ${directionText} segment? This will combine both segments into one.`;
+    
+    if (!confirm(confirmMsg)) {
+      return;
+    }
+
     const result = mergeSegments(segments, current.segmentId, direction, t);
     if (result.success && result.newSegments) {
       setSegmentsWithHistory(result.newSegments);
@@ -682,19 +689,6 @@ function EditablePreview({
               >
                 {t('planning.delete')}
               </StandardButton>
-              
-              <StandardButton
-                onClick={undoSegmentOperation}
-                disabled={!canUndo}
-                variant="secondary"
-                size="compact"
-                title={t("planning.undoLastOperation")}
-                style={{
-                  padding: "6px 12px"
-                }}
-              >
-                ↶ {t('planning.undo')}
-              </StandardButton>
             </>
           ) : (
             <>
@@ -751,11 +745,11 @@ function EditablePreview({
                   onAudition(current.segmentId, isDirty ? editedText : undefined, isDirty);
                 }}
                 disabled={isAudioLoading || auditioningSegments.has(current.segmentId)}
-                variant="primary"
+                variant="secondary"
                 size="compact"
-              style={{
-                padding: "6px 12px"
-              }}
+                style={{
+                  padding: "6px 12px"
+                }}
             >
               {(isAudioLoading || auditioningSegments.has(current.segmentId)) ? (
                 <>
@@ -768,12 +762,12 @@ function EditablePreview({
                     borderRadius: "50%", 
                     animation: "spin 1s linear infinite" 
                   }}></span>
-                  {t("casting.audition.loading")}
+                  {' '}{t("casting.audition.loading")}
                 </>
               ) : isAudioPlaying ? (
-                <>🔊 {t("common.playing")}</>
+                <>▶ {t("common.playing")}</>
               ) : (
-                <>{t("casting.audition.button")}</>
+                <>▶ {t("casting.audition.button")}</>
               )}
             </StandardButton>
           )}

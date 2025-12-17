@@ -2,7 +2,7 @@
 Action History Model for Undo/Redo functionality
 Tracks automatically saved actions that can be undone/redone
 """
-from sqlalchemy import Column, String, Boolean, Integer, DateTime, ForeignKey, Text, JSON
+from sqlalchemy import Column, String, Boolean, Integer, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship

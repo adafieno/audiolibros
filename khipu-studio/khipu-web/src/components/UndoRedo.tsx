@@ -114,7 +114,7 @@ export function UndoRedo({ projectId, className = '' }: UndoRedoProps) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [canUndo, canRedo, isProcessing, lastUndoableAction, lastRedoableAction]);
+  }, [canUndo, canRedo, isProcessing, lastUndoableAction, lastRedoableAction, handleUndo, handleRedo]);
 
   return (
     <div className={`flex items-center gap-1 ${className}`} style={{ marginLeft: 24 }}>
