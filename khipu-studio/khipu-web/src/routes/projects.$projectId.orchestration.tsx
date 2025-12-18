@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { planningApi } from '../api/planning';
 import { getChapters } from '../api/chapters';
 import { charactersApi } from '../lib/api/characters';
@@ -62,7 +62,28 @@ function OrchestrationPage() {
   };
 
   const [filterNoCharacter, setFilterNoCharacter] = useState(false);
-  const selectedSegment = plan?.segments.find(s => s.id === selectedSegmentId);
+  
+  // Local state for segments to enable immediate updates
+  const [localSegments, setLocalSegments] = useState<Array<{
+    id: string;
+    order: number;
+    start_idx: number;
+    end_idx: number;
+    delimiter: string;
+    text: string;
+    voice?: string;
+    needsRevision?: boolean;
+  }>>([]);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const selectedSegment = localSegments.find(s => s.id === selectedSegmentId);
+  
+  // Sync local state with fetched plan
+  useEffect(() => {
+    if (plan?.segments) {
+      setLocalSegments(plan.segments);
+      setHasUnsavedChanges(false);
+    }
+  }, [plan]);
 
   // Auto-select first chapter on load if none selected
   useEffect(() => {
@@ -73,10 +94,10 @@ function OrchestrationPage() {
 
   // Auto-select first segment when plan loads
   useEffect(() => {
-    if (plan?.segments && plan.segments.length > 0 && !selectedSegmentId) {
-      setSelectedSegmentId(plan.segments[0].id);
+    if (localSegments.length > 0 && !selectedSegmentId) {
+      setSelectedSegmentId(localSegments[0].id);
     }
-  }, [plan, selectedSegmentId]);
+  }, [localSegments, selectedSegmentId]);
 
   // Query to fetch characters
   const { data: characters } = useQuery({
@@ -84,32 +105,24 @@ function OrchestrationPage() {
     queryFn: () => charactersApi.getCharacters(projectId),
   });
 
-  // Mutation to update plan segments
-  const updatePlanMutation = useMutation({
-    mutationFn: async (segments: Array<{
-      id: string;
-      order: number;
-      start_idx: number;
-      end_idx: number;
-      delimiter: string;
-      text: string;
-      voice?: string;
-      needsRevision?: boolean;
-    }>) => {
-      if (!selectedChapterId) throw new Error('No chapter selected');
-      return await planningApi.updatePlan(projectId, selectedChapterId, segments);
-    },
-    onSuccess: () => {
-      refetch();
-    },
-  });
+  // Removed updatePlanMutation - now using saveChanges() for batch updates
 
   const handleVoiceChange = (segmentId: string, voice: string) => {
-    if (!plan) return;
-    const updatedSegments = plan.segments.map(seg => 
+    setLocalSegments(prev => prev.map(seg => 
       seg.id === segmentId ? { ...seg, voice } : seg
-    );
-    updatePlanMutation.mutate(updatedSegments);
+    ));
+    setHasUnsavedChanges(true);
+  };
+  
+  const saveChanges = async () => {
+    if (!selectedChapterId) return;
+    try {
+      await planningApi.updatePlan(projectId, selectedChapterId, localSegments);
+      await refetch();
+      setHasUnsavedChanges(false);
+    } catch (error) {
+      console.error('Failed to save changes:', error);
+    }
   };
 
   // Helper to normalize voice name to match available character names (case-insensitive)
@@ -279,7 +292,7 @@ function OrchestrationPage() {
                 {chaptersData?.items.map((chapter) => {
                   return (
                     <option key={chapter.id} value={chapter.id}>
-                      {chapter.orchestration_complete ? '✓ ' : ''}{chapter.title}
+                      {(chapter as typeof chapter & { orchestration_complete?: boolean }).orchestration_complete ? '✓ ' : ''}{chapter.title}
                     </option>
                   );
                 })}
@@ -294,7 +307,7 @@ function OrchestrationPage() {
                 style={{ cursor: 'pointer' }}
               />
               <span className="text-sm" style={{ color: 'var(--text)' }}>
-                {t('orchestration.noCharacter', 'No character')}
+                {t('orchestration.unassigned', 'Unassigned')}
               </span>
             </label>
 
@@ -310,11 +323,20 @@ function OrchestrationPage() {
 
             <Button
               variant="primary"
-              disabled={!plan || plan.segments.length === 0 || isAssigning}
+              disabled={!plan || localSegments.length === 0 || isAssigning}
               onClick={handleAssignCharacters}
             >
               {isAssigning ? '⏳ Assigning...' : t('orchestration.assignCharacters', 'Assign Characters')}
             </Button>
+            
+            {hasUnsavedChanges && (
+              <Button
+                variant="primary"
+                onClick={saveChanges}
+              >
+                {t('common.save', 'Save Changes')}
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -391,7 +413,7 @@ function OrchestrationPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {plan.segments.map((segment) => (
+                  {localSegments.map((segment) => (
                     <tr
                       key={segment.id}
                       onClick={() => setSelectedSegmentId(segment.id)}
@@ -633,12 +655,11 @@ function OrchestrationPage() {
                       <Button
                         variant="primary"
                         onClick={() => {
-                          // TODO: Save the edited text
-                          if (selectedSegment && plan) {
-                            const updatedSegments = plan.segments.map(seg =>
+                          if (selectedSegment) {
+                            setLocalSegments(prev => prev.map(seg =>
                               seg.id === selectedSegment.id ? { ...seg, text: editedText } : seg
-                            );
-                            updatePlanMutation.mutate(updatedSegments);
+                            ));
+                            setHasUnsavedChanges(true);
                             setIsEditing(false);
                           }
                         }}

@@ -47,6 +47,17 @@ function CharactersPage() {
   const [detectionProgress, setDetectionProgress] = useState('');
   const [assignmentProgress, setAssignmentProgress] = useState('');
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
+  
+  // Local state for characters to enable immediate updates
+  const [localCharacters, setLocalCharacters] = useState<Character[]>([]);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  
+  // Sync local state with fetched characters
+  useEffect(() => {
+    if (characters.length > 0) {
+      setLocalCharacters(characters);
+    }
+  }, [characters]);
 
   // Mutations
   const createMutation = useMutation({
@@ -59,7 +70,31 @@ function CharactersPage() {
   const updateMutation = useMutation({
     mutationFn: ({ characterId, data }: { characterId: string; data: any }) =>
       charactersApi.updateCharacter(projectId, characterId, data),
-    onSuccess: () => {
+    onMutate: async ({ characterId, data }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['characters', projectId] });
+      
+      // Snapshot the previous value
+      const previousCharacters = queryClient.getQueryData(['characters', projectId]);
+      
+      // Optimistically update to the new value
+      queryClient.setQueryData(['characters', projectId], (old: any) => {
+        if (!old) return old;
+        return old.map((char: any) => 
+          char.id === characterId ? { ...char, ...data } : char
+        );
+      });
+      
+      return { previousCharacters };
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousCharacters) {
+        queryClient.setQueryData(['characters', projectId], context.previousCharacters);
+      }
+    },
+    onSettled: () => {
+      // Refetch after mutation completes (success or error)
       queryClient.invalidateQueries({ queryKey: ['characters', projectId] });
     },
   });
@@ -74,9 +109,9 @@ function CharactersPage() {
 
   // Check if all characters are assigned and update workflow completion
   useEffect(() => {
-    if (!project || !characters || characters.length === 0) return;
+    if (!project || !localCharacters || localCharacters.length === 0 || hasUnsavedChanges) return;
 
-    const allAssigned = characters.every(c => c.voiceAssignment?.voiceId);
+    const allAssigned = localCharacters.every(c => c.voiceAssignment?.voiceId);
     const currentlyComplete = project.workflow_completed?.characters || false;
 
     // Update workflow completion if status changed
@@ -92,7 +127,7 @@ function CharactersPage() {
         })
         .catch(error => console.error('Failed to update workflow completion:', error));
     }
-  }, [characters, project, projectId, queryClient]);
+  }, [localCharacters, hasUnsavedChanges, project, projectId, queryClient]);
 
   // Detection handler
   const handleDetection = async () => {
@@ -233,15 +268,23 @@ function CharactersPage() {
   };
 
   const handleVoiceAssignment = (characterId: string, voiceId: string) => {
-    const voiceAssignment: VoiceAssignment = {
-      voiceId,
-      style: undefined,
-      styledegree: 1.0,
-      rate_pct: 0,
-      pitch_pct: 0,
-      method: 'manual',
-    };
-    updateMutation.mutate({ characterId, data: { voiceAssignment } });
+    setLocalCharacters(prev => prev.map(char => {
+      if (char.id === characterId) {
+        return {
+          ...char,
+          voiceAssignment: {
+            voiceId,
+            style: undefined,
+            styledegree: 1.0,
+            rate_pct: 0,
+            pitch_pct: 0,
+            method: 'manual' as const,
+          }
+        };
+      }
+      return char;
+    }));
+    setHasUnsavedChanges(true);
   };
 
   const handleProsodyUpdate = (
@@ -251,11 +294,40 @@ function CharactersPage() {
   ) => {
     if (!character.voiceAssignment) return;
     
-    const voiceAssignment: VoiceAssignment = {
-      ...character.voiceAssignment,
-      ...updates,
-    };
-    updateMutation.mutate({ characterId, data: { voiceAssignment } });
+    setLocalCharacters(prev => prev.map(char => {
+      if (char.id === characterId) {
+        return {
+          ...char,
+          voiceAssignment: {
+            ...character.voiceAssignment!,
+            ...updates,
+          }
+        };
+      }
+      return char;
+    }));
+    setHasUnsavedChanges(true);
+  };
+  
+  const saveChanges = async () => {
+    try {
+      // Save all characters with voice assignments
+      await Promise.all(
+        localCharacters
+          .filter(char => char.voiceAssignment)
+          .map(char => 
+            charactersApi.updateCharacter(projectId, char.id, {
+              voiceAssignment: char.voiceAssignment
+            })
+          )
+      );
+      
+      // Refresh data
+      await queryClient.invalidateQueries({ queryKey: ['characters', projectId] });
+      setHasUnsavedChanges(false);
+    } catch (error) {
+      console.error('Failed to save changes:', error);
+    }
   };
 
   if (isLoading) {
@@ -308,14 +380,23 @@ function CharactersPage() {
               {t('characters.detectRefresh', 'Detect / Refresh')}
             </Button>
             
-            {characters.length > 0 && (
+            {localCharacters.length > 0 && (
               <Button
                 variant="primary"
                 onClick={handleAssignVoices}
-                disabled={isAssigningVoices || characters.length === 0}
+                disabled={isAssigningVoices || localCharacters.length === 0}
                 loading={isAssigningVoices}
               >
                 {t('characters.assignVoices', 'Assign Voices')}
+              </Button>
+            )}
+            
+            {hasUnsavedChanges && (
+              <Button
+                variant="primary"
+                onClick={saveChanges}
+              >
+                {t('common.save', 'Save Changes')}
               </Button>
             )}
             
@@ -328,15 +409,15 @@ function CharactersPage() {
               {t('characters.add', 'Add Character')}
             </Button>
             
-            {characters.length > 0 && (
+            {localCharacters.length > 0 && (
               <>
                 <Button
                   variant="secondary"
                   onClick={() => {
-                    const sorted = [...characters].sort((a, b) => (b.frequency || 0) - (a.frequency || 0));
-                    queryClient.setQueryData(['characters', projectId], sorted);
+                    const sorted = [...localCharacters].sort((a, b) => (b.frequency || 0) - (a.frequency || 0));
+                    setLocalCharacters(sorted);
                   }}
-                  disabled={characters.length === 0}
+                  disabled={localCharacters.length === 0}
                 >
                   {t('characters.sortByProbability', 'Sort by Probability')}
                 </Button>
@@ -344,10 +425,10 @@ function CharactersPage() {
                 <Button
                   variant="secondary"
                   onClick={() => {
-                    const sorted = [...characters].sort((a, b) => a.name.localeCompare(b.name));
-                    queryClient.setQueryData(['characters', projectId], sorted);
+                    const sorted = [...localCharacters].sort((a, b) => a.name.localeCompare(b.name));
+                    setLocalCharacters(sorted);
                   }}
-                  disabled={characters.length === 0}
+                  disabled={localCharacters.length === 0}
                 >
                   {t('characters.sortAlphabetically', 'Sort Alphabetically')}
                 </Button>
@@ -367,7 +448,7 @@ function CharactersPage() {
       )}
 
       {/* Characters grid */}
-      {characters.length === 0 ? (
+      {localCharacters.length === 0 ? (
         <div className="text-center py-16 border border-dashed rounded-lg" style={{ borderColor: 'var(--border)' }}>
           <p className="text-lg mb-2" style={{ color: 'var(--text)' }}>
             {t('characters.noCharactersYet', 'No characters yet')}
@@ -378,7 +459,7 @@ function CharactersPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {characters.map((character) => (
+          {localCharacters.map((character) => (
             <div
               key={character.id}
               className="border rounded-lg p-4 space-y-3"

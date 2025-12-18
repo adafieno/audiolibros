@@ -129,14 +129,53 @@ async def update_plan(
     if not plan:
         raise HTTPException(status_code=404, detail="Plan not found")
     
+    # Store previous state
+    previous_is_complete = plan.is_complete
+    
     # Update segments
     plan.segments = update_data.segments
+    
+    # Check if all segments have voice assignments (plan is complete)
+    all_assigned = all(seg.get('voice') for seg in update_data.segments)
+    plan.is_complete = all_assigned
+    
+    if all_assigned and not previous_is_complete:
+        plan.completed_at = datetime.utcnow()
+        logger.info(f"✅ Chapter plan {plan.id} marked as complete via manual update")
+    elif not all_assigned and previous_is_complete:
+        plan.completed_at = None
+        plan.is_complete = False
+        logger.info(f"⚠️ Chapter plan {plan.id} marked as incomplete - some voices removed")
     
     # Mark the JSONB field as modified so SQLAlchemy detects the change
     attributes.flag_modified(plan, 'segments')
     
     await db.commit()
     await db.refresh(plan)
+    
+    # Check if all chapters in project are now complete (for orchestration workflow)
+    if plan.is_complete and not previous_is_complete:
+        project_result = await db.execute(
+            select(Project).where(Project.id == project_id)
+        )
+        project = project_result.scalar_one_or_none()
+        
+        if project:
+            # Get all chapter plans for this project
+            chapter_plans_result = await db.execute(
+                select(ChapterPlan).where(ChapterPlan.project_id == project_id)
+            )
+            all_chapter_plans = chapter_plans_result.scalars().all()
+            
+            # Check if all chapters have complete plans
+            if all_chapter_plans and all(cp.is_complete for cp in all_chapter_plans):
+                # Mark orchestration as complete in project workflow
+                if not project.workflow_completed:
+                    project.workflow_completed = {}
+                project.workflow_completed['orchestration'] = True
+                attributes.flag_modified(project, 'workflow_completed')
+                await db.commit()
+                logger.info(f"✅ Orchestration module marked as complete - all {len(all_chapter_plans)} chapters complete")
     
     return plan
 
