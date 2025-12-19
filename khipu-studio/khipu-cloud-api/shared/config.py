@@ -46,9 +46,9 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379/0"
     REDIS_PASSWORD: str | None = None
     
-    # Azure Storage
-    AZURE_STORAGE_CONNECTION_STRING: str
-    AZURE_STORAGE_ACCOUNT_NAME: str
+    # Azure Storage (Optional - for audio cache)
+    AZURE_STORAGE_CONNECTION_STRING: str | None = None
+    AZURE_STORAGE_ACCOUNT_NAME: str | None = None
     AZURE_STORAGE_CONTAINER_NAME: str = "tenants"
     
     # JWT Authentication
@@ -101,3 +101,8 @@ class Settings(BaseSettings):
 
 # Create global settings instance
 settings = Settings()
+
+
+def get_settings() -> Settings:
+    """Dependency for getting settings instance"""
+    return settings

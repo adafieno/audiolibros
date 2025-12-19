@@ -17,21 +17,37 @@ class BlobStorageService:
     Handles upload, download, and deletion of audio files with proper error handling.
     """
     
-    def __init__(self, settings: Settings):
-        """Initialize blob storage service."""
-        self.settings = settings
-        self.connection_string = settings.AZURE_STORAGE_CONNECTION_STRING
-        self.container_name = settings.AZURE_STORAGE_CONTAINER_NAME
+    def __init__(self, settings: Settings, connection_string: str = None, container_name: str = None):
+        """
+        Initialize blob storage service.
         
-        # Initialize blob service client
-        try:
-            self.blob_service_client = BlobServiceClient.from_connection_string(
-                self.connection_string
-            )
-            logger.info(f"Initialized BlobStorageService for container: {self.container_name}")
-        except Exception as e:
-            logger.error(f"Failed to initialize BlobStorageService: {e}")
-            raise
+        Args:
+            settings: Global settings (for fallback)
+            connection_string: Optional Azure Storage connection string
+            container_name: Optional container name
+        """
+        self.settings = settings
+        
+        # Use provided values or fall back to settings
+        self.connection_string = connection_string or settings.AZURE_STORAGE_CONNECTION_STRING
+        self.container_name = container_name or settings.AZURE_STORAGE_CONTAINER_NAME
+        
+        self.is_configured = False
+        self.blob_service_client = None
+        
+        # Initialize blob service client only if credentials are configured
+        if self.connection_string:
+            try:
+                self.blob_service_client = BlobServiceClient.from_connection_string(
+                    self.connection_string
+                )
+                self.is_configured = True
+                logger.info(f"✅ Initialized BlobStorageService for container: {self.container_name}")
+            except Exception as e:
+                logger.warning(f"⚠️  Failed to initialize BlobStorageService: {e}")
+                logger.warning("⚠️  Audio cache will work without blob storage (database only)")
+        else:
+            logger.info("ℹ️  Azure Storage not configured - audio cache will use database only")
     
     def _get_blob_client(self, blob_path: str) -> BlobClient:
         """Get blob client for a specific blob path."""
@@ -45,7 +61,7 @@ class BlobStorageService:
         blob_path: str,
         audio_data: bytes,
         content_type: str = "audio/mpeg"
-    ) -> str:
+    ) -> str | None:
         """
         Upload audio file to blob storage.
         
@@ -55,11 +71,15 @@ class BlobStorageService:
             content_type: MIME type (default: audio/mpeg)
             
         Returns:
-            str: Full blob URL
+            str: Full blob URL, or None if storage not configured
             
         Raises:
             AzureError: If upload fails
         """
+        if not self.is_configured:
+            logger.debug("Blob storage not configured, skipping upload")
+            return None
+            
         try:
             blob_client = self._get_blob_client(blob_path)
             
@@ -89,8 +109,12 @@ class BlobStorageService:
             blob_path: Path in blob storage
             
         Returns:
-            bytes: Audio file data, or None if not found
+            bytes: Audio file data, or None if not found or storage not configured
         """
+        if not self.is_configured:
+            logger.debug("Blob storage not configured, skipping download")
+            return None
+            
         try:
             blob_client = self._get_blob_client(blob_path)
             

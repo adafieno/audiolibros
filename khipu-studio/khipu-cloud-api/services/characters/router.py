@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.db.database import get_db
 from shared.models import Project
+from shared.config import Settings, get_settings
 from shared.auth.dependencies import get_current_user
 from services.actions.action_logger import log_action
 from .schemas import CharacterCreateRequest, CharacterUpdateRequest, CharacterResponse
@@ -588,7 +589,8 @@ async def audition_character_voice(
     project_id: str,
     request: dict,
     current_user = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    settings: Settings = Depends(get_settings)
 ):
     """
     Generate audio for character voice audition
@@ -650,17 +652,47 @@ async def audition_character_voice(
     }
     
     # Get audio cache service
-    audio_cache_service = get_audio_cache_service()
+    from shared.services.blob_storage import BlobStorageService
     
-    # Check L2 cache (Database + Blob Storage)
-    logger.info(f"🔍 Checking L2 cache for voice {voice_id}")
-    cached_audio = await audio_cache_service.get_cached_audio(
-        db=db,
-        tenant_id=str(project.tenant_id),
-        text=text,
-        voice_id=voice_id,
-        voice_settings=voice_settings
-    )
+    cached_audio = None
+    use_cache = False
+    
+    try:
+        # Try to get blob storage credentials from project settings
+        storage_config = project.settings.get("creds", {}).get("storage", {}).get("azure", {})
+        
+        blob_service = None
+        if storage_config.get("accountName") and storage_config.get("accessKey"):
+            # Build connection string from project settings
+            account_name = storage_config["accountName"]
+            access_key = storage_config["accessKey"]
+            container_name = storage_config.get("containerName", "audios")
+            
+            connection_string = f"DefaultEndpointsProtocol=https;AccountName={account_name};AccountKey={access_key};EndpointSuffix=core.windows.net"
+            
+            blob_service = BlobStorageService(settings, connection_string, container_name)
+            logger.info(f"📦 Using project-specific blob storage: {account_name}/{container_name}")
+        else:
+            # Fall back to global settings
+            blob_service = BlobStorageService(settings)
+            logger.info("📦 Using global blob storage settings")
+        
+        audio_cache_service = get_audio_cache_service(blob_service, settings)
+        use_cache = blob_service.is_configured
+        
+        if use_cache:
+            # Check L2 cache (Database + Blob Storage)
+            logger.info(f"🔍 Checking L2 cache for voice {voice_id}")
+            cached_audio = await audio_cache_service.get_cached_audio(
+                db=db,
+                tenant_id=str(project.tenant_id),
+                text=text,
+                voice_id=voice_id,
+                voice_settings=voice_settings
+            )
+    except Exception as e:
+        logger.warning(f"⚠️ Cache check failed, proceeding without cache: {e}")
+        use_cache = False
     
     if cached_audio:
         logger.info(f"✅ L2 cache hit! Returning cached audio")
@@ -693,18 +725,24 @@ async def audition_character_voice(
             pitch_pct=pitch_pct
         )
         
-        # Store in L2 cache for future use
-        logger.info(f"💾 Storing audio in L2 cache")
-        await audio_cache_service.store_cached_audio(
-            db=db,
-            tenant_id=str(project.tenant_id),
-            text=text,
-            voice_id=voice_id,
-            voice_settings=voice_settings,
-            audio_data=audio_data
-        )
-        
-        logger.info(f"✅ Audio generated and cached successfully")
+        # Store in L2 cache for future use (if cache is available)
+        if use_cache:
+            try:
+                logger.info(f"💾 Storing audio in L2 cache")
+                await audio_cache_service.store_cached_audio(
+                    db=db,
+                    tenant_id=str(project.tenant_id),
+                    text=text,
+                    voice_id=voice_id,
+                    voice_settings=voice_settings,
+                    audio_data=audio_data
+                )
+                logger.info(f"✅ Audio generated and cached successfully")
+            except Exception as e:
+                logger.warning(f"⚠️ Failed to cache audio: {e}")
+        else:
+            logger.info(f"✅ Audio generated successfully (cache not available)")
+            
         return Response(
             content=audio_data,
             media_type="audio/mpeg",

@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from shared.auth.dependencies import get_current_user
 from shared.db.database import get_db
 from shared.models import Project
+from shared.config import Settings, get_settings
 from services.voices.azure_tts import generate_audio
 from sqlalchemy import select
 
@@ -305,10 +306,15 @@ async def audition_voice(
     voice_id: str,
     request: AuditionRequest,
     current_user = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    settings: Settings = Depends(get_settings)
 ):
     """
     Generate an audio preview for a voice at /api/v1/projects/{project_id}/voices/{voice_id}/audition
+    
+    Uses two-tier caching:
+    - L2 (Backend): Database + Azure Blob Storage with 30-day TTL
+    - L1 (Frontend): In-memory cache for same-session requests
     
     Args:
         project_id: Project ID (for authorization)
@@ -316,7 +322,7 @@ async def audition_voice(
         request: Optional parameters for audition
         
     Returns:
-        Audio file in WAV format
+        Audio file in WAV format with cache headers
     """
     try:
         # Extract locale from voice_id (e.g., "es-AR-ElenaNeural" -> "es-AR")
@@ -362,6 +368,72 @@ async def audition_voice(
                 detail="Azure TTS credentials not configured in project settings. Please add Azure key and region in Project Settings."
             )
         
+        # Prepare voice settings for cache key
+        voice_settings = {
+            "style": request.style,
+            "style_degree": request.style_degree,
+            "rate_pct": request.rate_pct,
+            "pitch_pct": request.pitch_pct
+        }
+        
+        # Get audio cache service
+        from shared.services.audio_cache import get_audio_cache_service
+        from shared.services.blob_storage import BlobStorageService
+        
+        cached_audio = None
+        use_cache = False
+        
+        try:
+            # Try to get blob storage credentials from project settings
+            storage_config = project.settings.get("creds", {}).get("storage", {}).get("azure", {})
+            
+            blob_service = None
+            if storage_config.get("accountName") and storage_config.get("accessKey"):
+                # Build connection string from project settings
+                account_name = storage_config["accountName"]
+                access_key = storage_config["accessKey"]
+                container_name = storage_config.get("containerName", "audios")
+                
+                connection_string = f"DefaultEndpointsProtocol=https;AccountName={account_name};AccountKey={access_key};EndpointSuffix=core.windows.net"
+                
+                blob_service = BlobStorageService(settings, connection_string, container_name)
+                logger.info(f"📦 Using project-specific blob storage: {account_name}/{container_name}")
+            else:
+                # Fall back to global settings
+                blob_service = BlobStorageService(settings)
+                logger.info("📦 Using global blob storage settings")
+            
+            audio_cache_service = get_audio_cache_service(blob_service, settings)
+            use_cache = blob_service.is_configured
+            
+            if use_cache:
+                # Check L2 cache (Database + Blob Storage)
+                logger.info(f"🔍 Checking L2 cache for voice {voice_id}")
+                cached_audio = await audio_cache_service.get_cached_audio(
+                    db=db,
+                    tenant_id=str(project.tenant_id),
+                    text=text,
+                    voice_id=voice_id,
+                    voice_settings=voice_settings
+                )
+        except Exception as e:
+            logger.warning(f"⚠️ Cache check failed, proceeding without cache: {e}")
+            use_cache = False
+        
+        if cached_audio:
+            logger.info(f"✅ L2 cache hit! Returning cached audio")
+            return Response(
+                content=cached_audio,
+                media_type="audio/mpeg",
+                headers={
+                    "X-Cache-Status": "HIT-L2",
+                    "Cache-Control": "public, max-age=1800"  # 30 minutes for frontend L1 cache
+                }
+            )
+        
+        # L2 cache miss - generate audio via Azure TTS
+        logger.info(f"❌ L2 cache miss, generating audio via Azure TTS")
+        
         # Generate audio
         audio_data = await generate_audio(
             voice_id=voice_id,
@@ -375,12 +447,32 @@ async def audition_voice(
             pitch_pct=request.pitch_pct
         )
         
+        # Store in L2 cache for future use (if cache is available)
+        if use_cache:
+            try:
+                logger.info(f"💾 Storing audio in L2 cache")
+                await audio_cache_service.store_cached_audio(
+                    db=db,
+                    tenant_id=str(project.tenant_id),
+                    text=text,
+                    voice_id=voice_id,
+                    voice_settings=voice_settings,
+                    audio_data=audio_data
+                )
+                logger.info(f"✅ Audio generated and cached successfully")
+            except Exception as e:
+                logger.warning(f"⚠️ Failed to cache audio: {e}")
+        else:
+            logger.info(f"✅ Audio generated successfully (cache not available)")
+        
         # Return audio as response
         return Response(
             content=audio_data,
-            media_type="audio/wav",
+            media_type="audio/mpeg",
             headers={
-                "Content-Disposition": f'inline; filename="{voice_id}-audition.wav"'
+                "X-Cache-Status": "MISS",
+                "Cache-Control": "public, max-age=1800",  # 30 minutes for frontend L1 cache
+                "Content-Disposition": f'inline; filename="{voice_id}-audition.mp3"'
             }
         )
         

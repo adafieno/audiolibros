@@ -172,8 +172,12 @@ class AudioCacheService:
             # Generate blob path
             blob_path = self.blob_service.generate_blob_path(str(tenant_id), cache_key)
             
-            # Upload to blob storage
-            blob_url = await self.blob_service.upload_audio(blob_path, audio_data)
+            # Upload to blob storage (if configured)
+            blob_url = None
+            if self.blob_service.is_configured:
+                blob_url = await self.blob_service.upload_audio(blob_path, audio_data)
+            else:
+                logger.debug("Blob storage not configured, skipping upload")
             
             # Create database entry
             cache_entry = AudioCache(
@@ -215,8 +219,9 @@ class AudioCacheService:
             bool: True if successful
         """
         try:
-            # Delete from blob storage
-            await self.blob_service.delete_audio(cache_entry.audio_blob_path)
+            # Delete from blob storage (if configured)
+            if self.blob_service.is_configured:
+                await self.blob_service.delete_audio(cache_entry.audio_blob_path)
             
             # Delete from database
             await db.delete(cache_entry)
