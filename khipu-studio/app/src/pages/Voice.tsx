@@ -151,9 +151,8 @@ const VUMeter = ({ level, label, color }: { level: number; label: string; color:
 };
 
 // Analog VU Meter Component with Needle
-const AnalogVUMeter = ({ level, isPlaying }: { level: number; isPlaying: boolean }) => {
+const AnalogVUMeter = ({ isPlaying }: { isPlaying: boolean }) => {
   const [currentLevel, setCurrentLevel] = useState(0);
-  const [peakLevel, setPeakLevel] = useState(0);
   
   useEffect(() => {
     if (isPlaying) {
@@ -179,18 +178,14 @@ const AnalogVUMeter = ({ level, isPlaying }: { level: number; isPlaying: boolean
           const attack = diff > 0 ? 0.3 : 0.4; // Much faster decay for audio pauses
           return prev + diff * attack;
         });
-        
-        setPeakLevel(prev => Math.max(prev * 0.98, currentLevel)); // Slower decay for peaks
       }, 50);
       return () => clearInterval(interval);
     } else {
       // Smooth return to rest position (far left)
       const interval = setInterval(() => {
         setCurrentLevel(prev => prev * 0.85);
-        setPeakLevel(prev => prev * 0.9);
         if (currentLevel < 0.5) {
           setCurrentLevel(0);
-          setPeakLevel(0);
         }
       }, 50);
       return () => clearInterval(interval);
@@ -2237,7 +2232,6 @@ export default function AudioProductionPage({ onStatus }: { onStatus: (s: string
                   marginBottom: "8px"
                 }}>
                   <AnalogVUMeter 
-                    level={75}
                     isPlaying={isCurrentSegmentPlaying(selectedRowIndex)}
                   />
                 </div>
