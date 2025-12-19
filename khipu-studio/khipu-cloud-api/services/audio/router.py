@@ -7,7 +7,7 @@ import logging
 from typing import Optional
 
 from shared.db.database import get_db
-from shared.models import User, Project, AudioSegmentMetadata, SfxSegment
+from shared.models import User, Project, AudioSegmentMetadata, SfxSegment, ChapterPlan
 from shared.auth import get_current_active_user
 from shared.config import get_settings, Settings
 from .schemas import (
@@ -564,22 +564,46 @@ async def get_chapter_audio_production_data(
     # Verify project access
     await _verify_project_access(db, project_id, current_user.tenant_id)
     
-    # This endpoint will need plan data from the planning service
-    # For now, return just metadata and SFX segments
-    # TODO: Integrate with planning service to get plan segments
+    # First, get the chapter by order to get its UUID
+    from shared.models.chapter import Chapter
+    result = await db.execute(
+        select(Chapter).where(
+            and_(
+                Chapter.project_id == project_id,
+                Chapter.order == int(chapter_id)
+            )
+        )
+    )
+    chapter = result.scalar_one_or_none()
     
-    # Get segment metadata
-    # TODO: Merge metadata with plan segments from planning service
-    # result = await db.execute(
-    #     select(AudioSegmentMetadata).where(
-    #         and_(
-    #             AudioSegmentMetadata.project_id == project_id,
-    #             AudioSegmentMetadata.chapter_id == chapter_id
-    #         )
-    #     )
-    # )
-    # metadata_list = result.scalars().all()
-    # metadata_dict = {m.segment_id: m for m in metadata_list}
+    if not chapter:
+        raise HTTPException(status_code=404, detail="Chapter not found")
+    
+    # Get chapter plan with segments
+    result = await db.execute(
+        select(ChapterPlan).where(
+            and_(
+                ChapterPlan.project_id == project_id,
+                ChapterPlan.chapter_id == chapter.id
+            )
+        )
+    )
+    plan = result.scalar_one_or_none()
+    
+    if not plan:
+        raise HTTPException(status_code=404, detail="Chapter plan not found")
+    
+    # Get segment metadata (for audio cache status and processing chains)
+    result = await db.execute(
+        select(AudioSegmentMetadata).where(
+            and_(
+                AudioSegmentMetadata.project_id == project_id,
+                AudioSegmentMetadata.chapter_id == chapter_id
+            )
+        )
+    )
+    metadata_list = result.scalars().all()
+    metadata_dict = {m.segment_id: m for m in metadata_list}
     
     # Get SFX segments
     result = await db.execute(
@@ -594,9 +618,47 @@ async def get_chapter_audio_production_data(
     )
     sfx_segments = result.scalars().all()
     
-    # Build response
-    # TODO: Merge with plan segments from planning service
+    # Build response with real plan segments
     segments = []
+    
+    # Add plan segments from the orchestration
+    # Handle both dict with 'segments' key and direct array
+    if isinstance(plan.segments, dict):
+        plan_segments = plan.segments.get('segments', [])
+    elif isinstance(plan.segments, list):
+        plan_segments = plan.segments
+    else:
+        plan_segments = []
+    
+    for idx, seg in enumerate(plan_segments):
+        # Use the existing UUID from orchestration
+        segment_id = seg.get('id')
+        if not segment_id:
+            # Fallback if no ID exists (shouldn't happen with orchestration data)
+            segment_id = f"seg_{chapter.id}_{idx}"
+        
+        # Get metadata using the segment ID
+        metadata = metadata_dict.get(str(segment_id))
+        
+        # Determine if audio exists for this segment
+        has_audio = metadata is not None and metadata.cache_key is not None
+        
+        # Use orchestration order multiplied by 100 to leave room for SFX insertions
+        # SFX can be inserted at positions like: 50, 150, 250 (between segments 0, 100, 200)
+        base_order = seg.get('order', idx) * 100
+        
+        segments.append(AudioSegmentData(
+            segment_id=str(segment_id),
+            type="plan",
+            display_order=base_order,
+            text=seg.get('text', ''),
+            voice=seg.get('voice', ''),
+            raw_audio_url=None,  # TODO: Generate URL from cache_key if exists
+            has_audio=has_audio,
+            processing_chain=metadata.processing_chain if metadata else None,
+            needs_revision=metadata.needs_revision if metadata else seg.get('needsRevision', False),
+            duration=metadata.duration_seconds if metadata else None
+        ))
     
     # Add SFX segments
     for sfx in sfx_segments:
@@ -615,6 +677,9 @@ async def get_chapter_audio_production_data(
             needs_revision=False,
             duration=sfx.duration_seconds
         ))
+    
+    # Sort by display order
+    segments.sort(key=lambda x: x.display_order)
     
     return ChapterAudioProductionResponse(segments=segments)
 

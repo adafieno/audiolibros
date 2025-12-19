@@ -113,3 +113,22 @@ export interface SfxSegment {
 export interface SfxListResponse {
   sfx_segments: SfxSegment[];
 }
+
+// UI-friendly segment type
+export interface Segment {
+  id: number;
+  position: number;
+  text: string | null;
+  audio_blob_path: string | null;
+  status: 'pending' | 'cached' | 'processed' | 'needs_revision' | null;
+  duration: number | null;
+  revision_notes: string | null;
+}
+
+// Chapter info for UI
+export interface Chapter {
+  id: number;
+  chapter_number: number;
+  title: string | null;
+  processing_chain: AudioProcessingChain | null;
+}

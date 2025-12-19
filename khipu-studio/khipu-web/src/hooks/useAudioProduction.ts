@@ -32,7 +32,6 @@ export function useAudioProduction(projectId: string, chapterId: string) {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load chapter data';
       setError(errorMessage);
-      console.error('Failed to load chapter data:', err);
     } finally {
       setLoading(false);
     }
@@ -67,7 +66,7 @@ export function useAudioProduction(projectId: string, chapterId: string) {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate audio';
       setError(errorMessage);
-      console.error('Failed to generate segment audio:', err);
+
       throw err;
     }
   }, [projectId, chapterId]);
@@ -99,7 +98,6 @@ export function useAudioProduction(projectId: string, chapterId: string) {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update processing chain';
       setError(errorMessage);
-      console.error('Failed to update processing chain:', err);
       throw err;
     }
   }, [projectId, chapterId]);
@@ -132,7 +130,6 @@ export function useAudioProduction(projectId: string, chapterId: string) {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update revision mark';
       setError(errorMessage);
-      console.error('Failed to update revision mark:', err);
       throw err;
     }
   }, [projectId, chapterId]);
@@ -172,7 +169,6 @@ export function useAudioProduction(projectId: string, chapterId: string) {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to upload SFX';
       setError(errorMessage);
-      console.error('Failed to upload SFX:', err);
       throw err;
     }
   }, [projectId, chapterId]);
@@ -204,7 +200,6 @@ export function useAudioProduction(projectId: string, chapterId: string) {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to move SFX';
       setError(errorMessage);
-      console.error('Failed to move SFX:', err);
       throw err;
     }
   }, [projectId, chapterId]);
@@ -224,7 +219,6 @@ export function useAudioProduction(projectId: string, chapterId: string) {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete SFX';
       setError(errorMessage);
-      console.error('Failed to delete SFX:', err);
       throw err;
     }
   }, [projectId, chapterId]);

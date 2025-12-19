@@ -24,6 +24,14 @@ function getAuthHeaders() {
 }
 
 async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
+  const token = localStorage.getItem('access_token');
+  
+  // If no token, don't even try - return 401 immediately
+  if (!token) {
+    const response = new Response(null, { status: 401 });
+    return response;
+  }
+  
   const response = await fetch(url, {
     ...options,
     headers: {
@@ -56,15 +64,14 @@ async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Re
             },
           });
         }
-      } catch (error) {
-        console.error('Token refresh failed:', error);
+      } catch {
+        // Token refresh failed - return the 401 response, don't redirect
+        // Let the calling code handle it
       }
     }
     
-    // If refresh failed, clear tokens and redirect to login
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    window.location.href = '/login';
+    // If refresh failed or no refresh token, just return the 401
+    // Don't redirect here - let the app decide what to do
   }
 
   return response;
