@@ -5,9 +5,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
+import asyncio
 
 from shared.config import settings
-from shared.db.database import engine
+from shared.db.database import engine, get_db
 from services.auth.router import router as auth_router
 from services.projects.router import router as projects_router
 from services.chapters.router import router as chapters_router
@@ -24,6 +25,44 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+async def cleanup_audio_cache_task():
+    """Background task to cleanup expired and LRU audio cache entries"""
+    from shared.services.audio_cache import get_audio_cache_service
+    
+    while True:
+        try:
+            # Wait 1 hour between cleanup runs
+            await asyncio.sleep(3600)
+            
+            logger.info("🧹 Running audio cache cleanup...")
+            
+            # Get database session
+            async for db in get_db():
+                audio_cache_service = get_audio_cache_service()
+                
+                # Cleanup expired entries
+                deleted_expired = await audio_cache_service.cleanup_expired_cache(db)
+                logger.info(f"🗑️ Deleted {deleted_expired} expired cache entries")
+                
+                # Cleanup LRU entries (keep 10,000 most recent per tenant)
+                deleted_lru = await audio_cache_service.cleanup_lru_cache(db, max_entries=10000)
+                logger.info(f"🗑️ Deleted {deleted_lru} old cache entries via LRU")
+                
+                # Get cache stats
+                stats = await audio_cache_service.get_cache_stats(db)
+                logger.info(
+                    f"📊 Cache stats: {stats['total_entries']} entries, "
+                    f"{stats['total_size_mb']:.2f} MB, "
+                    f"{stats['total_hits']} total hits, "
+                    f"{stats['average_hits_per_entry']:.2f} avg hits/entry"
+                )
+                
+                break  # Exit the async for loop after one iteration
+                
+        except Exception as e:
+            logger.error(f"❌ Error during audio cache cleanup: {e}")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan - startup and shutdown events"""
@@ -33,10 +72,19 @@ async def lifespan(app: FastAPI):
     logger.info(f"Debug mode: {settings.DEBUG}")
     logger.info("Database schema managed by Alembic migrations")
     
+    # Start background tasks
+    cleanup_task = asyncio.create_task(cleanup_audio_cache_task())
+    logger.info("✅ Started audio cache cleanup background task")
+    
     yield
     
     # Shutdown
     logger.info("Shutting down Khipu Cloud API...")
+    cleanup_task.cancel()
+    try:
+        await cleanup_task
+    except asyncio.CancelledError:
+        logger.info("✅ Cancelled audio cache cleanup task")
     await engine.dispose()
 
 

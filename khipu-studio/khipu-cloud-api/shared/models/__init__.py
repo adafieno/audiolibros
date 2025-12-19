@@ -11,6 +11,7 @@ from shared.db.database import Base
 from .chapter import Chapter
 from .plan import ChapterPlan
 from .action_history import ActionHistory
+from .audio_cache import AudioCache
 
 
 class Tenant(Base):

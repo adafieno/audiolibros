@@ -2,11 +2,12 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { charactersApi, type Character, type VoiceAssignment } from '../lib/api/characters';
+import { charactersApi, type Character, type VoiceAssignment, type CharacterUpdateRequest } from '../lib/api/characters';
 import { voicesApi } from '../lib/api/voices';
 import { projectsApi } from '../lib/projects';
 import { Button } from '../components/Button';
 import { ProgressBar } from '../components/ProgressBar';
+import { useAudioCache } from '../hooks/useAudioCache';
 
 export const Route = createFileRoute('/projects/$projectId/characters')({
   component: CharactersPage,
@@ -36,7 +37,7 @@ function CharactersPage() {
   });
 
   // Filter to only selected voices from casting module
-  const selectedVoiceIds = project?.settings?.voices?.selectedVoiceIds || [];
+  const selectedVoiceIds = (project?.settings?.voices as { selectedVoiceIds?: string[] } | undefined)?.selectedVoiceIds || [];
   const availableVoices = (voiceInventory?.voices || []).filter(
     voice => selectedVoiceIds.includes(voice.id)
   );
@@ -46,7 +47,10 @@ function CharactersPage() {
   const [isAssigningVoices, setIsAssigningVoices] = useState(false);
   const [detectionProgress, setDetectionProgress] = useState('');
   const [assignmentProgress, setAssignmentProgress] = useState('');
-  const [playingAudio, setPlayingAudio] = useState<string | null>(null);
+  const [playingCharacterId, setPlayingCharacterId] = useState<string | null>(null);
+  
+  // Audio cache for voice auditions
+  const { isPlaying, isLoading: isLoadingAudio, playAudition, stopAudio } = useAudioCache();
   
   // Local state for characters to enable immediate updates
   const [localCharacters, setLocalCharacters] = useState<Character[]>([]);
@@ -68,7 +72,7 @@ function CharactersPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ characterId, data }: { characterId: string; data: any }) =>
+    mutationFn: ({ characterId, data }: { characterId: string; data: CharacterUpdateRequest }) =>
       charactersApi.updateCharacter(projectId, characterId, data),
     onMutate: async ({ characterId, data }) => {
       // Cancel outgoing refetches
@@ -78,16 +82,16 @@ function CharactersPage() {
       const previousCharacters = queryClient.getQueryData(['characters', projectId]);
       
       // Optimistically update to the new value
-      queryClient.setQueryData(['characters', projectId], (old: any) => {
+      queryClient.setQueryData(['characters', projectId], (old: Character[] | undefined) => {
         if (!old) return old;
-        return old.map((char: any) => 
+        return old.map((char: Character) => 
           char.id === characterId ? { ...char, ...data } : char
         );
       });
       
       return { previousCharacters };
     },
-    onError: (err, variables, context) => {
+    onError: (_err, _variables, context) => {
       // Rollback on error
       if (context?.previousCharacters) {
         queryClient.setQueryData(['characters', projectId], context.previousCharacters);
@@ -140,10 +144,13 @@ function CharactersPage() {
       // Refresh the character list
       await queryClient.invalidateQueries({ queryKey: ['characters', projectId] });
       setTimeout(() => setDetectionProgress(''), 2000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Character detection failed:', error);
       setDetectionProgress('');
-      alert(error.response?.data?.detail || 'Character detection failed. Please ensure chapters are uploaded and OpenAI API key is configured.');
+      const errorMessage = error && typeof error === 'object' && 'response' in error 
+        ? (error.response as { data?: { detail?: string } })?.data?.detail 
+        : undefined;
+      alert(errorMessage || 'Character detection failed. Please ensure chapters are uploaded and OpenAI API key is configured.');
     } finally {
       setIsDetecting(false);
     }
@@ -173,10 +180,13 @@ function CharactersPage() {
       }
       
       setTimeout(() => setAssignmentProgress(''), 2000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Voice assignment failed:', error);
       setAssignmentProgress('');
-      alert(error.response?.data?.detail || 'Voice assignment failed. Please ensure characters are detected first.');
+      const errorMessage = error && typeof error === 'object' && 'response' in error 
+        ? (error.response as { data?: { detail?: string } })?.data?.detail 
+        : undefined;
+      alert(errorMessage || 'Voice assignment failed. Please ensure characters are detected first.');
     } finally {
       setIsAssigningVoices(false);
     }
@@ -184,53 +194,49 @@ function CharactersPage() {
 
   // Audition handler
   const handleAudition = async (character: Character) => {
-    if (!character.voiceAssignment?.voiceId) {
+    if (!character.voiceAssignment?.voiceId || !project) {
       alert('Please assign a voice to this character first');
       return;
     }
 
-    const characterId = character.id;
-    setPlayingAudio(characterId);
+    // Stop any currently playing audio
+    if (isPlaying) {
+      stopAudio();
+      setPlayingCharacterId(null);
+      return;
+    }
+
+    setPlayingCharacterId(character.id);
 
     try {
       // Use character description or a default text
       const auditionText = character.description || `Hola, soy ${character.name}`;
       
-      // Get rate and pitch from voice assignment
-      const ratePct = character.voiceAssignment.rate_pct ?? 0;
-      const pitchPct = character.voiceAssignment.pitch_pct ?? 0;
-      
-      const audioBlob = await voicesApi.auditionVoice(
-        projectId,
-        character.voiceAssignment.voiceId,
-        auditionText,
-        ratePct,
-        pitchPct
-      );
+      // Find the voice object
+      const voice = availableVoices.find(v => v.id === character.voiceAssignment?.voiceId);
+      if (!voice) {
+        throw new Error('Voice not found');
+      }
 
-      // Play the audio
-      const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
+      // Play audition using cached audio
+      await playAudition({
+        voice,
+        config: project,
+        text: auditionText,
+        style: character.voiceAssignment.style,
+        styledegree: character.voiceAssignment.styledegree,
+        rate_pct: character.voiceAssignment.rate_pct ?? 0,
+        pitch_pct: character.voiceAssignment.pitch_pct ?? 0,
+        page: 'characters',
+      });
       
-      // Apply prosody settings if available
-      // Note: This would need backend support to apply rate/pitch
-      
-      audio.onended = () => {
-        setPlayingAudio(null);
-        URL.revokeObjectURL(audioUrl);
-      };
-      
-      audio.onerror = () => {
-        setPlayingAudio(null);
-        URL.revokeObjectURL(audioUrl);
-        alert('Failed to play audio');
-      };
-
-      await audio.play();
-    } catch (error: any) {
+      // Clear playing state when done
+      setPlayingCharacterId(null);
+    } catch (error: unknown) {
       console.error('Audition failed:', error);
-      setPlayingAudio(null);
-      alert(error.message || 'Voice audition failed. Please ensure TTS is configured.');
+      setPlayingCharacterId(null);
+      const errorMessage = error instanceof Error ? error.message : 'Voice audition failed. Please ensure TTS is configured.';
+      alert(errorMessage);
     }
   };
 
@@ -249,7 +255,7 @@ function CharactersPage() {
 
   const isEditing = (fieldId: string) => editingFields.has(fieldId);
 
-  const handleFieldUpdate = (characterId: string, field: string, value: any) => {
+  const handleFieldUpdate = (characterId: string, field: string, value: string) => {
     updateMutation.mutate({ characterId, data: { [field]: value } });
     stopEditing(`${characterId}-${field}`);
   };
@@ -258,7 +264,7 @@ function CharactersPage() {
     event: React.KeyboardEvent,
     characterId: string,
     field: string,
-    value: any
+    value: string
   ) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       handleFieldUpdate(characterId, field, value);
@@ -687,10 +693,13 @@ function CharactersPage() {
                     variant="secondary"
                     size="compact"
                     onClick={() => handleAudition(character)}
-                    disabled={playingAudio === character.id}
-                    loading={playingAudio === character.id}
+                    disabled={isLoadingAudio && playingCharacterId === character.id}
+                    loading={isLoadingAudio && playingCharacterId === character.id}
                   >
-                    {t('characters.audition', '▶ Audition')}
+                    {isPlaying && playingCharacterId === character.id 
+                      ? t('characters.stop', '⏹ Stop')
+                      : t('characters.audition', '▶ Audition')
+                    }
                   </Button>
                 )}
                 <Button

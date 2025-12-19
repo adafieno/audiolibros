@@ -9,6 +9,8 @@ import { voicesApi } from '../lib/api/voices';
 import { Button } from '../components/Button';
 import { Select } from '../components/Select';
 import { ProgressBar } from '../components/ProgressBar';
+import { useAudioCache } from '../hooks/useAudioCache';
+import { projectsApi } from '../lib/projects';
 
 export const Route = createFileRoute('/projects/$projectId/orchestration')({
   component: OrchestrationPage,
@@ -62,6 +64,22 @@ function OrchestrationPage() {
   };
 
   const [filterNoCharacter, setFilterNoCharacter] = useState(false);
+  
+  // Audio cache for voice auditions
+  const { isPlaying, isLoading: isLoadingAudio, playAudition, stopAudio } = useAudioCache();
+  const [playingSegmentId, setPlayingSegmentId] = useState<string | null>(null);
+  
+  // Fetch project
+  const { data: project } = useQuery({
+    queryKey: ['project', projectId],
+    queryFn: () => projectsApi.get(projectId),
+  });
+  
+  // Fetch available voices
+  const { data: voiceInventory } = useQuery({
+    queryKey: ['voices'],
+    queryFn: () => voicesApi.getAvailableVoices(),
+  });
   
   // Local state for segments to enable immediate updates
   const [localSegments, setLocalSegments] = useState<Array<{
@@ -210,13 +228,19 @@ function OrchestrationPage() {
     }
   };
 
-  const [isAuditioning, setIsAuditioning] = useState(false);
-  
   const handleAudition = async (segmentToPlay?: typeof selectedSegment) => {
     const segment = segmentToPlay || selectedSegment;
-    if (!segment || isAuditioning) return;
+    if (!segment || !project) return;
     
-    setIsAuditioning(true);
+    // Stop if already playing this segment
+    if (isPlaying && playingSegmentId === segment.id) {
+      stopAudio();
+      setPlayingSegmentId(null);
+      return;
+    }
+    
+    setPlayingSegmentId(segment.id);
+    
     try {
       // Get the character for the segment's voice
       const character = characters?.find(c => c.name === segment.voice);
@@ -224,34 +248,30 @@ function OrchestrationPage() {
       // Use the voice from character's assignment, or default to a narrator voice
       const voiceId = character?.voiceAssignment?.voiceId || 'es-MX-DaliaNeural';
       
-      // Generate audio for the segment text
-      const audioBlob = await voicesApi.auditionVoice(
-        projectId,
-        voiceId,
-        segment.text,
-        character?.voiceAssignment?.rate_pct,
-        character?.voiceAssignment?.pitch_pct
-      );
+      // Find the voice object
+      const voice = voiceInventory?.voices?.find(v => v.id === voiceId);
+      if (!voice) {
+        throw new Error('Voice not found');
+      }
       
-      // Play the audio
-      const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
+      // Play audition using cached audio
+      await playAudition({
+        voice,
+        config: project,
+        text: segment.text,
+        style: character?.voiceAssignment?.style,
+        styledegree: character?.voiceAssignment?.styledegree,
+        rate_pct: character?.voiceAssignment?.rate_pct ?? 0,
+        pitch_pct: character?.voiceAssignment?.pitch_pct ?? 0,
+        page: 'orchestration',
+      });
       
-      audio.onended = () => {
-        URL.revokeObjectURL(audioUrl);
-        setIsAuditioning(false);
-      };
-      
-      audio.onerror = () => {
-        URL.revokeObjectURL(audioUrl);
-        setIsAuditioning(false);
-        console.error('Audio playback failed');
-      };
-      
-      await audio.play();
+      // Clear playing state when done
+      setPlayingSegmentId(null);
     } catch (error) {
       console.error('Audition failed:', error);
-      setIsAuditioning(false);
+      setPlayingSegmentId(null);
+      alert('Failed to play audition. Please ensure TTS is configured.');
     }
   };
 
@@ -340,7 +360,6 @@ function OrchestrationPage() {
           </div>
         </div>
       </div>
-
       {/* Progress indicators - Full width below header */}
       {(generationProgress || assignmentProgress) && (
         <ProgressBar 
@@ -349,7 +368,6 @@ function OrchestrationPage() {
           totalSteps={assignmentTotal || 1}
         />
       )}
-
       {/* Main Content */}
       <div className="flex gap-4" style={{ height: 'calc(100vh - 280px)' }}>
         {/* Left Panel - Segments Table (50% width) */}
@@ -430,17 +448,17 @@ function OrchestrationPage() {
                             setSelectedSegmentId(segment.id);
                             handleAudition(segment);
                           }}
-                          disabled={!segment.voice || isAuditioning}
+                          disabled={!segment.voice || (isLoadingAudio && playingSegmentId === segment.id)}
                           className="w-6 h-6 flex items-center justify-center rounded hover:bg-opacity-20 transition-colors"
                           style={{ 
                             background: 'transparent', 
-                            color: segment.voice && !isAuditioning ? 'var(--text)' : 'var(--text-muted)',
-                            cursor: segment.voice && !isAuditioning ? 'pointer' : 'not-allowed',
-                            opacity: segment.voice && !isAuditioning ? 1 : 0.5
+                            color: segment.voice && !(isLoadingAudio && playingSegmentId === segment.id) ? 'var(--text)' : 'var(--text-muted)',
+                            cursor: segment.voice && !(isLoadingAudio && playingSegmentId === segment.id) ? 'pointer' : 'not-allowed',
+                            opacity: segment.voice && !(isLoadingAudio && playingSegmentId === segment.id) ? 1 : 0.5
                           }}
                           title={segment.voice ? t('orchestration.audition', 'Play audition') : t('orchestration.assignVoiceFirst', 'Assign a voice first')}
                         >
-                          ▶
+                          {isPlaying && playingSegmentId === segment.id ? '⏹' : '▶'}
                         </button>
                       </td>
                       <td className="py-2 px-2 font-mono" style={{ color: 'var(--text)' }}>
@@ -680,10 +698,10 @@ function OrchestrationPage() {
                   <div className="flex-1" />
                   <Button
                     variant="secondary"
-                    disabled={!selectedSegmentId || isAuditioning}
+                    disabled={!selectedSegmentId || (isLoadingAudio && playingSegmentId === selectedSegmentId)}
                     onClick={() => handleAudition()}
                   >
-                    {isAuditioning ? '⏸' : '▶'} {t('orchestration.audition', 'Audition')}
+                    {isPlaying && playingSegmentId === selectedSegmentId ? '⏹ Stop' : '▶ Audition'}
                   </Button>
                 </div>
               </div>
@@ -698,5 +716,5 @@ function OrchestrationPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

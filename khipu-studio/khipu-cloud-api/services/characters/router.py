@@ -581,3 +581,145 @@ async def assign_voices_to_characters(
         "count": len(assigned_characters),
         "characters": assigned_characters
     }
+
+
+@router.post("/projects/{project_id}/characters/audition")
+async def audition_character_voice(
+    project_id: str,
+    request: dict,
+    current_user = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Generate audio for character voice audition
+    
+    This endpoint uses a two-tier caching system:
+    - L2 (Backend): Database + Azure Blob Storage with 30-day TTL
+    - L1 (Frontend): In-memory cache for same-session requests
+    
+    Args:
+        project_id: Project ID
+        request: Audition request containing voice settings and text
+        db: Database session
+        
+    Returns:
+        Audio data (audio/mpeg)
+    """
+    from fastapi.responses import Response
+    from shared.services.audio_cache import get_audio_cache_service
+    from services.voices.azure_tts import generate_audio
+    
+    logger.info(f"🎤 Audition request for project {project_id}")
+    
+    # Get project
+    result = await db.execute(
+        select(Project).where(Project.id == project_id)
+    )
+    project = result.scalar_one_or_none()
+    
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Extract request parameters
+    voice_id = request.get("voice")
+    text = request.get("text")
+    style = request.get("style")
+    styledegree = request.get("styledegree")
+    rate_pct = request.get("rate_pct")
+    pitch_pct = request.get("pitch_pct")
+    
+    if not voice_id or not text:
+        raise HTTPException(status_code=400, detail="voice and text are required")
+    
+    # Get Azure credentials from project settings
+    azure_key = project.settings.get("azure_tts_key") if project.settings else None
+    azure_region = project.settings.get("azure_tts_region") if project.settings else None
+    
+    if not azure_key or not azure_region:
+        raise HTTPException(
+            status_code=400,
+            detail="Azure TTS credentials not configured in project settings"
+        )
+    
+    # Prepare voice settings for cache key
+    voice_settings = {
+        "style": style,
+        "styledegree": styledegree,
+        "rate_pct": rate_pct,
+        "pitch_pct": pitch_pct
+    }
+    
+    # Get audio cache service
+    audio_cache_service = get_audio_cache_service()
+    
+    # Check L2 cache (Database + Blob Storage)
+    logger.info(f"🔍 Checking L2 cache for voice {voice_id}")
+    cached_audio = await audio_cache_service.get_cached_audio(
+        db=db,
+        tenant_id=str(project.tenant_id),
+        text=text,
+        voice_id=voice_id,
+        voice_settings=voice_settings
+    )
+    
+    if cached_audio:
+        logger.info(f"✅ L2 cache hit! Returning cached audio")
+        return Response(
+            content=cached_audio,
+            media_type="audio/mpeg",
+            headers={
+                "X-Cache-Status": "HIT-L2",
+                "Cache-Control": "public, max-age=1800"  # 30 minutes for frontend L1 cache
+            }
+        )
+    
+    # L2 cache miss - generate audio via Azure TTS
+    logger.info(f"❌ L2 cache miss, generating audio via Azure TTS")
+    
+    try:
+        # Extract locale from voice ID (e.g., "es-AR-ElenaNeural" -> "es-AR")
+        locale = "-".join(voice_id.split("-")[:2]) if "-" in voice_id else "en-US"
+        
+        # Generate audio
+        audio_data = await generate_audio(
+            voice_id=voice_id,
+            text=text,
+            locale=locale,
+            azure_key=azure_key,
+            azure_region=azure_region,
+            style=style,
+            style_degree=styledegree,
+            rate_pct=rate_pct,
+            pitch_pct=pitch_pct
+        )
+        
+        # Store in L2 cache for future use
+        logger.info(f"💾 Storing audio in L2 cache")
+        await audio_cache_service.store_cached_audio(
+            db=db,
+            tenant_id=str(project.tenant_id),
+            text=text,
+            voice_id=voice_id,
+            voice_settings=voice_settings,
+            audio_data=audio_data
+        )
+        
+        logger.info(f"✅ Audio generated and cached successfully")
+        return Response(
+            content=audio_data,
+            media_type="audio/mpeg",
+            headers={
+                "X-Cache-Status": "MISS",
+                "Cache-Control": "public, max-age=1800"  # 30 minutes for frontend L1 cache
+            }
+        )
+        
+    except ValueError as e:
+        logger.error(f"❌ Configuration error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"❌ TTS generation failed: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate audio: {str(e)}"
+        )
