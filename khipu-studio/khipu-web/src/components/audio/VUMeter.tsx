@@ -1,0 +1,329 @@
+/**
+ * Hardware-style VU Meter Components
+ * 
+ * Digital LED-style and analog needle-style VU meters.
+ */
+
+import { useEffect, useState } from 'react';
+
+interface VUMeterProps {
+  level: number; // 0-100
+  label: string;
+  color?: string;
+}
+
+/**
+ * Digital LED-style VU Meter
+ */
+export function VUMeter({ level, label }: VUMeterProps) {
+  const segments = 12;
+  const activeSegments = Math.round((level / 100) * segments);
+  
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+      <div 
+        style={{ 
+          fontFamily: "'Courier New', monospace", 
+          fontSize: '9px', 
+          color: '#999',
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px',
+        }}
+      >
+        {label}
+      </div>
+      <div 
+        style={{ 
+          display: 'flex', 
+          gap: '2px', 
+          background: '#0d0d0d',
+          padding: '4px',
+          borderRadius: '3px',
+          border: '1px solid #1a1a1a',
+        }}
+      >
+        {Array.from({ length: segments }).map((_, i) => {
+          const isActive = i < activeSegments;
+          const segmentColor = i < 8 ? '#4ade80' : i < 10 ? '#fbbf24' : '#ef4444';
+          
+          return (
+            <div
+              key={i}
+              style={{
+                width: '4px',
+                height: '16px',
+                background: isActive ? segmentColor : '#1a1a1a',
+                boxShadow: isActive ? `0 0 4px ${segmentColor}` : 'none',
+                transition: 'all 0.1s',
+                borderRadius: '1px',
+              }}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Analog needle-style VU Meter
+ */
+export function AnalogVUMeter({ isPlaying }: { isPlaying: boolean }) {
+  const [currentLevel, setCurrentLevel] = useState(0);
+  
+  useEffect(() => {
+    if (isPlaying) {
+      // Realistic audio dynamics - mostly hovering around -6 to -3 dB (70-85%)
+      const interval = setInterval(() => {
+        const random = Math.random();
+        let targetLevel: number;
+        
+        if (random < 0.7) {
+          // Normal speech levels: -6 to -3 dB (70-85%)
+          targetLevel = 70 + Math.random() * 15;
+        } else if (random < 0.9) {
+          // Occasional peaks: -3 to 0 dB (85-95%)
+          targetLevel = 85 + Math.random() * 10;
+        } else {
+          // Rare transients: 0 to +3 dB (95-100%)
+          targetLevel = 95 + Math.random() * 5;
+        }
+        
+        // Smooth transition with attack and decay
+        setCurrentLevel(prev => {
+          const diff = targetLevel - prev;
+          const rate = diff > 0 ? 0.3 : 0.15; // Faster attack, slower decay
+          return prev + diff * rate;
+        });
+      }, 50);
+      return () => clearInterval(interval);
+    } else {
+      // Smooth return to rest position (far left)
+      const interval = setInterval(() => {
+        setCurrentLevel(prev => prev * 0.85);
+        if (currentLevel < 0.5) {
+          clearInterval(interval);
+        }
+      }, 50);
+      return () => clearInterval(interval);
+    }
+  }, [isPlaying, currentLevel]);
+  
+  // Map percentage to needle angle (275° to 375° = 275° to 15° wrapped)
+  const needleRotation = 275 + (currentLevel / 100) * 100;
+  
+  return (
+    <div 
+      style={{
+        width: '180px',
+        height: '110px',
+        background: 'linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%)',
+        borderRadius: '6px',
+        border: '1px solid #444',
+        boxShadow: '0 4px 8px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '8px',
+        position: 'relative',
+      }}
+    >
+      {/* Meter face with vintage paper texture */}
+      <div 
+        style={{
+          width: '164px',
+          height: '85px',
+          background: 'radial-gradient(ellipse at center top, #fffae0 0%, #f7e8c0 40%, #ead9a8 100%)',
+          borderRadius: '4px',
+          position: 'relative',
+          overflow: 'hidden',
+          boxShadow: 'inset 0 -2px 6px rgba(0,0,0,0.08), inset 0 2px 4px rgba(255,255,255,0.6), 0 1px 0 rgba(255,255,255,0.4)',
+          border: '1px solid #c9b897',
+        }}
+      >
+        {/* Scale arc */}
+        <svg width="164" height="85" style={{ position: 'absolute', top: 0, left: 0 }}>
+          <defs>
+            <linearGradient id="greenGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style={{ stopColor: '#4ade80', stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: '#fbbf24', stopOpacity: 1 }} />
+            </linearGradient>
+            <linearGradient id="redGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style={{ stopColor: '#fbbf24', stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: '#ef4444', stopOpacity: 1 }} />
+            </linearGradient>
+          </defs>
+          
+          {/* Green/yellow arc */}
+          <path
+            d="M 35 63 A 45 45 0 0 1 98 22"
+            fill="none"
+            stroke="url(#greenGrad)"
+            strokeWidth="14"
+          />
+          
+          {/* Yellow/red arc */}
+          <path
+            d="M 98 22 A 45 45 0 0 1 129 63"
+            fill="none"
+            stroke="url(#redGrad)"
+            strokeWidth="14"
+          />
+          
+          {/* Scale markings */}
+          {Array.from({ length: 13 }).map((_, i) => {
+            const angle = 275 + (i * 100 / 12);
+            const rad = (angle * Math.PI) / 180;
+            const x1 = 82 + Math.cos(rad) * 38;
+            const y1 = 63 - Math.sin(rad) * 38;
+            const x2 = 82 + Math.cos(rad) * (i % 2 === 0 ? 32 : 35);
+            const y2 = 63 - Math.sin(rad) * (i % 2 === 0 ? 32 : 35);
+            
+            return (
+              <line
+                key={i}
+                x1={x1}
+                y1={y1}
+                x2={x2}
+                y2={y2}
+                stroke="#000"
+                strokeWidth={i % 2 === 0 ? '1.5' : '1'}
+              />
+            );
+          })}
+          
+          {/* Labels */}
+          {['-20', '-10', '-7', '-5', '-3', '-1', '0', '+1', '+2', '+3'].map((label, i) => {
+            const positions = [
+              { x: 25, y: 68 },
+              { x: 35, y: 48 },
+              { x: 48, y: 35 },
+              { x: 60, y: 28 },
+              { x: 73, y: 24 },
+              { x: 86, y: 23 },
+              { x: 99, y: 24 },
+              { x: 112, y: 28 },
+              { x: 124, y: 35 },
+              { x: 135, y: 48 },
+            ];
+            
+            return (
+              <text
+                key={i}
+                x={positions[i].x}
+                y={positions[i].y}
+                fontSize="7"
+                fontFamily="Arial"
+                fontWeight="bold"
+                fill="#000"
+                textAnchor="middle"
+              >
+                {label}
+              </text>
+            );
+          })}
+        </svg>
+        
+        {/* VU label */}
+        <div 
+          style={{
+            position: 'absolute',
+            top: '3px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            fontSize: '11px',
+            fontWeight: 'bold',
+            letterSpacing: '2px',
+            color: '#000',
+            fontFamily: 'Arial, sans-serif',
+          }}
+        >
+          VU
+        </div>
+        
+        {/* Needle */}
+        <div 
+          style={{
+            position: 'absolute',
+            bottom: '15px',
+            left: '82px',
+            width: '100px',
+            height: '100px',
+            transformOrigin: '0% 100%',
+            transform: `rotate(${needleRotation}deg)`,
+            transition: 'transform 0.08s ease-out',
+          }}
+        >
+          {/* Needle shaft */}
+          <div 
+            style={{
+              position: 'absolute',
+              bottom: '0',
+              left: '0',
+              width: '0.5px',
+              height: '50px',
+              background: '#000',
+              boxShadow: 'none',
+            }} 
+          />
+          
+          {/* Needle tip */}
+          <div 
+            style={{
+              position: 'absolute',
+              top: '-3px',
+              left: '-1px',
+              width: '0',
+              height: '0',
+              borderLeft: '1px solid transparent',
+              borderRight: '1px solid transparent',
+              borderBottom: '4px solid #000',
+            }} 
+          />
+        </div>
+        
+        {/* Center screw */}
+        <div 
+          style={{
+            position: 'absolute',
+            bottom: '15px',
+            left: '79px',
+            width: '6px',
+            height: '6px',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle at 30% 30%, #888, #333)',
+            border: '0.5px solid #000',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.5)',
+            zIndex: 10,
+          }}
+        >
+          <div 
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              width: '3px',
+              height: '0.5px',
+              backgroundColor: '#555',
+              transform: 'translate(-50%, -50%)',
+            }} 
+          />
+        </div>
+      </div>
+      
+      {/* Bottom label plate */}
+      <div 
+        style={{
+          marginTop: '4px',
+          fontSize: '8px',
+          color: '#999',
+          fontFamily: 'monospace',
+          letterSpacing: '0.5px',
+        }}
+      >
+        {isPlaying ? 'ACTIVE' : 'STANDBY'}
+      </div>
+    </div>
+  );
+}
