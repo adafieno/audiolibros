@@ -1,7 +1,6 @@
 """SFX segments model for audio production module."""
 from datetime import datetime
 from uuid import UUID
-from typing import Optional
 from sqlalchemy import String, Integer, BigInteger, Float, ForeignKey, DateTime, Index
 from sqlalchemy.sql import func
 from sqlalchemy.orm import Mapped, mapped_column

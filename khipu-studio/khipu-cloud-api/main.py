@@ -16,6 +16,7 @@ from services.voices.router import router as voices_router
 from services.characters.router import router as characters_router
 from services.planning.router import router as planning_router
 from services.actions.router import router as actions_router
+from services.audio.router import router as audio_router
 
 # Configure logging
 logging.basicConfig(
@@ -112,6 +113,7 @@ app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(projects_router, prefix="/api/v1/projects", tags=["Projects"])
 app.include_router(chapters_router, prefix="/api/v1/projects/{project_id}/chapters", tags=["Chapters"])
 app.include_router(planning_router, prefix="/api/v1/projects/{project_id}/planning", tags=["Planning"])
+app.include_router(audio_router, prefix="/api/v1", tags=["Audio Production"])
 app.include_router(voices_router, prefix="/api/v1", tags=["Voices"])
 app.include_router(characters_router, prefix="/api/v1", tags=["Characters"])
 app.include_router(actions_router, prefix="/api/v1", tags=["Actions"])
