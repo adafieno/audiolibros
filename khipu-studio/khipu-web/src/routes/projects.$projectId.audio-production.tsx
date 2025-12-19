@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { AnalogVUMeter } from '../components/audio/VUMeter';
@@ -46,6 +46,8 @@ function AudioProductionPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [customMode, setCustomMode] = useState(false);
   const [selectedPresetId, setSelectedPresetId] = useState<string>('clean_polished');
+  const [showSfxDialog, setShowSfxDialog] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Auto-select first chapter when chapters load
   useEffect(() => {
@@ -130,6 +132,38 @@ function AudioProductionPage() {
     }
   }, [playingSegmentId, isPlaying]);
 
+  // Handle player controls
+  const handlePlayPrevious = useCallback(() => {
+    if (!selectedSegmentId || segments.length === 0) return;
+    const currentIdx = segments.findIndex(s => parseInt(s.segment_id) === selectedSegmentId);
+    if (currentIdx > 0) {
+      const prevSegmentId = parseInt(segments[currentIdx - 1].segment_id);
+      handlePlaySegment(prevSegmentId);
+    }
+  }, [selectedSegmentId, segments, handlePlaySegment]);
+
+  const handlePlayNext = useCallback(() => {
+    if (!selectedSegmentId || segments.length === 0) return;
+    const currentIdx = segments.findIndex(s => parseInt(s.segment_id) === selectedSegmentId);
+    if (currentIdx < segments.length - 1) {
+      const nextSegmentId = parseInt(segments[currentIdx + 1].segment_id);
+      handlePlaySegment(nextSegmentId);
+    }
+  }, [selectedSegmentId, segments, handlePlaySegment]);
+
+  const handlePlayAll = useCallback(() => {
+    if (segments.length === 0) return;
+    const firstSegmentId = parseInt(segments[0].segment_id);
+    handlePlaySegment(firstSegmentId);
+    // TODO: Implement continuous playback
+  }, [segments, handlePlaySegment]);
+
+  const handleStop = useCallback(() => {
+    setIsPlaying(false);
+    setPlayingSegmentId(null);
+    // TODO: Reset audio position
+  }, []);
+
   // Handle mark for revision
   const handleMarkRevision = useCallback(async (notes: string) => {
     if (selectedSegmentId === null) return;
@@ -140,6 +174,38 @@ function AudioProductionPage() {
       // Error is handled by hook
     }
   }, [selectedSegmentId, toggleRevisionMark]);
+
+  // Handle toggle revision flag
+  const handleToggleRevision = useCallback(async (segmentId: number) => {
+    try {
+      const segment = segments.find(s => s.segment_id === segmentId.toString());
+      await toggleRevisionMark(segmentId.toString(), !segment?.needs_revision);
+    } catch {
+      // Error is handled by hook
+    }
+  }, [segments, toggleRevisionMark]);
+
+  // Handle SFX file upload
+  const handleSfxUpload = useCallback(() => {
+    setShowSfxDialog(true);
+  }, []);
+
+  // Handle SFX file selection
+  const handleSfxFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // TODO: Validate file (audio format, duration)
+    // TODO: Upload to blob storage
+    // TODO: Create SFX segment
+    console.log('Selected SFX file:', file.name);
+    
+    // For now, just close dialog
+    setShowSfxDialog(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, []);
 
   // Show loading indicator - AFTER all hooks are defined
   if (loading && segments.length === 0) {
@@ -273,6 +339,34 @@ function AudioProductionPage() {
                 ))}
               </select>
             </div>
+
+            {/* Insert Sound Effect Button */}
+            <button
+              onClick={handleSfxUpload}
+              disabled={!selectedChapterId}
+              style={{
+                padding: '6px 16px',
+                background: '#4a9eff',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: selectedChapterId ? 'pointer' : 'not-allowed',
+                opacity: selectedChapterId ? 1 : 0.5,
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                if (selectedChapterId) {
+                  e.currentTarget.style.background = '#5aa9ff';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = '#4a9eff';
+              }}
+            >
+              🎵 Insert Sound Effect
+            </button>
           </div>
         </div>
       </div>
@@ -304,6 +398,115 @@ function AudioProductionPage() {
               <h2 style={{ margin: 0, fontSize: '14px', fontWeight: 600 }}>
                 Audio Preview
               </h2>
+              
+              {/* Player Controls */}
+              <div style={{ display: 'flex', gap: '8px', marginLeft: '16px' }}>
+                <button
+                  onClick={handlePlayPrevious}
+                  disabled={!selectedSegmentId || segments.length === 0}
+                  title="Previous segment"
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '4px',
+                    background: '#333',
+                    border: 'none',
+                    color: '#fff',
+                    cursor: selectedSegmentId && segments.length > 0 ? 'pointer' : 'not-allowed',
+                    opacity: selectedSegmentId && segments.length > 0 ? 1 : 0.5,
+                    fontSize: '14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  ⏮
+                </button>
+                <button
+                  onClick={() => selectedSegmentId && handlePlaySegment(selectedSegmentId)}
+                  disabled={!selectedSegmentId}
+                  title={isPlaying ? 'Pause' : 'Play'}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '4px',
+                    background: isPlaying ? '#4a9eff' : '#333',
+                    border: 'none',
+                    color: '#fff',
+                    cursor: selectedSegmentId ? 'pointer' : 'not-allowed',
+                    opacity: selectedSegmentId ? 1 : 0.5,
+                    fontSize: '14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {isPlaying ? '⏸' : '▶'}
+                </button>
+                <button
+                  onClick={handlePlayNext}
+                  disabled={!selectedSegmentId || segments.length === 0}
+                  title="Next segment"
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '4px',
+                    background: '#333',
+                    border: 'none',
+                    color: '#fff',
+                    cursor: selectedSegmentId && segments.length > 0 ? 'pointer' : 'not-allowed',
+                    opacity: selectedSegmentId && segments.length > 0 ? 1 : 0.5,
+                    fontSize: '14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  ⏭
+                </button>
+                <div style={{ width: '1px', background: '#444', margin: '0 4px' }} />
+                <button
+                  onClick={handlePlayAll}
+                  disabled={segments.length === 0}
+                  title="Play all"
+                  style={{
+                    padding: '0 12px',
+                    height: '32px',
+                    borderRadius: '4px',
+                    background: '#333',
+                    border: 'none',
+                    color: '#fff',
+                    cursor: segments.length > 0 ? 'pointer' : 'not-allowed',
+                    opacity: segments.length > 0 ? 1 : 0.5,
+                    fontSize: '12px',
+                    fontWeight: 600,
+                  }}
+                >
+                  Play All
+                </button>
+                <button
+                  onClick={handleStop}
+                  disabled={!isPlaying}
+                  title="Stop"
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '4px',
+                    background: '#333',
+                    border: 'none',
+                    color: '#fff',
+                    cursor: isPlaying ? 'pointer' : 'not-allowed',
+                    opacity: isPlaying ? 1 : 0.5,
+                    fontSize: '14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  ⏹
+                </button>
+              </div>
+
               <div style={{ fontSize: '11px', color: '#999' }}>
                 Select a segment to preview with processing applied
               </div>
@@ -390,14 +593,17 @@ function AudioProductionPage() {
                   id: parseInt(seg.segment_id) || idx,
                   position: seg.display_order,
                   text: seg.text || null,
+                  character_name: seg.character_name || null,
                   audio_blob_path: seg.raw_audio_url || null,
                   status: seg.has_audio ? 'cached' : (seg.needs_revision ? 'needs_revision' : 'pending'),
                   duration: seg.duration || null,
                   revision_notes: null,
+                  needs_revision: seg.needs_revision,
                 }))}
                 selectedSegmentId={selectedSegmentId}
                 onSegmentSelect={handleSegmentSelect}
                 onPlaySegment={handlePlaySegment}
+                onToggleRevision={handleToggleRevision}
                 playingSegmentId={playingSegmentId}
               />
             </div>
@@ -450,6 +656,86 @@ function AudioProductionPage() {
           </div>
         </div>
       </div>
+
+      {/* SFX Upload Dialog */}
+      {showSfxDialog && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setShowSfxDialog(false)}
+        >
+          <div
+            style={{
+              background: '#1a1a1a',
+              border: '1px solid #333',
+              borderRadius: '8px',
+              padding: '24px',
+              maxWidth: '500px',
+              width: '90%',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 600, color: '#e0e0e0' }}>
+              Insert Sound Effect
+            </h3>
+            
+            <p style={{ margin: '0 0 24px 0', fontSize: '13px', color: '#999' }}>
+              Select an audio file to insert as a sound effect. Supported formats: WAV, MP3, OGG
+            </p>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="audio/*"
+              onChange={handleSfxFileSelect}
+              style={{ display: 'none' }}
+            />
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowSfxDialog(false)}
+                style={{
+                  padding: '8px 16px',
+                  background: '#333',
+                  color: '#e0e0e0',
+                  border: 'none',
+                  borderRadius: '4px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  padding: '8px 16px',
+                  background: '#4a9eff',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Choose File
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

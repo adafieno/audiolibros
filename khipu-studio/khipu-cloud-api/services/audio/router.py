@@ -653,6 +653,7 @@ async def get_chapter_audio_production_data(
             display_order=base_order,
             text=seg.get('text', ''),
             voice=seg.get('voice', ''),
+            character_name=seg.get('voice', ''),  # voice field contains character name from orchestration
             raw_audio_url=None,  # TODO: Generate URL from cache_key if exists
             has_audio=has_audio,
             processing_chain=metadata.processing_chain if metadata else None,
@@ -671,6 +672,7 @@ async def get_chapter_audio_production_data(
             display_order=sfx.display_order,
             text=None,
             voice=None,
+            character_name=None,
             raw_audio_url=sfx_url,
             has_audio=True,
             processing_chain=None,

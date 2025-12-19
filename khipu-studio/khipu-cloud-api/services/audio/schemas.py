@@ -62,6 +62,7 @@ class AudioSegmentData(BaseModel):
     display_order: int = Field(..., description="Display order in chapter")
     text: Optional[str] = Field(None, description="Text content (plan segments only)")
     voice: Optional[str] = Field(None, description="Voice ID (plan segments only)")
+    character_name: Optional[str] = Field(None, description="Character name (plan segments only)")
     raw_audio_url: Optional[str] = Field(None, description="URL to raw audio")
     has_audio: bool = Field(..., description="Whether audio file exists")
     processing_chain: Optional[Dict[str, Any]] = Field(None, description="Processing chain config")

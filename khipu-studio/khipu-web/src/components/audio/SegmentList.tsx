@@ -13,6 +13,7 @@ interface SegmentListProps {
   selectedSegmentId?: number | null;
   onSegmentSelect: (segmentId: number) => void;
   onPlaySegment: (segmentId: number) => void;
+  onToggleRevision: (segmentId: number) => void;
   playingSegmentId?: number | null;
   disabled?: boolean;
 }
@@ -22,6 +23,7 @@ export function SegmentList({
   selectedSegmentId,
   onSegmentSelect,
   onPlaySegment,
+  onToggleRevision,
   playingSegmentId,
   disabled = false,
 }: SegmentListProps) {
@@ -159,6 +161,21 @@ export function SegmentList({
                     Segment {segment.position + 1}
                   </span>
                   
+                  {/* Character Name */}
+                  {segment.character_name && (
+                    <span style={{
+                      fontSize: '12px',
+                      color: '#4a9eff',
+                      fontWeight: 500,
+                      padding: '2px 8px',
+                      background: 'rgba(74, 158, 255, 0.15)',
+                      borderRadius: '3px',
+                      border: '1px solid rgba(74, 158, 255, 0.3)',
+                    }}>
+                      {segment.character_name}
+                    </span>
+                  )}
+                  
                   {/* Status Badge */}
                   <span style={{
                     display: 'inline-flex',
@@ -180,6 +197,44 @@ export function SegmentList({
                     }} />
                     {statusLabel}
                   </span>
+
+                  {/* Revision Flag Icon */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!disabled) onToggleRevision(segment.id);
+                    }}
+                    disabled={disabled}
+                    title={segment.needs_revision ? 'Remove revision flag' : 'Flag for revision'}
+                    style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '3px',
+                      background: segment.needs_revision ? 'rgba(251, 191, 36, 0.2)' : 'transparent',
+                      border: segment.needs_revision ? '1px solid #fbbf24' : '1px solid #444',
+                      color: segment.needs_revision ? '#fbbf24' : '#666',
+                      cursor: disabled ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '14px',
+                      transition: 'all 0.2s',
+                      flexShrink: 0,
+                      padding: 0,
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!disabled) {
+                        e.currentTarget.style.borderColor = segment.needs_revision ? '#fbbf24' : '#888';
+                        e.currentTarget.style.color = segment.needs_revision ? '#fbbf24' : '#aaa';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = segment.needs_revision ? '#fbbf24' : '#444';
+                      e.currentTarget.style.color = segment.needs_revision ? '#fbbf24' : '#666';
+                    }}
+                  >
+                    🚩
+                  </button>
 
                   {/* Duration */}
                   <span style={{ 

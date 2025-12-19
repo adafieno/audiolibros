@@ -90,6 +90,7 @@ export interface AudioSegmentData {
   display_order: number;
   text?: string;
   voice?: string;
+  character_name?: string;
   raw_audio_url?: string;
   has_audio: boolean;
   processing_chain?: AudioProcessingChain;
@@ -119,10 +120,12 @@ export interface Segment {
   id: number;
   position: number;
   text: string | null;
+  character_name: string | null;
   audio_blob_path: string | null;
   status: 'pending' | 'cached' | 'processed' | 'needs_revision' | null;
   duration: number | null;
   revision_notes: string | null;
+  needs_revision: boolean;
 }
 
 // Chapter info for UI
