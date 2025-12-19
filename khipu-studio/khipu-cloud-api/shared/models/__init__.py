@@ -12,6 +12,8 @@ from .chapter import Chapter
 from .plan import ChapterPlan
 from .action_history import ActionHistory
 from .audio_cache import AudioCache
+from .audio_segment_metadata import AudioSegmentMetadata
+from .sfx_segments import SfxSegment
 
 
 class Tenant(Base):
