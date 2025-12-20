@@ -665,7 +665,7 @@ async def get_chapter_audio_production_data(
         metadata = metadata_dict.get(str(segment_id))
         
         # Determine if audio exists for this segment
-        has_audio = metadata is not None and metadata.cache_key is not None
+        has_audio = metadata is not None and metadata.raw_audio_cache_key is not None
         
         # Use orchestration order multiplied by 100 to leave room for SFX insertions
         # SFX can be inserted at positions like: 50, 150, 250 (between segments 0, 100, 200)
@@ -682,7 +682,7 @@ async def get_chapter_audio_production_data(
             has_audio=has_audio,
             processing_chain=metadata.processing_chain if metadata else None,
             preset_id=metadata.preset_id if metadata else None,
-            needs_revision=metadata.needs_revision if metadata else seg.get('needsRevision', False),
+            needs_revision=metadata.needs_revision if metadata else False,
             duration=metadata.duration_seconds if metadata else None
         ))
     

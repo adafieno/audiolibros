@@ -360,10 +360,12 @@ function AudioProductionPage() {
     try {
       const segment = segments.find(s => s.segment_id === segmentId);
       await toggleRevisionMark(segmentId, !segment?.needs_revision);
+      // Refetch to ensure we have the latest data
+      await loadChapterData();
     } catch {
       // Error is handled by hook
     }
-  }, [segments, toggleRevisionMark]);
+  }, [segments, toggleRevisionMark, loadChapterData]);
 
   // Handle SFX file upload
   const handleSfxUpload = useCallback(() => {
