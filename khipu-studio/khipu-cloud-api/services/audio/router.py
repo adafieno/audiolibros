@@ -236,7 +236,8 @@ async def get_processing_chain(
     metadata = result.scalar_one_or_none()
     
     return ProcessingChainResponse(
-        processing_chain=metadata.processing_chain if metadata else None
+        processing_chain=metadata.processing_chain if metadata else None,
+        preset_id=metadata.preset_id if metadata else None
     )
 
 
@@ -269,18 +270,20 @@ async def update_processing_chain(
     
     if metadata:
         metadata.processing_chain = request.processing_chain
+        metadata.preset_id = request.preset_id
     else:
         metadata = AudioSegmentMetadata(
             project_id=project_id,
             chapter_id=chapter_id,
             segment_id=segment_id,
-            processing_chain=request.processing_chain
+            processing_chain=request.processing_chain,
+            preset_id=request.preset_id
         )
         db.add(metadata)
     
     await db.commit()
     
-    logger.info(f"💾 Updated processing chain for segment {segment_id}")
+    logger.info(f"💾 Updated processing chain for segment {segment_id}, preset: {request.preset_id}")
     
     return {"success": True}
 
@@ -678,6 +681,7 @@ async def get_chapter_audio_production_data(
             raw_audio_url=None,  # TODO: Generate URL from cache_key if exists
             has_audio=has_audio,
             processing_chain=metadata.processing_chain if metadata else None,
+            preset_id=metadata.preset_id if metadata else None,
             needs_revision=metadata.needs_revision if metadata else seg.get('needsRevision', False),
             duration=metadata.duration_seconds if metadata else None
         ))

@@ -65,6 +65,7 @@ export interface ProcessingChainResponse {
 
 export interface ProcessingChainUpdateRequest {
   processing_chain: AudioProcessingChain;
+  preset_id?: string;
 }
 
 export interface RevisionMarkRequest {
@@ -94,6 +95,7 @@ export interface AudioSegmentData {
   raw_audio_url?: string;
   has_audio: boolean;
   processing_chain?: AudioProcessingChain;
+  preset_id?: string;
   needs_revision: boolean;
   duration?: number;
 }

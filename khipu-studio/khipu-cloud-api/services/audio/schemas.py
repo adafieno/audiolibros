@@ -25,6 +25,7 @@ class ProcessingChainResponse(BaseModel):
         None,
         description="Processing chain JSON configuration"
     )
+    preset_id: Optional[str] = Field(None, description="Preset ID if using a preset")
 
 
 class ProcessingChainUpdateRequest(BaseModel):
@@ -33,6 +34,7 @@ class ProcessingChainUpdateRequest(BaseModel):
         ...,
         description="Processing chain JSON configuration"
     )
+    preset_id: Optional[str] = Field(None, description="Preset ID if using a preset")
 
 
 class RevisionMarkRequest(BaseModel):
@@ -66,6 +68,7 @@ class AudioSegmentData(BaseModel):
     raw_audio_url: Optional[str] = Field(None, description="URL to raw audio")
     has_audio: bool = Field(..., description="Whether audio file exists")
     processing_chain: Optional[Dict[str, Any]] = Field(None, description="Processing chain config")
+    preset_id: Optional[str] = Field(None, description="Preset ID if using a preset")
     needs_revision: bool = Field(False, description="Whether marked for revision")
     duration: Optional[float] = Field(None, description="Audio duration in seconds")
 

@@ -33,6 +33,9 @@ class AudioSegmentMetadata(Base):
     chapter_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     segment_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     
+    # Preset identification
+    preset_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    
     # Processing chain configuration (JSON)
     processing_chain: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
     

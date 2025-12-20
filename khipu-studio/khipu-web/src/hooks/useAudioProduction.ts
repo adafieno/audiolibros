@@ -76,7 +76,8 @@ export function useAudioProduction(projectId: string, chapterId: string, chapter
    */
   const updateProcessingChain = useCallback(async (
     segmentId: string,
-    processingChain: AudioProcessingChain
+    processingChain: AudioProcessingChain,
+    presetId?: string
   ): Promise<void> => {
     try {
       setError(null);
@@ -85,13 +86,13 @@ export function useAudioProduction(projectId: string, chapterId: string, chapter
         projectId,
         chapterId,
         segmentId,
-        { processing_chain: processingChain }
+        { processing_chain: processingChain, preset_id: presetId }
       );
       
       // Update segment in local state
       setSegments(prev => prev.map(seg => 
         seg.segment_id === segmentId
-          ? { ...seg, processing_chain: processingChain }
+          ? { ...seg, processing_chain: processingChain, preset_id: presetId }
           : seg
       ));
       

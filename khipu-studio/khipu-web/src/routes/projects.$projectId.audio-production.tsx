@@ -52,6 +52,7 @@ function AudioProductionPage() {
     error,
     loadChapterData,
     toggleRevisionMark,
+    updateProcessingChain,
   } = useAudioProduction(projectId, chapterOrder, selectedChapterId);
 
   const { audioData, processingChain, updateProcessingChain: updatePlayerChain } = useAudioPlayer();
@@ -94,16 +95,21 @@ function AudioProductionPage() {
   }, [updatePlayerChain]);
 
   // Handle preset selection
-  const handlePresetSelect = useCallback((presetId: string) => {
+  const handlePresetSelect = useCallback(async (presetId: string) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const preset = AUDIO_PRESETS.find((p: any) => p.id === presetId);
-    if (preset) {
+    if (preset && selectedSegmentId) {
       setSelectedPresetId(presetId);
       setCustomMode(false);
       updatePlayerChain(preset.processingChain);
-      // Auto-save - no need for isDirty
+      // Save to backend
+      try {
+        await updateProcessingChain(selectedSegmentId, preset.processingChain, presetId);
+      } catch (error) {
+        console.error('Failed to save preset:', error);
+      }
     }
-  }, [updatePlayerChain]);
+  }, [updatePlayerChain, selectedSegmentId, updateProcessingChain]);
 
   // Handle custom mode toggle
   const handleCustomModeToggle = useCallback(() => {
@@ -157,6 +163,21 @@ function AudioProductionPage() {
   const handleSegmentSelect = useCallback(async (segmentId: string) => {
     setSelectedSegmentId(segmentId);
     
+    // Load preset from segment metadata
+    const segment = segments.find(s => s.segment_id === segmentId);
+    if (segment) {
+      if (segment.preset_id) {
+        setSelectedPresetId(segment.preset_id);
+        setCustomMode(false);
+      } else if (segment.processing_chain) {
+        setSelectedPresetId('');
+        setCustomMode(true);
+      } else {
+        setSelectedPresetId('raw_unprocessed');
+        setCustomMode(false);
+      }
+    }
+    
     // Stop any currently playing audio
     audioElements.forEach((audio, id) => {
       if (id !== segmentId) {
@@ -168,7 +189,6 @@ function AudioProductionPage() {
     setPlayingSegmentId(null);
     
     // Load audio for selected segment if not already loaded
-    const segment = segments.find(s => s.segment_id === segmentId);
     if (!segment) {
       console.error('Segment not found:', segmentId);
       return;
