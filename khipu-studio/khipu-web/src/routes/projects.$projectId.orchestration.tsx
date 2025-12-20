@@ -9,7 +9,6 @@ import { voicesApi } from '../lib/api/voices';
 import { Button } from '../components/Button';
 import { Select } from '../components/Select';
 import { ProgressBar } from '../components/ProgressBar';
-import { useAudioCache } from '../hooks/useAudioCache';
 import { projectsApi } from '../lib/projects';
 
 export const Route = createFileRoute('/projects/$projectId/orchestration')({
@@ -65,20 +64,17 @@ function OrchestrationPage() {
 
   const [filterNoCharacter, setFilterNoCharacter] = useState(false);
   
-  // Audio cache for voice auditions
-  const { isPlaying, isLoading: isLoadingAudio, playAudition, stopAudio } = useAudioCache();
+  // Audio playback state - using same pattern as Voice Casting
+  const [audioCache] = useState(new Map<string, string>());
+  const [audioElements] = useState(new Map<string, HTMLAudioElement>());
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [playingSegmentId, setPlayingSegmentId] = useState<string | null>(null);
   
   // Fetch project
   const { data: project } = useQuery({
     queryKey: ['project', projectId],
     queryFn: () => projectsApi.get(projectId),
-  });
-  
-  // Fetch available voices
-  const { data: voiceInventory } = useQuery({
-    queryKey: ['voices'],
-    queryFn: () => voicesApi.getAvailableVoices(),
   });
   
   // Local state for segments to enable immediate updates
@@ -92,14 +88,12 @@ function OrchestrationPage() {
     voice?: string;
     needsRevision?: boolean;
   }>>([]);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const selectedSegment = localSegments.find(s => s.id === selectedSegmentId);
   
   // Sync local state with fetched plan
   useEffect(() => {
     if (plan?.segments) {
       setLocalSegments(plan.segments);
-      setHasUnsavedChanges(false);
     }
   }, [plan]);
 
@@ -125,21 +119,39 @@ function OrchestrationPage() {
 
   // Removed updatePlanMutation - now using saveChanges() for batch updates
 
-  const handleVoiceChange = (segmentId: string, voice: string) => {
-    setLocalSegments(prev => prev.map(seg => 
-      seg.id === segmentId ? { ...seg, voice } : seg
-    ));
-    setHasUnsavedChanges(true);
-  };
-  
-  const saveChanges = async () => {
+  const handleVoiceChange = async (segmentId: string, voice: string) => {
     if (!selectedChapterId) return;
+    
+    // Update local state immediately for UI responsiveness
+    const updatedSegments = localSegments.map(seg => 
+      seg.id === segmentId ? { ...seg, voice } : seg
+    );
+    setLocalSegments(updatedSegments);
+    
+    // Auto-save to backend
     try {
-      await planningApi.updatePlan(projectId, selectedChapterId, localSegments);
+      await planningApi.updatePlan(projectId, selectedChapterId, updatedSegments);
       await refetch();
-      setHasUnsavedChanges(false);
     } catch (error) {
-      console.error('Failed to save changes:', error);
+      console.error('Failed to auto-save voice change:', error);
+    }
+  };
+
+  const handleToggleRevision = async (segmentId: string) => {
+    if (!selectedChapterId) return;
+    
+    // Update local state immediately for UI responsiveness
+    const updatedSegments = localSegments.map(seg => 
+      seg.id === segmentId ? { ...seg, needsRevision: !seg.needsRevision } : seg
+    );
+    setLocalSegments(updatedSegments);
+    
+    // Auto-save to backend
+    try {
+      await planningApi.updatePlan(projectId, selectedChapterId, updatedSegments);
+      await refetch();
+    } catch (error) {
+      console.error('Failed to auto-save revision flag:', error);
     }
   };
 
@@ -234,12 +246,27 @@ function OrchestrationPage() {
     
     // Stop if already playing this segment
     if (isPlaying && playingSegmentId === segment.id) {
-      stopAudio();
+      // Stop playing audio
+      const audio = audioElements.get(segment.id);
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+      setIsPlaying(false);
       setPlayingSegmentId(null);
       return;
     }
     
+    // Stop any other playing audio
+    audioElements.forEach((audio, id) => {
+      if (id !== segment.id) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+    });
+    
     setPlayingSegmentId(segment.id);
+    setIsLoadingAudio(true);
     
     try {
       // Get the character for the segment's voice
@@ -248,29 +275,44 @@ function OrchestrationPage() {
       // Use the voice from character's assignment, or default to a narrator voice
       const voiceId = character?.voiceAssignment?.voiceId || 'es-MX-DaliaNeural';
       
-      // Find the voice object
-      const voice = voiceInventory?.voices?.find(v => v.id === voiceId);
-      if (!voice) {
-        throw new Error('Voice not found');
+      // Check if audio is already cached
+      let audioUrl = audioCache.get(segment.id);
+      
+      if (!audioUrl) {
+        // Generate audio via voice audition API (same as Voice Casting)
+        console.log('Generating audio for segment:', segment.id, 'voice:', voiceId, 'character:', segment.voice);
+        const blob = await voicesApi.auditionVoice(projectId, voiceId, segment.text);
+        audioUrl = URL.createObjectURL(blob);
+        audioCache.set(segment.id, audioUrl);
+        console.log('Audio generated and cached for segment:', segment.id);
       }
       
-      // Play audition using cached audio
-      await playAudition({
-        voice,
-        config: project,
-        text: segment.text,
-        style: character?.voiceAssignment?.style,
-        styledegree: character?.voiceAssignment?.styledegree,
-        rate_pct: character?.voiceAssignment?.rate_pct ?? 0,
-        pitch_pct: character?.voiceAssignment?.pitch_pct ?? 0,
-        page: 'orchestration',
-      });
+      // Get or create audio element
+      let audio = audioElements.get(segment.id);
+      if (!audio) {
+        audio = new Audio(audioUrl);
+        audio.onended = () => {
+          setIsPlaying(false);
+          setPlayingSegmentId(null);
+        };
+        audio.onerror = (e) => {
+          console.error('Failed to play audio for segment:', segment.id, e);
+          setIsPlaying(false);
+          setPlayingSegmentId(null);
+        };
+        audioElements.set(segment.id, audio);
+      }
       
-      // Clear playing state when done
-      setPlayingSegmentId(null);
+      // Play audio
+      setIsPlaying(true);
+      setIsLoadingAudio(false);
+      await audio.play();
+      
     } catch (error) {
       console.error('Audition failed:', error);
       setPlayingSegmentId(null);
+      setIsPlaying(false);
+      setIsLoadingAudio(false);
       alert('Failed to play audition. Please ensure TTS is configured.');
     }
   };
@@ -348,15 +390,6 @@ function OrchestrationPage() {
             >
               {isAssigning ? '⏳ Assigning...' : t('orchestration.assignCharacters', 'Assign Characters')}
             </Button>
-            
-            {hasUnsavedChanges && (
-              <Button
-                variant="primary"
-                onClick={saveChanges}
-              >
-                {t('common.save', 'Save Changes')}
-              </Button>
-            )}
           </div>
         </div>
       </div>
@@ -428,6 +461,9 @@ function OrchestrationPage() {
                     <th className="text-left py-2 px-2 font-medium flex-1" style={{ color: 'var(--text-muted)' }}>
                       {t('orchestration.character', 'character')}
                     </th>
+                    <th className="text-center py-2 px-2 font-medium" style={{ color: 'var(--text-muted)', width: '50px' }}>
+                      🚩
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -493,6 +529,32 @@ function OrchestrationPage() {
                             </option>
                           ))}
                         </Select>
+                      </td>
+                      <td className="py-2 px-2 text-center">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleRevision(segment.id);
+                          }}
+                          title={segment.needsRevision ? 'Remove revision flag' : 'Flag for revision'}
+                          style={{
+                            width: '24px',
+                            height: '24px',
+                            borderRadius: '3px',
+                            background: segment.needsRevision ? 'rgba(251, 191, 36, 0.2)' : 'transparent',
+                            border: segment.needsRevision ? '1px solid #fbbf24' : '1px solid #444',
+                            color: segment.needsRevision ? '#fbbf24' : '#666',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '14px',
+                            transition: 'all 0.2s',
+                            padding: 0,
+                          }}
+                        >
+                          🚩
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -672,13 +734,21 @@ function OrchestrationPage() {
                     <>
                       <Button
                         variant="primary"
-                        onClick={() => {
-                          if (selectedSegment) {
-                            setLocalSegments(prev => prev.map(seg =>
+                        onClick={async () => {
+                          if (selectedSegment && selectedChapterId) {
+                            const updatedSegments = localSegments.map(seg =>
                               seg.id === selectedSegment.id ? { ...seg, text: editedText } : seg
-                            ));
-                            setHasUnsavedChanges(true);
+                            );
+                            setLocalSegments(updatedSegments);
                             setIsEditing(false);
+                            
+                            // Auto-save to backend
+                            try {
+                              await planningApi.updatePlan(projectId, selectedChapterId, updatedSegments);
+                              await refetch();
+                            } catch (error) {
+                              console.error('Failed to auto-save text change:', error);
+                            }
                           }
                         }}
                       >

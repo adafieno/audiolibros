@@ -7,7 +7,6 @@ import { voicesApi } from '../lib/api/voices';
 import { projectsApi } from '../lib/projects';
 import { Button } from '../components/Button';
 import { ProgressBar } from '../components/ProgressBar';
-import { useAudioCache } from '../hooks/useAudioCache';
 
 export const Route = createFileRoute('/projects/$projectId/characters')({
   component: CharactersPage,
@@ -49,8 +48,11 @@ function CharactersPage() {
   const [assignmentProgress, setAssignmentProgress] = useState('');
   const [playingCharacterId, setPlayingCharacterId] = useState<string | null>(null);
   
-  // Audio cache for voice auditions
-  const { isPlaying, isLoading: isLoadingAudio, playAudition, stopAudio } = useAudioCache();
+  // Audio playback state - using same pattern as Voice Casting
+  const [audioCache] = useState(new Map<string, string>());
+  const [audioElements] = useState(new Map<string, HTMLAudioElement>());
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   
   // Local state for characters to enable immediate updates
   const [localCharacters, setLocalCharacters] = useState<Character[]>([]);
@@ -200,41 +202,79 @@ function CharactersPage() {
     }
 
     // Stop any currently playing audio
-    if (isPlaying) {
-      stopAudio();
+    if (isPlaying && playingCharacterId === character.id) {
+      const audio = audioElements.get(character.id);
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+      setIsPlaying(false);
       setPlayingCharacterId(null);
       return;
     }
 
+    // Stop any other playing audio
+    audioElements.forEach((audio, id) => {
+      if (id !== character.id) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+    });
+
     setPlayingCharacterId(character.id);
+    setIsLoadingAudio(true);
 
     try {
       // Use character description or a default text
       const auditionText = character.description || `Hola, soy ${character.name}`;
-      
-      // Find the voice object
-      const voice = availableVoices.find(v => v.id === character.voiceAssignment?.voiceId);
-      if (!voice) {
-        throw new Error('Voice not found');
-      }
+      const voiceId = character.voiceAssignment.voiceId;
 
-      // Play audition using cached audio
-      await playAudition({
-        voice,
-        config: project,
-        text: auditionText,
-        style: character.voiceAssignment.style,
-        styledegree: character.voiceAssignment.styledegree,
-        rate_pct: character.voiceAssignment.rate_pct ?? 0,
-        pitch_pct: character.voiceAssignment.pitch_pct ?? 0,
-        page: 'characters',
-      });
+      // Check if audio is already cached
+      let audioUrl = audioCache.get(character.id);
       
-      // Clear playing state when done
-      setPlayingCharacterId(null);
+      if (!audioUrl) {
+        // Generate audio via voice audition API (same as Voice Casting)
+        console.log('Generating audio for character:', character.id, 'voice:', voiceId);
+        const blob = await voicesApi.auditionVoice(
+          projectId,
+          voiceId,
+          auditionText,
+          character.voiceAssignment.rate_pct ?? 0,
+          character.voiceAssignment.pitch_pct ?? 0,
+          character.voiceAssignment.style,
+          character.voiceAssignment.styledegree
+        );
+        audioUrl = URL.createObjectURL(blob);
+        audioCache.set(character.id, audioUrl);
+        console.log('Audio generated and cached for character:', character.id);
+      }
+      
+      // Get or create audio element
+      let audio = audioElements.get(character.id);
+      if (!audio) {
+        audio = new Audio(audioUrl);
+        audio.onended = () => {
+          setIsPlaying(false);
+          setPlayingCharacterId(null);
+        };
+        audio.onerror = (e) => {
+          console.error('Failed to play audio for character:', character.id, e);
+          setIsPlaying(false);
+          setPlayingCharacterId(null);
+        };
+        audioElements.set(character.id, audio);
+      }
+      
+      // Play audio
+      setIsPlaying(true);
+      setIsLoadingAudio(false);
+      await audio.play();
+      
     } catch (error: unknown) {
       console.error('Audition failed:', error);
       setPlayingCharacterId(null);
+      setIsPlaying(false);
+      setIsLoadingAudio(false);
       const errorMessage = error instanceof Error ? error.message : 'Voice audition failed. Please ensure TTS is configured.';
       alert(errorMessage);
     }

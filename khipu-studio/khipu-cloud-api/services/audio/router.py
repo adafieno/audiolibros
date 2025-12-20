@@ -300,12 +300,33 @@ async def update_revision_mark(
     # Verify project access
     await _verify_project_access(db, project_id, current_user.tenant_id)
     
+    # Import Chapter model here to avoid circular import
+    from shared.models.chapter import Chapter
+    
+    # Resolve chapter_id - could be UUID or order number
+    try:
+        chapter_uuid = UUID(chapter_id)
+    except ValueError:
+        # chapter_id is an order number, look up the UUID
+        chapter_result = await db.execute(
+            select(Chapter).where(
+                and_(
+                    Chapter.project_id == project_id,
+                    Chapter.order == int(chapter_id)
+                )
+            )
+        )
+        chapter = chapter_result.scalar_one_or_none()
+        if not chapter:
+            raise HTTPException(status_code=404, detail="Chapter not found")
+        chapter_uuid = chapter.id
+    
     # Get or create segment metadata
     result = await db.execute(
         select(AudioSegmentMetadata).where(
             and_(
                 AudioSegmentMetadata.project_id == project_id,
-                AudioSegmentMetadata.chapter_id == chapter_id,
+                AudioSegmentMetadata.chapter_id == str(chapter_uuid),
                 AudioSegmentMetadata.segment_id == segment_id
             )
         )
@@ -318,7 +339,7 @@ async def update_revision_mark(
     else:
         metadata = AudioSegmentMetadata(
             project_id=project_id,
-            chapter_id=chapter_id,
+            chapter_id=str(chapter_uuid),
             segment_id=segment_id,
             needs_revision=request.needs_revision,
             revision_notes=request.notes

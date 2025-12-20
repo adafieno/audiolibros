@@ -10,11 +10,11 @@ import type { Segment } from '../../types/audio-production';
 
 interface SegmentListProps {
   segments: Segment[];
-  selectedSegmentId?: number | null;
-  onSegmentSelect: (segmentId: number) => void;
-  onPlaySegment: (segmentId: number) => void;
-  onToggleRevision: (segmentId: number) => void;
-  playingSegmentId?: number | null;
+  selectedSegmentId?: string | null;
+  onSegmentSelect: (segmentId: string) => void;
+  onPlaySegment: (segmentId: string) => void;
+  onToggleRevision: (segmentId: string) => void;
+  playingSegmentId?: string | null;
   disabled?: boolean;
 }
 
@@ -27,7 +27,7 @@ export function SegmentList({
   playingSegmentId,
   disabled = false,
 }: SegmentListProps) {
-  const [expandedSegmentId, setExpandedSegmentId] = useState<number | null>(null);
+  const [expandedSegmentId, setExpandedSegmentId] = useState<string | null>(null);
 
   const formatDuration = (seconds: number | null | undefined): string => {
     if (!seconds) return '00:00';

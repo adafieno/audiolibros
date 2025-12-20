@@ -68,7 +68,7 @@ export function VUMeter({ level, label }: VUMeterProps) {
 /**
  * Analog needle-style VU Meter
  */
-export function AnalogVUMeter({ isPlaying }: { isPlaying: boolean }) {
+export function AnalogVUMeter({ isPlaying, channel }: { isPlaying: boolean; channel?: 'L' | 'R' }) {
   const [currentLevel, setCurrentLevel] = useState(0);
   
   useEffect(() => {
@@ -171,56 +171,80 @@ export function AnalogVUMeter({ isPlaying }: { isPlaying: boolean }) {
             strokeWidth="14"
           />
           
-          {/* Scale markings */}
-          {Array.from({ length: 13 }).map((_, i) => {
-            const angle = 275 + (i * 100 / 12);
+          {/* Major tick marks and labels - matching desktop app layout */}
+          {[
+            { label: '-20', angle: 165 },
+            { label: '-10', angle: 135 },
+            { label: '-5', angle: 105 },
+            { label: '0', angle: 75, bold: true },
+            { label: '+1', angle: 55, red: true },
+            { label: '+2', angle: 35, red: true },
+            { label: '+3', angle: 15, red: true }
+          ].map((tick, i) => {
+            const rad = (tick.angle * Math.PI) / 180;
+            const innerRadius = 40;
+            const outerRadius = tick.bold ? 48 : 46;
+            const labelRadius = 30;
+            const x1 = 82 + Math.cos(rad) * innerRadius;
+            const y1 = 70 - Math.sin(rad) * innerRadius;
+            const x2 = 82 + Math.cos(rad) * outerRadius;
+            const y2 = 70 - Math.sin(rad) * outerRadius;
+            const labelX = 82 + Math.cos(rad) * labelRadius;
+            const labelY = 70 - Math.sin(rad) * labelRadius;
+            
+            return (
+              <g key={i}>
+                <line
+                  x1={x1}
+                  y1={y1}
+                  x2={x2}
+                  y2={y2}
+                  stroke={tick.red ? '#8b0000' : '#000'}
+                  strokeWidth={tick.bold ? '2' : '1.5'}
+                />
+                <text
+                  x={labelX}
+                  y={labelY + 3}
+                  textAnchor="middle"
+                  fontSize={tick.bold ? '9' : '7'}
+                  fontWeight={tick.bold ? 'bold' : 'normal'}
+                  fill={tick.red ? '#8b0000' : '#000'}
+                  fontFamily="Arial, sans-serif"
+                >
+                  {tick.label}
+                </text>
+              </g>
+            );
+          })}
+          
+          {/* Minor tick marks - different density for left and right */}
+          {[...Array.from({ length: 6 }).map((_, i) => {
+            // Left side (negative dB): fewer ticks, compressed scale
+            return 165 - ((i + 1) * 15);
+          }), ...Array.from({ length: 3 }).map((_, i) => {
+            // Right side (positive dB): 10° spacing
+            return 65 - ((i + 1) * 10);
+          })].map((angle, i) => {
+            // Skip positions where major ticks are
+            const isMajorAngle = [165, 135, 105, 75, 55, 35, 15].some(a => Math.abs(angle - a) < 4);
+            if (isMajorAngle) return null;
+            
             const rad = (angle * Math.PI) / 180;
-            const x1 = 82 + Math.cos(rad) * 38;
-            const y1 = 63 - Math.sin(rad) * 38;
-            const x2 = 82 + Math.cos(rad) * (i % 2 === 0 ? 32 : 35);
-            const y2 = 63 - Math.sin(rad) * (i % 2 === 0 ? 32 : 35);
+            const x1 = 82 + Math.cos(rad) * 42;
+            const y1 = 70 - Math.sin(rad) * 42;
+            const x2 = 82 + Math.cos(rad) * 45;
+            const y2 = 70 - Math.sin(rad) * 45;
             
             return (
               <line
-                key={i}
+                key={`minor-${i}`}
                 x1={x1}
                 y1={y1}
                 x2={x2}
                 y2={y2}
-                stroke="#000"
-                strokeWidth={i % 2 === 0 ? '1.5' : '1'}
+                stroke="#333"
+                strokeWidth="0.5"
               />
-            );
-          })}
-          
-          {/* Labels */}
-          {['-20', '-10', '-7', '-5', '-3', '-1', '0', '+1', '+2', '+3'].map((label, i) => {
-            const positions = [
-              { x: 25, y: 68 },
-              { x: 35, y: 48 },
-              { x: 48, y: 35 },
-              { x: 60, y: 28 },
-              { x: 73, y: 24 },
-              { x: 86, y: 23 },
-              { x: 99, y: 24 },
-              { x: 112, y: 28 },
-              { x: 124, y: 35 },
-              { x: 135, y: 48 },
-            ];
-            
-            return (
-              <text
-                key={i}
-                x={positions[i].x}
-                y={positions[i].y}
-                fontSize="7"
-                fontFamily="Arial"
-                fontWeight="bold"
-                fill="#000"
-                textAnchor="middle"
-              >
-                {label}
-              </text>
             );
           })}
         </svg>
@@ -240,6 +264,22 @@ export function AnalogVUMeter({ isPlaying }: { isPlaying: boolean }) {
           }}
         >
           VU
+        </div>
+        
+        {/* Channel label at bottom */}
+        <div 
+          style={{
+            position: 'absolute',
+            bottom: '2px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            fontSize: '8px',
+            fontWeight: 'bold',
+            color: '#000',
+            fontFamily: 'Arial, sans-serif',
+          }}
+        >
+          {channel || 'STANDBY'}
         </div>
         
         {/* Needle */}

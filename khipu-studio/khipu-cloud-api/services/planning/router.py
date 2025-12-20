@@ -132,11 +132,12 @@ async def update_plan(
     # Store previous state
     previous_is_complete = plan.is_complete
     
-    # Update segments
-    plan.segments = update_data.segments
+    # Update segments - convert Pydantic models to dicts for JSONB storage
+    segments_as_dicts = [seg.model_dump() for seg in update_data.segments]
+    plan.segments = segments_as_dicts
     
     # Check if all segments have voice assignments (plan is complete)
-    all_assigned = all(seg.get('voice') for seg in update_data.segments)
+    all_assigned = all(seg.get('voice') for seg in segments_as_dicts)
     plan.is_complete = all_assigned
     
     if all_assigned and not previous_is_complete:

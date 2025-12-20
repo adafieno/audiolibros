@@ -62,7 +62,7 @@ export function createDefaultProcessingChain(): AudioProcessingChain {
  */
 const cleanPolished: AudioPreset = {
   id: 'clean_polished',
-  name: 'Clean & Polished',
+  name: '✨ Clean & Polished',
   description: 'Professional audiobook quality with clarity and warmth',
   processingChain: {
     noiseCleanup: {
@@ -113,7 +113,7 @@ const cleanPolished: AudioPreset = {
  */
 const warmIntimate: AudioPreset = {
   id: 'warm_intimate',
-  name: 'Warm & Intimate',
+  name: '🔥 Warm & Intimate',
   description: 'Close, personal sound with enhanced low-mids',
   processingChain: {
     noiseCleanup: {
@@ -165,7 +165,7 @@ const warmIntimate: AudioPreset = {
  */
 const broadcastStandard: AudioPreset = {
   id: 'broadcast_standard',
-  name: 'Broadcast Standard',
+  name: '📻 Broadcast Standard',
   description: 'Radio/podcast quality with heavy processing',
   processingChain: {
     noiseCleanup: {
@@ -217,7 +217,7 @@ const broadcastStandard: AudioPreset = {
  */
 const naturalMinimal: AudioPreset = {
   id: 'natural_minimal',
-  name: 'Natural & Minimal',
+  name: '🍃 Natural & Minimal',
   description: 'Minimal processing for natural sound',
   processingChain: {
     noiseCleanup: {
@@ -264,7 +264,7 @@ const naturalMinimal: AudioPreset = {
  */
 const cinematicDramatic: AudioPreset = {
   id: 'cinematic_dramatic',
-  name: 'Cinematic & Dramatic',
+  name: '🎬 Cinematic & Dramatic',
   description: 'Movie-style narration with depth and space',
   processingChain: {
     noiseCleanup: {
@@ -316,21 +316,205 @@ const cinematicDramatic: AudioPreset = {
  */
 const rawUnprocessed: AudioPreset = {
   id: 'raw_unprocessed',
-  name: 'Raw & Unprocessed',
+  name: '🎤 Raw & Unprocessed',
   description: 'No processing - original recording',
   processingChain: createDefaultProcessingChain(),
 };
 
 /**
- * All available presets
+ * Additional presets from desktop app (Page 2+)
+ */
+const cleanNatural: AudioPreset = {
+  id: 'clean_natural',
+  name: '🌿 Clean Natural',
+  description: 'Minimal processing for pristine natural voice',
+  processingChain: createDefaultProcessingChain(),
+};
+
+const cleanIntimate: AudioPreset = {
+  id: 'clean_intimate',
+  name: '💫 Clean Intimate',
+  description: 'Close, intimate storytelling style',
+  processingChain: createDefaultProcessingChain(),
+};
+
+const characterPhone: AudioPreset = {
+  id: 'character_phone',
+  name: '☎️ Phone/Radio',
+  description: 'Telephone or vintage radio effect',
+  processingChain: createDefaultProcessingChain(),
+};
+
+const characterVintage: AudioPreset = {
+  id: 'character_vintage',
+  name: '📻 Vintage Radio',
+  description: 'Classic 1940s radio broadcast sound',
+  processingChain: createDefaultProcessingChain(),
+};
+
+const characterElderly: AudioPreset = {
+  id: 'character_elderly',
+  name: '👴 Elderly Voice',
+  description: 'Warm, aged character with gentle processing',
+  processingChain: createDefaultProcessingChain(),
+};
+
+const characterChild: AudioPreset = {
+  id: 'character_child',
+  name: '👶 Child Voice',
+  description: 'Bright, youthful character processing',
+  processingChain: createDefaultProcessingChain(),
+};
+
+const characterMonster: AudioPreset = {
+  id: 'character_monster',
+  name: '👹 Monster Voice',
+  description: 'Dark, menacing character effect',
+  processingChain: createDefaultProcessingChain(),
+};
+
+const broadcastRadio: AudioPreset = {
+  id: 'broadcast_radio',
+  name: '📡 Radio Broadcast',
+  description: 'Professional radio station processing',
+  processingChain: createDefaultProcessingChain(),
+};
+
+const broadcastNews: AudioPreset = {
+  id: 'broadcast_news',
+  name: '📰 News Anchor',
+  description: 'Crisp, authoritative news presentation',
+  processingChain: createDefaultProcessingChain(),
+};
+
+const broadcastPodcast: AudioPreset = {
+  id: 'broadcast_podcast',
+  name: '🎙️ Podcast Pro',
+  description: 'Optimized for podcast distribution',
+  processingChain: createDefaultProcessingChain(),
+};
+
+const broadcastSports: AudioPreset = {
+  id: 'broadcast_sports',
+  name: '⚽ Sports Commentary',
+  description: 'Dynamic, energetic sports broadcasting',
+  processingChain: createDefaultProcessingChain(),
+};
+
+const vintageGoldenAge: AudioPreset = {
+  id: 'vintage_golden_age',
+  name: '🎭 Golden Age Radio',
+  description: 'Classic 1940s-50s radio drama sound',
+  processingChain: createDefaultProcessingChain(),
+};
+
+const vintageTape: AudioPreset = {
+  id: 'vintage_tape',
+  name: '📼 Vintage Tape',
+  description: 'Analog tape warmth and saturation',
+  processingChain: createDefaultProcessingChain(),
+};
+
+const vintageLoFi: AudioPreset = {
+  id: 'vintage_lo_fi',
+  name: '🔊 Lo-Fi Vintage',
+  description: 'Deliberately degraded retro sound',
+  processingChain: createDefaultProcessingChain(),
+};
+
+const envCathedral: AudioPreset = {
+  id: 'env_cathedral',
+  name: '⛪ Cathedral',
+  description: 'Large reverberant space like cathedral',
+  processingChain: createDefaultProcessingChain(),
+};
+
+const envForest: AudioPreset = {
+  id: 'env_forest',
+  name: '🌲 Forest Echo',
+  description: 'Natural outdoor reverb with depth',
+  processingChain: createDefaultProcessingChain(),
+};
+
+const envCavern: AudioPreset = {
+  id: 'env_cavern',
+  name: '🕳️ Deep Cavern',
+  description: 'Dramatic underground cave acoustics',
+  processingChain: createDefaultProcessingChain(),
+};
+
+const envUnderwater: AudioPreset = {
+  id: 'env_underwater',
+  name: '🌊 Underwater',
+  description: 'Submerged, muffled underwater effect',
+  processingChain: createDefaultProcessingChain(),
+};
+
+const fxAlien: AudioPreset = {
+  id: 'fx_alien',
+  name: '👽 Alien Voice',
+  description: 'Otherworldly alien character effect',
+  processingChain: createDefaultProcessingChain(),
+};
+
+const fxGhost: AudioPreset = {
+  id: 'fx_ghost',
+  name: '👻 Ghost Voice',
+  description: 'Ethereal, haunting spectral effect',
+  processingChain: createDefaultProcessingChain(),
+};
+
+const fxMegaphone: AudioPreset = {
+  id: 'fx_megaphone',
+  name: '📢 Megaphone',
+  description: 'Distorted megaphone/bullhorn effect',
+  processingChain: createDefaultProcessingChain(),
+};
+
+const fxRobot: AudioPreset = {
+  id: 'fx_robot',
+  name: '🤖 Robot Voice',
+  description: 'Robotic/synthetic character effect',
+  processingChain: createDefaultProcessingChain(),
+};
+
+/**
+ * All available presets - current 6 on page 1, new ones on pages 2+
  */
 export const AUDIO_PRESETS: AudioPreset[] = [
+  // Page 1: Current favorites
+  rawUnprocessed,
   cleanPolished,
   warmIntimate,
-  broadcastStandard,
   naturalMinimal,
+  broadcastStandard,
   cinematicDramatic,
-  rawUnprocessed,
+  // Page 2: Clean & Character
+  cleanNatural,
+  cleanIntimate,
+  characterPhone,
+  characterVintage,
+  characterElderly,
+  characterChild,
+  // Page 3: Character & Broadcast
+  characterMonster,
+  broadcastRadio,
+  broadcastNews,
+  broadcastPodcast,
+  broadcastSports,
+  vintageGoldenAge,
+  // Page 4: Vintage & Environmental
+  vintageTape,
+  vintageLoFi,
+  envCathedral,
+  envForest,
+  envCavern,
+  envUnderwater,
+  // Page 5: Special Effects
+  fxAlien,
+  fxGhost,
+  fxMegaphone,
+  fxRobot,
 ];
 
 /**

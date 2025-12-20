@@ -13,7 +13,7 @@ import type {
   AudioSegmentData,
 } from '../types/audio-production';
 
-export function useAudioProduction(projectId: string, chapterId: string) {
+export function useAudioProduction(projectId: string, chapterId: string, chapterUuid?: string | null) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [segments, setSegments] = useState<AudioSegmentData[]>([]);
@@ -113,9 +113,12 @@ export function useAudioProduction(projectId: string, chapterId: string) {
     try {
       setError(null);
       
+      // Use chapter UUID if available, otherwise fall back to chapterId (order)
+      const chapterIdForApi = chapterUuid || chapterId;
+      
       await audioProductionApi.updateRevisionMark(
         projectId,
-        chapterId,
+        chapterIdForApi,
         segmentId,
         { needs_revision: needsRevision, notes }
       );
@@ -132,7 +135,7 @@ export function useAudioProduction(projectId: string, chapterId: string) {
       setError(errorMessage);
       throw err;
     }
-  }, [projectId, chapterId]);
+  }, [projectId, chapterId, chapterUuid]);
 
   /**
    * Upload an SFX file

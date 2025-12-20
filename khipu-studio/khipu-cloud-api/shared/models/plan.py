@@ -1,11 +1,16 @@
 """Plan model for chapter orchestration."""
 from datetime import datetime
 from uuid import UUID
-from sqlalchemy import String, Boolean, DateTime, ForeignKey, text
+from typing import TYPE_CHECKING
+from sqlalchemy import DateTime, ForeignKey, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import JSONB
 
 from shared.db.database import Base
+
+if TYPE_CHECKING:
+    from shared.models import Project
+    from shared.models.chapter import Chapter
 
 
 class ChapterPlan(Base):
@@ -21,7 +26,7 @@ class ChapterPlan(Base):
     chapter_id: Mapped[UUID] = mapped_column(ForeignKey("chapters.id", ondelete="CASCADE"), nullable=False, unique=True)
     
     # Plan data - stored as JSON array of segments
-    segments: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    segments: Mapped[list] = mapped_column(JSONB, nullable=False)
     
     # Status
     is_complete: Mapped[bool] = mapped_column(nullable=False, default=False)

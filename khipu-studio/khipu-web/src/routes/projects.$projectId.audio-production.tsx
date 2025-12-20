@@ -4,12 +4,15 @@ import { useQuery } from '@tanstack/react-query';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { AnalogVUMeter } from '../components/audio/VUMeter';
 import { PresetSelector } from '../components/audio/PresetSelector';
+import { Select } from '../components/Select';
 import { EffectChainEditor } from '../components/audio/EffectChainEditor';
 import { SegmentList } from '../components/audio/SegmentList';
 import { useAudioProduction } from '../hooks/useAudioProduction';
 import { useAudioPlayer } from '../hooks/useAudioPlayer';
 import { AUDIO_PRESETS } from '../config/audioPresets';
 import { getChapters } from '../api/chapters';
+import { voicesApi } from '../lib/api/voices';
+import { charactersApi, type Character } from '../lib/api/characters';
 import type { AudioProcessingChain } from '../types/audio-production';
 
 export const Route = createFileRoute('/projects/$projectId/audio-production')({
@@ -27,6 +30,18 @@ function AudioProductionPage() {
     queryKey: ['chapters', projectId],
     queryFn: () => getChapters(projectId),
   });
+
+  // Query to fetch characters for voice assignments
+  const { data: characters } = useQuery({
+    queryKey: ['characters', projectId],
+    queryFn: () => charactersApi.getCharacters(projectId),
+  });
+
+  // Query to fetch voice inventory
+  const { data: voiceInventory } = useQuery({
+    queryKey: ['voices'],
+    queryFn: () => voicesApi.getAvailableVoices(),
+  });
   
   // Convert chapter ID (UUID) to chapter order for API
   const chapterOrder = chaptersData?.items.find(ch => ch.id === selectedChapterId)?.order.toString() || '1';
@@ -37,16 +52,18 @@ function AudioProductionPage() {
     error,
     loadChapterData,
     toggleRevisionMark,
-  } = useAudioProduction(projectId, chapterOrder);
+  } = useAudioProduction(projectId, chapterOrder, selectedChapterId);
 
   const { audioData, processingChain, updateProcessingChain: updatePlayerChain } = useAudioPlayer();
   
-  const [selectedSegmentId, setSelectedSegmentId] = useState<number | null>(null);
-  const [playingSegmentId, setPlayingSegmentId] = useState<number | null>(null);
+  const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
+  const [playingSegmentId, setPlayingSegmentId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [customMode, setCustomMode] = useState(false);
-  const [selectedPresetId, setSelectedPresetId] = useState<string>('clean_polished');
+  const [selectedPresetId, setSelectedPresetId] = useState<string>('raw_unprocessed');
   const [showSfxDialog, setShowSfxDialog] = useState(false);
+  const [audioCache] = useState(new Map<string, string>());
+  const [audioElements] = useState(new Map<string, HTMLAudioElement>());
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Auto-select first chapter when chapters load
@@ -68,9 +85,9 @@ function AudioProductionPage() {
 
   // Initialize processing chain with default preset
   useEffect(() => {
-    // Default to Clean Polished preset
+    // Default to Raw & Unprocessed preset
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const defaultPreset = AUDIO_PRESETS.find((p: any) => p.id === 'clean_polished');
+    const defaultPreset = AUDIO_PRESETS.find((p: any) => p.id === 'raw_unprocessed');
     if (defaultPreset) {
       updatePlayerChain(defaultPreset.processingChain);
     }
@@ -97,6 +114,29 @@ function AudioProductionPage() {
     }
   }, [customMode]);
 
+  // Handle apply preset to all segments
+  const handleApplyToAll = useCallback(async () => {
+    if (!selectedPresetId || customMode) return;
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const preset = AUDIO_PRESETS.find((p: any) => p.id === selectedPresetId);
+    if (!preset) return;
+    
+    const count = segments.filter(seg => seg.type !== 'sfx').length;
+    if (!confirm(`Apply "${preset.name}" preset to all ${count} audio segments?`)) {
+      return;
+    }
+    
+    try {
+      // TODO: Implement backend API to apply preset to all segments
+      // For now, just show a message
+      alert(`Would apply "${preset.name}" to ${count} segments. Backend API not yet implemented.`);
+    } catch (error) {
+      console.error('Failed to apply preset to all:', error);
+      alert('Failed to apply preset to all segments');
+    }
+  }, [selectedPresetId, customMode, segments]);
+
   // Handle processing chain changes
   const handleProcessingChainChange = useCallback((chain: AudioProcessingChain) => {
     updatePlayerChain(chain);
@@ -114,72 +154,192 @@ function AudioProductionPage() {
   }, [updatePlayerChain, customMode, selectedPresetId]);
 
   // Handle segment selection
-  const handleSegmentSelect = useCallback((segmentId: number) => {
+  const handleSegmentSelect = useCallback(async (segmentId: string) => {
     setSelectedSegmentId(segmentId);
-    // Load audio for selected segment
-    // TODO: Implement audio loading from cache or backend
-  }, []);
+    
+    // Stop any currently playing audio
+    audioElements.forEach((audio, id) => {
+      if (id !== segmentId) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+    });
+    setIsPlaying(false);
+    setPlayingSegmentId(null);
+    
+    // Load audio for selected segment if not already loaded
+    const segment = segments.find(s => s.segment_id === segmentId);
+    if (!segment) {
+      console.error('Segment not found:', segmentId);
+      return;
+    }
+    
+    // Check if we already have an audio element
+    if (audioElements.has(segmentId)) {
+      console.log('Audio element already exists for segment:', segmentId);
+      return;
+    }
+    
+    if (!segment.text || !segment.voice) {
+      console.warn('Segment missing text or voice:', segmentId);
+      return;
+    }
+
+    // Look up the character to get their voice assignment
+    const character = characters?.find((c: Character) => c.name === segment.voice);
+    if (!character?.voiceAssignment?.voiceId) {
+      console.error('No voice assignment found for character:', segment.voice);
+      return;
+    }
+
+    const voiceId = character.voiceAssignment.voiceId;
+    
+    // Find the voice object
+    const voice = voiceInventory?.voices?.find(v => v.id === voiceId);
+    if (!voice) {
+      console.error('Voice not found in inventory:', voiceId);
+      return;
+    }
+    
+    try {
+      // Check if audio URL is already cached
+      let audioUrl = audioCache.get(segmentId);
+      
+      if (!audioUrl) {
+        // Generate audio via voice audition API (same as Voice Casting)
+        console.log('Generating audio for segment:', segmentId, 'voice:', voiceId, 'character:', segment.voice);
+        const blob = await voicesApi.auditionVoice(projectId, voiceId, segment.text);
+        audioUrl = URL.createObjectURL(blob);
+        audioCache.set(segmentId, audioUrl);
+        console.log('Audio generated and cached for segment:', segmentId);
+      }
+      
+      // Create audio element
+      const audio = new Audio(audioUrl);
+      audio.onended = () => {
+        setIsPlaying(false);
+        setPlayingSegmentId(null);
+      };
+      audio.onerror = (e) => {
+        console.error('Failed to play audio for segment:', segmentId, e);
+        setIsPlaying(false);
+        setPlayingSegmentId(null);
+      };
+      audioElements.set(segmentId, audio);
+      console.log('Audio element created for segment:', segmentId);
+    } catch (error) {
+      console.error('Error loading audio:', error);
+    }
+  }, [segments, audioCache, audioElements, projectId, characters, voiceInventory]);
 
   // Handle segment playback
-  const handlePlaySegment = useCallback((segmentId: number) => {
-    if (playingSegmentId === segmentId) {
-      setIsPlaying(!isPlaying);
-    } else {
-      setPlayingSegmentId(segmentId);
-      setSelectedSegmentId(segmentId);
-      setIsPlaying(true);
-      // TODO: Load and play audio
+  const handlePlaySegment = useCallback(async (segmentId: string) => {
+    console.log('handlePlaySegment called for:', segmentId);
+    
+    // If already playing this segment, pause it
+    if (playingSegmentId === segmentId && isPlaying) {
+      const audio = audioElements.get(segmentId);
+      if (audio) {
+        audio.pause();
+        setIsPlaying(false);
+      }
+      return;
     }
-  }, [playingSegmentId, isPlaying]);
+    
+    // Stop any currently playing audio
+    audioElements.forEach((audio, id) => {
+      if (id !== segmentId) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+    });
+    
+    // Ensure segment is selected and loaded
+    if (selectedSegmentId !== segmentId || !audioElements.has(segmentId)) {
+      console.log('Loading audio for segment:', segmentId);
+      await handleSegmentSelect(segmentId);
+    }
+    
+    // Wait a tick to ensure audio element is created
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Play the segment
+    const audio = audioElements.get(segmentId);
+    if (audio) {
+      console.log('Playing audio for segment:', segmentId);
+      setPlayingSegmentId(segmentId);
+      setIsPlaying(true);
+      audio.play().catch(error => {
+        console.error('Error playing audio:', error);
+        setIsPlaying(false);
+        setPlayingSegmentId(null);
+      });
+    } else {
+      console.error('No audio element found for segment:', segmentId);
+      const segment = segments.find(s => s.segment_id === segmentId);
+      if (segment && !segment.raw_audio_url) {
+        console.error('Segment has no audio URL - audio may not be generated yet');
+      }
+    }
+  }, [playingSegmentId, isPlaying, selectedSegmentId, audioElements, handleSegmentSelect, segments]);
+
+  // Auto-select first segment when segments load
+  useEffect(() => {
+    if (segments.length > 0 && !selectedSegmentId) {
+      const firstSegmentId = segments[0].segment_id;
+      console.log('Auto-selecting first segment:', firstSegmentId);
+      // Use setTimeout to avoid cascading renders
+      setTimeout(() => {
+        setSelectedSegmentId(firstSegmentId);
+        // Load audio for first segment (don't await to avoid blocking render)
+        handleSegmentSelect(firstSegmentId).catch(err => {
+          console.error('Error auto-loading first segment:', err);
+        });
+      }, 0);
+    }
+  }, [segments, selectedSegmentId, handleSegmentSelect]);
 
   // Handle player controls
   const handlePlayPrevious = useCallback(() => {
     if (!selectedSegmentId || segments.length === 0) return;
-    const currentIdx = segments.findIndex(s => parseInt(s.segment_id) === selectedSegmentId);
+    const currentIdx = segments.findIndex(s => s.segment_id === selectedSegmentId);
     if (currentIdx > 0) {
-      const prevSegmentId = parseInt(segments[currentIdx - 1].segment_id);
+      const prevSegmentId = segments[currentIdx - 1].segment_id;
       handlePlaySegment(prevSegmentId);
     }
   }, [selectedSegmentId, segments, handlePlaySegment]);
 
   const handlePlayNext = useCallback(() => {
     if (!selectedSegmentId || segments.length === 0) return;
-    const currentIdx = segments.findIndex(s => parseInt(s.segment_id) === selectedSegmentId);
+    const currentIdx = segments.findIndex(s => s.segment_id === selectedSegmentId);
     if (currentIdx < segments.length - 1) {
-      const nextSegmentId = parseInt(segments[currentIdx + 1].segment_id);
+      const nextSegmentId = segments[currentIdx + 1].segment_id;
       handlePlaySegment(nextSegmentId);
     }
   }, [selectedSegmentId, segments, handlePlaySegment]);
 
   const handlePlayAll = useCallback(() => {
     if (segments.length === 0) return;
-    const firstSegmentId = parseInt(segments[0].segment_id);
+    const firstSegmentId = segments[0].segment_id;
     handlePlaySegment(firstSegmentId);
     // TODO: Implement continuous playback
   }, [segments, handlePlaySegment]);
 
   const handleStop = useCallback(() => {
+    // Stop and reset all audio
+    audioElements.forEach(audio => {
+      audio.pause();
+      audio.currentTime = 0;
+    });
     setIsPlaying(false);
     setPlayingSegmentId(null);
-    // TODO: Reset audio position
-  }, []);
-
-  // Handle mark for revision
-  const handleMarkRevision = useCallback(async (notes: string) => {
-    if (selectedSegmentId === null) return;
-    
-    try {
-      await toggleRevisionMark(selectedSegmentId.toString(), true, notes);
-    } catch {
-      // Error is handled by hook
-    }
-  }, [selectedSegmentId, toggleRevisionMark]);
+  }, [audioElements]);
 
   // Handle toggle revision flag
-  const handleToggleRevision = useCallback(async (segmentId: number) => {
+  const handleToggleRevision = useCallback(async (segmentId: string) => {
     try {
-      const segment = segments.find(s => s.segment_id === segmentId.toString());
-      await toggleRevisionMark(segmentId.toString(), !segment?.needs_revision);
+      const segment = segments.find(s => s.segment_id === segmentId);
+      await toggleRevisionMark(segmentId, !segment?.needs_revision);
     } catch {
       // Error is handled by hook
     }
@@ -318,26 +478,18 @@ function AudioProductionPage() {
               <label className="text-sm font-medium" style={{ color: 'var(--text)' }}>
                 Chapter:
               </label>
-              <select
+              <Select
+                size="compact"
                 value={selectedChapterId || ''}
                 onChange={(e) => setSelectedChapterId(e.target.value)}
-                style={{
-                  padding: '6px 12px',
-                  background: 'var(--input)',
-                  color: 'var(--text)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '4px',
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  minWidth: '200px',
-                }}
+                style={{ minWidth: '200px' }}
               >
                 {chaptersData?.items.map((chapter) => (
                   <option key={chapter.id} value={chapter.id}>
                     {chapter.order}. {chapter.title}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             {/* Insert Sound Effect Button */}
@@ -365,7 +517,7 @@ function AudioProductionPage() {
                 e.currentTarget.style.background = '#4a9eff';
               }}
             >
-              🎵 Insert Sound Effect
+              Insert Sound Effect
             </button>
           </div>
         </div>
@@ -387,20 +539,81 @@ function AudioProductionPage() {
           gap: '16px',
           overflow: 'hidden',
         }}>
-          {/* Audio Player */}
+          {/* Audio Player Controls */}
           <div style={{
             background: '#1a1a1a',
             border: '1px solid #333',
             borderRadius: '8px',
             padding: '16px',
+            display: 'flex',
+            gap: '16px',
           }}>
-            <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <h2 style={{ margin: 0, fontSize: '14px', fontWeight: 600 }}>
-                Audio Preview
-              </h2>
-              
+            {/* Left side: Segment Text - 50% width */}
+            <div style={{ flex: '1', minWidth: 0 }}>
+              {selectedSegmentId && (() => {
+                const segment = segments.find(s => s.segment_id === selectedSegmentId.toString());
+                return segment ? (
+                  <div style={{
+                    padding: '12px',
+                    background: '#0f0f0f',
+                    border: '1px solid #333',
+                    borderRadius: '6px',
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}>
+                    {segment.character_name && (
+                      <div style={{
+                        fontSize: '11px',
+                        color: '#4a9eff',
+                        fontWeight: 600,
+                        marginBottom: '8px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                      }}>
+                        {segment.character_name}
+                      </div>
+                    )}
+                    <div style={{
+                      fontSize: '16px',
+                      color: '#e0e0e0',
+                      lineHeight: '1.6',
+                      fontWeight: 500,
+                      flex: 1,
+                      overflow: 'auto',
+                    }}>
+                      {segment.text}
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{
+                    padding: '32px',
+                    textAlign: 'center',
+                    color: '#666',
+                    fontSize: '13px',
+                    border: '1px dashed #333',
+                    borderRadius: '6px',
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    No segment selected
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Right side: VU Meters + Controls - 50% width */}
+            <div style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {/* VU Meters */}
+              <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+                <AnalogVUMeter isPlaying={isPlaying} channel="L" />
+                <AnalogVUMeter isPlaying={isPlaying} channel="R" />
+              </div>
+            
               {/* Player Controls */}
-              <div style={{ display: 'flex', gap: '8px', marginLeft: '16px' }}>
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                 <button
                   onClick={handlePlayPrevious}
                   disabled={!selectedSegmentId || segments.length === 0}
@@ -506,17 +719,17 @@ function AudioProductionPage() {
                   ⏹
                 </button>
               </div>
-
-              <div style={{ fontSize: '11px', color: '#999' }}>
-                Select a segment to preview with processing applied
-              </div>
-              <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
-                <AnalogVUMeter isPlaying={isPlaying} />
-                <AnalogVUMeter isPlaying={isPlaying} />
-              </div>
             </div>
+          </div>
             
-            {!audioData && (
+          {/* Waveform & Progress */}
+          <div style={{
+            background: '#1a1a1a',
+            border: '1px solid #333',
+            borderRadius: '8px',
+            padding: '16px',
+          }}>
+            {!selectedSegmentId && (
               <div style={{
                 padding: '32px',
                 textAlign: 'center',
@@ -525,22 +738,48 @@ function AudioProductionPage() {
                 border: '1px dashed #333',
                 borderRadius: '4px',
               }}>
-                No audio loaded
+                No segment selected
                 <div style={{ marginTop: '8px', fontSize: '11px' }}>
-                  Click the play button on a segment to load and preview its audio
+                  Select a segment to view details and waveform
                 </div>
               </div>
             )}
             
-            {audioData && (
-              <AudioPlayer
-                audioData={audioData}
-                processingChain={processingChain}
-                autoPlay={false}
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
-                onEnded={() => setIsPlaying(false)}
-              />
+            {selectedSegmentId && audioData && (
+              <div style={{
+                background: '#0f0f0f',
+                border: '1px solid #333',
+                borderRadius: '4px',
+                padding: '16px',
+              }}>
+                <div style={{ marginBottom: '8px', fontSize: '12px', color: '#999', fontWeight: 600 }}>
+                  Waveform & Progress
+                </div>
+                <AudioPlayer
+                  audioData={audioData}
+                  processingChain={processingChain}
+                  autoPlay={false}
+                  onPlay={() => setIsPlaying(true)}
+                  onPause={() => setIsPlaying(false)}
+                  onEnded={() => setIsPlaying(false)}
+                />
+              </div>
+            )}
+            
+            {selectedSegmentId && !audioData && (
+              <div style={{
+                padding: '24px',
+                textAlign: 'center',
+                color: '#666',
+                fontSize: '13px',
+                border: '1px dashed #333',
+                borderRadius: '4px',
+              }}>
+                No audio generated yet
+                <div style={{ marginTop: '8px', fontSize: '11px' }}>
+                  Audio will appear here once generated
+                </div>
+              </div>
             )}
           </div>
 
@@ -555,42 +794,14 @@ function AudioProductionPage() {
             display: 'flex',
             flexDirection: 'column',
           }}>
-            <div style={{ 
-              marginBottom: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}>
-              <h2 style={{ margin: 0, fontSize: '14px', fontWeight: 600 }}>
-                Segments ({segments.length})
-              </h2>
-              
-              {selectedSegmentId !== null && (
-                <button
-                  onClick={() => {
-                    const notes = prompt('Enter revision notes:');
-                    if (notes) handleMarkRevision(notes);
-                  }}
-                  style={{
-                    padding: '4px 8px',
-                    background: 'transparent',
-                    color: '#fbbf24',
-                    border: '1px solid #fbbf24',
-                    borderRadius: '4px',
-                    fontSize: '11px',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Mark for Revision
-                </button>
-              )}
-            </div>
+            <h2 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 600 }}>
+              Segments ({segments.length})
+            </h2>
             
             <div style={{ flex: 1, overflow: 'auto' }}>
               <SegmentList
-                segments={segments.map((seg, idx) => ({
-                  id: parseInt(seg.segment_id) || idx,
+                segments={segments.map((seg) => ({
+                  id: seg.segment_id,  // Use UUID directly
                   position: seg.display_order,
                   text: seg.text || null,
                   character_name: seg.character_name || null,
@@ -632,6 +843,7 @@ function AudioProductionPage() {
               customSettingsEnabled={customMode}
               onPresetSelect={handlePresetSelect}
               onCustomToggle={handleCustomModeToggle}
+              onApplyToAll={handleApplyToAll}
               currentProcessingChain={processingChain}
             />
           </div>

@@ -117,7 +117,7 @@ export interface SfxListResponse {
 
 // UI-friendly segment type
 export interface Segment {
-  id: number;
+  id: string;  // UUID from segment_id
   position: number;
   text: string | null;
   character_name: string | null;
