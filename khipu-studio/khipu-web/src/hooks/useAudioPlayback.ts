@@ -35,7 +35,14 @@ export function useAudioPlayback({ projectId, processingChain }: UseAudioPlaybac
   const [playingSegmentId, setPlayingSegmentId] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [volume, setVolumeState] = useState(1.0); // Track volume independently (0.0 to 1.0)
+  const volumeRef = useRef(1.0); // Ref to avoid stale closures
   const animationFrameRef = useRef<number | null>(null);
+
+  // Keep volumeRef in sync with volume state
+  useEffect(() => {
+    volumeRef.current = volume;
+  }, [volume]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -138,6 +145,7 @@ export function useAudioPlayback({ projectId, processingChain }: UseAudioPlaybac
       let audio = audioElements.get(segmentId);
       if (!audio) {
         audio = new Audio(finalAudioUrl);
+        audio.volume = volumeRef.current; // Apply current volume setting
         audio.onended = () => {
           setIsPlaying(false);
           setPlayingSegmentId(null);
@@ -156,6 +164,7 @@ export function useAudioPlayback({ projectId, processingChain }: UseAudioPlaybac
       } else {
         // If processing chain changed, update the audio source
         audio.src = finalAudioUrl;
+        audio.volume = volumeRef.current; // Ensure volume is applied
       }
 
       audio.onloadedmetadata = () => {
@@ -210,11 +219,14 @@ export function useAudioPlayback({ projectId, processingChain }: UseAudioPlaybac
     }
   }, [playingSegmentId, audioElements]);
 
-  const setVolume = useCallback((volume: number) => {
+  const setVolume = useCallback((vol: number) => {
+    volumeRef.current = vol; // Update ref immediately
+    setVolumeState(vol);
+    // Apply to currently playing audio if any
     if (playingSegmentId) {
       const audio = audioElements.get(playingSegmentId);
       if (audio) {
-        audio.volume = volume;
+        audio.volume = vol;
       }
     }
   }, [playingSegmentId, audioElements]);
@@ -240,6 +252,7 @@ export function useAudioPlayback({ projectId, processingChain }: UseAudioPlaybac
     playingSegmentId,
     currentTime,
     duration,
+    volume,
     playSegment,
     stopPlayback,
     seek,

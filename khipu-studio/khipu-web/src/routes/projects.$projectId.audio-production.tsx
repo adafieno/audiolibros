@@ -61,6 +61,7 @@ function AudioProductionPage() {
     isLoadingAudio,
     currentTime,
     duration,
+    volume: hookVolume,
     playingSegmentId,
     clearCache,
   } = useAudioPlayback({ projectId, processingChain });
@@ -68,7 +69,6 @@ function AudioProductionPage() {
   console.log('[AudioProduction] Render - processingChain:', processingChain);
   
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
-  const [volume, setVolume] = useState(100);
   const [customMode, setCustomMode] = useState(false);
   const [selectedPresetId, setSelectedPresetId] = useState<string>('raw_unprocessed');
   const [showSfxDialog, setShowSfxDialog] = useState(false);
@@ -821,33 +821,6 @@ function AudioProductionPage() {
                       outline: 'none',
                       cursor: playingSegmentId ? 'pointer' : 'not-allowed',
                       opacity: playingSegmentId ? 1 : 0.3,
-                    }}
-                  />
-
-                  {/* Volume icon */}
-                  <span style={{ fontSize: '14px', flexShrink: 0 }}>🔊</span>
-
-                  {/* Volume slider */}
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={volume}
-                    onChange={(e) => {
-                      const vol = parseInt(e.target.value);
-                      setVolume(vol);
-                      setAudioVolume(vol / 100);
-                    }}
-                    disabled={!playingSegmentId}
-                    style={{
-                      width: '80px',
-                      height: '4px',
-                      borderRadius: '2px',
-                      background: playingSegmentId ? `linear-gradient(to right, #4a9eff ${volume}%, #333 ${volume}%)` : '#222',
-                      outline: 'none',
-                      cursor: playingSegmentId ? 'pointer' : 'not-allowed',
-                      opacity: playingSegmentId ? 1 : 0.3,
-                      flexShrink: 0,
                     }}
                   />
                 </div>
