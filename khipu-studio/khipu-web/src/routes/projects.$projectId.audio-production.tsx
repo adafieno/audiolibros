@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { AudioPlayer } from '../components/AudioPlayer';
+import { Waveform } from '../components/Waveform';
 import { AnalogVUMeter } from '../components/audio/VUMeter';
 import { PresetSelector } from '../components/audio/PresetSelector';
 import { Select } from '../components/Select';
@@ -55,7 +56,7 @@ function AudioProductionPage() {
     updateProcessingChain,
   } = useAudioProduction(projectId, chapterOrder, selectedChapterId);
 
-  const { audioData, processingChain, updateProcessingChain: updatePlayerChain } = useAudioPlayer();
+  const { audioData, processingChain, loadAudio, updateProcessingChain: updatePlayerChain } = useAudioPlayer();
   
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
   const [playingSegmentId, setPlayingSegmentId] = useState<string | null>(null);
@@ -65,6 +66,7 @@ function AudioProductionPage() {
   const [showSfxDialog, setShowSfxDialog] = useState(false);
   const [audioCache] = useState(new Map<string, string>());
   const [audioElements] = useState(new Map<string, HTMLAudioElement>());
+  const [isLoadingWaveform, setIsLoadingWaveform] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Auto-select first chapter when chapters load
@@ -194,7 +196,34 @@ function AudioProductionPage() {
       return;
     }
     
-    // Check if we already have an audio element
+    // If segment has cached audio, load it for waveform display
+    if (segment.has_audio && segment.raw_audio_url) {
+      setIsLoadingWaveform(true);
+      try {
+        console.log('Loading audio from URL for waveform:', segment.raw_audio_url);
+        const response = await fetch(segment.raw_audio_url);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch audio: ${response.status}`);
+        }
+        const blob = await response.blob();
+        const arrayBuffer = await blob.arrayBuffer();
+        
+        // Store as Blob instead to avoid ArrayBuffer detachment issues
+        // When components need it, they can get their own copy
+        loadAudio(arrayBuffer);
+        console.log('Audio loaded for waveform display');
+      } catch (error) {
+        console.error('Failed to load audio for waveform:', error);
+        loadAudio(null);
+      } finally {
+        setIsLoadingWaveform(false);
+      }
+    } else {
+      // No audio yet - clear waveform
+      loadAudio(null);
+    }
+    
+    // Check if we already have an audio element for playback
     if (audioElements.has(segmentId)) {
       console.log('Audio element already exists for segment:', segmentId);
       return;
@@ -225,16 +254,28 @@ function AudioProductionPage() {
       // Check if audio URL is already cached
       let audioUrl = audioCache.get(segmentId);
       
-      if (!audioUrl) {
+      if (!audioUrl && !segment.has_audio) {
         // Generate audio via voice audition API (same as Voice Casting)
         console.log('Generating audio for segment:', segmentId, 'voice:', voiceId, 'character:', segment.voice);
         const blob = await voicesApi.auditionVoice(projectId, voiceId, segment.text);
         audioUrl = URL.createObjectURL(blob);
         audioCache.set(segmentId, audioUrl);
         console.log('Audio generated and cached for segment:', segmentId);
+        
+        // Also load for waveform
+        const arrayBuffer = await blob.arrayBuffer();
+        loadAudio(arrayBuffer);
+      } else if (segment.raw_audio_url && !audioUrl) {
+        // Use cached audio from server
+        audioUrl = segment.raw_audio_url;
       }
       
-      // Create audio element
+      if (!audioUrl) {
+        console.warn('No audio URL available for segment:', segmentId);
+        return;
+      }
+      
+      // Create audio element for playback
       const audio = new Audio(audioUrl);
       audio.onended = () => {
         setIsPlaying(false);
@@ -250,7 +291,14 @@ function AudioProductionPage() {
     } catch (error) {
       console.error('Error loading audio:', error);
     }
-  }, [segments, audioCache, audioElements, projectId, characters, voiceInventory]);
+  }, [segments, audioCache, audioElements, projectId, characters, voiceInventory, loadAudio]);
+
+  // Auto-select first segment when segments load
+  useEffect(() => {
+    if (segments.length > 0 && !selectedSegmentId) {
+      handleSegmentSelect(segments[0].segment_id);
+    }
+  }, [segments, selectedSegmentId, handleSegmentSelect]);
 
   // Handle segment playback
   const handlePlaySegment = useCallback(async (segmentId: string) => {
@@ -483,16 +531,21 @@ function AudioProductionPage() {
   }
 
   return (
-    <div className="p-6" style={{
+    <div style={{
       display: 'flex',
       flexDirection: 'column',
-      height: '100vh',
-      overflow: 'auto',
+      height: 'calc(100vh - 100px)',
+      overflow: 'hidden',
     }}>
       {/* Header */}
       <div
-        className="rounded-lg border shadow mb-6 p-6"
-        style={{ background: 'var(--panel)', borderColor: 'var(--border)' }}
+        className="rounded-lg border shadow p-6"
+        style={{ 
+          background: 'var(--panel)', 
+          borderColor: 'var(--border)',
+          margin: '24px 24px 0 24px',
+          flexShrink: 0,
+        }}
       >
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
           <div>
@@ -558,10 +611,11 @@ function AudioProductionPage() {
       <div style={{
         flex: 1,
         display: 'grid',
-        gridTemplateColumns: '1fr 400px',
+        gridTemplateColumns: '1fr 320px 280px',
         gap: '16px',
-        padding: '0 24px 16px 24px',
+        padding: '16px 24px 24px 24px',
         overflow: 'hidden',
+        minHeight: 0,
       }}>
         {/* Left Panel - Segments & Player */}
         <div style={{
@@ -569,6 +623,7 @@ function AudioProductionPage() {
           flexDirection: 'column',
           gap: '16px',
           overflow: 'hidden',
+          minHeight: 0,
         }}>
           {/* Audio Player Controls */}
           <div style={{
@@ -578,6 +633,7 @@ function AudioProductionPage() {
             padding: '16px',
             display: 'flex',
             gap: '16px',
+            flexShrink: 0,
           }}>
             {/* Left side: Segment Text - 50% width */}
             <div style={{ flex: '1', minWidth: 0 }}>
@@ -635,120 +691,12 @@ function AudioProductionPage() {
               })()}
             </div>
 
-            {/* Right side: VU Meters + Controls - 50% width */}
-            <div style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {/* Right side: VU Meters - 50% width */}
+            <div style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '12px', justifyContent: 'center' }}>
               {/* VU Meters */}
               <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
                 <AnalogVUMeter isPlaying={isPlaying} channel="L" />
                 <AnalogVUMeter isPlaying={isPlaying} channel="R" />
-              </div>
-            
-              {/* Player Controls */}
-              <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                <button
-                  onClick={handlePlayPrevious}
-                  disabled={!selectedSegmentId || segments.length === 0}
-                  title="Previous segment"
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '4px',
-                    background: '#333',
-                    border: 'none',
-                    color: '#fff',
-                    cursor: selectedSegmentId && segments.length > 0 ? 'pointer' : 'not-allowed',
-                    opacity: selectedSegmentId && segments.length > 0 ? 1 : 0.5,
-                    fontSize: '14px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  ⏮
-                </button>
-                <button
-                  onClick={() => selectedSegmentId && handlePlaySegment(selectedSegmentId)}
-                  disabled={!selectedSegmentId}
-                  title={isPlaying ? 'Pause' : 'Play'}
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '4px',
-                    background: isPlaying ? '#4a9eff' : '#333',
-                    border: 'none',
-                    color: '#fff',
-                    cursor: selectedSegmentId ? 'pointer' : 'not-allowed',
-                    opacity: selectedSegmentId ? 1 : 0.5,
-                    fontSize: '14px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  {isPlaying ? '⏸' : '▶'}
-                </button>
-                <button
-                  onClick={handlePlayNext}
-                  disabled={!selectedSegmentId || segments.length === 0}
-                  title="Next segment"
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '4px',
-                    background: '#333',
-                    border: 'none',
-                    color: '#fff',
-                    cursor: selectedSegmentId && segments.length > 0 ? 'pointer' : 'not-allowed',
-                    opacity: selectedSegmentId && segments.length > 0 ? 1 : 0.5,
-                    fontSize: '14px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  ⏭
-                </button>
-                <div style={{ width: '1px', background: '#444', margin: '0 4px' }} />
-                <button
-                  onClick={handlePlayAll}
-                  disabled={segments.length === 0}
-                  title="Play all"
-                  style={{
-                    padding: '0 12px',
-                    height: '32px',
-                    borderRadius: '4px',
-                    background: '#333',
-                    border: 'none',
-                    color: '#fff',
-                    cursor: segments.length > 0 ? 'pointer' : 'not-allowed',
-                    opacity: segments.length > 0 ? 1 : 0.5,
-                    fontSize: '12px',
-                    fontWeight: 600,
-                  }}
-                >
-                  Play All
-                </button>
-                <button
-                  onClick={handleStop}
-                  disabled={!isPlaying}
-                  title="Stop"
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '4px',
-                    background: '#333',
-                    border: 'none',
-                    color: '#fff',
-                    cursor: isPlaying ? 'pointer' : 'not-allowed',
-                    opacity: isPlaying ? 1 : 0.5,
-                    fontSize: '14px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  ⏹
-                </button>
               </div>
             </div>
           </div>
@@ -759,6 +707,7 @@ function AudioProductionPage() {
             border: '1px solid #333',
             borderRadius: '8px',
             padding: '16px',
+            flexShrink: 0,
           }}>
             {!selectedSegmentId && (
               <div style={{
@@ -776,41 +725,94 @@ function AudioProductionPage() {
               </div>
             )}
             
-            {selectedSegmentId && audioData && (
-              <div style={{
-                background: '#0f0f0f',
-                border: '1px solid #333',
-                borderRadius: '4px',
-                padding: '16px',
-              }}>
-                <div style={{ marginBottom: '8px', fontSize: '12px', color: '#999', fontWeight: 600 }}>
-                  Waveform & Progress
+            {selectedSegmentId && (
+              <>
+                {/* Single-line consolidated controls - Always visible */}
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px solid #333', marginBottom: '12px' }}>
+                  {/* Transport controls */}
+                  <button onClick={handlePlayPrevious} disabled={!audioData || segments.length === 0} title="Previous"
+                    style={{ width: '28px', height: '28px', borderRadius: '4px', background: '#333', border: 'none', color: '#fff', cursor: audioData && segments.length > 0 ? 'pointer' : 'not-allowed', opacity: audioData && segments.length > 0 ? 1 : 0.5, fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    ⏮
+                  </button>
+                  <button onClick={() => selectedSegmentId && handlePlaySegment(selectedSegmentId)} disabled={!audioData} title={isPlaying ? 'Pause' : 'Play'}
+                    style={{ width: '32px', height: '32px', borderRadius: '50%', background: isPlaying ? '#4a9eff' : '#333', border: 'none', color: '#fff', cursor: audioData ? 'pointer' : 'not-allowed', opacity: audioData ? 1 : 0.5, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    {isPlaying ? '⏸' : '▶'}
+                  </button>
+                  <button onClick={handlePlayNext} disabled={!audioData || segments.length === 0} title="Next"
+                    style={{ width: '28px', height: '28px', borderRadius: '4px', background: '#333', border: 'none', color: '#fff', cursor: audioData && segments.length > 0 ? 'pointer' : 'not-allowed', opacity: audioData && segments.length > 0 ? 1 : 0.5, fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    ⏭
+                  </button>
+                  <button onClick={handleStop} disabled={!isPlaying} title="Stop"
+                    style={{ width: '28px', height: '28px', borderRadius: '4px', background: '#333', border: 'none', color: '#fff', cursor: isPlaying ? 'pointer' : 'not-allowed', opacity: isPlaying ? 1 : 0.5, fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    ⏹
+                  </button>
+                  
+                  <div style={{ width: '1px', background: '#444', height: '24px', margin: '0 4px' }} />
+                  
+                  <button onClick={handlePlayAll} disabled={!audioData || segments.length === 0} title="Play all"
+                    style={{ padding: '0 10px', height: '28px', borderRadius: '4px', background: '#333', border: 'none', color: '#fff', cursor: audioData && segments.length > 0 ? 'pointer' : 'not-allowed', opacity: audioData && segments.length > 0 ? 1 : 0.5, fontSize: '11px', fontWeight: 600, flexShrink: 0 }}>
+                    Play All
+                  </button>
+                  
+                  <div style={{ width: '1px', background: '#444', height: '24px', margin: '0 4px' }} />
+                  
+                  {/* Progress bar and volume - from AudioPlayer inline */}
+                  {audioData && (
+                    <AudioPlayer
+                      audioData={audioData}
+                      processingChain={processingChain}
+                      autoPlay={false}
+                      showControls={true}
+                      hideTransportControls={true}
+                      onPlay={() => setIsPlaying(true)}
+                      onPause={() => setIsPlaying(false)}
+                      onEnded={() => setIsPlaying(false)}
+                    />
+                  )}
                 </div>
-                <AudioPlayer
-                  audioData={audioData}
-                  processingChain={processingChain}
-                  autoPlay={false}
-                  onPlay={() => setIsPlaying(true)}
-                  onPause={() => setIsPlaying(false)}
-                  onEnded={() => setIsPlaying(false)}
-                />
-              </div>
-            )}
-            
-            {selectedSegmentId && !audioData && (
-              <div style={{
-                padding: '24px',
-                textAlign: 'center',
-                color: '#666',
-                fontSize: '13px',
-                border: '1px dashed #333',
-                borderRadius: '4px',
-              }}>
-                No audio generated yet
-                <div style={{ marginTop: '8px', fontSize: '11px' }}>
-                  Audio will appear here once generated
-                </div>
-              </div>
+
+                {/* Waveform or loading state */}
+                {audioData ? (
+                  <div style={{ width: '100%' }}>
+                    <Waveform
+                      audioData={audioData}
+                      width={Math.floor((window.innerWidth - 800))}
+                      height={80}
+                      waveColor="#4a5568"
+                      progressColor="#4a9eff"
+                      currentPosition={0}
+                    />
+                  </div>
+                ) : isLoadingWaveform ? (
+                  <div style={{
+                    padding: '24px',
+                    textAlign: 'center',
+                    color: '#4a9eff',
+                    fontSize: '13px',
+                    border: '1px dashed #333',
+                    borderRadius: '4px',
+                  }}>
+                    Loading audio waveform...
+                    <div style={{ marginTop: '8px', fontSize: '11px', color: '#666' }}>
+                      Please wait
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{
+                    padding: '24px',
+                    textAlign: 'center',
+                    color: '#666',
+                    fontSize: '13px',
+                    border: '1px dashed #333',
+                    borderRadius: '4px',
+                  }}>
+                    No audio generated yet
+                    <div style={{ marginTop: '8px', fontSize: '11px' }}>
+                      Audio will appear here once generated
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
 
@@ -824,6 +826,7 @@ function AudioProductionPage() {
             overflow: 'hidden',
             display: 'flex',
             flexDirection: 'column',
+            minHeight: 0,
           }}>
             <h2 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 600 }}>
               Segments ({segments.length})
@@ -832,13 +835,15 @@ function AudioProductionPage() {
             <div style={{ flex: 1, overflow: 'auto' }}>
               <SegmentList
                 segments={segments.map((seg) => {
+                  const status: 'pending' | 'cached' | 'processed' | 'needs_revision' | null = 
+                    seg.has_audio ? 'cached' : (seg.needs_revision ? 'needs_revision' : 'pending');
                   const mapped = {
                     id: seg.segment_id,  // Use UUID directly
                     position: seg.display_order,
                     text: seg.text || null,
                     character_name: seg.character_name || null,
                     audio_blob_path: seg.raw_audio_url || null,
-                    status: seg.has_audio ? 'cached' : (seg.needs_revision ? 'needs_revision' : 'pending'),
+                    status,
                     duration: seg.duration || null,
                     revision_notes: null,
                     needs_revision: seg.needs_revision,
@@ -856,23 +861,21 @@ function AudioProductionPage() {
           </div>
         </div>
 
-        {/* Right Panel - Processing Controls */}
+        {/* Middle Panel - Audio Presets (Full Height) */}
         <div style={{
+          background: '#1a1a1a',
+          border: '1px solid #333',
+          borderRadius: '8px',
+          padding: '16px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '16px',
-          overflow: 'auto',
+          overflow: 'hidden',
+          minHeight: 0,
         }}>
-          {/* Preset Selector */}
-          <div style={{
-            background: '#1a1a1a',
-            border: '1px solid #333',
-            borderRadius: '8px',
-            padding: '16px',
-          }}>
-            <h2 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 600 }}>
-              Audio Presets
-            </h2>
+          <h2 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 600 }}>
+            Audio Presets
+          </h2>
+          <div style={{ flex: 1, overflow: 'auto' }}>
             <PresetSelector
               selectedPresetId={selectedPresetId}
               customSettingsEnabled={customMode}
@@ -882,17 +885,23 @@ function AudioProductionPage() {
               currentProcessingChain={processingChain}
             />
           </div>
+        </div>
 
-          {/* Effect Chain Editor */}
-          <div style={{
-            background: '#1a1a1a',
-            border: '1px solid #333',
-            borderRadius: '8px',
-            padding: '16px',
-          }}>
-            <h2 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 600 }}>
-              Processing Chain
-            </h2>
+        {/* Right Panel - Processing Chain (Full Height) */}
+        <div style={{
+          background: '#1a1a1a',
+          border: '1px solid #333',
+          borderRadius: '8px',
+          padding: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          minHeight: 0,
+        }}>
+          <h2 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 600 }}>
+            Processing Chain
+          </h2>
+          <div style={{ flex: 1, overflow: 'auto' }}>
             {processingChain && (
               <EffectChainEditor
                 processingChain={processingChain}

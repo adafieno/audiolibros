@@ -17,7 +17,7 @@ interface PresetSelectorProps {
   currentProcessingChain?: AudioProcessingChain;
 }
 
-const PRESETS_PER_PAGE = 6;
+const PRESETS_PER_PAGE = 5;
 
 export function PresetSelector({
   selectedPresetId,
@@ -85,7 +85,7 @@ export function PresetSelector({
       </div>
 
       {/* Preset Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '8px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
         {currentPresets.map((preset) => {
           const isSelected = !customSettingsEnabled && selectedPresetId === preset.id;
           
@@ -95,7 +95,7 @@ export function PresetSelector({
               onClick={() => onPresetSelect(preset.id)}
               disabled={customSettingsEnabled}
               style={{
-                padding: '12px',
+                padding: '16px',
                 textAlign: 'left',
                 background: isSelected ? 'linear-gradient(135deg, #4a9eff 0%, #357abd 100%)' : '#1a1a1a',
                 border: '1px solid',
@@ -105,6 +105,8 @@ export function PresetSelector({
                 opacity: customSettingsEnabled ? 0.5 : 1,
                 transition: 'all 0.2s',
                 boxShadow: isSelected ? '0 4px 12px rgba(74, 158, 255, 0.3)' : 'none',
+                flex: 1,
+                minHeight: 0,
               }}
             >
               <div style={{ 

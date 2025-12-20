@@ -7,6 +7,32 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { getAudioProcessor } from '../services/audioProcessor';
 
+/**
+ * Extract downsampled waveform data from audio buffer
+ */
+function extractWaveformSamples(
+  audioBuffer: AudioBuffer,
+  targetWidth: number
+): Float32Array {
+  const samples = new Float32Array(targetWidth);
+  const rawData = audioBuffer.getChannelData(0); // Use first channel
+  const blockSize = Math.floor(rawData.length / targetWidth);
+
+  for (let i = 0; i < targetWidth; i++) {
+    const start = i * blockSize;
+    let sum = 0;
+    
+    // Calculate RMS (Root Mean Square) for each block
+    for (let j = 0; j < blockSize; j++) {
+      sum += rawData[start + j] ** 2;
+    }
+    
+    samples[i] = Math.sqrt(sum / blockSize);
+  }
+
+  return samples;
+}
+
 interface WaveformProps {
   /** Audio data as ArrayBuffer */
   audioData: ArrayBuffer | null;
@@ -46,51 +72,68 @@ export function Waveform({
   /**
    * Process audio data to extract waveform samples
    */
-  const processWaveform = useCallback(async () => {
-    if (!audioData) return;
-
-    setIsProcessing(true);
-    try {
-      const processor = getAudioProcessor();
-      await processor.initialize();
-      
-      const audioBuffer = await processor.decodeAudio(audioData);
-      
-      // Extract samples for waveform (downsample to width)
-      const samples = extractWaveformSamples(audioBuffer, width);
-      setWaveformData(samples);
-    } catch (error) {
-      console.error('Failed to process waveform:', error);
-    } finally {
-      setIsProcessing(false);
+  useEffect(() => {
+    if (!audioData) {
+      console.log('[Waveform] No audio data provided');
+      // Clear waveform data asynchronously to avoid setState in effect warning
+      Promise.resolve().then(() => setWaveformData(null));
+      return;
     }
-  }, [audioData, width]);
 
-  /**
-   * Extract downsampled waveform data from audio buffer
-   */
-  const extractWaveformSamples = (
-    audioBuffer: AudioBuffer,
-    targetWidth: number
-  ): Float32Array => {
-    const samples = new Float32Array(targetWidth);
-    const rawData = audioBuffer.getChannelData(0); // Use first channel
-    const blockSize = Math.floor(rawData.length / targetWidth);
-
-    for (let i = 0; i < targetWidth; i++) {
-      const start = i * blockSize;
-      let sum = 0;
+    console.log('[Waveform] Starting waveform processing, audioData size:', audioData.byteLength);
+    
+    let cancelled = false;
+    
+    const processAudio = async () => {
+      setIsProcessing(true);
       
-      // Calculate RMS (Root Mean Square) for each block
-      for (let j = 0; j < blockSize; j++) {
-        sum += rawData[start + j] ** 2;
+      // Add timeout to prevent infinite loading
+      const timeoutId = setTimeout(() => {
+        if (!cancelled) {
+          console.error('[Waveform] Processing timeout after 10 seconds');
+          setIsProcessing(false);
+          setWaveformData(null);
+        }
+      }, 10000);
+      
+      try {
+        // Clone the ArrayBuffer to avoid detachment issues when shared with AudioPlayer
+        const clonedBuffer = audioData.slice(0);
+        
+        const processor = getAudioProcessor();
+        console.log('[Waveform] Got audio processor:', processor);
+        
+        await processor.initialize();
+        console.log('[Waveform] Audio processor initialized');
+        
+        const audioBuffer = await processor.decodeAudio(clonedBuffer);
+        console.log('[Waveform] Audio decoded, duration:', audioBuffer.duration, 'channels:', audioBuffer.numberOfChannels);
+        
+        // Extract samples for waveform (downsample to width)
+        const samples = extractWaveformSamples(audioBuffer, width);
+        console.log('[Waveform] Waveform samples extracted, count:', samples.length, 'first few values:', samples.slice(0, 10));
+        
+        if (!cancelled) {
+          clearTimeout(timeoutId);
+          setWaveformData(samples);
+          setIsProcessing(false);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error('[Waveform] Failed to process waveform:', error);
+          clearTimeout(timeoutId);
+          setIsProcessing(false);
+          setWaveformData(null);
+        }
       }
-      
-      samples[i] = Math.sqrt(sum / blockSize);
-    }
+    };
 
-    return samples;
-  };
+    void processAudio();
+    
+    return () => {
+      cancelled = true;
+    };
+  }, [audioData, width]);
 
   /**
    * Draw waveform on canvas
@@ -170,17 +213,6 @@ export function Waveform({
   }, [onSeek, width, waveformData]);
 
   /**
-   * Process waveform when audio data changes
-   */
-  useEffect(() => {
-    if (audioData) {
-      processWaveform();
-    } else {
-      setWaveformData(null);
-    }
-  }, [audioData, processWaveform]);
-
-  /**
    * Redraw waveform when data or position changes
    */
   useEffect(() => {
@@ -190,25 +222,65 @@ export function Waveform({
   }, [waveformData, drawWaveform]);
 
   return (
-    <div className={`waveform ${className}`}>
+    <div className={`waveform ${className}`} style={{
+      position: 'relative',
+      width: width,
+      height: height,
+      background: '#0a0a0a',
+      borderRadius: '4px',
+      overflow: 'hidden',
+    }}>
       {(isLoading || isProcessing) && (
-        <div className="waveform-loading">
-          <div className="loading-spinner" />
-          <span>Loading waveform...</span>
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'column',
+          gap: '8px',
+          color: '#666',
+          fontSize: '12px',
+        }}>
+          <div style={{
+            width: '20px',
+            height: '20px',
+            border: '2px solid #333',
+            borderTopColor: '#4a9eff',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+          }} />
+          <span>Processing waveform...</span>
         </div>
       )}
 
-      {!isLoading && !isProcessing && (
+      {!isLoading && !isProcessing && waveformData && (
         <canvas
           ref={canvasRef}
           onClick={handleCanvasClick}
-          style={{ cursor: onSeek ? 'pointer' : 'default' }}
+          style={{ 
+            cursor: onSeek ? 'pointer' : 'default',
+            display: 'block',
+            width: '100%',
+            height: '100%',
+          }}
           className="waveform-canvas"
         />
       )}
 
       {!audioData && !isLoading && !isProcessing && (
-        <div className="waveform-empty" style={{ width, height }}>
+        <div style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#666',
+          fontSize: '12px',
+        }}>
           <span>No audio data</span>
         </div>
       )}

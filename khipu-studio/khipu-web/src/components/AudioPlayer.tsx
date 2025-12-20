@@ -26,6 +26,8 @@ interface AudioPlayerProps {
   autoPlay?: boolean;
   /** Show playback controls */
   showControls?: boolean;
+  /** Hide transport controls (play/stop buttons) */
+  hideTransportControls?: boolean;
   /** Custom class name */
   className?: string;
 }
@@ -39,6 +41,7 @@ export function AudioPlayer({
   onTimeUpdate,
   autoPlay = false,
   showControls = true,
+  hideTransportControls = false,
   className = '',
 }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -158,10 +161,13 @@ export function AudioPlayer({
     try {
       await initialize();
       
+      // Clone the ArrayBuffer to avoid detachment issues
+      const clonedBuffer = audioData.slice(0);
+      
       const processor = getAudioProcessor();
       
       // Decode audio
-      const audioBuffer = await processor.decodeAudio(audioData);
+      const audioBuffer = await processor.decodeAudio(clonedBuffer);
       
       // Apply processing chain if provided
       let finalBuffer = audioBuffer;
@@ -254,7 +260,8 @@ export function AudioPlayer({
     return () => {
       stop();
     };
-  }, [audioData, stop, processAudio]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [audioData, stop]);
 
   /**
    * Cleanup on unmount
@@ -309,37 +316,84 @@ export function AudioPlayer({
   }
 
   return (
-    <div className={`audio-player ${className}`}>
+    <div className={`audio-player ${className}`} style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
+    }}>
       {isLoading && (
-        <div className="audio-player-loading">
-          Processing audio...
+        <div style={{
+          padding: '12px',
+          textAlign: 'center',
+          color: '#666',
+          fontSize: '11px',
+        }}>
+          Processing...
         </div>
       )}
 
       {!isLoading && processedBufferRef.current && (
-        <div className="audio-player-controls">
-          {/* Play/Pause Button */}
-          <button
-            onClick={togglePlayPause}
-            disabled={!processedBufferRef.current}
-            className="audio-player-play-button"
-            aria-label={isPlaying ? 'Pause' : 'Play'}
-          >
-            {isPlaying ? '⏸' : '▶'}
-          </button>
+        <>
+          {!hideTransportControls && (
+            <>
+              {/* Play/Pause Button */}
+              <button
+                onClick={togglePlayPause}
+                disabled={!processedBufferRef.current}
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: isPlaying ? '#4a9eff' : '#333',
+                  border: 'none',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontSize: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s',
+                  flexShrink: 0,
+                }}
+                aria-label={isPlaying ? 'Pause' : 'Play'}
+              >
+                {isPlaying ? '⏸' : '▶'}
+              </button>
 
-          {/* Stop Button */}
-          <button
-            onClick={stop}
-            disabled={!isPlaying && currentTime === 0}
-            className="audio-player-stop-button"
-            aria-label="Stop"
-          >
-            ⏹
-          </button>
+              {/* Stop Button */}
+              <button
+                onClick={stop}
+                disabled={!isPlaying && currentTime === 0}
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '4px',
+                  background: '#333',
+                  border: 'none',
+                  color: '#fff',
+                  cursor: (!isPlaying && currentTime === 0) ? 'not-allowed' : 'pointer',
+                  opacity: (!isPlaying && currentTime === 0) ? 0.5 : 1,
+                  fontSize: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+                aria-label="Stop"
+              >
+                ⏹
+              </button>
+            </>
+          )}
 
           {/* Time Display */}
-          <span className="audio-player-time">
+          <span style={{
+            fontSize: '11px',
+            color: '#999',
+            fontVariantNumeric: 'tabular-nums',
+            minWidth: '70px',
+            flexShrink: 0,
+          }}>
             {formatTime(currentTime)} / {formatTime(duration)}
           </span>
 
@@ -351,12 +405,19 @@ export function AudioPlayer({
             step="0.1"
             value={currentTime}
             onChange={handleSeek}
-            className="audio-player-seek"
+            style={{
+              flex: 1,
+              height: '4px',
+              borderRadius: '2px',
+              background: `linear-gradient(to right, #4a9eff 0%, #4a9eff ${(currentTime / duration) * 100}%, #333 ${(currentTime / duration) * 100}%, #333 100%)`,
+              outline: 'none',
+              cursor: 'pointer',
+            }}
             aria-label="Seek"
           />
 
           {/* Volume Control */}
-          <span className="audio-player-volume-label">🔊</span>
+          <span style={{ fontSize: '14px', flexShrink: 0 }}>🔊</span>
           <input
             type="range"
             min="0"
@@ -364,14 +425,27 @@ export function AudioPlayer({
             step="0.01"
             value={volume}
             onChange={handleVolumeChange}
-            className="audio-player-volume"
+            style={{
+              width: '100px',
+              height: '4px',
+              borderRadius: '2px',
+              background: `linear-gradient(to right, #4a9eff 0%, #4a9eff ${volume * 100}%, #333 ${volume * 100}%, #333 100%)`,
+              outline: 'none',
+              cursor: 'pointer',
+              flexShrink: 0,
+            }}
             aria-label="Volume"
           />
-        </div>
+        </>
       )}
 
       {!audioData && !isLoading && (
-        <div className="audio-player-empty">
+        <div style={{
+          padding: '12px',
+          textAlign: 'center',
+          color: '#666',
+          fontSize: '11px',
+        }}>
           No audio loaded
         </div>
       )}
