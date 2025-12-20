@@ -168,12 +168,33 @@ export function AudioPlayer({
       
       // Decode audio
       const audioBuffer = await processor.decodeAudio(clonedBuffer);
+      console.log('[AudioPlayer] Audio decoded, duration:', audioBuffer.duration);
       
       // Apply processing chain if provided
       let finalBuffer = audioBuffer;
       if (processingChain) {
+        console.log('[AudioPlayer] ====== PROCESSING CHAIN DETAILS ======');
+        console.log('[AudioPlayer] Noise Cleanup - Noise Reduction:', processingChain.noiseCleanup?.noiseReduction?.enabled);
+        console.log('[AudioPlayer] Noise Cleanup - De-esser:', processingChain.noiseCleanup?.deEsser?.enabled);
+        console.log('[AudioPlayer] Noise Cleanup - De-clicker:', processingChain.noiseCleanup?.deClicker?.enabled);
+        console.log('[AudioPlayer] Dynamic Control - Compression:', processingChain.dynamicControl?.compression?.enabled);
+        console.log('[AudioPlayer] Dynamic Control - Limiting:', processingChain.dynamicControl?.limiting?.enabled);
+        console.log('[AudioPlayer] Dynamic Control - Normalization:', processingChain.dynamicControl?.normalization?.enabled);
+        console.log('[AudioPlayer] EQ Shaping - High Pass:', processingChain.eqShaping?.highPass?.enabled);
+        console.log('[AudioPlayer] EQ Shaping - Low Pass:', processingChain.eqShaping?.lowPass?.enabled);
+        console.log('[AudioPlayer] EQ Shaping - Parametric EQ bands:', processingChain.eqShaping?.parametricEQ?.bands?.length || 0);
+        console.log('[AudioPlayer] Spatial - Reverb:', processingChain.spatialEnhancement?.reverb?.enabled);
+        console.log('[AudioPlayer] Mastering - Loudness Normalization:', processingChain.consistencyMastering?.loudnessNormalization?.enabled);
+        console.log('[AudioPlayer] ====================================');
+        console.log('[AudioPlayer] ⚙️ Applying processing chain to audio...');
+        
         const processed = await processor.processAudio(audioBuffer, processingChain);
         finalBuffer = processed.buffer;
+        console.log('[AudioPlayer] ✓ Processing complete');
+        console.log('[AudioPlayer] Original duration:', audioBuffer.duration.toFixed(2), 's');
+        console.log('[AudioPlayer] Processed duration:', finalBuffer.duration.toFixed(2), 's');
+      } else {
+        console.log('[AudioPlayer] ℹ No processing chain provided, using raw audio');
       }
       
       processedBufferRef.current = finalBuffer;
@@ -252,6 +273,7 @@ export function AudioPlayer({
    * Process audio when data or processing chain changes
    */
   useEffect(() => {
+    console.log('[AudioPlayer] useEffect triggered - audioData:', !!audioData, 'processingChain:', !!processingChain);
     if (audioData) {
       stop(); // Stop current playback
       processAudio();
@@ -261,7 +283,7 @@ export function AudioPlayer({
       stop();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [audioData, stop]);
+  }, [audioData, processingChain, stop]);
 
   /**
    * Cleanup on unmount

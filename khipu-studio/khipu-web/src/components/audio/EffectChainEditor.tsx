@@ -23,6 +23,8 @@ export function EffectChainEditor({
   
   // Helper to update nested processing chain values
   const updateChain = useCallback((path: string[], value: unknown) => {
+    if (disabled) return; // Prevent changes in read-only mode
+    
     const newChain = JSON.parse(JSON.stringify(processingChain));
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let current: any = newChain;
@@ -33,10 +35,12 @@ export function EffectChainEditor({
     
     current[path[path.length - 1]] = value;
     onChange(newChain);
-  }, [processingChain, onChange]);
+  }, [processingChain, onChange, disabled]);
 
   // Toggle effect enabled state
   const toggleEffect = useCallback((path: string[]) => {
+    if (disabled) return; // Prevent changes in read-only mode
+    
     const newChain = JSON.parse(JSON.stringify(processingChain));
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let current: any = newChain;
@@ -48,12 +52,12 @@ export function EffectChainEditor({
     const lastKey = path[path.length - 1];
     current[lastKey].enabled = !current[lastKey].enabled;
     onChange(newChain);
-  }, [processingChain, onChange]);
+  }, [processingChain, onChange, disabled]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', opacity: disabled ? 0.6 : 1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', opacity: disabled ? 0.6 : 1 }}>
       {/* Noise Cleanup Section */}
-      <CollapsibleSection title="Noise Cleanup" defaultExpanded={false}>
+      <CollapsibleSection title="Noise Cleanup" icon="🧹" defaultExpanded={false}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Noise Reduction */}
           <div style={{ 
@@ -163,7 +167,7 @@ export function EffectChainEditor({
       </CollapsibleSection>
 
       {/* Dynamic Control Section */}
-      <CollapsibleSection title="Dynamic Control" defaultExpanded={false}>
+      <CollapsibleSection title="Compressor" icon="⚡" defaultExpanded={false}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Compression */}
           <div style={{ 
@@ -312,7 +316,7 @@ export function EffectChainEditor({
       </CollapsibleSection>
 
       {/* EQ Shaping Section */}
-      <CollapsibleSection title="EQ Shaping" defaultExpanded={false}>
+      <CollapsibleSection title="EQ" icon="📊" defaultExpanded={false}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* High-pass Filter */}
           <div style={{ 
@@ -419,7 +423,7 @@ export function EffectChainEditor({
       </CollapsibleSection>
 
       {/* Spatial Enhancement Section */}
-      <CollapsibleSection title="Spatial Enhancement" defaultExpanded={false}>
+      <CollapsibleSection title="Reverb" icon="🌊" defaultExpanded={false}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Reverb */}
           <div style={{ 
@@ -516,7 +520,7 @@ export function EffectChainEditor({
       </CollapsibleSection>
 
       {/* Consistency & Mastering Section */}
-      <CollapsibleSection title="Consistency & Mastering" defaultExpanded={false}>
+      <CollapsibleSection title="Master" icon="🎚️" defaultExpanded={false}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Loudness Normalization */}
           <div style={{ 

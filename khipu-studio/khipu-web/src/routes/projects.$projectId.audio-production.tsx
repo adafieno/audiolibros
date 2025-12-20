@@ -21,6 +21,7 @@ export const Route = createFileRoute('/projects/$projectId/audio-production')({
 });
 
 function AudioProductionPage() {
+  console.log('[AudioProduction] ===== PAGE COMPONENT RENDERING =====');
   const { projectId } = Route.useParams();
   
   // Chapter selection state
@@ -57,6 +58,8 @@ function AudioProductionPage() {
   } = useAudioProduction(projectId, chapterOrder, selectedChapterId);
 
   const { audioData, processingChain, loadAudio, updateProcessingChain: updatePlayerChain } = useAudioPlayer();
+  
+  console.log('[AudioProduction] Render - audioData:', !!audioData, 'processingChain:', processingChain);
   
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
   const [playingSegmentId, setPlayingSegmentId] = useState<string | null>(null);
@@ -96,31 +99,78 @@ function AudioProductionPage() {
     }
   }, [updatePlayerChain]);
 
+  // Apply processing chain when preset changes (from segment selection)
+  useEffect(() => {
+    console.log('[AudioProduction] Processing chain sync effect triggered - selectedPresetId:', selectedPresetId, 'customMode:', customMode, 'selectedSegmentId:', selectedSegmentId);
+    
+    if (selectedPresetId && !customMode) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const preset = AUDIO_PRESETS.find((p: any) => p.id === selectedPresetId);
+      if (preset) {
+        console.log('[AudioProduction] ✓ Auto-applying preset from segment:', selectedPresetId);
+        console.log('[AudioProduction] ✓ Processing chain:', JSON.stringify(preset.processingChain, null, 2));
+        updatePlayerChain(preset.processingChain);
+      } else {
+        console.warn('[AudioProduction] ✗ Preset not found:', selectedPresetId);
+      }
+    } else if (customMode) {
+      // When in custom mode, load the segment's custom processing chain
+      const segment = segments.find(s => s.segment_id === selectedSegmentId);
+      if (segment?.processing_chain) {
+        console.log('[AudioProduction] ✓ Auto-applying custom chain from segment');
+        console.log('[AudioProduction] ✓ Custom chain:', JSON.stringify(segment.processing_chain, null, 2));
+        updatePlayerChain(segment.processing_chain);
+      } else {
+        console.log('[AudioProduction] ℹ No custom chain found for segment, using default');
+      }
+    } else {
+      console.log('[AudioProduction] ℹ No preset selected or waiting for segment selection');
+    }
+  }, [selectedPresetId, customMode, selectedSegmentId, segments, updatePlayerChain]);
+
   // Handle preset selection
   const handlePresetSelect = useCallback(async (presetId: string) => {
+    console.log('[AudioProduction] ====== PRESET SELECTION ======');
+    console.log('[AudioProduction] User clicked preset:', presetId);
+    console.log('[AudioProduction] Current segment:', selectedSegmentId);
+    
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const preset = AUDIO_PRESETS.find((p: any) => p.id === presetId);
     if (preset && selectedSegmentId) {
+      console.log('[AudioProduction] ✓ Preset found:', preset.name);
+      console.log('[AudioProduction] ✓ Processing chain:', JSON.stringify(preset.processingChain, null, 2));
+      
       setSelectedPresetId(presetId);
       setCustomMode(false);
       updatePlayerChain(preset.processingChain);
+      
+      console.log('[AudioProduction] ✓ State updated - preset will be applied via useEffect');
+      
       // Save to backend
       try {
         await updateProcessingChain(selectedSegmentId, preset.processingChain, presetId);
+        console.log('[AudioProduction] ✓ Preset saved to backend');
       } catch (error) {
-        console.error('Failed to save preset:', error);
+        console.error('[AudioProduction] ✗ Failed to save preset:', error);
       }
+    } else {
+      if (!preset) console.error('[AudioProduction] ✗ Preset not found:', presetId);
+      if (!selectedSegmentId) console.error('[AudioProduction] ✗ No segment selected');
     }
+    console.log('[AudioProduction] ==============================');
   }, [updatePlayerChain, selectedSegmentId, updateProcessingChain]);
 
   // Handle custom mode toggle
   const handleCustomModeToggle = useCallback(() => {
-    setCustomMode(!customMode);
-    if (!customMode) {
-      // Entering custom mode - keep current chain
-      setSelectedPresetId('');
-    }
-  }, [customMode]);
+    setCustomMode(prev => {
+      const newCustomMode = !prev;
+      if (newCustomMode) {
+        // Entering custom mode - keep current chain
+        setSelectedPresetId('');
+      }
+      return newCustomMode;
+    });
+  }, []);
 
   // Handle apply preset to all segments
   const handleApplyToAll = useCallback(async () => {
@@ -147,6 +197,10 @@ function AudioProductionPage() {
 
   // Handle processing chain changes
   const handleProcessingChainChange = useCallback((chain: AudioProcessingChain) => {
+    console.log('[AudioProduction] ====== CUSTOM CHAIN CHANGE ======');
+    console.log('[AudioProduction] User modified processing chain');
+    console.log('[AudioProduction] New chain:', JSON.stringify(chain, null, 2));
+    
     updatePlayerChain(chain);
     // Auto-save - no need for isDirty
     
@@ -155,10 +209,14 @@ function AudioProductionPage() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const selectedPreset = AUDIO_PRESETS.find((p: any) => p.id === selectedPresetId);
       if (selectedPreset && JSON.stringify(selectedPreset.processingChain) !== JSON.stringify(chain)) {
+        console.log('[AudioProduction] ✓ Chain diverged from preset - switching to custom mode');
         setCustomMode(true);
         setSelectedPresetId('');
       }
     }
+    
+    console.log('[AudioProduction] ✓ Custom chain applied to player');
+    console.log('[AudioProduction] ==================================');
   }, [updatePlayerChain, customMode, selectedPresetId]);
 
   // Handle segment selection
@@ -368,41 +426,6 @@ function AudioProductionPage() {
   }, [segments, selectedSegmentId, handleSegmentSelect]);
 
   // Handle player controls
-  const handlePlayPrevious = useCallback(() => {
-    if (!selectedSegmentId || segments.length === 0) return;
-    const currentIdx = segments.findIndex(s => s.segment_id === selectedSegmentId);
-    if (currentIdx > 0) {
-      const prevSegmentId = segments[currentIdx - 1].segment_id;
-      handlePlaySegment(prevSegmentId);
-    }
-  }, [selectedSegmentId, segments, handlePlaySegment]);
-
-  const handlePlayNext = useCallback(() => {
-    if (!selectedSegmentId || segments.length === 0) return;
-    const currentIdx = segments.findIndex(s => s.segment_id === selectedSegmentId);
-    if (currentIdx < segments.length - 1) {
-      const nextSegmentId = segments[currentIdx + 1].segment_id;
-      handlePlaySegment(nextSegmentId);
-    }
-  }, [selectedSegmentId, segments, handlePlaySegment]);
-
-  const handlePlayAll = useCallback(() => {
-    if (segments.length === 0) return;
-    const firstSegmentId = segments[0].segment_id;
-    handlePlaySegment(firstSegmentId);
-    // TODO: Implement continuous playback
-  }, [segments, handlePlaySegment]);
-
-  const handleStop = useCallback(() => {
-    // Stop and reset all audio
-    audioElements.forEach(audio => {
-      audio.pause();
-      audio.currentTime = 0;
-    });
-    setIsPlaying(false);
-    setPlayingSegmentId(null);
-  }, [audioElements]);
-
   // Handle toggle revision flag
   const handleToggleRevision = useCallback(async (segmentId: string) => {
     console.log('[AUDIO PRODUCTION] Toggle revision called for segment:', segmentId);
@@ -729,45 +752,21 @@ function AudioProductionPage() {
               <>
                 {/* Single-line consolidated controls - Always visible */}
                 <div style={{ display: 'flex', gap: '6px', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px solid #333', marginBottom: '12px' }}>
-                  {/* Transport controls */}
-                  <button onClick={handlePlayPrevious} disabled={!audioData || segments.length === 0} title="Previous"
-                    style={{ width: '28px', height: '28px', borderRadius: '4px', background: '#333', border: 'none', color: '#fff', cursor: audioData && segments.length > 0 ? 'pointer' : 'not-allowed', opacity: audioData && segments.length > 0 ? 1 : 0.5, fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    ⏮
-                  </button>
-                  <button onClick={() => selectedSegmentId && handlePlaySegment(selectedSegmentId)} disabled={!audioData} title={isPlaying ? 'Pause' : 'Play'}
-                    style={{ width: '32px', height: '32px', borderRadius: '50%', background: isPlaying ? '#4a9eff' : '#333', border: 'none', color: '#fff', cursor: audioData ? 'pointer' : 'not-allowed', opacity: audioData ? 1 : 0.5, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    {isPlaying ? '⏸' : '▶'}
-                  </button>
-                  <button onClick={handlePlayNext} disabled={!audioData || segments.length === 0} title="Next"
-                    style={{ width: '28px', height: '28px', borderRadius: '4px', background: '#333', border: 'none', color: '#fff', cursor: audioData && segments.length > 0 ? 'pointer' : 'not-allowed', opacity: audioData && segments.length > 0 ? 1 : 0.5, fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    ⏭
-                  </button>
-                  <button onClick={handleStop} disabled={!isPlaying} title="Stop"
-                    style={{ width: '28px', height: '28px', borderRadius: '4px', background: '#333', border: 'none', color: '#fff', cursor: isPlaying ? 'pointer' : 'not-allowed', opacity: isPlaying ? 1 : 0.5, fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    ⏹
-                  </button>
                   
-                  <div style={{ width: '1px', background: '#444', height: '24px', margin: '0 4px' }} />
-                  
-                  <button onClick={handlePlayAll} disabled={!audioData || segments.length === 0} title="Play all"
-                    style={{ padding: '0 10px', height: '28px', borderRadius: '4px', background: '#333', border: 'none', color: '#fff', cursor: audioData && segments.length > 0 ? 'pointer' : 'not-allowed', opacity: audioData && segments.length > 0 ? 1 : 0.5, fontSize: '11px', fontWeight: 600, flexShrink: 0 }}>
-                    Play All
-                  </button>
-                  
-                  <div style={{ width: '1px', background: '#444', height: '24px', margin: '0 4px' }} />
-                  
-                  {/* Progress bar and volume - from AudioPlayer inline */}
+                  {/* Audio Player with processing - this plays the PROCESSED audio */}
                   {audioData && (
-                    <AudioPlayer
-                      audioData={audioData}
-                      processingChain={processingChain}
-                      autoPlay={false}
-                      showControls={true}
-                      hideTransportControls={true}
-                      onPlay={() => setIsPlaying(true)}
-                      onPause={() => setIsPlaying(false)}
-                      onEnded={() => setIsPlaying(false)}
-                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                      <AudioPlayer
+                        audioData={audioData}
+                        processingChain={processingChain}
+                        autoPlay={false}
+                        showControls={true}
+                        hideTransportControls={false}
+                        onPlay={() => setIsPlaying(true)}
+                        onPause={() => setIsPlaying(false)}
+                        onEnded={() => setIsPlaying(false)}
+                      />
+                    </div>
                   )}
                 </div>
 
@@ -906,7 +905,7 @@ function AudioProductionPage() {
               <EffectChainEditor
                 processingChain={processingChain}
                 onChange={handleProcessingChainChange}
-                disabled={!customMode && selectedPresetId !== ''}
+                disabled={!customMode}
               />
             )}
           </div>

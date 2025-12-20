@@ -17,7 +17,7 @@ interface PresetSelectorProps {
   currentProcessingChain?: AudioProcessingChain;
 }
 
-const PRESETS_PER_PAGE = 5;
+const PRESETS_PER_PAGE = 6;
 
 export function PresetSelector({
   selectedPresetId,

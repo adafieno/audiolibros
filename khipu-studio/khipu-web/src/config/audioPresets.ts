@@ -16,43 +16,80 @@ export interface AudioPreset {
 /**
  * Create a default processing chain with all effects disabled
  */
-export function createDefaultProcessingChain(): AudioProcessingChain {
+interface ProcessingChainParams {
+  // Noise Cleanup
+  noiseReduction?: { amount: number };
+  deEsser?: { threshold: number };
+  deClicker?: { sensitivity: number };
+  // Compression
+  compression?: { threshold: number; ratio: number; attack: number; release: number };
+  limiting?: { threshold: number; release: number };
+  normalization?: { targetLevel: number };
+  // EQ
+  highPass?: { frequency: number; slope: number };
+  lowPass?: { frequency: number; slope: number };
+  eqBands?: Array<{ frequency: number; gain: number; q: number }>;
+  // Spatial
+  reverb?: { roomSize: number; damping: number; wetLevel: number };
+  stereoWidth?: { width: number };
+  // Mastering
+  loudnessTarget?: number;
+  dithering?: { bitDepth: number };
+}
+
+/**
+ * Universal function to create processing chain from parameters
+ */
+export function createProcessingChain(params: ProcessingChainParams = {}): AudioProcessingChain {
   return {
     noiseCleanup: {
-      noiseReduction: { enabled: false, amount: 0 },
-      deEsser: { enabled: false, threshold: -20 },
-      deClicker: { enabled: false, sensitivity: 50 },
+      noiseReduction: params.noiseReduction 
+        ? { enabled: true, amount: params.noiseReduction.amount }
+        : { enabled: false, amount: 0 },
+      deEsser: params.deEsser
+        ? { enabled: true, threshold: params.deEsser.threshold }
+        : { enabled: false, threshold: -20 },
+      deClicker: params.deClicker
+        ? { enabled: true, sensitivity: params.deClicker.sensitivity }
+        : { enabled: false, sensitivity: 50 },
     },
     dynamicControl: {
-      compression: {
-        enabled: false,
-        threshold: -20,
-        ratio: 4,
-        attack: 5,
-        release: 50,
-      },
-      limiting: { enabled: false, threshold: -1, release: 50 },
-      normalization: { enabled: false, targetLevel: -16 },
+      compression: params.compression
+        ? { enabled: true, ...params.compression }
+        : { enabled: false, threshold: -20, ratio: 4, attack: 5, release: 50 },
+      limiting: params.limiting
+        ? { enabled: true, ...params.limiting }
+        : { enabled: false, threshold: -1, release: 50 },
+      normalization: params.normalization
+        ? { enabled: true, targetLevel: params.normalization.targetLevel }
+        : { enabled: false, targetLevel: -16 },
     },
     eqShaping: {
-      highPass: { enabled: false, frequency: 80, slope: 12 },
-      lowPass: { enabled: false, frequency: 15000, slope: 12 },
+      highPass: params.highPass
+        ? { enabled: true, ...params.highPass }
+        : { enabled: false, frequency: 80, slope: 12 },
+      lowPass: params.lowPass
+        ? { enabled: true, ...params.lowPass }
+        : { enabled: false, frequency: 15000, slope: 12 },
       parametricEQ: {
-        bands: [],
+        bands: params.eqBands || [],
       },
     },
     spatialEnhancement: {
-      reverb: {
-        enabled: false,
-        roomSize: 0.3,
-        damping: 0.5,
-        wetLevel: 0.2,
-      },
-      stereoWidth: { enabled: false, width: 1.0 },
+      reverb: params.reverb
+        ? { enabled: true, ...params.reverb }
+        : { enabled: false, roomSize: 0.3, damping: 0.5, wetLevel: 0.2 },
+      stereoWidth: params.stereoWidth
+        ? { enabled: true, width: params.stereoWidth.width }
+        : { enabled: false, width: 1.0 },
     },
     consistencyMastering: {
-      loudnessNormalization: { enabled: false, targetLUFS: -16 },
-      dithering: { enabled: false, bitDepth: 16 },
+      loudnessNormalization: params.loudnessTarget
+        ? { enabled: true, targetLUFS: params.loudnessTarget }
+        : { enabled: false, targetLUFS: -16 },
+      dithering: params.dithering
+        ? { enabled: true, bitDepth: params.dithering.bitDepth }
+        : { enabled: false, bitDepth: 16 },
     },
   };
 }
@@ -312,13 +349,64 @@ const cinematicDramatic: AudioPreset = {
 };
 
 /**
+ * Soft and gentle preset - delicate processing for children's audiobooks
+ */
+const softGentle: AudioPreset = {
+  id: 'soft_gentle',
+  name: '🌸 Soft & Gentle',
+  description: 'Delicate processing for children\'s audiobooks or soft narration',
+  processingChain: {
+    noiseCleanup: {
+      noiseReduction: { enabled: true, amount: 20 },
+      deEsser: { enabled: true, threshold: -26 },
+      deClicker: { enabled: true, sensitivity: 45 },
+    },
+    dynamicControl: {
+      compression: {
+        enabled: true,
+        threshold: -22,
+        ratio: 2,
+        attack: 20,
+        release: 140,
+      },
+      limiting: { enabled: true, threshold: -2.5, release: 55 },
+      normalization: { enabled: true, targetLevel: -20 },
+    },
+    eqShaping: {
+      highPass: { enabled: true, frequency: 60, slope: 6 },
+      lowPass: { enabled: true, frequency: 10000, slope: 6 },
+      parametricEQ: {
+        bands: [
+          { frequency: 200, gain: -1, q: 0.5 }, // Reduce muddiness gently
+          { frequency: 2500, gain: 1, q: 0.8 }, // Soft presence
+          { frequency: 6000, gain: -1, q: 0.5 }, // Gentle high-end roll-off
+        ],
+      },
+    },
+    spatialEnhancement: {
+      reverb: {
+        enabled: true,
+        roomSize: 0.2,
+        damping: 0.7,
+        wetLevel: 0.12,
+      },
+      stereoWidth: { enabled: false, width: 1.0 },
+    },
+    consistencyMastering: {
+      loudnessNormalization: { enabled: true, targetLUFS: -20 },
+      dithering: { enabled: true, bitDepth: 16 },
+    },
+  },
+};
+
+/**
  * Raw unprocessed preset - bypass all processing
  */
 const rawUnprocessed: AudioPreset = {
   id: 'raw_unprocessed',
   name: '🎤 Raw & Unprocessed',
   description: 'No processing - original recording',
-  processingChain: createDefaultProcessingChain(),
+  processingChain: createProcessingChain(),
 };
 
 /**
@@ -328,154 +416,230 @@ const cleanNatural: AudioPreset = {
   id: 'clean_natural',
   name: '🌿 Clean Natural',
   description: 'Minimal processing for pristine natural voice',
-  processingChain: createDefaultProcessingChain(),
+  processingChain: createProcessingChain(),
 };
 
 const cleanIntimate: AudioPreset = {
   id: 'clean_intimate',
   name: '💫 Clean Intimate',
   description: 'Close, intimate storytelling style',
-  processingChain: createDefaultProcessingChain(),
+  processingChain: createProcessingChain(),
 };
 
 const characterPhone: AudioPreset = {
   id: 'character_phone',
   name: '☎️ Phone/Radio',
   description: 'Telephone or vintage radio effect',
-  processingChain: createDefaultProcessingChain(),
+  processingChain: createProcessingChain({
+    compression: { threshold: -15, ratio: 6, attack: 2, release: 30 },
+    limiting: { threshold: -3, release: 30 },
+    normalization: { targetLevel: -16 },
+    highPass: { frequency: 300, slope: 24 },
+    lowPass: { frequency: 3400, slope: 24 },
+    eqBands: [
+      { frequency: 1000, gain: 4, q: 1.5 },
+      { frequency: 2500, gain: 3, q: 1.2 },
+    ],
+    loudnessTarget: -16,
+    dithering: { bitDepth: 16 },
+  }),
 };
 
 const characterVintage: AudioPreset = {
   id: 'character_vintage',
   name: '📻 Vintage Radio',
   description: 'Classic 1940s radio broadcast sound',
-  processingChain: createDefaultProcessingChain(),
+  processingChain: createProcessingChain({
+    compression: { threshold: -18, ratio: 5, attack: 3, release: 40 },
+    limiting: { threshold: -4, release: 35 },
+    normalization: { targetLevel: -18 },
+    highPass: { frequency: 250, slope: 18 },
+    lowPass: { frequency: 5000, slope: 18 },
+    eqBands: [
+      { frequency: 800, gain: 3, q: 1.0 },
+      { frequency: 2000, gain: 4, q: 1.2 },
+      { frequency: 3500, gain: -2, q: 0.8 },
+    ],
+    reverb: { roomSize: 0.15, damping: 0.8, wetLevel: 0.1 },
+    stereoWidth: { width: 0.7 },
+    loudnessTarget: -18,
+    dithering: { bitDepth: 16 },
+  }),
 };
 
 const characterElderly: AudioPreset = {
   id: 'character_elderly',
   name: '👴 Elderly Voice',
   description: 'Warm, aged character with gentle processing',
-  processingChain: createDefaultProcessingChain(),
+  processingChain: createProcessingChain(),
 };
 
 const characterChild: AudioPreset = {
   id: 'character_child',
   name: '👶 Child Voice',
   description: 'Bright, youthful character processing',
-  processingChain: createDefaultProcessingChain(),
+  processingChain: createProcessingChain(),
 };
 
 const characterMonster: AudioPreset = {
   id: 'character_monster',
   name: '👹 Monster Voice',
   description: 'Dark, menacing character effect',
-  processingChain: createDefaultProcessingChain(),
+  processingChain: createProcessingChain({
+    compression: { threshold: -25, ratio: 8, attack: 1, release: 20 },
+    limiting: { threshold: -1, release: 20 },
+    normalization: { targetLevel: -14 },
+    highPass: { frequency: 60, slope: 12 },
+    eqBands: [
+      { frequency: 120, gain: 8, q: 1.2 },
+      { frequency: 250, gain: 6, q: 1.0 },
+      { frequency: 600, gain: -4, q: 0.8 },
+      { frequency: 2000, gain: -6, q: 1.2 },
+      { frequency: 5000, gain: 3, q: 0.7 },
+    ],
+    reverb: { roomSize: 0.6, damping: 0.4, wetLevel: 0.35 },
+    stereoWidth: { width: 1.3 },
+    loudnessTarget: -14,
+    dithering: { bitDepth: 16 },
+  }),
 };
 
 const broadcastRadio: AudioPreset = {
   id: 'broadcast_radio',
   name: '📡 Radio Broadcast',
   description: 'Professional radio station processing',
-  processingChain: createDefaultProcessingChain(),
+  processingChain: createProcessingChain(),
 };
 
 const broadcastNews: AudioPreset = {
   id: 'broadcast_news',
   name: '📰 News Anchor',
   description: 'Crisp, authoritative news presentation',
-  processingChain: createDefaultProcessingChain(),
+  processingChain: createProcessingChain(),
 };
 
 const broadcastPodcast: AudioPreset = {
   id: 'broadcast_podcast',
   name: '🎙️ Podcast Pro',
   description: 'Optimized for podcast distribution',
-  processingChain: createDefaultProcessingChain(),
+  processingChain: createProcessingChain({
+    noiseReduction: { amount: 25 },
+    deEsser: { threshold: -24 },
+    deClicker: { sensitivity: 55 },
+    compression: { threshold: -16, ratio: 4, attack: 8, release: 80 },
+    limiting: { threshold: -1.5, release: 45 },
+    normalization: { targetLevel: -16 },
+    highPass: { frequency: 75, slope: 12 },
+    lowPass: { frequency: 14000, slope: 6 },
+    eqBands: [
+      { frequency: 150, gain: -1, q: 0.7 },
+      { frequency: 3500, gain: 2, q: 1.0 },
+      { frequency: 8000, gain: 1.5, q: 0.7 },
+    ],
+    reverb: { roomSize: 0.15, damping: 0.75, wetLevel: 0.1 },
+    loudnessTarget: -16,
+    dithering: { bitDepth: 16 },
+  }),
 };
 
 const broadcastSports: AudioPreset = {
   id: 'broadcast_sports',
   name: '⚽ Sports Commentary',
   description: 'Dynamic, energetic sports broadcasting',
-  processingChain: createDefaultProcessingChain(),
+  processingChain: createProcessingChain(),
 };
 
 const vintageGoldenAge: AudioPreset = {
   id: 'vintage_golden_age',
   name: '🎭 Golden Age Radio',
   description: 'Classic 1940s-50s radio drama sound',
-  processingChain: createDefaultProcessingChain(),
+  processingChain: createProcessingChain(),
 };
 
 const vintageTape: AudioPreset = {
   id: 'vintage_tape',
   name: '📼 Vintage Tape',
   description: 'Analog tape warmth and saturation',
-  processingChain: createDefaultProcessingChain(),
+  processingChain: createProcessingChain(),
 };
 
 const vintageLoFi: AudioPreset = {
   id: 'vintage_lo_fi',
   name: '🔊 Lo-Fi Vintage',
   description: 'Deliberately degraded retro sound',
-  processingChain: createDefaultProcessingChain(),
+  processingChain: createProcessingChain(),
 };
 
 const envCathedral: AudioPreset = {
   id: 'env_cathedral',
   name: '⛪ Cathedral',
   description: 'Large reverberant space like cathedral',
-  processingChain: createDefaultProcessingChain(),
+  processingChain: createProcessingChain(),
 };
 
 const envForest: AudioPreset = {
   id: 'env_forest',
   name: '🌲 Forest Echo',
   description: 'Natural outdoor reverb with depth',
-  processingChain: createDefaultProcessingChain(),
+  processingChain: createProcessingChain(),
 };
 
 const envCavern: AudioPreset = {
   id: 'env_cavern',
   name: '🕳️ Deep Cavern',
   description: 'Dramatic underground cave acoustics',
-  processingChain: createDefaultProcessingChain(),
+  processingChain: createProcessingChain(),
 };
 
 const envUnderwater: AudioPreset = {
   id: 'env_underwater',
   name: '🌊 Underwater',
   description: 'Submerged, muffled underwater effect',
-  processingChain: createDefaultProcessingChain(),
+  processingChain: createProcessingChain(),
 };
 
 const fxAlien: AudioPreset = {
   id: 'fx_alien',
   name: '👽 Alien Voice',
   description: 'Otherworldly alien character effect',
-  processingChain: createDefaultProcessingChain(),
+  processingChain: createProcessingChain(),
 };
 
 const fxGhost: AudioPreset = {
   id: 'fx_ghost',
   name: '👻 Ghost Voice',
   description: 'Ethereal, haunting spectral effect',
-  processingChain: createDefaultProcessingChain(),
+  processingChain: createProcessingChain(),
 };
 
 const fxMegaphone: AudioPreset = {
   id: 'fx_megaphone',
   name: '📢 Megaphone',
   description: 'Distorted megaphone/bullhorn effect',
-  processingChain: createDefaultProcessingChain(),
+  processingChain: createProcessingChain(),
 };
 
 const fxRobot: AudioPreset = {
   id: 'fx_robot',
   name: '🤖 Robot Voice',
   description: 'Robotic/synthetic character effect',
-  processingChain: createDefaultProcessingChain(),
+  processingChain: createProcessingChain({
+    compression: { threshold: -20, ratio: 10, attack: 0.5, release: 10 },
+    limiting: { threshold: -2, release: 15 },
+    normalization: { targetLevel: -16 },
+    highPass: { frequency: 200, slope: 24 },
+    lowPass: { frequency: 8000, slope: 24 },
+    eqBands: [
+      { frequency: 400, gain: -6, q: 1.5 },
+      { frequency: 1000, gain: 8, q: 2.0 },
+      { frequency: 2500, gain: 6, q: 1.8 },
+      { frequency: 5000, gain: -4, q: 1.2 },
+    ],
+    reverb: { roomSize: 0.25, damping: 0.3, wetLevel: 0.2 },
+    stereoWidth: { width: 1.2 },
+    loudnessTarget: -16,
+    dithering: { bitDepth: 16 },
+  }),
 };
 
 /**
@@ -488,29 +652,30 @@ export const AUDIO_PRESETS: AudioPreset[] = [
   warmIntimate,
   naturalMinimal,
   broadcastStandard,
+  softGentle,
+  // Page 2: Cinematic & Character
   cinematicDramatic,
-  // Page 2: Clean & Character
   cleanNatural,
   cleanIntimate,
   characterPhone,
   characterVintage,
   characterElderly,
-  characterChild,
   // Page 3: Character & Broadcast
+  characterChild,
   characterMonster,
   broadcastRadio,
   broadcastNews,
   broadcastPodcast,
   broadcastSports,
-  vintageGoldenAge,
   // Page 4: Vintage & Environmental
+  vintageGoldenAge,
   vintageTape,
   vintageLoFi,
   envCathedral,
   envForest,
   envCavern,
+  // Page 5: Environmental & Special Effects
   envUnderwater,
-  // Page 5: Special Effects
   fxAlien,
   fxGhost,
   fxMegaphone,

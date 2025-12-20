@@ -90,11 +90,11 @@ export function Waveform({
       // Add timeout to prevent infinite loading
       const timeoutId = setTimeout(() => {
         if (!cancelled) {
-          console.error('[Waveform] Processing timeout after 10 seconds');
+          console.error('[Waveform] Processing timeout after 30 seconds');
           setIsProcessing(false);
           setWaveformData(null);
         }
-      }, 10000);
+      }, 30000); // Increased to 30 seconds for complex processing chains
       
       try {
         // Clone the ArrayBuffer to avoid detachment issues when shared with AudioPlayer

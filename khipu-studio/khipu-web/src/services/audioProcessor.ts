@@ -21,6 +21,7 @@ export interface ProcessedAudio {
  */
 export class AudioProcessor {
   private audioContext: AudioContext | null = null;
+  private impulseResponseCache: Map<string, AudioBuffer> = new Map();
 
   /**
    * Initialize audio context (must be called after user interaction)
@@ -60,74 +61,95 @@ export class AudioProcessor {
     audioBuffer: AudioBuffer,
     processingChain: AudioProcessingChain
   ): Promise<ProcessedAudio> {
-    // Create offline context for processing
-    const offlineContext = new OfflineAudioContext(
-      audioBuffer.numberOfChannels,
-      audioBuffer.length,
-      audioBuffer.sampleRate
-    );
+    console.log('[AudioProcessor] Starting audio processing...');
+    const startTime = performance.now();
+    
+    try {
+      // Create offline context for processing
+      const offlineContext = new OfflineAudioContext(
+        audioBuffer.numberOfChannels,
+        audioBuffer.length,
+        audioBuffer.sampleRate
+      );
 
-    // Create source
-    const source = offlineContext.createBufferSource();
-    source.buffer = audioBuffer;
+      // Create source
+      const source = offlineContext.createBufferSource();
+      source.buffer = audioBuffer;
 
-    // Build processing chain
-    let currentNode: AudioNode = source;
+      // Build processing chain
+      let currentNode: AudioNode = source;
 
-    // 1. Apply De-esser (if enabled)
-    if (processingChain.noiseCleanup?.deEsser?.enabled) {
-      currentNode = this.applyDeEsser(currentNode, processingChain.noiseCleanup.deEsser, offlineContext);
+      // 1. Apply De-esser (if enabled)
+      if (processingChain.noiseCleanup?.deEsser?.enabled) {
+        console.log('[AudioProcessor] Applying de-esser...');
+        currentNode = this.applyDeEsser(currentNode, processingChain.noiseCleanup.deEsser, offlineContext);
+      }
+
+      // 2. Apply High-pass filter (if enabled)
+      if (processingChain.eqShaping?.highPass?.enabled) {
+        console.log('[AudioProcessor] Applying high-pass filter...');
+        currentNode = this.applyHighPass(currentNode, processingChain.eqShaping.highPass, offlineContext);
+      }
+
+      // 3. Apply Low-pass filter (if enabled)
+      if (processingChain.eqShaping?.lowPass?.enabled) {
+        console.log('[AudioProcessor] Applying low-pass filter...');
+        currentNode = this.applyLowPass(currentNode, processingChain.eqShaping.lowPass, offlineContext);
+      }
+
+      // 4. Apply Parametric EQ (if enabled)
+      if (processingChain.eqShaping?.parametricEQ?.bands && processingChain.eqShaping.parametricEQ.bands.length > 0) {
+        console.log('[AudioProcessor] Applying parametric EQ with', processingChain.eqShaping.parametricEQ.bands.length, 'bands...');
+        currentNode = this.applyParametricEQ(currentNode, processingChain.eqShaping.parametricEQ, offlineContext);
+      }
+
+      // 5. Apply Compression (if enabled)
+      if (processingChain.dynamicControl?.compression?.enabled) {
+        console.log('[AudioProcessor] Applying compression...');
+        currentNode = this.applyCompression(currentNode, processingChain.dynamicControl.compression, offlineContext);
+      }
+
+      // 6. Apply Reverb (if enabled)
+      if (processingChain.spatialEnhancement?.reverb?.enabled) {
+        console.log('[AudioProcessor] Applying reverb...');
+        currentNode = await this.applyReverb(currentNode, processingChain.spatialEnhancement.reverb, offlineContext);
+      }
+
+      // 7. Apply Normalization (if enabled)
+      if (processingChain.consistencyMastering?.loudnessNormalization?.enabled) {
+        console.log('[AudioProcessor] Applying normalization...');
+        currentNode = this.applyNormalization(currentNode, processingChain.consistencyMastering.loudnessNormalization, offlineContext);
+      }
+
+      // 8. Apply Limiter (if enabled)
+      if (processingChain.dynamicControl?.limiting?.enabled) {
+        console.log('[AudioProcessor] Applying limiter...');
+        currentNode = this.applyLimiter(currentNode, processingChain.dynamicControl.limiting, offlineContext);
+      }
+
+      // Connect to destination
+      currentNode.connect(offlineContext.destination);
+
+      // Start processing
+      source.start(0);
+
+      console.log('[AudioProcessor] Rendering audio...');
+      // Render
+      const renderedBuffer = await offlineContext.startRendering();
+
+      const elapsed = performance.now() - startTime;
+      console.log('[AudioProcessor] ✓ Processing complete in', elapsed.toFixed(0), 'ms');
+
+      return {
+        buffer: renderedBuffer,
+        duration: renderedBuffer.duration,
+        sampleRate: renderedBuffer.sampleRate,
+      };
+    } catch (error) {
+      const elapsed = performance.now() - startTime;
+      console.error('[AudioProcessor] ✗ Processing failed after', elapsed.toFixed(0), 'ms:', error);
+      throw error;
     }
-
-    // 2. Apply High-pass filter (if enabled)
-    if (processingChain.eqShaping?.highPass?.enabled) {
-      currentNode = this.applyHighPass(currentNode, processingChain.eqShaping.highPass, offlineContext);
-    }
-
-    // 3. Apply Low-pass filter (if enabled)
-    if (processingChain.eqShaping?.lowPass?.enabled) {
-      currentNode = this.applyLowPass(currentNode, processingChain.eqShaping.lowPass, offlineContext);
-    }
-
-    // 4. Apply Parametric EQ (if enabled)
-    if (processingChain.eqShaping?.parametricEQ?.bands && processingChain.eqShaping.parametricEQ.bands.length > 0) {
-      currentNode = this.applyParametricEQ(currentNode, processingChain.eqShaping.parametricEQ, offlineContext);
-    }
-
-    // 5. Apply Compression (if enabled)
-    if (processingChain.dynamicControl?.compression?.enabled) {
-      currentNode = this.applyCompression(currentNode, processingChain.dynamicControl.compression, offlineContext);
-    }
-
-    // 6. Apply Reverb (if enabled)
-    if (processingChain.spatialEnhancement?.reverb?.enabled) {
-      currentNode = await this.applyReverb(currentNode, processingChain.spatialEnhancement.reverb, offlineContext);
-    }
-
-    // 7. Apply Normalization (if enabled)
-    if (processingChain.consistencyMastering?.loudnessNormalization?.enabled) {
-      currentNode = this.applyNormalization(currentNode, processingChain.consistencyMastering.loudnessNormalization, offlineContext);
-    }
-
-    // 8. Apply Limiter (if enabled)
-    if (processingChain.dynamicControl?.limiting?.enabled) {
-      currentNode = this.applyLimiter(currentNode, processingChain.dynamicControl.limiting, offlineContext);
-    }
-
-    // Connect to destination
-    currentNode.connect(offlineContext.destination);
-
-    // Start processing
-    source.start(0);
-
-    // Render
-    const renderedBuffer = await offlineContext.startRendering();
-
-    return {
-      buffer: renderedBuffer,
-      duration: renderedBuffer.duration,
-      sampleRate: renderedBuffer.sampleRate,
-    };
   }
 
   /**
@@ -278,12 +300,22 @@ export class AudioProcessor {
     // Create convolver for reverb
     const convolver = context.createConvolver();
     
-    // Generate impulse response based on room size
-    const impulseResponse = this.generateImpulseResponse(
-      reverbConfig.roomSize,
-      reverbConfig.damping,
-      context
-    );
+    // Generate or retrieve cached impulse response
+    const cacheKey = `${reverbConfig.roomSize}_${reverbConfig.damping}_${context.sampleRate}`;
+    let impulseResponse = this.impulseResponseCache.get(cacheKey);
+    
+    if (!impulseResponse) {
+      console.log('[AudioProcessor] Generating new impulse response for reverb');
+      impulseResponse = this.generateImpulseResponse(
+        reverbConfig.roomSize,
+        reverbConfig.damping,
+        context
+      );
+      this.impulseResponseCache.set(cacheKey, impulseResponse);
+    } else {
+      console.log('[AudioProcessor] Using cached impulse response for reverb');
+    }
+    
     convolver.buffer = impulseResponse;
 
     // Create wet/dry mix
