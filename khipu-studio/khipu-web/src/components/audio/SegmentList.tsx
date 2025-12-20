@@ -202,6 +202,7 @@ export function SegmentList({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
+                      console.log('[SegmentList] Revision flag clicked for segment:', segment.id, 'current value:', segment.needs_revision);
                       if (!disabled) onToggleRevision(segment.id);
                     }}
                     disabled={disabled}

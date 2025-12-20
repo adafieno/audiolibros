@@ -113,9 +113,11 @@ export function useAudioProduction(projectId: string, chapterId: string, chapter
   ): Promise<void> => {
     try {
       setError(null);
+      console.log('[useAudioProduction] toggleRevisionMark called:', { segmentId, needsRevision, notes });
       
       // Use chapter UUID if available, otherwise fall back to chapterId (order)
       const chapterIdForApi = chapterUuid || chapterId;
+      console.log('[useAudioProduction] Using chapterId for API:', chapterIdForApi);
       
       await audioProductionApi.updateRevisionMark(
         projectId,
@@ -124,6 +126,8 @@ export function useAudioProduction(projectId: string, chapterId: string, chapter
         { needs_revision: needsRevision, notes }
       );
       
+      console.log('[useAudioProduction] API call successful, updating local state');
+      
       // Update segment in local state
       setSegments(prev => prev.map(seg => 
         seg.segment_id === segmentId
@@ -131,8 +135,11 @@ export function useAudioProduction(projectId: string, chapterId: string, chapter
           : seg
       ));
       
+      console.log('[useAudioProduction] Local state updated');
+      
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update revision mark';
+      console.error('[useAudioProduction] toggleRevisionMark error:', errorMessage, err);
       setError(errorMessage);
       throw err;
     }

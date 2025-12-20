@@ -2,6 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
+from sqlalchemy.orm.attributes import flag_modified
 from uuid import UUID
 import logging
 from typing import Optional
@@ -349,6 +350,45 @@ async def update_revision_mark(
         )
         db.add(metadata)
     
+    # ALSO update the orchestration plan to keep them in sync
+    # The orchestration stores it as 'needsRevision' in the plan segments JSON
+    plan_result = await db.execute(
+        select(ChapterPlan).where(
+            and_(
+                ChapterPlan.project_id == project_id,
+                ChapterPlan.chapter_id == chapter_uuid
+            )
+        )
+    )
+    plan = plan_result.scalar_one_or_none()
+    
+    if plan and plan.segments:
+        # Handle both dict with 'segments' key and direct array
+        if isinstance(plan.segments, dict):
+            segments_list = plan.segments.get('segments', [])
+        elif isinstance(plan.segments, list):
+            segments_list = plan.segments
+        else:
+            segments_list = []
+        
+        # Update the needsRevision field in the matching segment
+        updated = False
+        for seg in segments_list:
+            if seg.get('id') == segment_id:
+                seg['needsRevision'] = request.needs_revision
+                updated = True
+                break
+        
+        if updated:
+            # Save the updated segments back to the plan
+            if isinstance(plan.segments, dict):
+                plan.segments['segments'] = segments_list
+            else:
+                plan.segments = segments_list
+            
+            # Mark as modified to trigger SQLAlchemy update
+            flag_modified(plan, "segments")
+    
     await db.commit()
     
     logger.info(f"🚩 Updated revision mark for segment {segment_id}: {request.needs_revision}")
@@ -671,6 +711,14 @@ async def get_chapter_audio_production_data(
         # SFX can be inserted at positions like: 50, 150, 250 (between segments 0, 100, 200)
         base_order = seg.get('order', idx) * 100
         
+        # Get needs_revision from either metadata OR from orchestration plan
+        # Orchestration stores it as 'needsRevision', audio production stores in metadata as 'needs_revision'
+        needs_revision = False
+        if metadata and metadata.needs_revision:
+            needs_revision = True
+        elif seg.get('needsRevision', False):
+            needs_revision = True
+        
         segments.append(AudioSegmentData(
             segment_id=str(segment_id),
             type="plan",
@@ -682,7 +730,7 @@ async def get_chapter_audio_production_data(
             has_audio=has_audio,
             processing_chain=metadata.processing_chain if metadata else None,
             preset_id=metadata.preset_id if metadata else None,
-            needs_revision=metadata.needs_revision if metadata else False,
+            needs_revision=needs_revision,
             duration=metadata.duration_seconds if metadata else None
         ))
     

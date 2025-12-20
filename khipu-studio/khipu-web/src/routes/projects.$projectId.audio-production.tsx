@@ -357,12 +357,21 @@ function AudioProductionPage() {
 
   // Handle toggle revision flag
   const handleToggleRevision = useCallback(async (segmentId: string) => {
+    console.log('[AUDIO PRODUCTION] Toggle revision called for segment:', segmentId);
     try {
       const segment = segments.find(s => s.segment_id === segmentId);
+      console.log('[AUDIO PRODUCTION] Current segment:', segment);
+      console.log('[AUDIO PRODUCTION] Current needs_revision:', segment?.needs_revision);
+      console.log('[AUDIO PRODUCTION] New needs_revision:', !segment?.needs_revision);
+      
       await toggleRevisionMark(segmentId, !segment?.needs_revision);
+      console.log('[AUDIO PRODUCTION] Toggle successful, refetching...');
+      
       // Refetch to ensure we have the latest data
       await loadChapterData();
-    } catch {
+      console.log('[AUDIO PRODUCTION] Refetch complete');
+    } catch (error) {
+      console.error('[AUDIO PRODUCTION] Toggle revision failed:', error);
       // Error is handled by hook
     }
   }, [segments, toggleRevisionMark, loadChapterData]);
@@ -822,17 +831,21 @@ function AudioProductionPage() {
             
             <div style={{ flex: 1, overflow: 'auto' }}>
               <SegmentList
-                segments={segments.map((seg) => ({
-                  id: seg.segment_id,  // Use UUID directly
-                  position: seg.display_order,
-                  text: seg.text || null,
-                  character_name: seg.character_name || null,
-                  audio_blob_path: seg.raw_audio_url || null,
-                  status: seg.has_audio ? 'cached' : (seg.needs_revision ? 'needs_revision' : 'pending'),
-                  duration: seg.duration || null,
-                  revision_notes: null,
-                  needs_revision: seg.needs_revision,
-                }))}
+                segments={segments.map((seg) => {
+                  const mapped = {
+                    id: seg.segment_id,  // Use UUID directly
+                    position: seg.display_order,
+                    text: seg.text || null,
+                    character_name: seg.character_name || null,
+                    audio_blob_path: seg.raw_audio_url || null,
+                    status: seg.has_audio ? 'cached' : (seg.needs_revision ? 'needs_revision' : 'pending'),
+                    duration: seg.duration || null,
+                    revision_notes: null,
+                    needs_revision: seg.needs_revision,
+                  };
+                  console.log('[AUDIO PRODUCTION] Mapping segment:', seg.segment_id, 'needs_revision:', seg.needs_revision, '→', mapped.needs_revision);
+                  return mapped;
+                })}
                 selectedSegmentId={selectedSegmentId}
                 onSegmentSelect={handleSegmentSelect}
                 onPlaySegment={handlePlaySegment}
