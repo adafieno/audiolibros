@@ -1,19 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { AudioPlayer } from '../components/AudioPlayer';
-import { Waveform } from '../components/Waveform';
 import { AnalogVUMeter } from '../components/audio/VUMeter';
 import { PresetSelector } from '../components/audio/PresetSelector';
 import { Select } from '../components/Select';
 import { EffectChainEditor } from '../components/audio/EffectChainEditor';
 import { SegmentList } from '../components/audio/SegmentList';
 import { useAudioProduction } from '../hooks/useAudioProduction';
-import { useAudioPlayer } from '../hooks/useAudioPlayer';
+import { useAudioPlayback } from '../hooks/useAudioPlayback';
 import { AUDIO_PRESETS } from '../config/audioPresets';
 import { getChapters } from '../api/chapters';
-import { voicesApi } from '../lib/api/voices';
-import { charactersApi, type Character } from '../lib/api/characters';
+import { charactersApi } from '../lib/api/characters';
 import type { AudioProcessingChain } from '../types/audio-production';
 
 export const Route = createFileRoute('/projects/$projectId/audio-production')({
@@ -32,17 +29,11 @@ function AudioProductionPage() {
     queryKey: ['chapters', projectId],
     queryFn: () => getChapters(projectId),
   });
-
-  // Query to fetch characters for voice assignments
+  
+  // Query to fetch characters for voice lookup
   const { data: characters } = useQuery({
     queryKey: ['characters', projectId],
     queryFn: () => charactersApi.getCharacters(projectId),
-  });
-
-  // Query to fetch voice inventory
-  const { data: voiceInventory } = useQuery({
-    queryKey: ['voices'],
-    queryFn: () => voicesApi.getAvailableVoices(),
   });
   
   // Convert chapter ID (UUID) to chapter order for API
@@ -57,19 +48,30 @@ function AudioProductionPage() {
     updateProcessingChain,
   } = useAudioProduction(projectId, chapterOrder, selectedChapterId);
 
-  const { audioData, processingChain, loadAudio, updateProcessingChain: updatePlayerChain } = useAudioPlayer();
+  // Processing chain state
+  const [processingChain, setProcessingChain] = useState<AudioProcessingChain | null>(null);
   
-  console.log('[AudioProduction] Render - audioData:', !!audioData, 'processingChain:', processingChain);
+  // Audio playback using unified hook
+  const {
+    playSegment,
+    stopPlayback,
+    seek,
+    setVolume: setAudioVolume,
+    isPlaying,
+    isLoadingAudio,
+    currentTime,
+    duration,
+    playingSegmentId,
+    clearCache,
+  } = useAudioPlayback({ projectId, processingChain });
+  
+  console.log('[AudioProduction] Render - processingChain:', processingChain);
   
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
-  const [playingSegmentId, setPlayingSegmentId] = useState<string | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(100);
   const [customMode, setCustomMode] = useState(false);
   const [selectedPresetId, setSelectedPresetId] = useState<string>('raw_unprocessed');
   const [showSfxDialog, setShowSfxDialog] = useState(false);
-  const [audioCache] = useState(new Map<string, string>());
-  const [audioElements] = useState(new Map<string, HTMLAudioElement>());
-  const [isLoadingWaveform, setIsLoadingWaveform] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Auto-select first chapter when chapters load
@@ -95,9 +97,11 @@ function AudioProductionPage() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const defaultPreset = AUDIO_PRESETS.find((p: any) => p.id === 'raw_unprocessed');
     if (defaultPreset) {
-      updatePlayerChain(defaultPreset.processingChain);
+      setTimeout(() => {
+        setProcessingChain(defaultPreset.processingChain);
+      }, 0);
     }
-  }, [updatePlayerChain]);
+  }, []);
 
   // Apply processing chain when preset changes (from segment selection)
   useEffect(() => {
@@ -109,7 +113,9 @@ function AudioProductionPage() {
       if (preset) {
         console.log('[AudioProduction] ✓ Auto-applying preset from segment:', selectedPresetId);
         console.log('[AudioProduction] ✓ Processing chain:', JSON.stringify(preset.processingChain, null, 2));
-        updatePlayerChain(preset.processingChain);
+        setTimeout(() => {
+          setProcessingChain(preset.processingChain);
+        }, 0);
       } else {
         console.warn('[AudioProduction] ✗ Preset not found:', selectedPresetId);
       }
@@ -119,14 +125,16 @@ function AudioProductionPage() {
       if (segment?.processing_chain) {
         console.log('[AudioProduction] ✓ Auto-applying custom chain from segment');
         console.log('[AudioProduction] ✓ Custom chain:', JSON.stringify(segment.processing_chain, null, 2));
-        updatePlayerChain(segment.processing_chain);
+        setTimeout(() => {
+          setProcessingChain(segment.processing_chain || null);
+        }, 0);
       } else {
         console.log('[AudioProduction] ℹ No custom chain found for segment, using default');
       }
     } else {
       console.log('[AudioProduction] ℹ No preset selected or waiting for segment selection');
     }
-  }, [selectedPresetId, customMode, selectedSegmentId, segments, updatePlayerChain]);
+  }, [selectedPresetId, customMode, selectedSegmentId, segments]);
 
   // Handle preset selection
   const handlePresetSelect = useCallback(async (presetId: string) => {
@@ -142,7 +150,10 @@ function AudioProductionPage() {
       
       setSelectedPresetId(presetId);
       setCustomMode(false);
-      updatePlayerChain(preset.processingChain);
+      setProcessingChain(preset.processingChain);
+      
+      // Clear cached audio so it re-processes with new preset
+      clearCache(selectedSegmentId);
       
       console.log('[AudioProduction] ✓ State updated - preset will be applied via useEffect');
       
@@ -158,7 +169,7 @@ function AudioProductionPage() {
       if (!selectedSegmentId) console.error('[AudioProduction] ✗ No segment selected');
     }
     console.log('[AudioProduction] ==============================');
-  }, [updatePlayerChain, selectedSegmentId, updateProcessingChain]);
+  }, [selectedSegmentId, updateProcessingChain, clearCache]);
 
   // Handle custom mode toggle
   const handleCustomModeToggle = useCallback(() => {
@@ -201,8 +212,12 @@ function AudioProductionPage() {
     console.log('[AudioProduction] User modified processing chain');
     console.log('[AudioProduction] New chain:', JSON.stringify(chain, null, 2));
     
-    updatePlayerChain(chain);
-    // Auto-save - no need for isDirty
+    setProcessingChain(chain);
+    
+    // Clear cache for selected segment so it re-processes with new chain
+    if (selectedSegmentId) {
+      clearCache(selectedSegmentId);
+    }
     
     // Check if it still matches selected preset
     if (!customMode && selectedPresetId) {
@@ -217,7 +232,7 @@ function AudioProductionPage() {
     
     console.log('[AudioProduction] ✓ Custom chain applied to player');
     console.log('[AudioProduction] ==================================');
-  }, [updatePlayerChain, customMode, selectedPresetId]);
+  }, [customMode, selectedPresetId, selectedSegmentId, clearCache]);
 
   // Handle segment selection
   const handleSegmentSelect = useCallback(async (segmentId: string) => {
@@ -238,176 +253,49 @@ function AudioProductionPage() {
       }
     }
     
-    // Stop any currently playing audio
-    audioElements.forEach((audio, id) => {
-      if (id !== segmentId) {
-        audio.pause();
-        audio.currentTime = 0;
-      }
-    });
-    setIsPlaying(false);
-    setPlayingSegmentId(null);
+    // Don't auto-load audio - wait for user to click play
+  }, [segments]);
+
+  // Handle audio playback - use unified hook
+  const handlePlaySegment = useCallback(async () => {
+    if (!selectedSegmentId) return;
     
-    // Load audio for selected segment if not already loaded
+    // Stop if already playing this segment
+    if (isPlaying && playingSegmentId === selectedSegmentId) {
+      stopPlayback();
+      return;
+    }
+    
+    const segment = segments.find(s => s.segment_id === selectedSegmentId);
     if (!segment) {
-      console.error('Segment not found:', segmentId);
+      alert('Segment not found.');
       return;
     }
     
-    // If segment has cached audio, load it for waveform display
-    if (segment.has_audio && segment.raw_audio_url) {
-      setIsLoadingWaveform(true);
-      try {
-        console.log('Loading audio from URL for waveform:', segment.raw_audio_url);
-        const response = await fetch(segment.raw_audio_url);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch audio: ${response.status}`);
-        }
-        const blob = await response.blob();
-        const arrayBuffer = await blob.arrayBuffer();
-        
-        // Store as Blob instead to avoid ArrayBuffer detachment issues
-        // When components need it, they can get their own copy
-        loadAudio(arrayBuffer);
-        console.log('Audio loaded for waveform display');
-      } catch (error) {
-        console.error('Failed to load audio for waveform:', error);
-        loadAudio(null);
-      } finally {
-        setIsLoadingWaveform(false);
-      }
-    } else {
-      // No audio yet - clear waveform
-      loadAudio(null);
-    }
+    // Get voice from character's assignment (same as orchestration)
+    const character = characters?.find(c => c.name === segment.character_name);
+    const voiceId = character?.voiceAssignment?.voiceId || 'es-MX-DaliaNeural';
     
-    // Check if we already have an audio element for playback
-    if (audioElements.has(segmentId)) {
-      console.log('Audio element already exists for segment:', segmentId);
-      return;
-    }
+    console.log('[AudioProduction] Playing segment:', segment.segment_id, 'character:', segment.character_name, 'voice:', voiceId);
     
-    if (!segment.text || !segment.voice) {
-      console.warn('Segment missing text or voice:', segmentId);
-      return;
-    }
-
-    // Look up the character to get their voice assignment
-    const character = characters?.find((c: Character) => c.name === segment.voice);
-    if (!character?.voiceAssignment?.voiceId) {
-      console.error('No voice assignment found for character:', segment.voice);
-      return;
-    }
-
-    const voiceId = character.voiceAssignment.voiceId;
-    
-    // Find the voice object
-    const voice = voiceInventory?.voices?.find(v => v.id === voiceId);
-    if (!voice) {
-      console.error('Voice not found in inventory:', voiceId);
-      return;
-    }
-    
-    try {
-      // Check if audio URL is already cached
-      let audioUrl = audioCache.get(segmentId);
-      
-      if (!audioUrl && !segment.has_audio) {
-        // Generate audio via voice audition API (same as Voice Casting)
-        console.log('Generating audio for segment:', segmentId, 'voice:', voiceId, 'character:', segment.voice);
-        const blob = await voicesApi.auditionVoice(projectId, voiceId, segment.text);
-        audioUrl = URL.createObjectURL(blob);
-        audioCache.set(segmentId, audioUrl);
-        console.log('Audio generated and cached for segment:', segmentId);
-        
-        // Also load for waveform
-        const arrayBuffer = await blob.arrayBuffer();
-        loadAudio(arrayBuffer);
-      } else if (segment.raw_audio_url && !audioUrl) {
-        // Use cached audio from server
-        audioUrl = segment.raw_audio_url;
-      }
-      
-      if (!audioUrl) {
-        console.warn('No audio URL available for segment:', segmentId);
-        return;
-      }
-      
-      // Create audio element for playback
-      const audio = new Audio(audioUrl);
-      audio.onended = () => {
-        setIsPlaying(false);
-        setPlayingSegmentId(null);
-      };
-      audio.onerror = (e) => {
-        console.error('Failed to play audio for segment:', segmentId, e);
-        setIsPlaying(false);
-        setPlayingSegmentId(null);
-      };
-      audioElements.set(segmentId, audio);
-      console.log('Audio element created for segment:', segmentId);
-    } catch (error) {
-      console.error('Error loading audio:', error);
-    }
-  }, [segments, audioCache, audioElements, projectId, characters, voiceInventory, loadAudio]);
+    await playSegment({
+      segment_id: segment.segment_id,
+      id: segment.segment_id,
+      has_audio: segment.has_audio,
+      raw_audio_url: segment.raw_audio_url || undefined,
+      text: segment.text || '',
+      voice: voiceId,
+    }, voiceId);
+  }, [selectedSegmentId, isPlaying, playingSegmentId, segments, characters, playSegment, stopPlayback]);
 
   // Auto-select first segment when segments load
   useEffect(() => {
     if (segments.length > 0 && !selectedSegmentId) {
-      handleSegmentSelect(segments[0].segment_id);
+      setTimeout(() => {
+        handleSegmentSelect(segments[0].segment_id);
+      }, 0);
     }
   }, [segments, selectedSegmentId, handleSegmentSelect]);
-
-  // Handle segment playback
-  const handlePlaySegment = useCallback(async (segmentId: string) => {
-    console.log('handlePlaySegment called for:', segmentId);
-    
-    // If already playing this segment, pause it
-    if (playingSegmentId === segmentId && isPlaying) {
-      const audio = audioElements.get(segmentId);
-      if (audio) {
-        audio.pause();
-        setIsPlaying(false);
-      }
-      return;
-    }
-    
-    // Stop any currently playing audio
-    audioElements.forEach((audio, id) => {
-      if (id !== segmentId) {
-        audio.pause();
-        audio.currentTime = 0;
-      }
-    });
-    
-    // Ensure segment is selected and loaded
-    if (selectedSegmentId !== segmentId || !audioElements.has(segmentId)) {
-      console.log('Loading audio for segment:', segmentId);
-      await handleSegmentSelect(segmentId);
-    }
-    
-    // Wait a tick to ensure audio element is created
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
-    // Play the segment
-    const audio = audioElements.get(segmentId);
-    if (audio) {
-      console.log('Playing audio for segment:', segmentId);
-      setPlayingSegmentId(segmentId);
-      setIsPlaying(true);
-      audio.play().catch(error => {
-        console.error('Error playing audio:', error);
-        setIsPlaying(false);
-        setPlayingSegmentId(null);
-      });
-    } else {
-      console.error('No audio element found for segment:', segmentId);
-      const segment = segments.find(s => s.segment_id === segmentId);
-      if (segment && !segment.raw_audio_url) {
-        console.error('Segment has no audio URL - audio may not be generated yet');
-      }
-    }
-  }, [playingSegmentId, isPlaying, selectedSegmentId, audioElements, handleSegmentSelect, segments]);
 
   // Auto-select first segment when segments load
   useEffect(() => {
@@ -750,67 +638,245 @@ function AudioProductionPage() {
             
             {selectedSegmentId && (
               <>
-                {/* Single-line consolidated controls - Always visible */}
-                <div style={{ display: 'flex', gap: '6px', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px solid #333', marginBottom: '12px' }}>
-                  
-                  {/* Audio Player with processing - this plays the PROCESSED audio */}
-                  {audioData && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
-                      <AudioPlayer
-                        audioData={audioData}
-                        processingChain={processingChain}
-                        autoPlay={false}
-                        showControls={true}
-                        hideTransportControls={false}
-                        onPlay={() => setIsPlaying(true)}
-                        onPause={() => setIsPlaying(false)}
-                        onEnded={() => setIsPlaying(false)}
-                      />
-                    </div>
-                  )}
+                {/* Single-line Transport Controls */}
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px', 
+                  paddingBottom: '12px', 
+                  borderBottom: '1px solid #333', 
+                  marginBottom: '12px',
+                }}>
+                  {/* Previous */}
+                  <button
+                    onClick={async () => {
+                      const currentIndex = segments.findIndex(s => s.segment_id === selectedSegmentId);
+                      if (currentIndex > 0) {
+                        const prevSegment = segments[currentIndex - 1];
+                        setSelectedSegmentId(prevSegment.segment_id);
+                        stopPlayback();
+                        
+                        // Play the previous segment directly
+                        const character = characters?.find(c => c.name === prevSegment.character_name);
+                        const voiceId = character?.voiceAssignment?.voiceId || 'es-MX-DaliaNeural';
+                        
+                        await playSegment({
+                          segment_id: prevSegment.segment_id,
+                          id: prevSegment.segment_id,
+                          has_audio: prevSegment.has_audio,
+                          raw_audio_url: prevSegment.raw_audio_url || undefined,
+                          text: prevSegment.text || '',
+                          voice: voiceId,
+                        }, voiceId);
+                      }
+                    }}
+                    disabled={segments.findIndex(s => s.segment_id === selectedSegmentId) === 0}
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '4px',
+                      background: '#333',
+                      border: '1px solid #444',
+                      color: '#fff',
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      opacity: segments.findIndex(s => s.segment_id === selectedSegmentId) === 0 ? 0.3 : 1,
+                      flexShrink: 0,
+                    }}
+                    title="Previous segment"
+                  >
+                    ⏮
+                  </button>
+
+                  {/* Play/Pause */}
+                  <button
+                    onClick={handlePlaySegment}
+                    disabled={!selectedSegmentId || isLoadingAudio}
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '50%',
+                      background: isPlaying && playingSegmentId === selectedSegmentId ? '#4a9eff' : '#333',
+                      border: 'none',
+                      color: '#fff',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      opacity: isLoadingAudio ? 0.5 : 1,
+                    }}
+                  >
+                    {isLoadingAudio ? '⏳' : (isPlaying && playingSegmentId === selectedSegmentId ? '⏸' : '▶')}
+                  </button>
+
+                  {/* Stop */}
+                  <button
+                    onClick={() => stopPlayback()}
+                    disabled={!playingSegmentId}
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '4px',
+                      background: '#333',
+                      border: '1px solid #444',
+                      color: '#fff',
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      opacity: playingSegmentId ? 1 : 0.3,
+                      flexShrink: 0,
+                    }}
+                    title="Stop"
+                  >
+                    ⏹
+                  </button>
+
+                  {/* Next */}
+                  <button
+                    onClick={async () => {
+                      const currentIndex = segments.findIndex(s => s.segment_id === selectedSegmentId);
+                      if (currentIndex >= 0 && currentIndex < segments.length - 1) {
+                        const nextSegment = segments[currentIndex + 1];
+                        setSelectedSegmentId(nextSegment.segment_id);
+                        stopPlayback();
+                        
+                        // Play the next segment directly
+                        const character = characters?.find(c => c.name === nextSegment.character_name);
+                        const voiceId = character?.voiceAssignment?.voiceId || 'es-MX-DaliaNeural';
+                        
+                        await playSegment({
+                          segment_id: nextSegment.segment_id,
+                          id: nextSegment.segment_id,
+                          has_audio: nextSegment.has_audio,
+                          raw_audio_url: nextSegment.raw_audio_url || undefined,
+                          text: nextSegment.text || '',
+                          voice: voiceId,
+                        }, voiceId);
+                      }
+                    }}
+                    disabled={segments.findIndex(s => s.segment_id === selectedSegmentId) === segments.length - 1}
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '4px',
+                      background: '#333',
+                      border: '1px solid #444',
+                      color: '#fff',
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      opacity: segments.findIndex(s => s.segment_id === selectedSegmentId) === segments.length - 1 ? 0.3 : 1,
+                      flexShrink: 0,
+                    }}
+                    title="Next segment"
+                  >
+                    ⏭
+                  </button>
+
+                  {/* Divider */}
+                  <div style={{ width: '1px', height: '24px', background: '#444', margin: '0 4px', flexShrink: 0 }} />
+
+                  {/* Time display */}
+                  <span style={{
+                    fontSize: '11px',
+                    color: '#999',
+                    fontFamily: 'monospace',
+                    minWidth: '80px',
+                    flexShrink: 0,
+                  }}>
+                    {(() => {
+                      const formatTime = (seconds: number) => {
+                        const mins = Math.floor(seconds / 60);
+                        const secs = Math.floor(seconds % 60);
+                        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                      };
+                      return playingSegmentId ? `${formatTime(currentTime)} / ${formatTime(duration)}` : '--:-- / --:--';
+                    })()}
+                  </span>
+
+                  {/* Progress slider */}
+                  <input
+                    type="range"
+                    min="0"
+                    max={duration || 100}
+                    step="0.1"
+                    value={currentTime}
+                    onChange={(e) => seek(parseFloat(e.target.value))}
+                    disabled={!playingSegmentId}
+                    style={{
+                      flex: 1,
+                      minWidth: '100px',
+                      height: '4px',
+                      borderRadius: '2px',
+                      background: playingSegmentId ? `linear-gradient(to right, #4a9eff ${(currentTime / duration) * 100}%, #333 ${(currentTime / duration) * 100}%)` : '#222',
+                      outline: 'none',
+                      cursor: playingSegmentId ? 'pointer' : 'not-allowed',
+                      opacity: playingSegmentId ? 1 : 0.3,
+                    }}
+                  />
+
+                  {/* Volume icon */}
+                  <span style={{ fontSize: '14px', flexShrink: 0 }}>🔊</span>
+
+                  {/* Volume slider */}
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={volume}
+                    onChange={(e) => {
+                      const vol = parseInt(e.target.value);
+                      setVolume(vol);
+                      setAudioVolume(vol / 100);
+                    }}
+                    disabled={!playingSegmentId}
+                    style={{
+                      width: '80px',
+                      height: '4px',
+                      borderRadius: '2px',
+                      background: playingSegmentId ? `linear-gradient(to right, #4a9eff ${volume}%, #333 ${volume}%)` : '#222',
+                      outline: 'none',
+                      cursor: playingSegmentId ? 'pointer' : 'not-allowed',
+                      opacity: playingSegmentId ? 1 : 0.3,
+                      flexShrink: 0,
+                    }}
+                  />
                 </div>
 
-                {/* Waveform or loading state */}
-                {audioData ? (
-                  <div style={{ width: '100%' }}>
-                    <Waveform
-                      audioData={audioData}
-                      width={Math.floor((window.innerWidth - 800))}
-                      height={80}
-                      waveColor="#4a5568"
-                      progressColor="#4a9eff"
-                      currentPosition={0}
-                    />
-                  </div>
-                ) : isLoadingWaveform ? (
-                  <div style={{
-                    padding: '24px',
-                    textAlign: 'center',
-                    color: '#4a9eff',
-                    fontSize: '13px',
-                    border: '1px dashed #333',
-                    borderRadius: '4px',
-                  }}>
-                    Loading audio waveform...
-                    <div style={{ marginTop: '8px', fontSize: '11px', color: '#666' }}>
-                      Please wait
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{
-                    padding: '24px',
-                    textAlign: 'center',
-                    color: '#666',
-                    fontSize: '13px',
-                    border: '1px dashed #333',
-                    borderRadius: '4px',
-                  }}>
-                    No audio generated yet
-                    <div style={{ marginTop: '8px', fontSize: '11px' }}>
-                      Audio will appear here once generated
-                    </div>
-                  </div>
-                )}
+                {/* Waveform Placeholder - Temporarily Disabled for Performance */}
+                <div style={{
+                  height: '80px',
+                  padding: '24px',
+                  textAlign: 'center',
+                  color: '#666',
+                  fontSize: '13px',
+                  border: '1px dashed #333',
+                  borderRadius: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  {playingSegmentId ? (
+                    <>
+                      <span style={{ marginRight: '8px' }}>📊</span>
+                      Waveform visualization (temporarily disabled)
+                    </>
+                  ) : (
+                    <>
+                      <span style={{ marginRight: '8px' }}>🎵</span>
+                      No audio loaded
+                    </>
+                  )}
+                </div>
               </>
             )}
           </div>
@@ -852,7 +918,7 @@ function AudioProductionPage() {
                 })}
                 selectedSegmentId={selectedSegmentId}
                 onSegmentSelect={handleSegmentSelect}
-                onPlaySegment={handlePlaySegment}
+
                 onToggleRevision={handleToggleRevision}
                 playingSegmentId={playingSegmentId}
               />
@@ -881,7 +947,7 @@ function AudioProductionPage() {
               onPresetSelect={handlePresetSelect}
               onCustomToggle={handleCustomModeToggle}
               onApplyToAll={handleApplyToAll}
-              currentProcessingChain={processingChain}
+              currentProcessingChain={processingChain || undefined}
             />
           </div>
         </div>

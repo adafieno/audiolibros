@@ -11,7 +11,6 @@ interface SegmentListProps {
   segments: Segment[];
   selectedSegmentId?: string | null;
   onSegmentSelect: (segmentId: string) => void;
-  onPlaySegment: (segmentId: string) => void;
   onToggleRevision: (segmentId: string) => void;
   playingSegmentId?: string | null;
   disabled?: boolean;
@@ -21,7 +20,6 @@ export function SegmentList({
   segments,
   selectedSegmentId,
   onSegmentSelect,
-  onPlaySegment,
   onToggleRevision,
   playingSegmentId,
   disabled = false,

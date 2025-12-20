@@ -5,9 +5,21 @@
  * Uses Web Audio API for client-side processing.
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { getAudioProcessor, initializeAudioProcessor } from '../services/audioProcessor';
 import type { AudioProcessingChain } from '../types/audio-production';
+
+// Add keyframes animation for spinner
+const spinnerStyle = document.createElement('style');
+spinnerStyle.textContent = `
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+`;
+if (typeof document !== 'undefined' && !document.head.querySelector('[data-spinner-style]')) {
+  spinnerStyle.setAttribute('data-spinner-style', 'true');
+  document.head.appendChild(spinnerStyle);
+}
 
 interface AudioPlayerProps {
   /** Audio data as ArrayBuffer */
@@ -22,6 +34,8 @@ interface AudioPlayerProps {
   onEnded?: () => void;
   /** Callback for time updates */
   onTimeUpdate?: (currentTime: number, duration: number) => void;
+  /** Callback when audio is ready to play */
+  onAudioReady?: (duration: number) => void;
   /** Auto-play when audio data changes */
   autoPlay?: boolean;
   /** Show playback controls */
@@ -32,18 +46,25 @@ interface AudioPlayerProps {
   className?: string;
 }
 
-export function AudioPlayer({
+export interface AudioPlayerHandle {
+  play: () => Promise<void>;
+  pause: () => void;
+  stop: () => void;
+  seek: (time: number) => Promise<void>;
+  setVolume: (volume: number) => void;
+}
+
+export const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(({
   audioData,
   processingChain,
   onPlay,
   onPause,
   onEnded,
-  onTimeUpdate,
-  autoPlay = false,
+  onTimeUpdate,  onAudioReady,  autoPlay = false,
   showControls = true,
   hideTransportControls = false,
   className = '',
-}: AudioPlayerProps) {
+}, ref) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -201,6 +222,9 @@ export function AudioPlayer({
       setDuration(finalBuffer.duration);
       setIsLoading(false);
 
+      // Notify that audio is ready
+      onAudioReady?.(finalBuffer.duration);
+
       // Auto-play if enabled
       if (autoPlay) {
         await play();
@@ -268,6 +292,17 @@ export function AudioPlayer({
       gainNodeRef.current.gain.value = clampedVolume;
     }
   }, []);
+
+  /**
+   * Expose methods via ref
+   */
+  useImperativeHandle(ref, () => ({
+    play,
+    pause,
+    stop,
+    seek,
+    setVolume: changeVolume,
+  }), [play, pause, stop, seek, changeVolume]);
 
   /**
    * Process audio when data or processing chain changes
@@ -342,15 +377,29 @@ export function AudioPlayer({
       display: 'flex',
       alignItems: 'center',
       gap: '12px',
+      width: '100%',
+      minHeight: '40px',
     }}>
       {isLoading && (
         <div style={{
           padding: '12px',
           textAlign: 'center',
-          color: '#666',
-          fontSize: '11px',
+          color: '#4a9eff',
+          fontSize: '12px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
         }}>
-          Processing...
+          <span style={{ 
+            display: 'inline-block',
+            width: '16px',
+            height: '16px',
+            border: '2px solid #4a9eff',
+            borderTopColor: 'transparent',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+          }} />
+          Processing audio with effects...
         </div>
       )}
 
@@ -473,4 +522,6 @@ export function AudioPlayer({
       )}
     </div>
   );
-}
+});
+
+AudioPlayer.displayName = 'AudioPlayer';
