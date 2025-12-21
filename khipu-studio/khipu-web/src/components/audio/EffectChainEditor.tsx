@@ -7,6 +7,7 @@
 import { useCallback, type ReactNode } from 'react';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
 import { RotaryKnob } from './RotaryKnob';
+import { ToggleSwitch } from './ToggleSwitch';
 import type { AudioProcessingChain } from '../../types/audio-production';
 
 interface EffectChainEditorProps {
@@ -108,97 +109,89 @@ export function EffectChainEditor({
           false
         }
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Noise Reduction */}
-          <RackUnit enabled={processingChain.noiseCleanup?.noiseReduction?.enabled || false} color="#4ade80" modelNumber="NR-01">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Noise Reduction
-              </span>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
+        {/* Combined Noise Cleanup - All three in one row */}
+        <RackUnit enabled={
+          (processingChain.noiseCleanup?.noiseReduction?.enabled || false) ||
+          (processingChain.noiseCleanup?.deEsser?.enabled || false) ||
+          (processingChain.noiseCleanup?.deClicker?.enabled || false)
+        } color="#4ade80" modelNumber="NC-01">
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+            {/* Noise Reduction */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '10px', fontWeight: 600, color: '#4ade80', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Noise Reduction
+                </span>
+                <ToggleSwitch
                   checked={processingChain.noiseCleanup?.noiseReduction?.enabled || false}
                   onChange={() => toggleEffect(['noiseCleanup', 'noiseReduction'])}
                   disabled={disabled}
-                  style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
+                  color="#4ade80"
                 />
-                <span style={{ fontSize: '11px', color: '#b0b0b0' }}>Enable</span>
-              </label>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              </div>
               <RotaryKnob
                 value={processingChain.noiseCleanup?.noiseReduction?.amount || 0}
                 min={0}
                 max={100}
                 label="Amount"
+                unit="%"
                 color="#4ade80"
                 disabled={disabled || !processingChain.noiseCleanup?.noiseReduction?.enabled}
                 onChange={(value) => updateChain(['noiseCleanup', 'noiseReduction', 'amount'], value)}
               />
             </div>
-          </RackUnit>
 
-          {/* De-esser */}
-          <RackUnit enabled={processingChain.noiseCleanup?.deEsser?.enabled || false} color="#fbbf24" modelNumber="DS-02">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                De-esser
-              </span>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
+            {/* De-esser */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '10px', fontWeight: 600, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  De-esser
+                </span>
+                <ToggleSwitch
                   checked={processingChain.noiseCleanup?.deEsser?.enabled || false}
                   onChange={() => toggleEffect(['noiseCleanup', 'deEsser'])}
                   disabled={disabled}
-                  style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
+                  color="#fbbf24"
                 />
-                <span style={{ fontSize: '11px', color: '#b0b0b0' }}>Enable</span>
-              </label>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              </div>
               <RotaryKnob
                 value={processingChain.noiseCleanup?.deEsser?.threshold || -20}
                 min={-40}
                 max={0}
                 label="Threshold"
+                unit="dB"
                 color="#fbbf24"
                 disabled={disabled || !processingChain.noiseCleanup?.deEsser?.enabled}
                 onChange={(value) => updateChain(['noiseCleanup', 'deEsser', 'threshold'], value)}
               />
             </div>
-          </RackUnit>
 
-          {/* De-clicker */}
-          <RackUnit enabled={processingChain.noiseCleanup?.deClicker?.enabled || false} color="#8b5cf6" modelNumber="DC-03">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                De-clicker
-              </span>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
+            {/* De-clicker */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '10px', fontWeight: 600, color: '#8b5cf6', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  De-clicker
+                </span>
+                <ToggleSwitch
                   checked={processingChain.noiseCleanup?.deClicker?.enabled || false}
                   onChange={() => toggleEffect(['noiseCleanup', 'deClicker'])}
                   disabled={disabled}
-                  style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
+                  color="#8b5cf6"
                 />
-                <span style={{ fontSize: '11px', color: '#b0b0b0' }}>Enable</span>
-              </label>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              </div>
               <RotaryKnob
                 value={processingChain.noiseCleanup?.deClicker?.sensitivity || 50}
                 min={0}
                 max={100}
                 label="Sensitivity"
+                unit="%"
                 color="#8b5cf6"
                 disabled={disabled || !processingChain.noiseCleanup?.deClicker?.enabled}
                 onChange={(value) => updateChain(['noiseCleanup', 'deClicker', 'sensitivity'], value)}
               />
             </div>
-          </RackUnit>
-        </div>
+          </div>
+        </RackUnit>
       </CollapsibleSection>
 
       {/* Dynamic Control Section */}
@@ -213,30 +206,33 @@ export function EffectChainEditor({
           false
         }
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Compression */}
-          <RackUnit enabled={processingChain.dynamicControl?.compression?.enabled || false} color="#ef4444" modelNumber="CP-04">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        {/* Combined Dynamic Control */}
+        <RackUnit enabled={
+          (processingChain.dynamicControl?.compression?.enabled || false) ||
+          (processingChain.dynamicControl?.limiting?.enabled || false) ||
+          (processingChain.dynamicControl?.normalization?.enabled || false)
+        } color="#ef4444" modelNumber="DC-02">
+          
+          {/* Compression - Takes more space with 4 knobs */}
+          <div style={{ marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid #333' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <span style={{ fontSize: '10px', fontWeight: 600, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Compression
               </span>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={processingChain.dynamicControl?.compression?.enabled || false}
-                  onChange={() => toggleEffect(['dynamicControl', 'compression'])}
-                  disabled={disabled}
-                  style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
-                />
-                <span style={{ fontSize: '11px', color: '#b0b0b0' }}>Enable</span>
-              </label>
+              <ToggleSwitch
+                checked={processingChain.dynamicControl?.compression?.enabled || false}
+                onChange={() => toggleEffect(['dynamicControl', 'compression'])}
+                disabled={disabled}
+                color="#ef4444"
+              />
             </div>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: '12px' }}>
               <RotaryKnob
                 value={processingChain.dynamicControl?.compression?.threshold || -20}
                 min={-60}
                 max={0}
                 label="Threshold"
+                unit="dB"
                 color="#ef4444"
                 disabled={disabled || !processingChain.dynamicControl?.compression?.enabled}
                 onChange={(value) => updateChain(['dynamicControl', 'compression', 'threshold'], value)}
@@ -247,6 +243,7 @@ export function EffectChainEditor({
                 max={20}
                 step={0.1}
                 label="Ratio"
+                unit=":1"
                 color="#ef4444"
                 disabled={disabled || !processingChain.dynamicControl?.compression?.enabled}
                 onChange={(value) => updateChain(['dynamicControl', 'compression', 'ratio'], value)}
@@ -257,6 +254,7 @@ export function EffectChainEditor({
                 max={100}
                 step={0.1}
                 label="Attack"
+                unit="ms"
                 color="#ef4444"
                 disabled={disabled || !processingChain.dynamicControl?.compression?.enabled}
                 onChange={(value) => updateChain(['dynamicControl', 'compression', 'attack'], value)}
@@ -266,83 +264,82 @@ export function EffectChainEditor({
                 min={10}
                 max={1000}
                 label="Release"
+                unit="ms"
                 color="#ef4444"
                 disabled={disabled || !processingChain.dynamicControl?.compression?.enabled}
                 onChange={(value) => updateChain(['dynamicControl', 'compression', 'release'], value)}
               />
             </div>
-          </RackUnit>
+          </div>
 
-          {/* Limiting */}
-          <RackUnit enabled={processingChain.dynamicControl?.limiting?.enabled || false} color="#f59e0b" modelNumber="LM-05">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Limiting
-              </span>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
+          {/* Limiting and Normalization in one row */}
+          <div style={{ display: 'flex', gap: '16px' }}>
+            {/* Limiting */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '10px', fontWeight: 600, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Limiting
+                </span>
+                <ToggleSwitch
                   checked={processingChain.dynamicControl?.limiting?.enabled || false}
                   onChange={() => toggleEffect(['dynamicControl', 'limiting'])}
                   disabled={disabled}
-                  style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
+                  color="#f59e0b"
                 />
-                <span style={{ fontSize: '11px', color: '#b0b0b0' }}>Enable</span>
-              </label>
+              </div>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <RotaryKnob
+                  value={processingChain.dynamicControl?.limiting?.threshold || -1}
+                  min={-10}
+                  max={0}
+                  step={0.1}
+                  label="Threshold"
+                  unit="dB"
+                  color="#f59e0b"
+                  disabled={disabled || !processingChain.dynamicControl?.limiting?.enabled}
+                  onChange={(value) => updateChain(['dynamicControl', 'limiting', 'threshold'], value)}
+                />
+                <RotaryKnob
+                  value={processingChain.dynamicControl?.limiting?.release || 50}
+                  min={10}
+                  max={1000}
+                  label="Release"
+                  unit="ms"
+                  color="#f59e0b"
+                  disabled={disabled || !processingChain.dynamicControl?.limiting?.enabled}
+                  onChange={(value) => updateChain(['dynamicControl', 'limiting', 'release'], value)}
+                />
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-              <RotaryKnob
-                value={processingChain.dynamicControl?.limiting?.threshold || -1}
-                min={-10}
-                max={0}
-                step={0.1}
-                label="Threshold"
-                color="#f59e0b"
-                disabled={disabled || !processingChain.dynamicControl?.limiting?.enabled}
-                onChange={(value) => updateChain(['dynamicControl', 'limiting', 'threshold'], value)}
-              />
-              <RotaryKnob
-                value={processingChain.dynamicControl?.limiting?.release || 50}
-                min={10}
-                max={1000}
-                label="Release"
-                color="#f59e0b"
-                disabled={disabled || !processingChain.dynamicControl?.limiting?.enabled}
-                onChange={(value) => updateChain(['dynamicControl', 'limiting', 'release'], value)}
-              />
-            </div>
-          </RackUnit>
 
-          {/* Normalization */}
-          <RackUnit enabled={processingChain.dynamicControl?.normalization?.enabled || false} color="#10b981" modelNumber="NM-06">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Normalization
-              </span>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
+            {/* Normalization */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '10px', fontWeight: 600, color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Normalization
+                </span>
+                <ToggleSwitch
                   checked={processingChain.dynamicControl?.normalization?.enabled || false}
                   onChange={() => toggleEffect(['dynamicControl', 'normalization'])}
                   disabled={disabled}
-                  style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
+                  color="#10b981"
                 />
-                <span style={{ fontSize: '11px', color: '#b0b0b0' }}>Enable</span>
-              </label>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <RotaryKnob
+                  value={processingChain.dynamicControl?.normalization?.targetLevel || -16}
+                  min={-30}
+                  max={0}
+                  label="Target"
+                  unit="dB"
+                  color="#10b981"
+                  disabled={disabled || !processingChain.dynamicControl?.normalization?.enabled}
+                  onChange={(value) => updateChain(['dynamicControl', 'normalization', 'targetLevel'], value)}
+                />
+              </div>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <RotaryKnob
-                value={processingChain.dynamicControl?.normalization?.targetLevel || -16}
-                min={-30}
-                max={0}
-                label="Target"
-                color="#10b981"
-                disabled={disabled || !processingChain.dynamicControl?.normalization?.enabled}
-                onChange={(value) => updateChain(['dynamicControl', 'normalization', 'targetLevel'], value)}
-              />
-            </div>
-          </RackUnit>
-        </div>
+          </div>
+        </RackUnit>
       </CollapsibleSection>
 
       {/* EQ Shaping Section */}
@@ -357,97 +354,173 @@ export function EffectChainEditor({
         }
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* High-pass Filter */}
-          <RackUnit enabled={processingChain.eqShaping?.highPass?.enabled || false} color="#3b82f6" modelNumber="HP-07">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                High-pass Filter
-              </span>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={processingChain.eqShaping?.highPass?.enabled || false}
-                  onChange={() => toggleEffect(['eqShaping', 'highPass'])}
-                  disabled={disabled}
-                  style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
-                />
-                <span style={{ fontSize: '11px', color: '#b0b0b0' }}>Enable</span>
-              </label>
-            </div>
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-              <RotaryKnob
-                value={processingChain.eqShaping?.highPass?.frequency || 80}
-                min={20}
-                max={500}
-                label="Frequency"
-                color="#3b82f6"
-                disabled={disabled || !processingChain.eqShaping?.highPass?.enabled}
-                onChange={(value) => updateChain(['eqShaping', 'highPass', 'frequency'], value)}
-              />
-              <RotaryKnob
-                value={processingChain.eqShaping?.highPass?.slope || 12}
-                min={6}
-                max={48}
-                step={6}
-                label="Slope"
-                color="#3b82f6"
-                disabled={disabled || !processingChain.eqShaping?.highPass?.enabled}
-                onChange={(value) => updateChain(['eqShaping', 'highPass', 'slope'], value)}
-              />
+          {/* Combined EQ Filters */}
+          <RackUnit 
+            enabled={processingChain.eqShaping?.highPass?.enabled || processingChain.eqShaping?.lowPass?.enabled || false} 
+            color="#3b82f6" 
+            modelNumber="EQ-03"
+          >
+            <div style={{ display: 'flex', gap: '16px' }}>
+              {/* High-pass Filter */}
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '10px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    High-pass
+                  </span>
+                  <ToggleSwitch
+                    checked={processingChain.eqShaping?.highPass?.enabled || false}
+                    onChange={() => toggleEffect(['eqShaping', 'highPass'])}
+                    disabled={disabled}
+                    color="#3b82f6"
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                  <RotaryKnob
+                    value={processingChain.eqShaping?.highPass?.frequency || 80}
+                    min={20}
+                    max={500}
+                    label="Frequency"
+                    unit="Hz"
+                    color="#3b82f6"
+                    disabled={disabled || !processingChain.eqShaping?.highPass?.enabled}
+                    onChange={(value) => updateChain(['eqShaping', 'highPass', 'frequency'], value)}
+                  />
+                  <RotaryKnob
+                    value={processingChain.eqShaping?.highPass?.slope || 12}
+                    min={6}
+                    max={48}
+                    step={6}
+                    label="Slope"
+                    unit="dB"
+                    color="#3b82f6"
+                    disabled={disabled || !processingChain.eqShaping?.highPass?.enabled}
+                    onChange={(value) => updateChain(['eqShaping', 'highPass', 'slope'], value)}
+                  />
+                </div>
+              </div>
+
+              {/* Low-pass Filter */}
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '10px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Low-pass
+                  </span>
+                  <ToggleSwitch
+                    checked={processingChain.eqShaping?.lowPass?.enabled || false}
+                    onChange={() => toggleEffect(['eqShaping', 'lowPass'])}
+                    disabled={disabled}
+                    color="#8b5cf6"
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                  <RotaryKnob
+                    value={processingChain.eqShaping?.lowPass?.frequency || 15000}
+                    min={5000}
+                    max={20000}
+                    label="Frequency"
+                    unit="Hz"
+                    color="#8b5cf6"
+                    disabled={disabled || !processingChain.eqShaping?.lowPass?.enabled}
+                    onChange={(value) => updateChain(['eqShaping', 'lowPass', 'frequency'], value)}
+                  />
+                  <RotaryKnob
+                    value={processingChain.eqShaping?.lowPass?.slope || 12}
+                    min={6}
+                    max={48}
+                    step={6}
+                    label="Slope"
+                    unit="dB"
+                    color="#8b5cf6"
+                    disabled={disabled || !processingChain.eqShaping?.lowPass?.enabled}
+                    onChange={(value) => updateChain(['eqShaping', 'lowPass', 'slope'], value)}
+                  />
+                </div>
+              </div>
             </div>
           </RackUnit>
 
-          {/* Low-pass Filter */}
-          <RackUnit enabled={processingChain.eqShaping?.lowPass?.enabled || false} color="#8b5cf6" modelNumber="LP-08">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Low-pass Filter
-              </span>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={processingChain.eqShaping?.lowPass?.enabled || false}
-                  onChange={() => toggleEffect(['eqShaping', 'lowPass'])}
-                  disabled={disabled}
-                  style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
-                />
-                <span style={{ fontSize: '11px', color: '#b0b0b0' }}>Enable</span>
-              </label>
+          {/* Parametric EQ Bands */}
+          {processingChain.eqShaping?.parametricEQ?.bands && processingChain.eqShaping.parametricEQ.bands.length > 0 && (
+            <div style={{ 
+              padding: '12px',
+              background: 'linear-gradient(to bottom, #1a1a2e 0%, #16162a 100%)',
+              borderRadius: '4px',
+              border: '1px solid #2a2a4a',
+            }}>
+              <div style={{ 
+                fontSize: '11px', 
+                fontWeight: 600,
+                color: '#4a9eff',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                marginBottom: '12px',
+                textAlign: 'center',
+              }}>
+                Parametric EQ Bands ({processingChain.eqShaping.parametricEQ.bands.length})
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {processingChain.eqShaping.parametricEQ.bands.map((band, index) => (
+                  <div 
+                    key={index}
+                    style={{
+                      display: 'flex',
+                      gap: '12px',
+                      alignItems: 'center',
+                      padding: '8px 12px',
+                      background: 'rgba(0,0,0,0.3)',
+                      borderRadius: '3px',
+                      border: '1px solid rgba(74, 158, 255, 0.2)',
+                    }}
+                  >
+                    <div style={{ 
+                      minWidth: '60px',
+                      fontSize: '10px',
+                      color: '#888',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}>
+                      Band {index + 1}
+                    </div>
+                    <div style={{ flex: 1, display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ 
+                          fontFamily: "'Consolas', 'Courier New', monospace",
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          color: '#4a9eff',
+                        }}>
+                          {band.frequency}<span style={{ fontSize: '9px', color: '#4a9eff', opacity: 0.8, marginLeft: '1px' }}>Hz</span>
+                        </div>
+                        <div style={{ fontSize: '9px', color: '#aaa', marginTop: '2px' }}>FREQ</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ 
+                          fontFamily: "'Consolas', 'Courier New', monospace",
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          color: band.gain >= 0 ? '#4ade80' : '#ef4444',
+                        }}>
+                          {band.gain > 0 ? '+' : ''}{band.gain.toFixed(1)}<span style={{ fontSize: '9px', opacity: 0.8, marginLeft: '1px' }}>dB</span>
+                        </div>
+                        <div style={{ fontSize: '9px', color: '#aaa', marginTop: '2px' }}>GAIN</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ 
+                          fontFamily: "'Consolas', 'Courier New', monospace",
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          color: '#fbbf24',
+                        }}>
+                          {band.q.toFixed(2)}
+                        </div>
+                        <div style={{ fontSize: '9px', color: '#aaa', marginTop: '2px' }}>Q</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-              <RotaryKnob
-                value={processingChain.eqShaping?.lowPass?.frequency || 15000}
-                min={5000}
-                max={20000}
-                label="Frequency"
-                color="#8b5cf6"
-                disabled={disabled || !processingChain.eqShaping?.lowPass?.enabled}
-                onChange={(value) => updateChain(['eqShaping', 'lowPass', 'frequency'], value)}
-              />
-              <RotaryKnob
-                value={processingChain.eqShaping?.lowPass?.slope || 12}
-                min={6}
-                max={48}
-                step={6}
-                label="Slope"
-                color="#8b5cf6"
-                disabled={disabled || !processingChain.eqShaping?.lowPass?.enabled}
-                onChange={(value) => updateChain(['eqShaping', 'lowPass', 'slope'], value)}
-              />
-            </div>
-          </RackUnit>
-
-          {/* Parametric EQ info */}
-          <div style={{
-            padding: '8px 12px',
-            background: 'rgba(74, 158, 255, 0.1)',
-            border: '1px solid rgba(74, 158, 255, 0.3)',
-            borderRadius: '4px',
-            fontSize: '11px',
-            color: '#4a9eff',
-          }}>
-            ℹ️ Parametric EQ bands are configured in preset definitions
-          </div>
+          )}
         </div>
       </CollapsibleSection>
 
@@ -463,85 +536,90 @@ export function EffectChainEditor({
         }
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Reverb */}
-          <RackUnit enabled={processingChain.spatialEnhancement?.reverb?.enabled || false} color="#06b6d4" modelNumber="RV-09">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Reverb
-              </span>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={processingChain.spatialEnhancement?.reverb?.enabled || false}
-                  onChange={() => toggleEffect(['spatialEnhancement', 'reverb'])}
-                  disabled={disabled}
-                  style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
-                />
-                <span style={{ fontSize: '11px', color: '#b0b0b0' }}>Enable</span>
-              </label>
-            </div>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
-              <RotaryKnob
-                value={processingChain.spatialEnhancement?.reverb?.roomSize || 0.3}
-                min={0.1}
-                max={1.0}
-                step={0.01}
-                label="Room Size"
-                color="#06b6d4"
-                disabled={disabled || !processingChain.spatialEnhancement?.reverb?.enabled}
-                onChange={(value) => updateChain(['spatialEnhancement', 'reverb', 'roomSize'], value)}
-              />
-              <RotaryKnob
-                value={processingChain.spatialEnhancement?.reverb?.damping || 0.5}
-                min={0}
-                max={1}
-                step={0.01}
-                label="Damping"
-                color="#06b6d4"
-                disabled={disabled || !processingChain.spatialEnhancement?.reverb?.enabled}
-                onChange={(value) => updateChain(['spatialEnhancement', 'reverb', 'damping'], value)}
-              />
-              <RotaryKnob
-                value={processingChain.spatialEnhancement?.reverb?.wetLevel || 0.2}
-                min={0}
-                max={1}
-                step={0.01}
-                label="Wet Level"
-                color="#06b6d4"
-                disabled={disabled || !processingChain.spatialEnhancement?.reverb?.enabled}
-                onChange={(value) => updateChain(['spatialEnhancement', 'reverb', 'wetLevel'], value)}
-              />
-            </div>
-          </RackUnit>
+          {/* Combined Spatial Effects */}
+          <RackUnit 
+            enabled={processingChain.spatialEnhancement?.reverb?.enabled || processingChain.spatialEnhancement?.stereoWidth?.enabled || false} 
+            color="#06b6d4" 
+            modelNumber="SP-04"
+          >
+            <div style={{ display: 'flex', gap: '16px' }}>
+              {/* Reverb */}
+              <div style={{ flex: 2 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '10px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Reverb
+                  </span>
+                  <ToggleSwitch
+                    checked={processingChain.spatialEnhancement?.reverb?.enabled || false}
+                    onChange={() => toggleEffect(['spatialEnhancement', 'reverb'])}
+                    disabled={disabled}
+                    color="#06b6d4"
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                  <RotaryKnob
+                    value={processingChain.spatialEnhancement?.reverb?.roomSize || 0.3}
+                    min={0.1}
+                    max={1.0}
+                    step={0.01}
+                    label="Room Size"
+                    unit=""
+                    color="#06b6d4"
+                    disabled={disabled || !processingChain.spatialEnhancement?.reverb?.enabled}
+                    onChange={(value) => updateChain(['spatialEnhancement', 'reverb', 'roomSize'], value)}
+                  />
+                  <RotaryKnob
+                    value={processingChain.spatialEnhancement?.reverb?.damping || 0.5}
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    label="Damping"
+                    unit=""
+                    color="#06b6d4"
+                    disabled={disabled || !processingChain.spatialEnhancement?.reverb?.enabled}
+                    onChange={(value) => updateChain(['spatialEnhancement', 'reverb', 'damping'], value)}
+                  />
+                  <RotaryKnob
+                    value={processingChain.spatialEnhancement?.reverb?.wetLevel || 0.2}
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    label="Wet Level"
+                    unit="%"
+                    color="#06b6d4"
+                    disabled={disabled || !processingChain.spatialEnhancement?.reverb?.enabled}
+                    onChange={(value) => updateChain(['spatialEnhancement', 'reverb', 'wetLevel'], value)}
+                  />
+                </div>
+              </div>
 
-          {/* Stereo Width */}
-          <RackUnit enabled={processingChain.spatialEnhancement?.stereoWidth?.enabled || false} color="#ec4899" modelNumber="WD-10">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Stereo Width
-              </span>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={processingChain.spatialEnhancement?.stereoWidth?.enabled || false}
-                  onChange={() => toggleEffect(['spatialEnhancement', 'stereoWidth'])}
-                  disabled={disabled}
-                  style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
-                />
-                <span style={{ fontSize: '11px', color: '#b0b0b0' }}>Enable</span>
-              </label>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <RotaryKnob
-                value={processingChain.spatialEnhancement?.stereoWidth?.width || 1.0}
-                min={0}
-                max={2}
-                step={0.01}
-                label="Width"
-                color="#ec4899"
-                disabled={disabled || !processingChain.spatialEnhancement?.stereoWidth?.enabled}
-                onChange={(value) => updateChain(['spatialEnhancement', 'stereoWidth', 'width'], value)}
-              />
+              {/* Stereo Width */}
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '10px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Stereo Width
+                  </span>
+                  <ToggleSwitch
+                    checked={processingChain.spatialEnhancement?.stereoWidth?.enabled || false}
+                    onChange={() => toggleEffect(['spatialEnhancement', 'stereoWidth'])}
+                    disabled={disabled}
+                    color="#ec4899"
+                  />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <RotaryKnob
+                    value={processingChain.spatialEnhancement?.stereoWidth?.width || 1.0}
+                    min={0}
+                    max={2}
+                    step={0.01}
+                    label="Width"
+                    unit="x"
+                    color="#ec4899"
+                    disabled={disabled || !processingChain.spatialEnhancement?.stereoWidth?.enabled}
+                    onChange={(value) => updateChain(['spatialEnhancement', 'stereoWidth', 'width'], value)}
+                  />
+                </div>
+              </div>
             </div>
           </RackUnit>
         </div>
@@ -559,80 +637,87 @@ export function EffectChainEditor({
         }
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Loudness Normalization */}
-          <RackUnit enabled={processingChain.consistencyMastering?.loudnessNormalization?.enabled || false} color="#f59e0b" modelNumber="LN-11">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Loudness Normalization (LUFS)
-              </span>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={processingChain.consistencyMastering?.loudnessNormalization?.enabled || false}
-                  onChange={() => toggleEffect(['consistencyMastering', 'loudnessNormalization'])}
-                  disabled={disabled}
-                  style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
-                />
-                <span style={{ fontSize: '11px', color: '#b0b0b0' }}>Enable</span>
-              </label>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <RotaryKnob
-                value={processingChain.consistencyMastering?.loudnessNormalization?.targetLUFS || -16}
-                min={-30}
-                max={0}
-                label="Target LUFS"
-                color="#f59e0b"
-                disabled={disabled || !processingChain.consistencyMastering?.loudnessNormalization?.enabled}
-                onChange={(value) => updateChain(['consistencyMastering', 'loudnessNormalization', 'targetLUFS'], value)}
-              />
-            </div>
-          </RackUnit>
+          {/* Combined Master Effects */}
+          <RackUnit 
+            enabled={processingChain.consistencyMastering?.loudnessNormalization?.enabled || processingChain.consistencyMastering?.dithering?.enabled || false} 
+            color="#f59e0b" 
+            modelNumber="MS-05"
+          >
+            <div style={{ display: 'flex', gap: '16px' }}>
+              {/* Loudness Normalization */}
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '10px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Loudness (LUFS)
+                  </span>
+                  <ToggleSwitch
+                    checked={processingChain.consistencyMastering?.loudnessNormalization?.enabled || false}
+                    onChange={() => toggleEffect(['consistencyMastering', 'loudnessNormalization'])}
+                    disabled={disabled}
+                    color="#f59e0b"
+                  />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <RotaryKnob
+                    value={processingChain.consistencyMastering?.loudnessNormalization?.targetLUFS || -16}
+                    min={-30}
+                    max={0}
+                    label="Target"
+                    unit="LUFS"
+                    color="#f59e0b"
+                    disabled={disabled || !processingChain.consistencyMastering?.loudnessNormalization?.enabled}
+                    onChange={(value) => updateChain(['consistencyMastering', 'loudnessNormalization', 'targetLUFS'], value)}
+                  />
+                </div>
+              </div>
 
-          {/* Dithering */}
-          <RackUnit enabled={processingChain.consistencyMastering?.dithering?.enabled || false} color="#64748b" modelNumber="DT-12">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Dithering
-              </span>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={processingChain.consistencyMastering?.dithering?.enabled || false}
-                  onChange={() => toggleEffect(['consistencyMastering', 'dithering'])}
-                  disabled={disabled}
-                  style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
-                />
-                <span style={{ fontSize: '11px', color: '#b0b0b0' }}>Enable</span>
-              </label>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <div style={{ textAlign: 'center' }}>
-                <select
-                  value={processingChain.consistencyMastering?.dithering?.bitDepth || 16}
-                  onChange={(e) => updateChain(['consistencyMastering', 'dithering', 'bitDepth'], parseInt(e.target.value))}
-                  disabled={disabled || !processingChain.consistencyMastering?.dithering?.enabled}
-                  style={{
-                    padding: '8px 12px',
-                    background: '#0d0d0d',
-                    color: '#e0e0e0',
-                    border: '1px solid #333',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    cursor: disabled || !processingChain.consistencyMastering?.dithering?.enabled ? 'not-allowed' : 'pointer',
-                  }}
-                >
-                  <option value={16}>16-bit</option>
-                  <option value={24}>24-bit</option>
-                </select>
-                <div style={{ 
-                  marginTop: '8px',
-                  fontSize: '10px', 
-                  color: '#b0b0b0',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                }}>
-                  Bit Depth
+              {/* Dithering */}
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '10px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Dithering
+                  </span>
+                  <ToggleSwitch
+                    checked={processingChain.consistencyMastering?.dithering?.enabled || false}
+                    onChange={() => toggleEffect(['consistencyMastering', 'dithering'])}
+                    disabled={disabled}
+                    color="#64748b"
+                  />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <select
+                      value={processingChain.consistencyMastering?.dithering?.bitDepth || 16}
+                      onChange={(e) => updateChain(['consistencyMastering', 'dithering', 'bitDepth'], parseInt(e.target.value))}
+                      disabled={disabled || !processingChain.consistencyMastering?.dithering?.enabled}
+                      style={{
+                        padding: '10px 16px',
+                        background: 'linear-gradient(to bottom, #0a0a0a, #000)',
+                        color: disabled || !processingChain.consistencyMastering?.dithering?.enabled ? '#555' : '#64748b',
+                        border: '1px solid #1a1a1a',
+                        borderRadius: '4px',
+                        fontSize: '13px',
+                        fontFamily: "'Courier New', Consolas, monospace",
+                        fontWeight: 600,
+                        cursor: disabled || !processingChain.consistencyMastering?.dithering?.enabled ? 'not-allowed' : 'pointer',
+                        boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.9)',
+                        minWidth: '100px',
+                      }}
+                    >
+                      <option value={16}>16-bit</option>
+                      <option value={24}>24-bit</option>
+                    </select>
+                    <div style={{ 
+                      marginTop: '8px',
+                      fontSize: '11px', 
+                      color: '#999',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.8px',
+                      fontWeight: 500,
+                    }}>
+                      Bit Depth
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

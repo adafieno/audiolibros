@@ -520,7 +520,7 @@ function AudioProductionPage() {
       <div style={{
         flex: 1,
         display: 'grid',
-        gridTemplateColumns: '1fr 320px 280px',
+        gridTemplateColumns: '1fr 280px 560px',
         gap: '16px',
         padding: '16px 24px 24px 24px',
         overflow: 'hidden',
