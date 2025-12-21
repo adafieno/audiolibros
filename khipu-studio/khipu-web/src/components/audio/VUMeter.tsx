@@ -134,40 +134,36 @@ export function AnalogVUMeter({ isPlaying, channel }: { isPlaying: boolean; chan
         style={{
           width: '164px',
           height: '85px',
-          background: 'radial-gradient(ellipse at center top, #fffae0 0%, #f7e8c0 40%, #ead9a8 100%)',
+          background: '#ECD282',
           borderRadius: '4px',
           position: 'relative',
           overflow: 'hidden',
-          boxShadow: 'inset 0 -2px 6px rgba(0,0,0,0.08), inset 0 2px 4px rgba(255,255,255,0.6), 0 1px 0 rgba(255,255,255,0.4)',
-          border: '1px solid #c9b897',
+          boxShadow: 'inset 0 -2px 6px rgba(0,0,0,0.12), inset 0 2px 4px rgba(255,255,255,0.5), 0 1px 0 rgba(255,255,255,0.3)',
+          border: '1px solid #a89878',
         }}
       >
         {/* Scale arc */}
         <svg width="164" height="85" style={{ position: 'absolute', top: 0, left: 0 }}>
           <defs>
-            <linearGradient id="greenGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" style={{ stopColor: '#4ade80', stopOpacity: 1 }} />
-              <stop offset="100%" style={{ stopColor: '#fbbf24', stopOpacity: 1 }} />
-            </linearGradient>
-            <linearGradient id="redGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" style={{ stopColor: '#fbbf24', stopOpacity: 1 }} />
-              <stop offset="100%" style={{ stopColor: '#ef4444', stopOpacity: 1 }} />
+            <linearGradient id="redZone" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style={{ stopColor: 'rgba(249, 69, 43, 0.4)', stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: 'rgba(249, 69, 43, 0.5)', stopOpacity: 1 }} />
             </linearGradient>
           </defs>
           
-          {/* Green/yellow arc */}
+          {/* Full arc line from -20 to +3 */}
           <path
-            d="M 35 63 A 45 45 0 0 1 98 22"
+            d="M 35 63 A 45 45 0 0 1 129 63"
             fill="none"
-            stroke="url(#greenGrad)"
+            stroke="rgba(0, 0, 0, 0.3)"
             strokeWidth="14"
           />
           
-          {/* Yellow/red arc */}
+          {/* Red danger zone overlay (right side only) - aligned to same arc */}
           <path
             d="M 98 22 A 45 45 0 0 1 129 63"
             fill="none"
-            stroke="url(#redGrad)"
+            stroke="#F9452B"
             strokeWidth="14"
           />
           
@@ -249,7 +245,7 @@ export function AnalogVUMeter({ isPlaying, channel }: { isPlaying: boolean; chan
           })}
         </svg>
         
-        {/* VU label */}
+        {/* dB label */}
         <div 
           style={{
             position: 'absolute',
@@ -263,23 +259,7 @@ export function AnalogVUMeter({ isPlaying, channel }: { isPlaying: boolean; chan
             fontFamily: 'Arial, sans-serif',
           }}
         >
-          VU
-        </div>
-        
-        {/* Channel label at bottom */}
-        <div 
-          style={{
-            position: 'absolute',
-            bottom: '2px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            fontSize: '8px',
-            fontWeight: 'bold',
-            color: '#000',
-            fontFamily: 'Arial, sans-serif',
-          }}
-        >
-          {channel || 'STANDBY'}
+          dB
         </div>
         
         {/* Needle */}
@@ -301,9 +281,9 @@ export function AnalogVUMeter({ isPlaying, channel }: { isPlaying: boolean; chan
               position: 'absolute',
               bottom: '0',
               left: '0',
-              width: '0.5px',
+              width: '1px',
               height: '50px',
-              background: '#000',
+              background: '#c41e1e',
               boxShadow: 'none',
             }} 
           />
@@ -313,12 +293,12 @@ export function AnalogVUMeter({ isPlaying, channel }: { isPlaying: boolean; chan
             style={{
               position: 'absolute',
               top: '-3px',
-              left: '-1px',
+              left: '-1.5px',
               width: '0',
               height: '0',
-              borderLeft: '1px solid transparent',
-              borderRight: '1px solid transparent',
-              borderBottom: '4px solid #000',
+              borderLeft: '2px solid transparent',
+              borderRight: '2px solid transparent',
+              borderBottom: '5px solid #c41e1e',
             }} 
           />
         </div>
@@ -352,17 +332,52 @@ export function AnalogVUMeter({ isPlaying, channel }: { isPlaying: boolean; chan
         </div>
       </div>
       
-      {/* Bottom label plate */}
+      {/* Bottom frame with screw and label */}
       <div 
         style={{
           marginTop: '4px',
-          fontSize: '8px',
-          color: '#999',
-          fontFamily: 'monospace',
-          letterSpacing: '0.5px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '6px',
         }}
       >
-        {isPlaying ? 'ACTIVE' : 'STANDBY'}
+        {/* Screw */}
+        <div 
+          style={{
+            width: '6px',
+            height: '6px',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle at 30% 30%, #888, #333)',
+            border: '0.5px solid #000',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.5)',
+            position: 'relative',
+          }}
+        >
+          <div 
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              width: '3px',
+              height: '0.5px',
+              backgroundColor: '#555',
+              transform: 'translate(-50%, -50%)',
+            }} 
+          />
+        </div>
+        
+        {/* Channel label */}
+        <div
+          style={{
+            fontSize: '8px',
+            color: '#999',
+            fontFamily: 'monospace',
+            letterSpacing: '0.5px',
+          }}
+        >
+          {channel || ''}
+        </div>
       </div>
     </div>
   );

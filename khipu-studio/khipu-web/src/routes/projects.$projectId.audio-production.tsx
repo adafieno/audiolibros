@@ -1,8 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { AnalogVUMeter } from '../components/audio/VUMeter';
+import { StandardVUMeter } from '../components/audio/StandardVUMeter';
 import { AudioWaveform } from '../components/audio/AudioWaveform';
+import { VUMeterCalibrator } from '../components/audio/VUMeterCalibrator';
+import { useAudioLevelAnalysis } from '../hooks/useAudioLevelAnalysis';
 import { PresetSelector } from '../components/audio/PresetSelector';
 import { Select } from '../components/Select';
 import { EffectChainEditor } from '../components/audio/EffectChainEditor';
@@ -18,6 +20,41 @@ import type { AudioProcessingChain } from '../types/audio-production';
 export const Route = createFileRoute('/projects/$projectId/audio-production')({
   component: AudioProductionPage,
 });
+
+/**
+ * VU Meters Section with Real Audio Analysis
+ * 
+ * Displays standard VU meters (ANSI C16.5-1942 compliant) with
+ * true ballistics and real-time RMS audio level analysis.
+ */
+function VUMetersSection({ 
+  audioElement, 
+  isPlaying 
+}: { 
+  audioElement: HTMLAudioElement | null; 
+  isPlaying: boolean;
+}) {
+  const { leftDbfs, rightDbfs } = useAudioLevelAnalysis(audioElement, isPlaying);
+
+  return (
+    <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+      <StandardVUMeter 
+        valueDbfs={leftDbfs}
+        calibrationDbfsAt0Vu={-18}
+        size={180}
+        label="L"
+        showTicks={true}
+      />
+      <StandardVUMeter 
+        valueDbfs={rightDbfs}
+        calibrationDbfsAt0Vu={-18}
+        size={180}
+        label="R"
+        showTicks={true}
+      />
+    </div>
+  );
+}
 
 function AudioProductionPage() {
   console.log('[AudioProduction] ===== PAGE COMPONENT RENDERING =====');
@@ -729,11 +766,11 @@ function AudioProductionPage() {
 
             {/* Right side: VU Meters - 50% width */}
             <div style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '12px', justifyContent: 'center' }}>
-              {/* VU Meters */}
-              <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-                <AnalogVUMeter isPlaying={isPlaying} channel="L" />
-                <AnalogVUMeter isPlaying={isPlaying} channel="R" />
-              </div>
+              {/* VU Meters with real audio analysis */}
+              <VUMetersSection 
+                audioElement={currentAudioElement || null}
+                isPlaying={isPlaying}
+              />
             </div>
           </div>
             
