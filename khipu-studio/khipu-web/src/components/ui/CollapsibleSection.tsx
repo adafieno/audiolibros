@@ -4,11 +4,13 @@
  * Reusable collapsible panel for organizing UI sections.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface CollapsibleSectionProps {
   title: string;
   defaultExpanded?: boolean;
+  expanded?: boolean; // Controlled mode
+  onExpandedChange?: (expanded: boolean) => void; // Controlled mode callback
   children: React.ReactNode;
   badge?: string;
   icon?: string;
@@ -18,13 +20,28 @@ interface CollapsibleSectionProps {
 export function CollapsibleSection({
   title,
   defaultExpanded = false,
+  expanded: controlledExpanded,
+  onExpandedChange,
   children,
   badge,
   icon,
   isActive = false,
 }: CollapsibleSectionProps) {
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);
   const [isHovered, setIsHovered] = useState(false);
+
+  // Support both controlled and uncontrolled modes
+  const isControlled = controlledExpanded !== undefined;
+  const isExpanded = isControlled ? controlledExpanded : internalExpanded;
+
+  const handleToggle = () => {
+    const newExpanded = !isExpanded;
+    if (isControlled) {
+      onExpandedChange?.(newExpanded);
+    } else {
+      setInternalExpanded(newExpanded);
+    }
+  };
 
   return (
     <div style={{
@@ -37,7 +54,7 @@ export function CollapsibleSection({
     }}>
       {/* Header - Studio Rack Style */}
       <button
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={handleToggle}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         style={{

@@ -4,7 +4,7 @@
  * Comprehensive audio processing chain editor with hardware-style controls.
  */
 
-import { useCallback, type ReactNode } from 'react';
+import { useCallback, useState, type ReactNode } from 'react';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
 import { RotaryKnob } from './RotaryKnob';
 import { ToggleSwitch } from './ToggleSwitch';
@@ -61,6 +61,8 @@ export function EffectChainEditor({
   onChange,
   disabled = false,
 }: EffectChainEditorProps) {
+  // Track which section is expanded (accordion behavior)
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
   
   // Helper to update nested processing chain values
   const updateChain = useCallback((path: string[], value: unknown) => {
@@ -101,7 +103,8 @@ export function EffectChainEditor({
       <CollapsibleSection 
         title="Noise Cleanup" 
         icon="🧹" 
-        defaultExpanded={false}
+        expanded={expandedSection === 'noiseCleanup'}
+        onExpandedChange={(expanded) => setExpandedSection(expanded ? 'noiseCleanup' : null)}
         isActive={
           processingChain.noiseCleanup?.noiseReduction?.enabled ||
           processingChain.noiseCleanup?.deEsser?.enabled ||
@@ -198,7 +201,8 @@ export function EffectChainEditor({
       <CollapsibleSection 
         title="Compressor" 
         icon="⚡" 
-        defaultExpanded={false}
+        expanded={expandedSection === 'dynamicControl'}
+        onExpandedChange={(expanded) => setExpandedSection(expanded ? 'dynamicControl' : null)}
         isActive={
           processingChain.dynamicControl?.compression?.enabled ||
           processingChain.dynamicControl?.limiting?.enabled ||
@@ -346,7 +350,8 @@ export function EffectChainEditor({
       <CollapsibleSection 
         title="EQ" 
         icon="🎛️" 
-        defaultExpanded={false}
+        expanded={expandedSection === 'eqShaping'}
+        onExpandedChange={(expanded) => setExpandedSection(expanded ? 'eqShaping' : null)}
         isActive={
           processingChain.eqShaping?.highPass?.enabled ||
           processingChain.eqShaping?.lowPass?.enabled ||
@@ -440,87 +445,114 @@ export function EffectChainEditor({
           </RackUnit>
 
           {/* Parametric EQ Bands */}
-          {processingChain.eqShaping?.parametricEQ?.bands && processingChain.eqShaping.parametricEQ.bands.length > 0 && (
+          <RackUnit 
+            enabled={processingChain.eqShaping?.parametricEQ?.bands?.some((b: any) => b.enabled !== false) || false} 
+            color="#4a9eff" 
+            modelNumber="PEQ-04"
+          >
             <div style={{ 
-              padding: '12px',
-              background: 'linear-gradient(to bottom, #1a1a2e 0%, #16162a 100%)',
-              borderRadius: '4px',
-              border: '1px solid #2a2a4a',
+              fontSize: '10px', 
+              fontWeight: 600,
+              color: '#f0f0f0',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              marginBottom: '16px',
+              textAlign: 'center',
             }}>
-              <div style={{ 
-                fontSize: '11px', 
-                fontWeight: 600,
-                color: '#4a9eff',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-                marginBottom: '12px',
-                textAlign: 'center',
-              }}>
-                Parametric EQ Bands ({processingChain.eqShaping.parametricEQ.bands.length})
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {processingChain.eqShaping.parametricEQ.bands.map((band, index) => (
-                  <div 
-                    key={index}
-                    style={{
-                      display: 'flex',
-                      gap: '12px',
-                      alignItems: 'center',
-                      padding: '8px 12px',
-                      background: 'rgba(0,0,0,0.3)',
-                      borderRadius: '3px',
-                      border: '1px solid rgba(74, 158, 255, 0.2)',
-                    }}
-                  >
-                    <div style={{ 
-                      minWidth: '60px',
-                      fontSize: '10px',
-                      color: '#888',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                    }}>
-                      Band {index + 1}
-                    </div>
-                    <div style={{ flex: 1, display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ 
-                          fontFamily: "'Consolas', 'Courier New', monospace",
-                          fontSize: '12px',
-                          fontWeight: 600,
-                          color: '#4a9eff',
-                        }}>
-                          {band.frequency}<span style={{ fontSize: '9px', color: '#4a9eff', opacity: 0.8, marginLeft: '1px' }}>Hz</span>
-                        </div>
-                        <div style={{ fontSize: '9px', color: '#aaa', marginTop: '2px' }}>FREQ</div>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ 
-                          fontFamily: "'Consolas', 'Courier New', monospace",
-                          fontSize: '12px',
-                          fontWeight: 600,
-                          color: band.gain >= 0 ? '#4ade80' : '#ef4444',
-                        }}>
-                          {band.gain > 0 ? '+' : ''}{band.gain.toFixed(1)}<span style={{ fontSize: '9px', opacity: 0.8, marginLeft: '1px' }}>dB</span>
-                        </div>
-                        <div style={{ fontSize: '9px', color: '#aaa', marginTop: '2px' }}>GAIN</div>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ 
-                          fontFamily: "'Consolas', 'Courier New', monospace",
-                          fontSize: '12px',
-                          fontWeight: 600,
-                          color: '#fbbf24',
-                        }}>
-                          {band.q.toFixed(2)}
-                        </div>
-                        <div style={{ fontSize: '9px', color: '#aaa', marginTop: '2px' }}>Q</div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              Parametric EQ — 4 Bands
             </div>
-          )}
+            <div style={{ display: 'flex', gap: '16px' }}>
+              {(() => {
+                const defaultBands = [
+                  { frequency: 100, gain: 0, q: 1.0 },
+                  { frequency: 500, gain: 0, q: 1.0 },
+                  { frequency: 2000, gain: 0, q: 1.0 },
+                  { frequency: 8000, gain: 0, q: 1.0 }
+                ];
+                const bands = processingChain.eqShaping?.parametricEQ?.bands || defaultBands;
+                const displayBands = bands.length >= 4 ? bands : [...bands, ...defaultBands.slice(bands.length)];
+                
+                return displayBands.slice(0, 4).map((band, index) => {
+                  const bandColors = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6'];
+                  const bandColor = bandColors[index % bandColors.length];
+                  
+                  return (
+                    <div key={index} style={{ flex: 1 }}>
+                      <div style={{ 
+                        fontSize: '9px', 
+                        fontWeight: 600,
+                        color: bandColor,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                        marginBottom: '8px',
+                        textAlign: 'center',
+                      }}>
+                        Band {index + 1}
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+                        <RotaryKnob
+                          value={band.frequency}
+                          min={20}
+                          max={20000}
+                          label="Freq"
+                          unit="Hz"
+                          color={bandColor}
+                          disabled={disabled}
+                          onChange={(value) => {
+                            const currentBands = processingChain.eqShaping?.parametricEQ?.bands || defaultBands;
+                            const newBands = [...currentBands];
+                            while (newBands.length < 4) {
+                              newBands.push(defaultBands[newBands.length]);
+                            }
+                            newBands[index] = { ...newBands[index], frequency: value };
+                            updateChain(['eqShaping', 'parametricEQ', 'bands'], newBands);
+                          }}
+                        />
+                        <RotaryKnob
+                          value={band.gain}
+                          min={-20}
+                          max={20}
+                          step={0.1}
+                          label="Gain"
+                          unit="dB"
+                          color={bandColor}
+                          disabled={disabled}
+                          onChange={(value) => {
+                            const currentBands = processingChain.eqShaping?.parametricEQ?.bands || defaultBands;
+                            const newBands = [...currentBands];
+                            while (newBands.length < 4) {
+                              newBands.push(defaultBands[newBands.length]);
+                            }
+                            newBands[index] = { ...newBands[index], gain: value };
+                            updateChain(['eqShaping', 'parametricEQ', 'bands'], newBands);
+                          }}
+                        />
+                        <RotaryKnob
+                          value={band.q}
+                          min={0.1}
+                          max={10}
+                          step={0.1}
+                          label="Q"
+                          unit=""
+                          color={bandColor}
+                          disabled={disabled}
+                          onChange={(value) => {
+                            const currentBands = processingChain.eqShaping?.parametricEQ?.bands || defaultBands;
+                            const newBands = [...currentBands];
+                            while (newBands.length < 4) {
+                              newBands.push(defaultBands[newBands.length]);
+                            }
+                            newBands[index] = { ...newBands[index], q: value };
+                            updateChain(['eqShaping', 'parametricEQ', 'bands'], newBands);
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          </RackUnit>
         </div>
       </CollapsibleSection>
 
@@ -528,7 +560,8 @@ export function EffectChainEditor({
       <CollapsibleSection 
         title="Reverb" 
         icon="〰️" 
-        defaultExpanded={false}
+        expanded={expandedSection === 'spatialEnhancement'}
+        onExpandedChange={(expanded) => setExpandedSection(expanded ? 'spatialEnhancement' : null)}
         isActive={
           processingChain.spatialEnhancement?.reverb?.enabled ||
           processingChain.spatialEnhancement?.stereoWidth?.enabled ||
@@ -629,7 +662,8 @@ export function EffectChainEditor({
       <CollapsibleSection 
         title="Master" 
         icon="🎚️" 
-        defaultExpanded={false}
+        expanded={expandedSection === 'consistencyMastering'}
+        onExpandedChange={(expanded) => setExpandedSection(expanded ? 'consistencyMastering' : null)}
         isActive={
           processingChain.consistencyMastering?.loudnessNormalization?.enabled ||
           processingChain.consistencyMastering?.dithering?.enabled ||
