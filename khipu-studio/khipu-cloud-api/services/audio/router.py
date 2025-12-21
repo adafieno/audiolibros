@@ -8,7 +8,7 @@ import logging
 from typing import Optional
 
 from shared.db.database import get_db
-from shared.models import User, Project, AudioSegmentMetadata, SfxSegment, ChapterPlan
+from shared.models import User, Project, AudioSegmentMetadata, SfxSegment, ChapterPlan, AudioPreset
 from shared.auth import get_current_active_user
 from shared.config import get_settings, Settings
 from .schemas import (
@@ -22,6 +22,7 @@ from .schemas import (
     ChapterAudioProductionResponse,
     AudioSegmentData
 )
+from shared.schemas.audio_presets import AudioPresetCreate, AudioPresetResponse
 from shared.services.audio_cache import get_audio_cache_service
 from shared.services.blob_storage import BlobStorageService, get_blob_storage_service
 from services.voices.azure_tts import generate_audio
@@ -757,6 +758,157 @@ async def get_chapter_audio_production_data(
     segments.sort(key=lambda x: x.display_order)
     
     return ChapterAudioProductionResponse(segments=segments)
+
+
+# Custom Audio Preset Endpoints
+
+@router.post(
+    "/projects/{project_id}/audio-presets",
+    response_model=AudioPresetResponse,
+    status_code=201
+)
+async def create_audio_preset(
+    project_id: UUID,
+    preset: AudioPresetCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    Create a new custom audio preset for a project.
+    
+    Allows users to save custom processing chain configurations for reuse.
+    """
+    # Verify project exists and user has access
+    await _verify_project_access(db, project_id, current_user.tenant_id)
+    
+    logger.info(f"💾 Creating audio preset '{preset.name}' for project {project_id}")
+    
+    # Create new preset
+    new_preset = AudioPreset(
+        project_id=project_id,
+        name=preset.name,
+        description=preset.description,
+        processing_chain=preset.processing_chain,
+        icon=preset.icon
+    )
+    
+    db.add(new_preset)
+    await db.commit()
+    await db.refresh(new_preset)
+    
+    logger.info(f"✅ Audio preset created with ID: {new_preset.id}")
+    
+    return AudioPresetResponse(
+        id=new_preset.id,
+        project_id=new_preset.project_id,
+        name=new_preset.name,
+        description=new_preset.description,
+        processing_chain=new_preset.processing_chain,
+        icon=new_preset.icon,
+        created_at=new_preset.created_at,
+        updated_at=new_preset.updated_at
+    )
+
+
+@router.get(
+    "/projects/{project_id}/audio-presets",
+    response_model=list[AudioPresetResponse]
+)
+async def list_audio_presets(
+    project_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    List all custom audio presets for a project.
+    
+    Returns all user-created presets for the specified project.
+    """
+    # Verify project exists and user has access
+    await _verify_project_access(db, project_id, current_user.tenant_id)
+    
+    logger.info(f"📋 Fetching audio presets for project {project_id}")
+    
+    # Query all presets for this project
+    result = await db.execute(
+        select(AudioPreset)
+        .where(AudioPreset.project_id == project_id)
+        .order_by(AudioPreset.created_at.desc())
+    )
+    presets = result.scalars().all()
+    
+    logger.info(f"✅ Found {len(presets)} audio presets")
+    
+    return [
+        AudioPresetResponse(
+            id=p.id,
+            project_id=p.project_id,
+            name=p.name,
+            description=p.description,
+            processing_chain=p.processing_chain,
+            icon=p.icon,
+            created_at=p.created_at,
+            updated_at=p.updated_at
+        )
+        for p in presets
+    ]
+
+
+@router.delete(
+    "/projects/{project_id}/audio-presets/{preset_id}",
+    status_code=204
+)
+async def delete_audio_preset(
+    project_id: UUID,
+    preset_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    Delete a custom audio preset.
+    
+    Removes a user-created preset from the project.
+    """
+    # Verify project exists and user has access
+    await _verify_project_access(db, project_id, current_user.tenant_id)
+    
+    logger.info(f"🗑️ Deleting audio preset {preset_id} from project {project_id}")
+    
+    # Find the preset
+    result = await db.execute(
+        select(AudioPreset).where(
+            and_(
+                AudioPreset.id == preset_id,
+                AudioPreset.project_id == project_id
+            )
+        )
+    )
+    preset = result.scalar_one_or_none()
+    
+    if not preset:
+        raise HTTPException(status_code=404, detail="Audio preset not found")
+    
+    # Clear preset references in segments that use this preset
+    # Segments will keep their processing_chain but lose the preset_id reference
+    preset_id_str = str(preset_id)
+    await db.execute(
+        AudioSegmentMetadata.__table__.update()
+        .where(
+            and_(
+                AudioSegmentMetadata.project_id == project_id,
+                AudioSegmentMetadata.preset_id == preset_id_str
+            )
+        )
+        .values(preset_id=None)
+    )
+    
+    logger.info(f"✅ Cleared preset reference from segments using preset {preset_id}")
+    
+    # Delete the preset
+    await db.delete(preset)
+    await db.commit()
+    
+    logger.info(f"✅ Audio preset deleted successfully")
 
 
 # Helper functions

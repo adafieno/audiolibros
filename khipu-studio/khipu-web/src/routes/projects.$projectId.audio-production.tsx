@@ -11,6 +11,7 @@ import { useAudioPlayback } from '../hooks/useAudioPlayback';
 import { AUDIO_PRESETS } from '../config/audioPresets';
 import { getChapters } from '../api/chapters';
 import { charactersApi } from '../lib/api/characters';
+import { audioProductionApi } from '../api/audio-production';
 import type { AudioProcessingChain } from '../types/audio-production';
 
 export const Route = createFileRoute('/projects/$projectId/audio-production')({
@@ -70,6 +71,17 @@ function AudioProductionPage() {
   const [customMode, setCustomMode] = useState(false);
   const [selectedPresetId, setSelectedPresetId] = useState<string>('raw_unprocessed');
   const [showSfxDialog, setShowSfxDialog] = useState(false);
+  const [showSavePresetModal, setShowSavePresetModal] = useState(false);
+  const [presetName, setPresetName] = useState('');
+  const [presetDescription, setPresetDescription] = useState('');
+  const [presetIcon, setPresetIcon] = useState('');
+  const [customPresets, setCustomPresets] = useState<Array<{
+    id: string;
+    name: string;
+    description?: string;
+    processing_chain: AudioProcessingChain;
+  }>>([]);
+  const [presetFilter, setPresetFilter] = useState<'all' | 'builtin' | 'custom'>('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Auto-select first chapter when chapters load
@@ -88,6 +100,24 @@ function AudioProductionPage() {
       loadChapterData();
     }
   }, [projectId, chapterOrder, selectedChapterId, loadChapterData]);
+
+  // Load custom presets
+  useEffect(() => {
+    const fetchCustomPresets = async () => {
+      try {
+        const presets = await audioProductionApi.getCustomPresets(projectId);
+        setCustomPresets(presets as Array<{
+          id: string;
+          name: string;
+          description?: string;
+          processing_chain: AudioProcessingChain;
+        }>);
+      } catch (error) {
+        console.error('Failed to load custom presets:', error);
+      }
+    };
+    fetchCustomPresets();
+  }, [projectId]);
 
   // Initialize processing chain with default preset
   useEffect(() => {
@@ -140,8 +170,23 @@ function AudioProductionPage() {
     console.log('[AudioProduction] User clicked preset:', presetId);
     console.log('[AudioProduction] Current segment:', selectedSegmentId);
     
+    // Check built-in presets first
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const preset = AUDIO_PRESETS.find((p: any) => p.id === presetId);
+    let preset = AUDIO_PRESETS.find((p: any) => p.id === presetId);
+    
+    // Check custom presets if not found in built-in
+    if (!preset) {
+      const customPreset = customPresets.find((p) => p.id === presetId);
+      if (customPreset) {
+        preset = {
+          id: customPreset.id,
+          name: customPreset.name,
+          description: customPreset.description || '',
+          processingChain: customPreset.processing_chain,
+        };
+      }
+    }
+    
     if (preset && selectedSegmentId) {
       console.log('[AudioProduction] ✓ Preset found:', preset.name);
       console.log('[AudioProduction] ✓ Processing chain:', JSON.stringify(preset.processingChain, null, 2));
@@ -167,7 +212,7 @@ function AudioProductionPage() {
       if (!selectedSegmentId) console.error('[AudioProduction] ✗ No segment selected');
     }
     console.log('[AudioProduction] ==============================');
-  }, [selectedSegmentId, updateProcessingChain, clearCache]);
+  }, [selectedSegmentId, updateProcessingChain, clearCache, customPresets]);
 
   // Handle custom mode toggle
   const handleCustomModeToggle = useCallback(() => {
@@ -231,6 +276,58 @@ function AudioProductionPage() {
       alert('Failed to apply processing chain to all segments');
     }
   }, [processingChain, customMode, selectedPresetId, segments, updateProcessingChain, clearCache]);
+
+  // Handle save custom preset
+  const handleSaveAsPreset = useCallback(async (name: string, description: string, icon: string) => {
+    if (!processingChain) return;
+    
+    try {
+      await audioProductionApi.saveCustomPreset(
+        projectId,
+        name,
+        description,
+        processingChain,
+        icon || undefined
+      );
+      
+      // Reload custom presets
+      const presets = await audioProductionApi.getCustomPresets(projectId);
+      setCustomPresets(presets as Array<{
+        id: string;
+        name: string;
+        description?: string;
+        processing_chain: AudioProcessingChain;
+      }>);
+      
+      alert(`Preset "${name}" saved successfully!`);
+    } catch (error) {
+      console.error('Failed to save preset:', error);
+      alert('Failed to save preset. Please try again.');
+    }
+  }, [processingChain, projectId]);
+
+  // Handle delete custom preset
+  const handleDeletePreset = useCallback(async (presetId: string) => {
+    if (!confirm('Are you sure you want to delete this preset?')) return;
+    
+    try {
+      await audioProductionApi.deleteCustomPreset(projectId, presetId);
+      
+      // Reload custom presets
+      const presets = await audioProductionApi.getCustomPresets(projectId);
+      setCustomPresets(presets as Array<{
+        id: string;
+        name: string;
+        description?: string;
+        processing_chain: AudioProcessingChain;
+      }>);
+      
+      alert('Preset deleted successfully!');
+    } catch (error) {
+      console.error('Failed to delete preset:', error);
+      alert('Failed to delete preset. Please try again.');
+    }
+  }, [projectId]);
 
   // Handle processing chain changes
   const handleProcessingChainChange = useCallback((chain: AudioProcessingChain) => {
@@ -936,9 +1033,6 @@ function AudioProductionPage() {
           overflow: 'hidden',
           minHeight: 0,
         }}>
-          <h2 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 600 }}>
-            Audio Presets
-          </h2>
           <div style={{ flex: 1, overflow: 'auto' }}>
             <PresetSelector
               selectedPresetId={selectedPresetId}
@@ -946,7 +1040,10 @@ function AudioProductionPage() {
               onPresetSelect={handlePresetSelect}
               onCustomToggle={handleCustomModeToggle}
               onApplyToAll={handleApplyToAll}
-              currentProcessingChain={processingChain || undefined}
+              customPresets={customPresets}
+              presetFilter={presetFilter}
+              onFilterChange={setPresetFilter}
+              onDeletePreset={handleDeletePreset}
             />
           </div>
         </div>
@@ -962,9 +1059,36 @@ function AudioProductionPage() {
           overflow: 'hidden',
           minHeight: 0,
         }}>
-          <h2 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 600 }}>
-            Processing Chain
-          </h2>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            marginBottom: '12px'
+          }}>
+            <h2 style={{ margin: 0, fontSize: '14px', fontWeight: 600 }}>
+              Processing Chain
+            </h2>
+            {customMode && (
+              <button
+                onClick={() => setShowSavePresetModal(true)}
+                style={{
+                  padding: '4px 12px',
+                  background: '#10b981',
+                  border: 'none',
+                  borderRadius: '4px',
+                  color: 'white',
+                  fontSize: '12px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                Save as Preset
+              </button>
+            )}
+          </div>
           <div style={{ flex: 1, overflow: 'auto' }}>
             {processingChain && (
               <EffectChainEditor
@@ -976,6 +1100,161 @@ function AudioProductionPage() {
           </div>
         </div>
       </div>
+
+      {/* Save Preset Modal */}
+      {showSavePresetModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => {
+            setShowSavePresetModal(false);
+            setPresetName('');
+            setPresetDescription('');
+            setPresetIcon('');
+          }}
+        >
+          <div
+            style={{
+              background: '#1a1a1a',
+              border: '1px solid #333',
+              borderRadius: '8px',
+              padding: '24px',
+              maxWidth: '500px',
+              width: '90%',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 600, color: '#e0e0e0' }}>
+              Save as Preset
+            </h3>
+            
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#999' }}>
+                Preset Name *
+              </label>
+              <input
+                type="text"
+                value={presetName}
+                onChange={(e) => setPresetName(e.target.value)}
+                placeholder="e.g., My Custom Preset"
+                autoFocus
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  background: '#0a0a0a',
+                  color: '#e0e0e0',
+                  border: '1px solid #333',
+                  borderRadius: '4px',
+                  fontSize: '13px',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#999' }}>
+                Description <span style={{ color: '#666' }}>(optional)</span>
+              </label>
+              <textarea
+                value={presetDescription}
+                onChange={(e) => setPresetDescription(e.target.value)}
+                placeholder="Brief description of this preset..."
+                rows={3}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  background: '#0a0a0a',
+                  color: '#e0e0e0',
+                  border: '1px solid #333',
+                  borderRadius: '4px',
+                  fontSize: '13px',
+                  boxSizing: 'border-box',
+                  resize: 'vertical',
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#999' }}>
+                Icon <span style={{ color: '#666' }}>(optional)</span>
+              </label>
+              <input
+                type="text"
+                value={presetIcon}
+                onChange={(e) => setPresetIcon(e.target.value)}
+                placeholder="e.g., 🎵"
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  background: '#0a0a0a',
+                  color: '#e0e0e0',
+                  border: '1px solid #333',
+                  borderRadius: '4px',
+                  fontSize: '13px',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setShowSavePresetModal(false);
+                  setPresetName('');
+                  setPresetDescription('');
+                  setPresetIcon('');
+                }}
+                style={{
+                  padding: '8px 16px',
+                  background: '#333',
+                  color: '#e0e0e0',
+                  border: 'none',
+                  borderRadius: '4px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (presetName.trim()) {
+                    handleSaveAsPreset(presetName.trim(), presetDescription.trim(), presetIcon.trim());
+                    setShowSavePresetModal(false);
+                    setPresetName('');
+                    setPresetDescription('');
+                    setPresetIcon('');
+                  }
+                }}
+                disabled={!presetName.trim()}
+                style={{
+                  padding: '8px 16px',
+                  background: presetName.trim() ? '#10b981' : '#333',
+                  color: presetName.trim() ? '#fff' : '#666',
+                  border: 'none',
+                  borderRadius: '4px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: presetName.trim() ? 'pointer' : 'not-allowed',
+                }}
+              >
+                Save Preset
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* SFX Upload Dialog */}
       {showSfxDialog && (

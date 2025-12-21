@@ -285,4 +285,71 @@ export const audioProductionApi = {
     
     return response.json();
   },
+
+  /**
+   * Save a custom audio preset
+   */
+  async saveCustomPreset(
+    projectId: string,
+    name: string,
+    description: string,
+    processingChain: unknown,
+    icon?: string
+  ): Promise<{ id: string }> {
+    const response = await fetchWithAuth(
+      `${API_BASE}/api/v1/projects/${projectId}/audio-presets`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          name,
+          description,
+          processing_chain: processingChain,
+          icon,
+        }),
+      }
+    );
+    
+    if (!response.ok) {
+      throw new Error('Failed to save custom preset');
+    }
+    
+    return response.json();
+  },
+
+  /**
+   * Get custom presets for a project
+   */
+  async getCustomPresets(projectId: string): Promise<Array<{
+    id: string;
+    name: string;
+    description: string;
+    processing_chain: unknown;
+    created_at: string;
+  }>> {
+    const response = await fetchWithAuth(
+      `${API_BASE}/api/v1/projects/${projectId}/audio-presets`
+    );
+    
+    if (!response.ok) {
+      throw new Error('Failed to get custom presets');
+    }
+    
+    return response.json();
+  },
+
+  /**
+   * Delete a custom preset
+   */
+  async deleteCustomPreset(projectId: string, presetId: string): Promise<void> {
+    const response = await fetchWithAuth(
+      `${API_BASE}/api/v1/projects/${projectId}/audio-presets/${presetId}`,
+      {
+        method: 'DELETE',
+      }
+    );
+    
+    if (!response.ok) {
+      throw new Error('Failed to delete custom preset');
+    }
+  },
 };
