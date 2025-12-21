@@ -4,7 +4,7 @@
  * Comprehensive audio processing chain editor with hardware-style controls.
  */
 
-import { useCallback } from 'react';
+import { useCallback, type ReactNode } from 'react';
 import { CollapsibleSection } from '../ui/CollapsibleSection';
 import { RotaryKnob } from './RotaryKnob';
 import type { AudioProcessingChain } from '../../types/audio-production';
@@ -13,6 +13,46 @@ interface EffectChainEditorProps {
   processingChain: AudioProcessingChain;
   onChange: (chain: AudioProcessingChain) => void;
   disabled?: boolean;
+}
+
+// Studio rack unit wrapper component
+function RackUnit({ 
+  enabled, 
+  color, 
+  modelNumber, 
+  children 
+}: { 
+  enabled: boolean; 
+  color: string; 
+  modelNumber: string; 
+  children: ReactNode;
+}) {
+  return (
+    <div style={{ 
+      padding: '12px', 
+      background: 'linear-gradient(to bottom, #222 0%, #1a1a1a 100%)', 
+      borderRadius: '4px',
+      border: '1px solid #444',
+      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 4px rgba(0,0,0,0.3)',
+      position: 'relative',
+    }}>
+      {/* Rack screws */}
+      <div style={{ position: 'absolute', left: '8px', top: '8px', width: '6px', height: '6px', borderRadius: '50%', background: 'linear-gradient(135deg, #555, #222)', boxShadow: 'inset 0 1px 1px rgba(0,0,0,0.5)' }} />
+      <div style={{ position: 'absolute', left: '8px', bottom: '8px', width: '6px', height: '6px', borderRadius: '50%', background: 'linear-gradient(135deg, #555, #222)', boxShadow: 'inset 0 1px 1px rgba(0,0,0,0.5)' }} />
+      <div style={{ position: 'absolute', right: '8px', top: '8px', width: '6px', height: '6px', borderRadius: '50%', background: 'linear-gradient(135deg, #555, #222)', boxShadow: 'inset 0 1px 1px rgba(0,0,0,0.5)' }} />
+      <div style={{ position: 'absolute', right: '8px', bottom: '8px', width: '6px', height: '6px', borderRadius: '50%', background: 'linear-gradient(135deg, #555, #222)', boxShadow: 'inset 0 1px 1px rgba(0,0,0,0.5)' }} />
+      
+      {/* Left rack panel with LED */}
+      <div style={{ position: 'absolute', left: '0', top: '0', bottom: '0', width: '32px', background: 'linear-gradient(to right, #2a2a2a, #1f1f1f)', borderRight: '1px solid #333', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', paddingTop: '4px' }}>
+        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: enabled ? color : '#333', boxShadow: enabled ? `0 0 8px ${color}, inset 0 -1px 2px rgba(0,0,0,0.5)` : 'inset 0 1px 2px rgba(0,0,0,0.8)', border: '1px solid #222' }} />
+        <div style={{ transform: 'rotate(-90deg)', fontSize: '7px', fontWeight: 700, color: '#666', letterSpacing: '0.5px', whiteSpace: 'nowrap', fontFamily: 'monospace' }}>{modelNumber}</div>
+      </div>
+      
+      <div style={{ marginLeft: '32px' }}>
+        {children}
+      </div>
+    </div>
+  );
 }
 
 export function EffectChainEditor({
@@ -55,19 +95,24 @@ export function EffectChainEditor({
   }, [processingChain, onChange, disabled]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', opacity: disabled ? 0.6 : 1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
       {/* Noise Cleanup Section */}
-      <CollapsibleSection title="Noise Cleanup" icon="🧹" defaultExpanded={false}>
+      <CollapsibleSection 
+        title="Noise Cleanup" 
+        icon="🧹" 
+        defaultExpanded={false}
+        isActive={
+          processingChain.noiseCleanup?.noiseReduction?.enabled ||
+          processingChain.noiseCleanup?.deEsser?.enabled ||
+          processingChain.noiseCleanup?.deClicker?.enabled ||
+          false
+        }
+      >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Noise Reduction */}
-          <div style={{ 
-            padding: '12px', 
-            background: '#1a1a1a', 
-            borderRadius: '4px',
-            border: '1px solid #333',
-          }}>
+          <RackUnit enabled={processingChain.noiseCleanup?.noiseReduction?.enabled || false} color="#4ade80" modelNumber="NR-01">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#e0e0e0' }}>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Noise Reduction
               </span>
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
@@ -78,7 +123,7 @@ export function EffectChainEditor({
                   disabled={disabled}
                   style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
                 />
-                <span style={{ fontSize: '11px', color: '#999' }}>Enable</span>
+                <span style={{ fontSize: '11px', color: '#b0b0b0' }}>Enable</span>
               </label>
             </div>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -92,17 +137,12 @@ export function EffectChainEditor({
                 onChange={(value) => updateChain(['noiseCleanup', 'noiseReduction', 'amount'], value)}
               />
             </div>
-          </div>
+          </RackUnit>
 
           {/* De-esser */}
-          <div style={{ 
-            padding: '12px', 
-            background: '#1a1a1a', 
-            borderRadius: '4px',
-            border: '1px solid #333',
-          }}>
+          <RackUnit enabled={processingChain.noiseCleanup?.deEsser?.enabled || false} color="#fbbf24" modelNumber="DS-02">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#e0e0e0' }}>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 De-esser
               </span>
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
@@ -113,7 +153,7 @@ export function EffectChainEditor({
                   disabled={disabled}
                   style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
                 />
-                <span style={{ fontSize: '11px', color: '#999' }}>Enable</span>
+                <span style={{ fontSize: '11px', color: '#b0b0b0' }}>Enable</span>
               </label>
             </div>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -127,17 +167,12 @@ export function EffectChainEditor({
                 onChange={(value) => updateChain(['noiseCleanup', 'deEsser', 'threshold'], value)}
               />
             </div>
-          </div>
+          </RackUnit>
 
           {/* De-clicker */}
-          <div style={{ 
-            padding: '12px', 
-            background: '#1a1a1a', 
-            borderRadius: '4px',
-            border: '1px solid #333',
-          }}>
+          <RackUnit enabled={processingChain.noiseCleanup?.deClicker?.enabled || false} color="#8b5cf6" modelNumber="DC-03">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#e0e0e0' }}>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 De-clicker
               </span>
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
@@ -148,7 +183,7 @@ export function EffectChainEditor({
                   disabled={disabled}
                   style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
                 />
-                <span style={{ fontSize: '11px', color: '#999' }}>Enable</span>
+                <span style={{ fontSize: '11px', color: '#b0b0b0' }}>Enable</span>
               </label>
             </div>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -162,22 +197,27 @@ export function EffectChainEditor({
                 onChange={(value) => updateChain(['noiseCleanup', 'deClicker', 'sensitivity'], value)}
               />
             </div>
-          </div>
+          </RackUnit>
         </div>
       </CollapsibleSection>
 
       {/* Dynamic Control Section */}
-      <CollapsibleSection title="Compressor" icon="⚡" defaultExpanded={false}>
+      <CollapsibleSection 
+        title="Compressor" 
+        icon="⚡" 
+        defaultExpanded={false}
+        isActive={
+          processingChain.dynamicControl?.compression?.enabled ||
+          processingChain.dynamicControl?.limiting?.enabled ||
+          processingChain.dynamicControl?.normalization?.enabled ||
+          false
+        }
+      >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Compression */}
-          <div style={{ 
-            padding: '12px', 
-            background: '#1a1a1a', 
-            borderRadius: '4px',
-            border: '1px solid #333',
-          }}>
+          <RackUnit enabled={processingChain.dynamicControl?.compression?.enabled || false} color="#ef4444" modelNumber="CP-04">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#e0e0e0' }}>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Compression
               </span>
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
@@ -188,7 +228,7 @@ export function EffectChainEditor({
                   disabled={disabled}
                   style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
                 />
-                <span style={{ fontSize: '11px', color: '#999' }}>Enable</span>
+                <span style={{ fontSize: '11px', color: '#b0b0b0' }}>Enable</span>
               </label>
             </div>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -231,17 +271,12 @@ export function EffectChainEditor({
                 onChange={(value) => updateChain(['dynamicControl', 'compression', 'release'], value)}
               />
             </div>
-          </div>
+          </RackUnit>
 
           {/* Limiting */}
-          <div style={{ 
-            padding: '12px', 
-            background: '#1a1a1a', 
-            borderRadius: '4px',
-            border: '1px solid #333',
-          }}>
+          <RackUnit enabled={processingChain.dynamicControl?.limiting?.enabled || false} color="#f59e0b" modelNumber="LM-05">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#e0e0e0' }}>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Limiting
               </span>
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
@@ -252,7 +287,7 @@ export function EffectChainEditor({
                   disabled={disabled}
                   style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
                 />
-                <span style={{ fontSize: '11px', color: '#999' }}>Enable</span>
+                <span style={{ fontSize: '11px', color: '#b0b0b0' }}>Enable</span>
               </label>
             </div>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
@@ -262,7 +297,7 @@ export function EffectChainEditor({
                 max={0}
                 step={0.1}
                 label="Threshold"
-                color="#fbbf24"
+                color="#f59e0b"
                 disabled={disabled || !processingChain.dynamicControl?.limiting?.enabled}
                 onChange={(value) => updateChain(['dynamicControl', 'limiting', 'threshold'], value)}
               />
@@ -271,22 +306,17 @@ export function EffectChainEditor({
                 min={10}
                 max={1000}
                 label="Release"
-                color="#fbbf24"
+                color="#f59e0b"
                 disabled={disabled || !processingChain.dynamicControl?.limiting?.enabled}
                 onChange={(value) => updateChain(['dynamicControl', 'limiting', 'release'], value)}
               />
             </div>
-          </div>
+          </RackUnit>
 
           {/* Normalization */}
-          <div style={{ 
-            padding: '12px', 
-            background: '#1a1a1a', 
-            borderRadius: '4px',
-            border: '1px solid #333',
-          }}>
+          <RackUnit enabled={processingChain.dynamicControl?.normalization?.enabled || false} color="#10b981" modelNumber="NM-06">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#e0e0e0' }}>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Normalization
               </span>
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
@@ -297,7 +327,7 @@ export function EffectChainEditor({
                   disabled={disabled}
                   style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
                 />
-                <span style={{ fontSize: '11px', color: '#999' }}>Enable</span>
+                <span style={{ fontSize: '11px', color: '#b0b0b0' }}>Enable</span>
               </label>
             </div>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -306,27 +336,31 @@ export function EffectChainEditor({
                 min={-30}
                 max={0}
                 label="Target"
-                color="#4a9eff"
+                color="#10b981"
                 disabled={disabled || !processingChain.dynamicControl?.normalization?.enabled}
                 onChange={(value) => updateChain(['dynamicControl', 'normalization', 'targetLevel'], value)}
               />
             </div>
-          </div>
+          </RackUnit>
         </div>
       </CollapsibleSection>
 
       {/* EQ Shaping Section */}
-      <CollapsibleSection title="EQ" icon="📊" defaultExpanded={false}>
+      <CollapsibleSection 
+        title="EQ" 
+        icon="🎛️" 
+        defaultExpanded={false}
+        isActive={
+          processingChain.eqShaping?.highPass?.enabled ||
+          processingChain.eqShaping?.lowPass?.enabled ||
+          false
+        }
+      >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* High-pass Filter */}
-          <div style={{ 
-            padding: '12px', 
-            background: '#1a1a1a', 
-            borderRadius: '4px',
-            border: '1px solid #333',
-          }}>
+          <RackUnit enabled={processingChain.eqShaping?.highPass?.enabled || false} color="#3b82f6" modelNumber="HP-07">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#e0e0e0' }}>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 High-pass Filter
               </span>
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
@@ -337,7 +371,7 @@ export function EffectChainEditor({
                   disabled={disabled}
                   style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
                 />
-                <span style={{ fontSize: '11px', color: '#999' }}>Enable</span>
+                <span style={{ fontSize: '11px', color: '#b0b0b0' }}>Enable</span>
               </label>
             </div>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
@@ -346,7 +380,7 @@ export function EffectChainEditor({
                 min={20}
                 max={500}
                 label="Frequency"
-                color="#4ade80"
+                color="#3b82f6"
                 disabled={disabled || !processingChain.eqShaping?.highPass?.enabled}
                 onChange={(value) => updateChain(['eqShaping', 'highPass', 'frequency'], value)}
               />
@@ -356,22 +390,17 @@ export function EffectChainEditor({
                 max={48}
                 step={6}
                 label="Slope"
-                color="#4ade80"
+                color="#3b82f6"
                 disabled={disabled || !processingChain.eqShaping?.highPass?.enabled}
                 onChange={(value) => updateChain(['eqShaping', 'highPass', 'slope'], value)}
               />
             </div>
-          </div>
+          </RackUnit>
 
           {/* Low-pass Filter */}
-          <div style={{ 
-            padding: '12px', 
-            background: '#1a1a1a', 
-            borderRadius: '4px',
-            border: '1px solid #333',
-          }}>
+          <RackUnit enabled={processingChain.eqShaping?.lowPass?.enabled || false} color="#8b5cf6" modelNumber="LP-08">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#e0e0e0' }}>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Low-pass Filter
               </span>
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
@@ -382,7 +411,7 @@ export function EffectChainEditor({
                   disabled={disabled}
                   style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
                 />
-                <span style={{ fontSize: '11px', color: '#999' }}>Enable</span>
+                <span style={{ fontSize: '11px', color: '#b0b0b0' }}>Enable</span>
               </label>
             </div>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
@@ -406,7 +435,7 @@ export function EffectChainEditor({
                 onChange={(value) => updateChain(['eqShaping', 'lowPass', 'slope'], value)}
               />
             </div>
-          </div>
+          </RackUnit>
 
           {/* Parametric EQ info */}
           <div style={{
@@ -423,17 +452,21 @@ export function EffectChainEditor({
       </CollapsibleSection>
 
       {/* Spatial Enhancement Section */}
-      <CollapsibleSection title="Reverb" icon="🌊" defaultExpanded={false}>
+      <CollapsibleSection 
+        title="Reverb" 
+        icon="〰️" 
+        defaultExpanded={false}
+        isActive={
+          processingChain.spatialEnhancement?.reverb?.enabled ||
+          processingChain.spatialEnhancement?.stereoWidth?.enabled ||
+          false
+        }
+      >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Reverb */}
-          <div style={{ 
-            padding: '12px', 
-            background: '#1a1a1a', 
-            borderRadius: '4px',
-            border: '1px solid #333',
-          }}>
+          <RackUnit enabled={processingChain.spatialEnhancement?.reverb?.enabled || false} color="#06b6d4" modelNumber="RV-09">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#e0e0e0' }}>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Reverb
               </span>
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
@@ -444,7 +477,7 @@ export function EffectChainEditor({
                   disabled={disabled}
                   style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
                 />
-                <span style={{ fontSize: '11px', color: '#999' }}>Enable</span>
+                <span style={{ fontSize: '11px', color: '#b0b0b0' }}>Enable</span>
               </label>
             </div>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -479,17 +512,12 @@ export function EffectChainEditor({
                 onChange={(value) => updateChain(['spatialEnhancement', 'reverb', 'wetLevel'], value)}
               />
             </div>
-          </div>
+          </RackUnit>
 
           {/* Stereo Width */}
-          <div style={{ 
-            padding: '12px', 
-            background: '#1a1a1a', 
-            borderRadius: '4px',
-            border: '1px solid #333',
-          }}>
+          <RackUnit enabled={processingChain.spatialEnhancement?.stereoWidth?.enabled || false} color="#ec4899" modelNumber="WD-10">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#e0e0e0' }}>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Stereo Width
               </span>
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
@@ -500,7 +528,7 @@ export function EffectChainEditor({
                   disabled={disabled}
                   style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
                 />
-                <span style={{ fontSize: '11px', color: '#999' }}>Enable</span>
+                <span style={{ fontSize: '11px', color: '#b0b0b0' }}>Enable</span>
               </label>
             </div>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -515,22 +543,26 @@ export function EffectChainEditor({
                 onChange={(value) => updateChain(['spatialEnhancement', 'stereoWidth', 'width'], value)}
               />
             </div>
-          </div>
+          </RackUnit>
         </div>
       </CollapsibleSection>
 
       {/* Consistency & Mastering Section */}
-      <CollapsibleSection title="Master" icon="🎚️" defaultExpanded={false}>
+      <CollapsibleSection 
+        title="Master" 
+        icon="🎚️" 
+        defaultExpanded={false}
+        isActive={
+          processingChain.consistencyMastering?.loudnessNormalization?.enabled ||
+          processingChain.consistencyMastering?.dithering?.enabled ||
+          false
+        }
+      >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Loudness Normalization */}
-          <div style={{ 
-            padding: '12px', 
-            background: '#1a1a1a', 
-            borderRadius: '4px',
-            border: '1px solid #333',
-          }}>
+          <RackUnit enabled={processingChain.consistencyMastering?.loudnessNormalization?.enabled || false} color="#f59e0b" modelNumber="LN-11">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#e0e0e0' }}>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Loudness Normalization (LUFS)
               </span>
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
@@ -541,7 +573,7 @@ export function EffectChainEditor({
                   disabled={disabled}
                   style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
                 />
-                <span style={{ fontSize: '11px', color: '#999' }}>Enable</span>
+                <span style={{ fontSize: '11px', color: '#b0b0b0' }}>Enable</span>
               </label>
             </div>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -555,17 +587,12 @@ export function EffectChainEditor({
                 onChange={(value) => updateChain(['consistencyMastering', 'loudnessNormalization', 'targetLUFS'], value)}
               />
             </div>
-          </div>
+          </RackUnit>
 
           {/* Dithering */}
-          <div style={{ 
-            padding: '12px', 
-            background: '#1a1a1a', 
-            borderRadius: '4px',
-            border: '1px solid #333',
-          }}>
+          <RackUnit enabled={processingChain.consistencyMastering?.dithering?.enabled || false} color="#64748b" modelNumber="DT-12">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#e0e0e0' }}>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: '#f0f0f0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Dithering
               </span>
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
@@ -576,7 +603,7 @@ export function EffectChainEditor({
                   disabled={disabled}
                   style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
                 />
-                <span style={{ fontSize: '11px', color: '#999' }}>Enable</span>
+                <span style={{ fontSize: '11px', color: '#b0b0b0' }}>Enable</span>
               </label>
             </div>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -601,7 +628,7 @@ export function EffectChainEditor({
                 <div style={{ 
                   marginTop: '8px',
                   fontSize: '10px', 
-                  color: '#999',
+                  color: '#b0b0b0',
                   textTransform: 'uppercase',
                   letterSpacing: '0.5px',
                 }}>
@@ -609,7 +636,7 @@ export function EffectChainEditor({
                 </div>
               </div>
             </div>
-          </div>
+          </RackUnit>
         </div>
       </CollapsibleSection>
     </div>

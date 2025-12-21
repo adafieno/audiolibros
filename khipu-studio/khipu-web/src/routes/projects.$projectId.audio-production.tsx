@@ -56,12 +56,10 @@ function AudioProductionPage() {
     playSegment,
     stopPlayback,
     seek,
-    setVolume: setAudioVolume,
     isPlaying,
     isLoadingAudio,
     currentTime,
     duration,
-    volume: hookVolume,
     playingSegmentId,
     clearCache,
   } = useAudioPlayback({ projectId, processingChain });
