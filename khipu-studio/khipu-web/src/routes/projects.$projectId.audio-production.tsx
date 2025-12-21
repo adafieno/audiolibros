@@ -171,25 +171,25 @@ function AudioProductionPage() {
 
   // Handle custom mode toggle
   const handleCustomModeToggle = useCallback(() => {
-    setCustomMode(prev => {
-      const newCustomMode = !prev;
-      if (newCustomMode) {
-        // Entering custom mode - preserve current processing chain from selected preset
-        if (selectedPresetId && processingChain) {
-          // Processing chain is already loaded from the preset, keep it
-          setSelectedPresetId('');
-        }
-      } else {
-        // Exiting custom mode - reset to Raw & Unprocessed preset
-        const rawPreset = AUDIO_PRESETS.find((p: any) => p.id === 'raw_unprocessed');
-        if (rawPreset) {
-          setSelectedPresetId('raw_unprocessed');
-          setProcessingChain(rawPreset.processingChain);
-        }
+    const newCustomMode = !customMode;
+    
+    if (newCustomMode) {
+      // Entering custom mode - preserve current processing chain from selected preset
+      if (selectedPresetId && processingChain) {
+        // Processing chain is already loaded from the preset, keep it
+        setSelectedPresetId('');
       }
-      return newCustomMode;
-    });
-  }, [selectedPresetId, processingChain]);
+      setCustomMode(true);
+    } else {
+      // Exiting custom mode - reset to Raw & Unprocessed preset
+      const rawPreset = AUDIO_PRESETS.find(p => p.id === 'raw_unprocessed');
+      if (rawPreset) {
+        setSelectedPresetId('raw_unprocessed');
+        setProcessingChain(rawPreset.processingChain);
+        setCustomMode(false);
+      }
+    }
+  }, [customMode, selectedPresetId, processingChain]);
 
   // Handle apply preset to all segments
   const handleApplyToAll = useCallback(async () => {
@@ -201,7 +201,7 @@ function AudioProductionPage() {
     // Determine the name to display in confirmation
     let chainName = 'custom processing chain';
     if (!customMode && selectedPresetId) {
-      const preset = AUDIO_PRESETS.find((p: any) => p.id === selectedPresetId);
+      const preset = AUDIO_PRESETS.find(p => p.id === selectedPresetId);
       if (preset) {
         chainName = `"${preset.name}" preset`;
       }
@@ -213,8 +213,11 @@ function AudioProductionPage() {
     
     try {
       // Apply processing chain to all segments
+      // Pass preset ID only if not in custom mode
+      const presetIdToSave = customMode ? undefined : selectedPresetId;
+      
       const updatePromises = audioSegments.map(segment => 
-        updateProcessingChain(segment.segment_id, processingChain)
+        updateProcessingChain(segment.segment_id, processingChain, presetIdToSave)
       );
       
       await Promise.all(updatePromises);
