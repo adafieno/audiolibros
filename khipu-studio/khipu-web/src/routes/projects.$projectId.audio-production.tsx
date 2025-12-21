@@ -174,35 +174,60 @@ function AudioProductionPage() {
     setCustomMode(prev => {
       const newCustomMode = !prev;
       if (newCustomMode) {
-        // Entering custom mode - keep current chain
-        setSelectedPresetId('');
+        // Entering custom mode - preserve current processing chain from selected preset
+        if (selectedPresetId && processingChain) {
+          // Processing chain is already loaded from the preset, keep it
+          setSelectedPresetId('');
+        }
+      } else {
+        // Exiting custom mode - reset to Raw & Unprocessed preset
+        const rawPreset = AUDIO_PRESETS.find((p: any) => p.id === 'raw_unprocessed');
+        if (rawPreset) {
+          setSelectedPresetId('raw_unprocessed');
+          setProcessingChain(rawPreset.processingChain);
+        }
       }
       return newCustomMode;
     });
-  }, []);
+  }, [selectedPresetId, processingChain]);
 
   // Handle apply preset to all segments
   const handleApplyToAll = useCallback(async () => {
-    if (!selectedPresetId || customMode) return;
+    if (!processingChain) return;
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const preset = AUDIO_PRESETS.find((p: any) => p.id === selectedPresetId);
-    if (!preset) return;
+    const audioSegments = segments.filter(seg => seg.type !== 'sfx');
+    const count = audioSegments.length;
     
-    const count = segments.filter(seg => seg.type !== 'sfx').length;
-    if (!confirm(`Apply "${preset.name}" preset to all ${count} audio segments?`)) {
+    // Determine the name to display in confirmation
+    let chainName = 'custom processing chain';
+    if (!customMode && selectedPresetId) {
+      const preset = AUDIO_PRESETS.find((p: any) => p.id === selectedPresetId);
+      if (preset) {
+        chainName = `"${preset.name}" preset`;
+      }
+    }
+    
+    if (!confirm(`Apply ${chainName} to all ${count} audio segments?`)) {
       return;
     }
     
     try {
-      // TODO: Implement backend API to apply preset to all segments
-      // For now, just show a message
-      alert(`Would apply "${preset.name}" to ${count} segments. Backend API not yet implemented.`);
+      // Apply processing chain to all segments
+      const updatePromises = audioSegments.map(segment => 
+        updateProcessingChain(segment.segment_id, processingChain)
+      );
+      
+      await Promise.all(updatePromises);
+      
+      alert(`Successfully applied ${chainName} to ${count} segments.`);
+      
+      // Clear audio cache to force reload with new processing
+      clearCache();
     } catch (error) {
-      console.error('Failed to apply preset to all:', error);
-      alert('Failed to apply preset to all segments');
+      console.error('Failed to apply processing chain to all:', error);
+      alert('Failed to apply processing chain to all segments');
     }
-  }, [selectedPresetId, customMode, segments]);
+  }, [processingChain, customMode, selectedPresetId, segments, updateProcessingChain, clearCache]);
 
   // Handle processing chain changes
   const handleProcessingChainChange = useCallback((chain: AudioProcessingChain) => {
@@ -520,7 +545,7 @@ function AudioProductionPage() {
       <div style={{
         flex: 1,
         display: 'grid',
-        gridTemplateColumns: '1fr 280px 560px',
+        gridTemplateColumns: '1fr 340px 520px',
         gap: '16px',
         padding: '16px 24px 24px 24px',
         overflow: 'hidden',

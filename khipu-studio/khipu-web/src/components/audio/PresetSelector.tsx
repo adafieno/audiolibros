@@ -42,7 +42,7 @@ export function PresetSelector({
         </h3>
         <div style={{ display: 'flex', gap: '8px' }}>
           {/* Apply to All Button */}
-          {!customSettingsEnabled && selectedPresetId && onApplyToAll && (
+          {onApplyToAll && (
             <button
               onClick={onApplyToAll}
               style={{
@@ -79,7 +79,7 @@ export function PresetSelector({
               transition: 'all 0.2s',
             }}
           >
-            {customSettingsEnabled ? '✓ Custom' : 'Custom'}
+            Custom
           </button>
         </div>
       </div>
