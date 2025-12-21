@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { AnalogVUMeter } from '../components/audio/VUMeter';
+import { AudioWaveform } from '../components/audio/AudioWaveform';
 import { PresetSelector } from '../components/audio/PresetSelector';
 import { Select } from '../components/Select';
 import { EffectChainEditor } from '../components/audio/EffectChainEditor';
@@ -63,6 +64,7 @@ function AudioProductionPage() {
     duration,
     playingSegmentId,
     clearCache,
+    currentAudioElement,
   } = useAudioPlayback({ projectId, processingChain });
   
   console.log('[AudioProduction] Render - processingChain:', processingChain);
@@ -948,30 +950,14 @@ function AudioProductionPage() {
                   />
                 </div>
 
-                {/* Waveform Placeholder - Temporarily Disabled for Performance */}
-                <div style={{
-                  height: '80px',
-                  padding: '24px',
-                  textAlign: 'center',
-                  color: '#666',
-                  fontSize: '13px',
-                  border: '1px dashed #333',
-                  borderRadius: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
-                  {playingSegmentId ? (
-                    <>
-                      <span style={{ marginRight: '8px' }}>📊</span>
-                      Waveform visualization (temporarily disabled)
-                    </>
-                  ) : (
-                    <>
-                      <span style={{ marginRight: '8px' }}>🎵</span>
-                      No audio loaded
-                    </>
-                  )}
+                {/* Real-time Audio Waveform */}
+                <div style={{ marginTop: '12px' }}>
+                  <AudioWaveform 
+                    audioElement={currentAudioElement || null}
+                    isPlaying={!!playingSegmentId}
+                    width={800}
+                    height={80}
+                  />
                 </div>
               </>
             )}

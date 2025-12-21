@@ -258,5 +258,6 @@ export function useAudioPlayback({ projectId, processingChain }: UseAudioPlaybac
     seek,
     setVolume,
     clearCache,
+    currentAudioElement: playingSegmentId ? audioElements.get(playingSegmentId) : null,
   };
 }
