@@ -1,162 +1,258 @@
 /**
  * Audio Waveform Visualizer
  * 
- * Displays a real-time waveform visualization of audio playback
+ * Displays the complete audio segment waveform with playback cursor
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 interface AudioWaveformProps {
   audioElement: HTMLAudioElement | null;
   isPlaying: boolean;
   width?: number;
   height?: number;
+  onSeek?: (time: number) => void;
 }
 
-export function AudioWaveform({ audioElement, isPlaying, width = 800, height = 80 }: AudioWaveformProps) {
+export function AudioWaveform({ audioElement, isPlaying, width = 800, height = 80, onSeek }: AudioWaveformProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const animationRef = useRef<number | null>(null);
+  const [waveformData, setWaveformData] = useState<Float32Array | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
-  const connectedElementRef = useRef<HTMLAudioElement | null>(null);
+  const currentElementRef = useRef<HTMLAudioElement | null>(null);
+  const waveformCacheRef = useRef<Map<string, Float32Array>>(new Map());
 
+  // Build waveform data from audio element
   useEffect(() => {
-    if (!audioElement || !canvasRef.current) return;
+    if (!audioElement || audioElement === currentElementRef.current) return;
 
-    // Create audio context and analyser on first use
-    if (!audioContextRef.current) {
-      try {
-        const AudioContextClass = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-        if (!AudioContextClass) {
-          console.error('AudioContext not supported');
-          return;
-        }
-        audioContextRef.current = new AudioContextClass();
-        analyserRef.current = audioContextRef.current.createAnalyser();
-        analyserRef.current.fftSize = 2048;
-        analyserRef.current.smoothingTimeConstant = 0.8;
-      } catch (error) {
-        console.error('Failed to create audio context:', error);
-        return;
-      }
+    const audioSrc = audioElement.src;
+    if (!audioSrc) return;
+
+    // Check cache first
+    const cached = waveformCacheRef.current.get(audioSrc);
+    if (cached) {
+      setWaveformData(cached);
+      currentElementRef.current = audioElement;
+      return;
     }
 
-    // Reconnect if audio element changed
-    if (audioElement !== connectedElementRef.current && audioContextRef.current && analyserRef.current) {
+    // Build waveform from audio
+    const buildWaveform = async () => {
+      setIsProcessing(true);
+      
       try {
-        // Disconnect old source if exists
-        if (sourceRef.current) {
-          sourceRef.current.disconnect();
+        // Create dedicated audio context for waveform only (not connected to output)
+        if (!audioContextRef.current) {
+          const AudioContextClass = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+          if (!AudioContextClass) {
+            console.error('AudioContext not supported');
+            setIsProcessing(false);
+            return;
+          }
+          audioContextRef.current = new AudioContextClass();
         }
+
+        // Fetch audio data
+        const response = await fetch(audioSrc);
+        const arrayBuffer = await response.arrayBuffer();
         
-        // Create new source for new audio element
-        sourceRef.current = audioContextRef.current.createMediaElementSource(audioElement);
-        sourceRef.current.connect(analyserRef.current);
-        analyserRef.current.connect(audioContextRef.current.destination);
-        connectedElementRef.current = audioElement;
+        // Decode audio
+        const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
+        
+        // Extract waveform samples with higher resolution
+        const samples = new Float32Array(width * 2); // 2x resolution for zoom
+        const rawData = audioBuffer.getChannelData(0);
+        const blockSize = Math.floor(rawData.length / (width * 2));
+
+        for (let i = 0; i < width * 2; i++) {
+          const start = i * blockSize;
+          let sum = 0;
+          
+          // Calculate RMS for each block
+          for (let j = 0; j < blockSize; j++) {
+            sum += rawData[start + j] ** 2;
+          }
+          
+          samples[i] = Math.sqrt(sum / blockSize);
+        }
+
+        // Cache and set
+        waveformCacheRef.current.set(audioSrc, samples);
+        setWaveformData(samples);
+        currentElementRef.current = audioElement;
+        setIsProcessing(false);
       } catch (error) {
-        // If element already has a source, we can't create another one
-        // This can happen if the element is reused - just continue using existing connection
-        console.warn('Could not create new audio source (element may already be connected):', error);
+        console.error('Failed to build waveform:', error);
+        setIsProcessing(false);
       }
-    }
+    };
 
+    buildWaveform();
+  }, [audioElement, width]);
+
+  // Draw waveform with playback cursor
+  useEffect(() => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
+
     const ctx = canvas.getContext('2d');
-    const analyser = analyserRef.current;
-
-    if (!ctx || !analyser) return;
-
-    const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
+    if (!ctx) return;
 
     const draw = () => {
-      if (!isPlaying) {
-        // Draw static waveform when not playing
-        ctx.fillStyle = '#0a0a0a';
-        ctx.fillRect(0, 0, width, height);
-        
-        // Draw center line
+      // Clear canvas
+      ctx.fillStyle = '#0a0a0a';
+      ctx.fillRect(0, 0, width, height);
+
+      if (isProcessing) {
+        // Show loading state
+        ctx.fillStyle = '#666';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Processing waveform...', width / 2, height / 2);
+        return;
+      }
+
+      if (!waveformData) {
+        // Show empty state
         ctx.strokeStyle = '#333';
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(0, height / 2);
         ctx.lineTo(width, height / 2);
         ctx.stroke();
-        
         return;
       }
 
-      animationRef.current = requestAnimationFrame(draw);
+      // Get current playback position
+      const currentTime = audioElement?.currentTime || 0;
+      const duration = audioElement?.duration || 0;
+      const progress = duration > 0 ? currentTime / duration : 0;
 
-      analyser.getByteTimeDomainData(dataArray);
+      // Draw full waveform (zoomed 2x with higher detail)
+      const barWidth = width / waveformData.length;
+      const halfHeight = height / 2;
+      const amplitudeScale = 1.8; // Zoom in vertically for better visibility
 
-      // Clear canvas
-      ctx.fillStyle = '#0a0a0a';
-      ctx.fillRect(0, 0, width, height);
+      // Draw waveform bars
+      for (let i = 0; i < waveformData.length; i++) {
+        const x = i * barWidth;
+        const barHeight = Math.min((waveformData[i] * halfHeight) * amplitudeScale, halfHeight * 0.95);
+        const progressPos = progress * waveformData.length;
 
-      // Draw waveform
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = '#4a9eff';
-      ctx.beginPath();
+        // Color based on progress
+        ctx.fillStyle = i < progressPos ? '#4a9eff' : '#444';
 
-      const sliceWidth = width / bufferLength;
-      let x = 0;
-
-      for (let i = 0; i < bufferLength; i++) {
-        const v = dataArray[i] / 128.0;
-        const y = (v * height) / 2;
-
-        if (i === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
-        }
-
-        x += sliceWidth;
+        // Draw bar centered
+        ctx.fillRect(
+          x,
+          halfHeight - barHeight / 2,
+          Math.max(barWidth - 0.5, 1),
+          barHeight
+        );
       }
 
-      ctx.lineTo(width, height / 2);
-      ctx.stroke();
+      // Draw time reference markers every second
+      if (duration > 0) {
+        ctx.font = '10px monospace';
+        ctx.fillStyle = '#666';
+        ctx.textAlign = 'center';
+        
+        const secondsPerMarker = duration > 10 ? 1 : 0.5;
+        for (let t = 0; t <= duration; t += secondsPerMarker) {
+          const x = (t / duration) * width;
+          
+          // Draw tick
+          ctx.strokeStyle = '#444';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, 8);
+          ctx.stroke();
+          
+          // Draw time label every second
+          if (t % 1 === 0) {
+            ctx.fillText(`${t.toFixed(0)}s`, x, height - 4);
+          }
+        }
+      }
 
-      // Draw center line (subtle)
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+      // Draw center line
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(0, height / 2);
-      ctx.lineTo(width, height / 2);
+      ctx.moveTo(0, halfHeight);
+      ctx.lineTo(width, halfHeight);
       ctx.stroke();
+
+      // Draw playback cursor with time display
+      if (progress > 0 && progress < 1) {
+        const cursorX = progress * width;
+        
+        ctx.strokeStyle = '#ff6b35';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(cursorX, 0);
+        ctx.lineTo(cursorX, height - 16);
+        ctx.stroke();
+        
+        // Draw current time
+        ctx.fillStyle = '#ff6b35';
+        ctx.font = 'bold 11px monospace';
+        ctx.textAlign = cursorX > width / 2 ? 'right' : 'left';
+        ctx.fillText(`${currentTime.toFixed(1)}s`, cursorX + (cursorX > width / 2 ? -4 : 4), 12);
+      }
     };
 
+    draw();
+
+    // Redraw during playback
+    let animationId: number | null = null;
     if (isPlaying) {
-      // Resume audio context if suspended
-      if (audioContextRef.current?.state === 'suspended') {
-        audioContextRef.current.resume();
-      }
-      draw();
-    } else {
-      // Draw static state
-      draw();
+      const animate = () => {
+        draw();
+        animationId = requestAnimationFrame(animate);
+      };
+      animate();
     }
 
     return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
+      if (animationId !== null) {
+        cancelAnimationFrame(animationId);
       }
     };
-  }, [audioElement, isPlaying, width, height]);
+  }, [audioElement, waveformData, isProcessing, isPlaying, width, height]);
+
+  // Handle canvas click for seeking
+  const handleCanvasClick = useCallback((event: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!audioElement || !onSeek) return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    // Use actual rendered width, not canvas width
+    const clickProgress = x / rect.width;
+    const seekTime = clickProgress * audioElement.duration;
+
+    if (!isNaN(seekTime) && isFinite(seekTime)) {
+      onSeek(seekTime);
+    }
+  }, [audioElement, onSeek]);
 
   return (
     <canvas
       ref={canvasRef}
       width={width}
       height={height}
+      onClick={handleCanvasClick}
       style={{
         width: '100%',
         height: `${height}px`,
         borderRadius: '4px',
         background: '#0a0a0a',
+        cursor: onSeek && waveformData ? 'pointer' : 'default',
       }}
     />
   );

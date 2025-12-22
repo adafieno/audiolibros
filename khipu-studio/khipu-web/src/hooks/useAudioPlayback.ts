@@ -30,6 +30,10 @@ interface UseAudioPlaybackOptions {
 export function useAudioPlayback({ projectId, processingChain }: UseAudioPlaybackOptions) {
   const [audioCache] = useState(new Map<string, string>());
   const [audioElements] = useState(new Map<string, HTMLAudioElement>());
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const audioSourcesRef = useRef(new Map<string, MediaElementAudioSourceNode>());
+  const [analyserNodes, setAnalyserNodes] = useState(new Map<string, AnalyserNode>());
+  const [splitterNodes, setSplitterNodes] = useState(new Map<string, ChannelSplitterNode>());
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [playingSegmentId, setPlayingSegmentId] = useState<string | null>(null);
@@ -64,18 +68,51 @@ export function useAudioPlayback({ projectId, processingChain }: UseAudioPlaybac
     const segmentId = segment.segment_id || segment.id;
     if (!segmentId) return;
 
-    // Stop if already playing this segment
-    if (isPlaying && playingSegmentId === segmentId) {
-      const audio = audioElements.get(segmentId);
-      if (audio) {
-        audio.pause();
-        audio.currentTime = 0;
-      }
-      setIsPlaying(false);
-      setPlayingSegmentId(null);
-      setCurrentTime(0);
+    // Check if we have an existing audio element for this segment
+    const existingAudio = audioElements.get(segmentId);
+    
+    // If audio exists and is ready, just play/replay it
+    if (existingAudio && existingAudio.src && existingAudio.readyState >= 2) {
+      // Stop any other playing audio
+      audioElements.forEach((audio, id) => {
+        if (id !== segmentId) {
+          audio.pause();
+          audio.currentTime = 0;
+        }
+      });
+      
+      // Cancel any existing animation frame
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+      
+      // Reset to beginning
+      existingAudio.currentTime = 0;
+      setCurrentTime(0);
+      setPlayingSegmentId(segmentId);
+      setIsLoadingAudio(false);
+      
+      // Set duration if available
+      if (existingAudio.duration) {
+        setDuration(existingAudio.duration);
+      }
+      
+      const updateTime = () => {
+        if (existingAudio && !existingAudio.paused && !existingAudio.ended) {
+          setCurrentTime(existingAudio.currentTime);
+          animationFrameRef.current = requestAnimationFrame(updateTime);
+        }
+      };
+      
+      try {
+        setIsPlaying(true);
+        await existingAudio.play();
+        updateTime();
+      } catch (error) {
+        console.error('[AudioPlayback] Failed to play existing audio:', error);
+        setIsPlaying(false);
+        setPlayingSegmentId(null);
       }
       return;
     }
@@ -145,13 +182,50 @@ export function useAudioPlayback({ projectId, processingChain }: UseAudioPlaybac
       let audio = audioElements.get(segmentId);
       if (!audio) {
         audio = new Audio(finalAudioUrl);
-        audio.volume = volumeRef.current; // Apply current volume setting
+        audio.volume = volumeRef.current;
+        audio.load();
+        
+        await new Promise<void>((resolve) => {
+          audio!.onloadedmetadata = () => {
+            console.log('[AudioPlayback] Audio metadata loaded');
+            resolve();
+          };
+        });
+        
+        // Create AudioContext and audio graph BEFORE setting up event handlers
+        if (!audioContextRef.current) {
+          const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+          audioContextRef.current = new AudioContextClass();
+        }
+        
+        if (audioContextRef.current.state === 'suspended') {
+          await audioContextRef.current.resume();
+        }
+        
+        try {
+          const source = audioContextRef.current.createMediaElementSource(audio);
+          const analyser = audioContextRef.current.createAnalyser();
+          analyser.fftSize = 2048;
+          analyser.smoothingTimeConstant = 0.8;
+          
+          source.connect(audioContextRef.current.destination);
+          source.connect(analyser);
+          
+          audioSourcesRef.current.set(segmentId, source);
+          setAnalyserNodes(prev => new Map(prev).set(segmentId, analyser));
+          
+          console.log('[AudioPlayback] Created audio graph for segment:', segmentId);
+        } catch (error) {
+          console.error('[AudioPlayback] Failed to create audio source:', error);
+        }
+        
         audio.onended = () => {
           setIsPlaying(false);
-          setPlayingSegmentId(null);
-          setCurrentTime(0);
+          // Keep playingSegmentId so waveform remains visible
+          setCurrentTime(audio!.duration); // Show at end
           if (animationFrameRef.current) {
             cancelAnimationFrame(animationFrameRef.current);
+            animationFrameRef.current = null;
           }
         };
         audio.onerror = (e) => {
@@ -161,15 +235,29 @@ export function useAudioPlayback({ projectId, processingChain }: UseAudioPlaybac
           setIsLoadingAudio(false);
         };
         audioElements.set(segmentId, audio);
+        
+        // Don't create audio graph yet - wait until after play() starts
       } else {
-        // If processing chain changed, update the audio source
-        audio.src = finalAudioUrl;
-        audio.volume = volumeRef.current; // Ensure volume is applied
+        // Only update source if URL has actually changed
+        if (audio.src !== finalAudioUrl) {
+          console.log('[AudioPlayback] Audio URL changed, updating source');
+          audio.src = finalAudioUrl;
+          audio.volume = volumeRef.current;
+          audio.load();
+        } else {
+          console.log('[AudioPlayback] Reusing existing audio element with same URL');
+          audio.volume = volumeRef.current; // Still update volume
+        }
       }
 
       audio.onloadedmetadata = () => {
         setDuration(audio.duration);
       };
+
+      // If metadata is already loaded, set duration immediately
+      if (audio.readyState >= 1 && audio.duration) {
+        setDuration(audio.duration);
+      }
 
       // Update current time during playback
       const updateTime = () => {
@@ -212,12 +300,32 @@ export function useAudioPlayback({ projectId, processingChain }: UseAudioPlaybac
   const seek = useCallback((time: number) => {
     if (playingSegmentId) {
       const audio = audioElements.get(playingSegmentId);
-      if (audio) {
+      if (audio && audio.readyState >= 2) {
         audio.currentTime = time;
         setCurrentTime(time);
+        // If audio was paused, resume playback after seek
+        if (audio.paused && !isPlaying) {
+          setIsPlaying(true);
+          audio.play().catch(err => {
+            console.error('Failed to resume after seek:', err);
+            setIsPlaying(false);
+          });
+          
+          // Restart animation frame for time updates
+          if (animationFrameRef.current) {
+            cancelAnimationFrame(animationFrameRef.current);
+          }
+          const updateTime = () => {
+            if (audio && !audio.paused && !audio.ended) {
+              setCurrentTime(audio.currentTime);
+              animationFrameRef.current = requestAnimationFrame(updateTime);
+            }
+          };
+          updateTime();
+        }
       }
     }
-  }, [playingSegmentId, audioElements]);
+  }, [playingSegmentId, audioElements, isPlaying]);
 
   const setVolume = useCallback((vol: number) => {
     volumeRef.current = vol; // Update ref immediately
@@ -259,5 +367,8 @@ export function useAudioPlayback({ projectId, processingChain }: UseAudioPlaybac
     setVolume,
     clearCache,
     currentAudioElement: playingSegmentId ? audioElements.get(playingSegmentId) : null,
+    currentAnalyser: playingSegmentId ? analyserNodes.get(playingSegmentId) : null,
+    currentSplitter: playingSegmentId ? splitterNodes.get(playingSegmentId) : null,
+    audioContext: audioContextRef.current,
   };
 }

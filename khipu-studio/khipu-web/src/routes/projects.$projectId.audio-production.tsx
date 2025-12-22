@@ -29,12 +29,18 @@ export const Route = createFileRoute('/projects/$projectId/audio-production')({
  */
 function VUMetersSection({ 
   audioElement, 
-  isPlaying 
+  isPlaying,
+  analyser,
+  splitter,
+  audioContext,
 }: { 
   audioElement: HTMLAudioElement | null; 
   isPlaying: boolean;
+  analyser?: AnalyserNode | null;
+  splitter?: ChannelSplitterNode | null;
+  audioContext?: AudioContext | null;
 }) {
-  const { leftDbfs, rightDbfs } = useAudioLevelAnalysis(audioElement, isPlaying);
+  const { leftDbfs, rightDbfs } = useAudioLevelAnalysis(audioElement, isPlaying, analyser, splitter, audioContext);
 
   return (
     <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
@@ -102,9 +108,10 @@ function AudioProductionPage() {
     playingSegmentId,
     clearCache,
     currentAudioElement,
+    currentAnalyser,
+    currentSplitter,
+    audioContext,
   } = useAudioPlayback({ projectId, processingChain });
-  
-  console.log('[AudioProduction] Render - processingChain:', processingChain);
   
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
   const [customMode, setCustomMode] = useState(false);
@@ -770,6 +777,9 @@ function AudioProductionPage() {
               <VUMetersSection 
                 audioElement={currentAudioElement || null}
                 isPlaying={isPlaying}
+                analyser={currentAnalyser}
+                splitter={currentSplitter}
+                audioContext={audioContext}
               />
             </div>
           </div>
@@ -979,7 +989,9 @@ function AudioProductionPage() {
                       minWidth: '100px',
                       height: '4px',
                       borderRadius: '2px',
-                      background: playingSegmentId ? `linear-gradient(to right, #4a9eff ${(currentTime / duration) * 100}%, #333 ${(currentTime / duration) * 100}%)` : '#222',
+                      background: playingSegmentId && duration > 0 
+                        ? `linear-gradient(to right, #4a9eff ${Math.min((currentTime / duration) * 100, 100)}%, #333 ${Math.min((currentTime / duration) * 100, 100)}%)` 
+                        : '#222',
                       outline: 'none',
                       cursor: playingSegmentId ? 'pointer' : 'not-allowed',
                       opacity: playingSegmentId ? 1 : 0.3,
@@ -994,6 +1006,7 @@ function AudioProductionPage() {
                     isPlaying={!!playingSegmentId}
                     width={800}
                     height={80}
+                    onSeek={seek}
                   />
                 </div>
               </>
