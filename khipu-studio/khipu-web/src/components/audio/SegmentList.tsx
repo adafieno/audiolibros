@@ -4,6 +4,7 @@
  * Displays list of audio segments with playback controls and status indicators.
  */
 
+import { Fragment } from 'react';
 import { MiniWaveform } from '../Waveform';
 import type { Segment } from '../../types/audio-production';
 
@@ -158,9 +159,8 @@ export function SegmentList({
               const statusLabel = getStatusLabel(segment.status);
 
               return (
-                <>
+                <Fragment key={segment.id}>
                   <tr
-                    key={segment.id}
                     onClick={() => !disabled && onSegmentSelect(segment.id)}
                     style={{
                       background: isSelected ? 'rgba(74, 158, 255, 0.15)' : 'transparent',
@@ -348,7 +348,7 @@ export function SegmentList({
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               );
             })}
           </tbody>

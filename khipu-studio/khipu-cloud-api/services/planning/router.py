@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import attributes
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 import json
 from shared.db.database import get_db
@@ -141,7 +141,7 @@ async def update_plan(
     plan.is_complete = all_assigned
     
     if all_assigned and not previous_is_complete:
-        plan.completed_at = datetime.utcnow()
+        plan.completed_at = datetime.now(timezone.utc)
         logger.info(f"✅ Chapter plan {plan.id} marked as complete via manual update")
     elif not all_assigned and previous_is_complete:
         plan.completed_at = None
@@ -320,7 +320,7 @@ async def assign_characters_stream(
             plan.is_complete = all_assigned
             
             if all_assigned and not previous_is_complete:
-                plan.completed_at = datetime.utcnow()
+                plan.completed_at = datetime.now(timezone.utc)
                 logger.info(f"✅ Chapter plan marked as complete - all {len(updated_segments)} segments have voice assignments")
             
             # Update plan

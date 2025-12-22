@@ -3,7 +3,7 @@ import logging
 import hashlib
 import json
 from typing import Optional, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 from uuid import UUID
@@ -105,7 +105,7 @@ class AudioCacheService:
                 return None
             
             # Check if expired
-            if cache_entry.expires_at and cache_entry.expires_at < datetime.utcnow():
+            if cache_entry.expires_at and cache_entry.expires_at < datetime.now(timezone.utc):
                 logger.info(f"L2 cache expired: {cache_key[:16]}...")
                 # Delete expired entry
                 await self._delete_cache_entry(db, cache_entry)
@@ -127,7 +127,7 @@ class AudioCacheService:
                 .where(AudioCache.id == cache_entry.id)
                 .values(
                     hit_count=AudioCache.hit_count + 1,
-                    last_accessed_at=datetime.utcnow()
+                    last_accessed_at=datetime.now(timezone.utc)
                 )
             )
             await db.commit()
@@ -249,7 +249,7 @@ class AudioCacheService:
             # Find expired entries
             result = await db.execute(
                 select(AudioCache).where(
-                    AudioCache.expires_at < datetime.utcnow()
+                    AudioCache.expires_at < datetime.now(timezone.utc)
                 )
             )
             expired_entries = result.scalars().all()

@@ -26,7 +26,7 @@ from .schemas import (
     AudioSegmentData
 )
 from shared.schemas.audio_presets import AudioPresetCreate, AudioPresetResponse
-from shared.services.audio_cache import get_audio_cache_service
+from shared.services.audio_cache import AudioCacheService
 from shared.services.blob_storage import BlobStorageService, get_blob_storage_service
 from services.voices.azure_tts import generate_audio
 
@@ -815,24 +815,16 @@ async def get_chapter_audio_production_data(
     # Build response with real plan segments
     segments = []
     
-    # Add plan segments from the orchestration
-    # Handle both dict with 'segments' key and direct array
-    if isinstance(plan.segments, dict):
-        plan_segments = plan.segments.get('segments', [])
-    elif isinstance(plan.segments, list):
-        plan_segments = plan.segments
-    else:
-        plan_segments = []
+    # Use normalized segments from the segments table (proper UUID relationships)
+    # This replaces the old JSONB segments approach
+    plan_segments = plan.normalized_segments if plan.normalized_segments else []
     
-    for idx, seg in enumerate(plan_segments):
-        # Use the existing UUID from orchestration
-        segment_id = seg.get('id')
-        if not segment_id:
-            # Fallback if no ID exists (shouldn't happen with orchestration data)
-            segment_id = f"seg_{chapter.id}_{idx}"
+    for idx, segment_model in enumerate(plan_segments):
+        # segment_model is now a Segment ORM instance with proper UUIDs
+        segment_id = str(segment_model.id)
         
-        # Get metadata using the segment ID
-        metadata = metadata_dict.get(str(segment_id))
+        # Get metadata using the segment UUID (proper FK relationship)
+        metadata = metadata_dict.get(segment_id)
         
         # Determine if audio exists and get URL from cache
         has_audio = metadata is not None and metadata.raw_audio_cache_key is not None
@@ -858,25 +850,92 @@ async def get_chapter_audio_production_data(
                     metadata.duration_seconds = duration
                     await db.commit()
         
+        # FALLBACK: If no metadata, compute cache_key directly and check cache
+        if not has_audio and not duration:
+            text = segment_model.text
+            character_name = segment_model.voice  # Character name from orchestration
+            
+            logger.info(f"🔍 FALLBACK CHECK: segment={segment_id}, has_audio={has_audio}, duration={duration}, char={character_name}, has_text={bool(text)}")
+            
+            if text and character_name:
+                try:
+                    # Look up the Azure voice ID for this character in project settings
+                    azure_voice_id = None
+                    voice_settings = None
+                    
+                    if project.settings and "characters" in project.settings:
+                        # Characters is an array, not a dict - iterate to find by name
+                        characters_list = project.settings["characters"]
+                        logger.info(f"🔍 Characters list type: {type(characters_list)}, is_list={isinstance(characters_list, list)}")
+                        if isinstance(characters_list, list):
+                            for char_data in characters_list:
+                                if char_data.get("name") == character_name:
+                                    voice_assignment = char_data.get("voiceAssignment", {})
+                                    azure_voice_id = voice_assignment.get("voiceId")
+                                    
+                                    # Extract voice settings (prosody) - match database column names
+                                    voice_settings = {
+                                        "style": voice_assignment.get("style"),
+                                        "style_degree": voice_assignment.get("styledegree"),  # Note: DB uses style_degree
+                                        "rate_pct": voice_assignment.get("rate_pct"),
+                                        "pitch_pct": voice_assignment.get("pitch_pct")
+                                    }
+                                    logger.info(f"✅ Found character: {character_name} → {azure_voice_id}")
+                                    break
+                    
+                    if not azure_voice_id:
+                        # Log warning but don't break the loop
+                        logger.warning(f"❌ No Azure voice ID found for character '{character_name}' in segment {segment_id}")
+                    else:
+                        # Compute cache_key using Azure voice ID (not character name)
+                        computed_cache_key = AudioCacheService.generate_cache_key(
+                            text=text,
+                            voice_id=azure_voice_id,  # Use Azure voice ID, not character name
+                            voice_settings=voice_settings
+                        )
+                        
+                        logger.info(f"🔑 Computed cache_key: {computed_cache_key[:32]}... for {azure_voice_id}")
+                        
+                        # Query audio_cache directly
+                        cache_result = await db.execute(
+                            select(AudioCache).where(
+                                and_(
+                                    AudioCache.cache_key == computed_cache_key,
+                                    AudioCache.tenant_id == current_user.tenant_id
+                                )
+                            )
+                        )
+                        cache_entry = cache_result.scalar_one_or_none()
+                        
+                        if cache_entry:
+                            logger.info(f"✨ FALLBACK: Found cached audio for segment {segment_id} (character: {character_name} → {azure_voice_id}, duration: {cache_entry.audio_duration_seconds}s)")
+                            has_audio = True
+                            duration = cache_entry.audio_duration_seconds
+                            if cache_entry.audio_blob_path:
+                                raw_audio_url = blob_service.get_blob_url(cache_entry.audio_blob_path)
+                        else:
+                            logger.warning(f"❌ Cache MISS for computed key: {computed_cache_key[:32]}...")
+                except Exception as e:
+                    logger.warning(f"Fallback cache lookup failed for segment {segment_id}: {e}")
+        
         # Use orchestration order multiplied by 100 to leave room for SFX insertions
         # SFX can be inserted at positions like: 50, 150, 250 (between segments 0, 100, 200)
-        base_order = seg.get('order', idx) * 100
+        base_order = segment_model.order_index * 100
         
-        # Get needs_revision from either metadata OR from orchestration plan
-        # Orchestration stores it as 'needsRevision', audio production stores in metadata as 'needs_revision'
+        # Get needs_revision from either metadata OR from segment model
         needs_revision = False
         if metadata and metadata.needs_revision:
             needs_revision = True
-        elif seg.get('needsRevision', False):
+        elif segment_model.needs_revision:
             needs_revision = True
         
         segments.append(AudioSegmentData(
-            segment_id=str(segment_id),
+            segment_id=segment_id,
             type="plan",
             display_order=base_order,
-            text=seg.get('text', ''),
-            voice=seg.get('voice', ''),
-            character_name=seg.get('voice', ''),  # voice field contains character name from orchestration
+            text=segment_model.text,
+            voice=segment_model.voice or '',
+            character_name=segment_model.voice or '',  # voice field contains character name
             raw_audio_url=raw_audio_url,
             has_audio=has_audio,
             processing_chain=metadata.processing_chain if metadata else None,

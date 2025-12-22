@@ -63,7 +63,7 @@ function VUMetersSection({
 }
 
 function AudioProductionPage() {
-  console.log('[AudioProduction] ===== PAGE COMPONENT RENDERING =====');
+
   const { projectId } = Route.useParams();
   
   // Chapter selection state
@@ -181,42 +181,42 @@ function AudioProductionPage() {
 
   // Apply processing chain when preset changes (from segment selection)
   useEffect(() => {
-    console.log('[AudioProduction] Processing chain sync effect triggered - selectedPresetId:', selectedPresetId, 'customMode:', customMode, 'selectedSegmentId:', selectedSegmentId);
+
     
     if (selectedPresetId && !customMode) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const preset = AUDIO_PRESETS.find((p: any) => p.id === selectedPresetId);
       if (preset) {
-        console.log('[AudioProduction] ✓ Auto-applying preset from segment:', selectedPresetId);
-        console.log('[AudioProduction] ✓ Processing chain:', JSON.stringify(preset.processingChain, null, 2));
+
+
         setTimeout(() => {
           setProcessingChain(preset.processingChain);
         }, 0);
       } else {
-        console.warn('[AudioProduction] ✗ Preset not found:', selectedPresetId);
+
       }
     } else if (customMode) {
       // When in custom mode, load the segment's custom processing chain
       const segment = segments.find(s => s.segment_id === selectedSegmentId);
       if (segment?.processing_chain) {
-        console.log('[AudioProduction] ✓ Auto-applying custom chain from segment');
-        console.log('[AudioProduction] ✓ Custom chain:', JSON.stringify(segment.processing_chain, null, 2));
+
+
         setTimeout(() => {
           setProcessingChain(segment.processing_chain || null);
         }, 0);
       } else {
-        console.log('[AudioProduction] ℹ No custom chain found for segment, using default');
+
       }
     } else {
-      console.log('[AudioProduction] ℹ No preset selected or waiting for segment selection');
+
     }
   }, [selectedPresetId, customMode, selectedSegmentId, segments]);
 
   // Handle preset selection
   const handlePresetSelect = useCallback(async (presetId: string) => {
-    console.log('[AudioProduction] ====== PRESET SELECTION ======');
-    console.log('[AudioProduction] User clicked preset:', presetId);
-    console.log('[AudioProduction] Current segment:', selectedSegmentId);
+
+
+
     
     // Check built-in presets first
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -236,8 +236,8 @@ function AudioProductionPage() {
     }
     
     if (preset && selectedSegmentId) {
-      console.log('[AudioProduction] ✓ Preset found:', preset.name);
-      console.log('[AudioProduction] ✓ Processing chain:', JSON.stringify(preset.processingChain, null, 2));
+
+
       
       setSelectedPresetId(presetId);
       setCustomMode(false);
@@ -246,20 +246,20 @@ function AudioProductionPage() {
       // Clear cached audio so it re-processes with new preset
       clearCache(selectedSegmentId);
       
-      console.log('[AudioProduction] ✓ State updated - preset will be applied via useEffect');
+
       
       // Save to backend
       try {
         await updateProcessingChain(selectedSegmentId, preset.processingChain, presetId);
-        console.log('[AudioProduction] ✓ Preset saved to backend');
+
       } catch (error) {
-        console.error('[AudioProduction] ✗ Failed to save preset:', error);
+
       }
     } else {
       if (!preset) console.error('[AudioProduction] ✗ Preset not found:', presetId);
       if (!selectedSegmentId) console.error('[AudioProduction] ✗ No segment selected');
     }
-    console.log('[AudioProduction] ==============================');
+
   }, [selectedSegmentId, updateProcessingChain, clearCache, customPresets]);
 
   // Handle custom mode toggle
@@ -397,9 +397,9 @@ function AudioProductionPage() {
 
   // Handle processing chain changes
   const handleProcessingChainChange = useCallback((chain: AudioProcessingChain) => {
-    console.log('[AudioProduction] ====== CUSTOM CHAIN CHANGE ======');
-    console.log('[AudioProduction] User modified processing chain');
-    console.log('[AudioProduction] New chain:', JSON.stringify(chain, null, 2));
+
+
+
     
     setProcessingChain(chain);
     
@@ -413,14 +413,14 @@ function AudioProductionPage() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const selectedPreset = AUDIO_PRESETS.find((p: any) => p.id === selectedPresetId);
       if (selectedPreset && JSON.stringify(selectedPreset.processingChain) !== JSON.stringify(chain)) {
-        console.log('[AudioProduction] ✓ Chain diverged from preset - switching to custom mode');
+
         setCustomMode(true);
         setSelectedPresetId('');
       }
     }
     
-    console.log('[AudioProduction] ✓ Custom chain applied to player');
-    console.log('[AudioProduction] ==================================');
+
+
   }, [customMode, selectedPresetId, selectedSegmentId, clearCache]);
 
   // Handle segment selection
@@ -465,7 +465,7 @@ function AudioProductionPage() {
     const character = characters?.find(c => c.name === segment.character_name);
     const voiceId = character?.voiceAssignment?.voiceId || 'es-MX-DaliaNeural';
     
-    console.log('[AudioProduction] Playing segment:', segment.segment_id, 'character:', segment.character_name, 'voice:', voiceId);
+
     
     await playSegment({
       segment_id: segment.segment_id,
@@ -508,19 +508,19 @@ function AudioProductionPage() {
   // Handle player controls
   // Handle toggle revision flag
   const handleToggleRevision = useCallback(async (segmentId: string) => {
-    console.log('[AUDIO PRODUCTION] Toggle revision called for segment:', segmentId);
+
     try {
       const segment = segments.find(s => s.segment_id === segmentId);
-      console.log('[AUDIO PRODUCTION] Current segment:', segment);
-      console.log('[AUDIO PRODUCTION] Current needs_revision:', segment?.needs_revision);
-      console.log('[AUDIO PRODUCTION] New needs_revision:', !segment?.needs_revision);
+
+
+
       
       await toggleRevisionMark(segmentId, !segment?.needs_revision);
-      console.log('[AUDIO PRODUCTION] Toggle successful, refetching...');
+
       
       // Refetch to ensure we have the latest data
       await loadChapterData();
-      console.log('[AUDIO PRODUCTION] Refetch complete');
+
     } catch (error) {
       console.error('[AUDIO PRODUCTION] Toggle revision failed:', error);
       // Error is handled by hook
@@ -1109,7 +1109,7 @@ function AudioProductionPage() {
                     needs_revision: seg.needs_revision,
                     type: seg.type,  // Include segment type
                   };
-                  console.log('[AUDIO PRODUCTION] Mapping segment:', seg.segment_id, 'needs_revision:', seg.needs_revision, '→', mapped.needs_revision);
+
                   return mapped;
                 })}
                 selectedSegmentId={selectedSegmentId}

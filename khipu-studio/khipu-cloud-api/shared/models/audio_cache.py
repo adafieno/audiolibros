@@ -1,5 +1,5 @@
 """Audio cache model for TTS auditions with Azure Blob Storage."""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
 from typing import Optional
 from sqlalchemy import String, Integer, Text, ForeignKey, DateTime, BigInteger, Index, JSON
@@ -74,7 +74,7 @@ class AudioCache(Base):
     @classmethod
     def default_expiration(cls) -> datetime:
         """Default expiration time: 30 days from now."""
-        return datetime.utcnow() + timedelta(days=30)
+        return datetime.now(timezone.utc) + timedelta(days=30)
 
 
 # Create indexes for efficient querying

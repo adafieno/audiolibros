@@ -262,13 +262,13 @@ async def update_project(
         
         # Set completed_at timestamp when marking as completed
         if new_status == 'completed' and current_status != 'completed':
-            from datetime import datetime
-            project.completed_at = datetime.utcnow()
+            from datetime import datetime, timezone
+            project.completed_at = datetime.now(timezone.utc)
     
     # Handle archiving
     if 'status' in update_data and update_data['status'] == 'archived':
-        from datetime import datetime
-        project.archived_at = datetime.utcnow()
+        from datetime import datetime, timezone
+        project.archived_at = datetime.now(timezone.utc)
         update_data.pop('status')  # Don't update status field, use archived_at instead
     
     # Auto-transition to 'in_progress' if currently 'draft' and any field is being updated
@@ -431,8 +431,8 @@ async def delete_project(
     await require_project_permission(current_user, project, Permission.DELETE, db)
     
     # Soft delete by setting archived_at
-    from datetime import datetime
-    project.archived_at = datetime.utcnow()
+    from datetime import datetime, timezone
+    project.archived_at = datetime.now(timezone.utc)
     
     await db.commit()
     

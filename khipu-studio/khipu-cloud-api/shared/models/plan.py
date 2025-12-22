@@ -11,6 +11,7 @@ from shared.db.database import Base
 if TYPE_CHECKING:
     from shared.models import Project
     from shared.models.chapter import Chapter
+    from shared.models.segment import Segment
 
 
 class ChapterPlan(Base):
@@ -39,6 +40,12 @@ class ChapterPlan(Base):
     # Relationships
     project: Mapped["Project"] = relationship("Project", back_populates="chapter_plans")
     chapter: Mapped["Chapter"] = relationship("Chapter", back_populates="plan", uselist=False)
+    normalized_segments: Mapped[list["Segment"]] = relationship(
+        "Segment", 
+        back_populates="chapter_plan",
+        order_by="Segment.order_index",
+        cascade="all, delete-orphan"
+    )
     
     def __repr__(self):
         return f"<ChapterPlan for Chapter {self.chapter_id}>"

@@ -10,6 +10,7 @@ import uuid
 from shared.db.database import Base
 from .chapter import Chapter
 from .plan import ChapterPlan
+from .segment import Segment
 from .action_history import ActionHistory
 from .audio_cache import AudioCache
 from .audio_segment_metadata import AudioSegmentMetadata

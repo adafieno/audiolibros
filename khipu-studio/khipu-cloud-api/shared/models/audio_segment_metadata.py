@@ -1,12 +1,15 @@
 """Audio segment metadata model for audio production module."""
 from datetime import datetime
 from uuid import UUID
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from sqlalchemy import String, Boolean, Text, Float, ForeignKey, DateTime, Index, JSON
 from sqlalchemy.sql import func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from shared.db.database import Base
+
+if TYPE_CHECKING:
+    from shared.models.segment import Segment
 
 
 class AudioSegmentMetadata(Base):
@@ -29,9 +32,17 @@ class AudioSegmentMetadata(Base):
         index=True
     )
     
-    # Chapter and segment identification
-    chapter_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
-    segment_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    # Chapter and segment identification - now proper UUID FKs
+    chapter_id: Mapped[UUID] = mapped_column(
+        ForeignKey("chapters.id", ondelete="CASCADE"),
+        nullable=False, 
+        index=True
+    )
+    segment_id: Mapped[UUID] = mapped_column(
+        ForeignKey("segments.id", ondelete="CASCADE"),
+        nullable=False, 
+        index=True
+    )
     
     # Preset identification
     preset_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
@@ -59,6 +70,9 @@ class AudioSegmentMetadata(Base):
         onupdate=func.now(),
         nullable=False
     )
+    
+    # Relationships
+    segment: Mapped["Segment"] = relationship("Segment", back_populates="audio_metadata")
     
     # Unique constraint: one metadata entry per segment per chapter per project
     __table_args__ = (
