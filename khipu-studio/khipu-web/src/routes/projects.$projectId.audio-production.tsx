@@ -91,6 +91,8 @@ function AudioProductionPage() {
     loadChapterData,
     toggleRevisionMark,
     updateProcessingChain,
+    uploadSfx,
+    deleteSfxSegment,
   } = useAudioProduction(projectId, chapterOrder, selectedChapterId);
 
   // Processing chain state
@@ -375,6 +377,24 @@ function AudioProductionPage() {
     }
   }, [projectId]);
 
+  // Handle delete SFX segment
+  const handleDeleteSfx = useCallback(async (segmentId: string) => {
+    if (!confirm('Are you sure you want to delete this sound effect?')) return;
+    
+    try {
+      await deleteSfxSegment(segmentId);
+      await loadChapterData();
+      
+      // Clear selection if deleted segment was selected
+      if (selectedSegmentId === segmentId) {
+        setSelectedSegmentId(null);
+      }
+    } catch (error) {
+      console.error('Failed to delete SFX:', error);
+      alert('Failed to delete sound effect. Please try again.');
+    }
+  }, [deleteSfxSegment, loadChapterData, selectedSegmentId]);
+
   // Handle processing chain changes
   const handleProcessingChainChange = useCallback((chain: AudioProcessingChain) => {
     console.log('[AudioProduction] ====== CUSTOM CHAIN CHANGE ======');
@@ -455,7 +475,10 @@ function AudioProductionPage() {
       text: segment.text || '',
       voice: voiceId,
     }, voiceId);
-  }, [selectedSegmentId, isPlaying, playingSegmentId, segments, characters, playSegment, stopPlayback]);
+    
+    // Reload chapter data to get updated duration
+    await loadChapterData();
+  }, [selectedSegmentId, isPlaying, playingSegmentId, segments, characters, playSegment, stopPlayback, loadChapterData]);
 
   // Auto-select first segment when segments load
   useEffect(() => {
@@ -510,21 +533,61 @@ function AudioProductionPage() {
   }, []);
 
   // Handle SFX file selection
-  const handleSfxFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSfxFileSelect = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // TODO: Validate file (audio format, duration)
-    // TODO: Upload to blob storage
-    // TODO: Create SFX segment
-    console.log('Selected SFX file:', file.name);
-    
-    // For now, just close dialog
-    setShowSfxDialog(false);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+    // Validate file format
+    const validFormats = ['audio/wav', 'audio/wave', 'audio/x-wav', 'audio/mpeg', 'audio/mp3'];
+    if (!validFormats.includes(file.type)) {
+      alert('Invalid file format. Please select a WAV or MP3 file.');
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
     }
-  }, []);
+
+    try {
+      if (!selectedSegmentId) {
+        alert('Please select a segment first to insert the sound effect before it.');
+        return;
+      }
+
+      // Find the selected segment to insert before it
+      const selectedSegment = segments.find(s => s.segment_id === selectedSegmentId);
+      if (!selectedSegment) {
+        alert('Selected segment not found.');
+        return;
+      }
+
+      // Use the selected segment's display order as the target position
+      // Backend will handle inserting before this position and reordering
+      const displayOrder = Math.floor(selectedSegment.display_order);
+      
+      console.log('[SFX Upload] Inserting SFX before segment:', selectedSegmentId, 'at position:', displayOrder);
+      await uploadSfx(file, displayOrder);
+      
+      // Reload data to reflect new segment and reordering
+      await loadChapterData();
+      
+      setShowSfxDialog(false);
+    } catch (error) {
+      console.error('Failed to upload SFX:', error);
+      let errorMessage = 'Failed to upload sound effect. Please try again.';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null) {
+        errorMessage = JSON.stringify(error);
+      }
+      
+      alert(errorMessage);
+    } finally {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  }, [selectedSegmentId, segments, uploadSfx, loadChapterData]);
 
   // Show loading indicator - AFTER all hooks are defined
   if (loading && segments.length === 0) {
@@ -1044,6 +1107,7 @@ function AudioProductionPage() {
                     duration: seg.duration || null,
                     revision_notes: null,
                     needs_revision: seg.needs_revision,
+                    type: seg.type,  // Include segment type
                   };
                   console.log('[AUDIO PRODUCTION] Mapping segment:', seg.segment_id, 'needs_revision:', seg.needs_revision, '→', mapped.needs_revision);
                   return mapped;
@@ -1052,6 +1116,7 @@ function AudioProductionPage() {
                 onSegmentSelect={handleSegmentSelect}
 
                 onToggleRevision={handleToggleRevision}
+                onDeleteSfx={handleDeleteSfx}
                 playingSegmentId={playingSegmentId}
               />
             </div>
@@ -1325,16 +1390,34 @@ function AudioProductionPage() {
             </h3>
             
             <p style={{ margin: '0 0 24px 0', fontSize: '13px', color: '#999' }}>
-              Select an audio file to insert as a sound effect. Supported formats: WAV, MP3, OGG
+              Select an audio file to insert as a sound effect. Supported formats: WAV, MP3
             </p>
 
             <input
               ref={fileInputRef}
               type="file"
-              accept="audio/*"
+              accept=".wav,.mp3,audio/wav,audio/mpeg"
               onChange={handleSfxFileSelect}
               style={{ display: 'none' }}
             />
+
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              style={{
+                padding: '12px 24px',
+                background: '#4a9eff',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '6px',
+                fontSize: '14px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                marginBottom: '24px',
+                width: '100%',
+              }}
+            >
+              Choose Audio File
+            </button>
 
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               <button

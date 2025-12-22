@@ -27,6 +27,7 @@ export function useAudioProduction(projectId: string, chapterId: string, chapter
       setError(null);
       
       const data = await audioProductionApi.getChapterAudioProduction(projectId, chapterId);
+      console.log('[useAudioProduction] Loaded segments:', data.segments.slice(0, 3).map(s => ({id: s.segment_id, duration: s.duration, has_audio: s.has_audio})));
       setSegments(data.segments);
       
     } catch (err) {

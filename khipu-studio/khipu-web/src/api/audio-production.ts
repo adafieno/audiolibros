@@ -197,8 +197,15 @@ export const audioProductionApi = {
     );
     
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: 'Failed to upload SFX' }));
-      throw new Error(error.detail || 'Failed to upload SFX');
+      const errorText = await response.text();
+      let errorDetail = 'Failed to upload SFX';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetail = errorJson.detail || errorJson.message || errorText;
+      } catch {
+        errorDetail = errorText || `HTTP ${response.status}`;
+      }
+      throw new Error(errorDetail);
     }
     
     return response.json();

@@ -271,19 +271,7 @@ export function Waveform({
         />
       )}
 
-      {!audioData && !isLoading && !isProcessing && (
-        <div style={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#666',
-          fontSize: '12px',
-        }}>
-          <span>No audio data</span>
-        </div>
-      )}
+      {/* Removed "No audio data" message as it's not needed */}
     </div>
   );
 }

@@ -6,9 +6,12 @@ from sqlalchemy.orm.attributes import flag_modified
 from uuid import UUID
 import logging
 from typing import Optional
+import io
+import wave
+import struct
 
 from shared.db.database import get_db
-from shared.models import User, Project, AudioSegmentMetadata, SfxSegment, ChapterPlan, AudioPreset
+from shared.models import User, Project, AudioSegmentMetadata, SfxSegment, ChapterPlan, AudioPreset, AudioCache
 from shared.auth import get_current_active_user
 from shared.config import get_settings, Settings
 from .schemas import (
@@ -28,6 +31,24 @@ from shared.services.blob_storage import BlobStorageService, get_blob_storage_se
 from services.voices.azure_tts import generate_audio
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
+
+
+def get_audio_duration(audio_bytes: bytes) -> Optional[float]:
+    """
+    Extract duration from WAV audio data.
+    Azure TTS returns WAV format.
+    """
+    try:
+        with io.BytesIO(audio_bytes) as audio_file:
+            with wave.open(audio_file, 'rb') as wav:
+                frames = wav.getnframes()
+                rate = wav.getframerate()
+                duration = frames / float(rate)
+                return duration
+    except Exception as e:
+        logger.warning(f"Failed to extract audio duration: {e}")
+        return None
 logger = logging.getLogger(__name__)
 
 
@@ -124,24 +145,50 @@ async def generate_segment_audio(
                 voice_settings=voice_settings
             )
             
-            # Get audio URL from blob service
-            audio_url = blob_service.get_blob_url(cached_audio["blob_path"])
+            # Query AudioCache table to get metadata (cached_audio is just bytes)
+            cache_result = await db.execute(
+                select(AudioCache).where(
+                    and_(
+                        AudioCache.cache_key == cache_key,
+                        AudioCache.tenant_id == current_user.tenant_id
+                    )
+                )
+            )
+            cache_entry = cache_result.scalar_one_or_none()
             
-            # Update or create segment metadata
+            if not cache_entry:
+                logger.error(f"❌ Cache entry not found for key {cache_key}")
+                raise HTTPException(status_code=500, detail="Cache inconsistency")
+            
+            # Get audio URL from blob service
+            audio_url = blob_service.get_blob_url(cache_entry.audio_blob_path)
+            
+            # Get duration from cache entry, or extract it if missing
+            duration = cache_entry.audio_duration_seconds
+            if duration is None:
+                logger.info(f"📏 Extracting duration from cached audio for segment {segment_id}")
+                duration = get_audio_duration(cached_audio)  # cached_audio is bytes
+                if duration:
+                    logger.info(f"✓ Extracted duration: {duration:.2f}s")
+                    # Update cache entry with duration
+                    cache_entry.audio_duration_seconds = duration
+                    await db.commit()
+            
+            # Update or create segment metadata with duration
             await _update_segment_metadata(
                 db=db,
                 project_id=project_id,
                 chapter_id=chapter_id,
                 segment_id=segment_id,
                 cache_key=cache_key,
-                duration=cached_audio.get("duration")
+                duration=duration
             )
             
             return SegmentAudioResponse(
                 success=True,
                 raw_audio_url=audio_url,
                 cache_status="HIT",
-                duration=cached_audio.get("duration")
+                duration=duration
             )
         
         # Cache miss - generate new audio
@@ -179,10 +226,17 @@ async def generate_segment_audio(
         
         logger.info(f"💾 Stored audio in cache for segment {segment_id}")
         
+        # Extract duration from audio
+        audio_duration = get_audio_duration(audio_bytes)
+        if audio_duration:
+            logger.info(f"📏 Audio duration: {audio_duration:.2f}s")
+        else:
+            logger.warning("⚠️ Could not determine audio duration")
+        
         # Get audio URL
         audio_url = blob_service.get_blob_url(cache_result["blob_path"])
         
-        # Update or create segment metadata
+        # Update or create segment metadata with duration
         cache_key = audio_cache_service.generate_cache_key(
             text=request.text,
             voice_id=request.voice,
@@ -195,7 +249,7 @@ async def generate_segment_audio(
             chapter_id=chapter_id,
             segment_id=segment_id,
             cache_key=cache_key,
-            duration=None
+            duration=audio_duration
         )
         
         return SegmentAudioResponse(
@@ -408,6 +462,7 @@ async def upload_sfx(
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
+    settings: Settings = Depends(get_settings),
 ):
     """
     Upload a sound effect (SFX) file.
@@ -440,8 +495,35 @@ async def upload_sfx(
     logger.info(f"🎵 Uploading SFX file: {file.filename} ({file_size} bytes)")
     
     try:
-        # Get blob storage service
-        blob_service = get_blob_storage_service()
+        # Get project to access storage configuration
+        result = await db.execute(
+            select(Project).where(
+                and_(
+                    Project.id == project_id,
+                    Project.tenant_id == current_user.tenant_id
+                )
+            )
+        )
+        project = result.scalar_one_or_none()
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+        
+        # Setup blob storage with project-specific credentials
+        storage_config = project.settings.get("creds", {}).get("storage", {}).get("azure", {})
+        
+        blob_service = None
+        if storage_config.get("accountName") and storage_config.get("accessKey"):
+            account_name = storage_config["accountName"]
+            access_key = storage_config["accessKey"]
+            container_name = storage_config.get("containerName", "audios")
+            
+            connection_string = f"DefaultEndpointsProtocol=https;AccountName={account_name};AccountKey={access_key};EndpointSuffix=core.windows.net"
+            
+            blob_service = BlobStorageService(settings, connection_string, container_name)
+            logger.info(f"📦 Using project-specific blob storage for SFX: {account_name}/{container_name}")
+        else:
+            blob_service = BlobStorageService(settings)
+            logger.info("📦 Using global blob storage settings for SFX")
         
         # Generate blob path
         blob_filename = f"{file.filename}"
@@ -458,7 +540,24 @@ async def upload_sfx(
         # For now, use a placeholder
         duration_seconds = 0.0
         
-        # Create SFX segment record
+        # Insert BEFORE the target segment by shifting all segments >= displayOrder forward
+        # First, get all SFX segments for this chapter that need reordering
+        result_sfx = await db.execute(
+            select(SfxSegment).where(
+                and_(
+                    SfxSegment.project_id == project_id,
+                    SfxSegment.chapter_id == chapter_id,
+                    SfxSegment.display_order >= display_order
+                )
+            ).order_by(SfxSegment.display_order.desc())
+        )
+        existing_sfx = result_sfx.scalars().all()
+        
+        # Increment display_order for all existing SFX at or after insertion point
+        for existing in existing_sfx:
+            existing.display_order += 1
+        
+        # Create SFX segment record at the requested position
         sfx_segment = SfxSegment(
             project_id=project_id,
             chapter_id=chapter_id,
@@ -466,7 +565,7 @@ async def upload_sfx(
             blob_path=blob_path,
             file_size_bytes=file_size,
             duration_seconds=duration_seconds,
-            display_order=display_order
+            display_order=display_order  # Insert at this position (before the selected segment)
         )
         db.add(sfx_segment)
         await db.commit()
@@ -534,6 +633,7 @@ async def delete_sfx(
     sfx_id: UUID,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
+    settings: Settings = Depends(get_settings),
 ):
     """Delete an SFX segment and its associated file."""
     # Verify project access
@@ -556,7 +656,7 @@ async def delete_sfx(
     
     # Delete from blob storage
     try:
-        blob_service = get_blob_storage_service()
+        blob_service = get_blob_storage_service(settings)
         await blob_service.delete_audio(sfx_segment.blob_path)
     except Exception as e:
         logger.warning(f"⚠️ Failed to delete blob: {e}")
@@ -620,6 +720,7 @@ async def get_chapter_audio_production_data(
     chapter_id: str,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
+    settings: Settings = Depends(get_settings),
 ):
     """
     Get combined audio production data for a chapter.
@@ -628,6 +729,19 @@ async def get_chapter_audio_production_data(
     """
     # Verify project access
     await _verify_project_access(db, project_id, current_user.tenant_id)
+    
+    # Get project for storage configuration
+    result_project = await db.execute(
+        select(Project).where(
+            and_(
+                Project.id == project_id,
+                Project.tenant_id == current_user.tenant_id
+            )
+        )
+    )
+    project = result_project.scalar_one_or_none()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
     
     # First, get the chapter by order to get its UUID
     from shared.models.chapter import Chapter
@@ -683,6 +797,21 @@ async def get_chapter_audio_production_data(
     )
     sfx_segments = result.scalars().all()
     
+    # Setup blob storage with project-specific credentials (needed for both plan segments and SFX)
+    storage_config = project.settings.get("creds", {}).get("storage", {}).get("azure", {})
+    
+    blob_service = None
+    if storage_config.get("accountName") and storage_config.get("accessKey"):
+        account_name = storage_config["accountName"]
+        access_key = storage_config["accessKey"]
+        container_name = storage_config.get("containerName", "audios")
+        
+        connection_string = f"DefaultEndpointsProtocol=https;AccountName={account_name};AccountKey={access_key};EndpointSuffix=core.windows.net"
+        
+        blob_service = BlobStorageService(settings, connection_string, container_name)
+    else:
+        blob_service = BlobStorageService(settings)
+    
     # Build response with real plan segments
     segments = []
     
@@ -705,8 +834,29 @@ async def get_chapter_audio_production_data(
         # Get metadata using the segment ID
         metadata = metadata_dict.get(str(segment_id))
         
-        # Determine if audio exists for this segment
+        # Determine if audio exists and get URL from cache
         has_audio = metadata is not None and metadata.raw_audio_cache_key is not None
+        raw_audio_url = None
+        duration = metadata.duration_seconds if metadata else None
+        
+        # If audio exists, get the URL from AudioCache table
+        if has_audio:
+            cache_result = await db.execute(
+                select(AudioCache).where(
+                    and_(
+                        AudioCache.cache_key == metadata.raw_audio_cache_key,
+                        AudioCache.tenant_id == current_user.tenant_id
+                    )
+                )
+            )
+            cache_entry = cache_result.scalar_one_or_none()
+            if cache_entry:
+                raw_audio_url = blob_service.get_blob_url(cache_entry.audio_blob_path)
+                # Backfill duration if missing
+                if not duration and cache_entry.audio_duration_seconds:
+                    duration = cache_entry.audio_duration_seconds
+                    metadata.duration_seconds = duration
+                    await db.commit()
         
         # Use orchestration order multiplied by 100 to leave room for SFX insertions
         # SFX can be inserted at positions like: 50, 150, 250 (between segments 0, 100, 200)
@@ -727,25 +877,24 @@ async def get_chapter_audio_production_data(
             text=seg.get('text', ''),
             voice=seg.get('voice', ''),
             character_name=seg.get('voice', ''),  # voice field contains character name from orchestration
-            raw_audio_url=None,  # TODO: Generate URL from cache_key if exists
+            raw_audio_url=raw_audio_url,
             has_audio=has_audio,
             processing_chain=metadata.processing_chain if metadata else None,
             preset_id=metadata.preset_id if metadata else None,
             needs_revision=needs_revision,
-            duration=metadata.duration_seconds if metadata else None
+            duration=duration
         ))
     
     # Add SFX segments
     for sfx in sfx_segments:
-        blob_service = get_blob_storage_service()
-        sfx_url = blob_service.get_blob_url(sfx.blob_path)
+        sfx_url = await blob_service.get_blob_url(sfx.blob_path) if blob_service.is_configured else None
         
         segments.append(AudioSegmentData(
             segment_id=str(sfx.id),
             type="sfx",
             display_order=sfx.display_order,
-            text=None,
-            voice=None,
+            text=f"[SFX: {sfx.filename}]",
+            voice="SFX",
             character_name=None,
             raw_audio_url=sfx_url,
             has_audio=True,

@@ -197,6 +197,10 @@ class BlobStorageService:
         Returns:
             str: Public URL, or None if blob doesn't exist
         """
+        if not self.is_configured:
+            logger.debug("Blob storage not configured, cannot get blob URL")
+            return None
+            
         try:
             blob_client = self._get_blob_client(blob_path)
             if blob_client.exists():

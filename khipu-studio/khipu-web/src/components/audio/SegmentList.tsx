@@ -12,6 +12,7 @@ interface SegmentListProps {
   selectedSegmentId?: string | null;
   onSegmentSelect: (segmentId: string) => void;
   onToggleRevision: (segmentId: string) => void;
+  onDeleteSfx?: (segmentId: string) => void;
   playingSegmentId?: string | null;
   disabled?: boolean;
 }
@@ -21,6 +22,7 @@ export function SegmentList({
   selectedSegmentId,
   onSegmentSelect,
   onToggleRevision,
+  onDeleteSfx,
   playingSegmentId,
   disabled = false,
 }: SegmentListProps) {
@@ -120,6 +122,15 @@ export function SegmentList({
                 width: '50px',
               }}>
                 🚩
+              </th>
+              <th style={{ 
+                textAlign: 'center', 
+                padding: '10px 12px', 
+                fontWeight: 500, 
+                color: '#999',
+                width: '50px',
+              }}>
+                {/* Delete column header (empty) */}
               </th>
               <th style={{ 
                 textAlign: 'left', 
@@ -238,6 +249,47 @@ export function SegmentList({
                       </button>
                     </td>
 
+                    {/* Delete SFX Button Column (only for SFX segments) */}
+                    <td style={{ padding: '10px 12px', textAlign: 'center' }}>
+                      {(segment as any).type === 'sfx' && onDeleteSfx && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteSfx(segment.id);
+                          }}
+                          disabled={disabled}
+                          title="Delete sound effect"
+                          style={{
+                            width: '28px',
+                            height: '28px',
+                            borderRadius: '4px',
+                            background: 'transparent',
+                            border: '1px solid #dc2626',
+                            color: '#dc2626',
+                            cursor: disabled ? 'not-allowed' : 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '14px',
+                            transition: 'all 0.2s',
+                            padding: 0,
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!disabled) {
+                              e.currentTarget.style.background = 'rgba(220, 38, 38, 0.2)';
+                              e.currentTarget.style.borderColor = '#ef4444';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'transparent';
+                            e.currentTarget.style.borderColor = '#dc2626';
+                          }}
+                        >
+                          🗑️
+                        </button>
+                      )}
+                    </td>
+
                     {/* Text Preview Column */}
                     <td style={{ 
                       padding: '10px 12px',
@@ -269,7 +321,7 @@ export function SegmentList({
                   {/* Mini Waveform Row (when selected) */}
                   {isSelected && segment.audio_blob_path && (
                     <tr key={`${segment.id}-waveform`}>
-                      <td colSpan={5} style={{
+                      <td colSpan={6} style={{
                         padding: '12px',
                         background: 'rgba(74, 158, 255, 0.05)',
                         borderBottom: '1px solid #333',
@@ -285,7 +337,7 @@ export function SegmentList({
                   {/* Revision Notes Row (if needs revision) */}
                   {segment.status === 'needs_revision' && segment.revision_notes && (
                     <tr key={`${segment.id}-notes`}>
-                      <td colSpan={5} style={{
+                      <td colSpan={6} style={{
                         padding: '10px 12px',
                         background: 'rgba(251, 191, 36, 0.1)',
                         borderBottom: '1px solid rgba(251, 191, 36, 0.3)',
