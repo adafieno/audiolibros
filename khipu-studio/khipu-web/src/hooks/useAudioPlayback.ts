@@ -98,6 +98,11 @@ export function useAudioPlayback({ projectId, processingChain }: UseAudioPlaybac
         setDuration(existingAudio.duration);
       }
       
+      // Ensure AudioContext is running
+      if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
+        await audioContextRef.current.resume();
+      }
+      
       const updateTime = () => {
         if (existingAudio && !existingAudio.paused && !existingAudio.ended) {
           setCurrentTime(existingAudio.currentTime);
@@ -202,21 +207,37 @@ export function useAudioPlayback({ projectId, processingChain }: UseAudioPlaybac
           await audioContextRef.current.resume();
         }
         
-        try {
-          const source = audioContextRef.current.createMediaElementSource(audio);
-          const analyser = audioContextRef.current.createAnalyser();
-          analyser.fftSize = 2048;
-          analyser.smoothingTimeConstant = 0.8;
-          
-          source.connect(audioContextRef.current.destination);
-          source.connect(analyser);
-          
-          audioSourcesRef.current.set(segmentId, source);
-          setAnalyserNodes(prev => new Map(prev).set(segmentId, analyser));
-          
-          console.log('[AudioPlayback] Created audio graph for segment:', segmentId);
-        } catch (error) {
-          console.error('[AudioPlayback] Failed to create audio source:', error);
+        // Check if we already have a source for this audio element (can only create once)
+        let existingSource = audioSourcesRef.current.get(segmentId);
+        
+        if (!existingSource) {
+          try {
+            const source = audioContextRef.current.createMediaElementSource(audio);
+            const analyser = audioContextRef.current.createAnalyser();
+            analyser.fftSize = 2048;
+            analyser.smoothingTimeConstant = 0.8;
+            
+            // Create channel splitter for stereo analysis
+            const splitter = audioContextRef.current.createChannelSplitter(2);
+            
+            // Connect for playback: source -> destination
+            source.connect(audioContextRef.current.destination);
+            
+            // Connect for analysis: source -> splitter (separate channels)
+            //                        source -> analyser (combined)
+            source.connect(splitter);
+            source.connect(analyser);
+            
+            audioSourcesRef.current.set(segmentId, source);
+            setAnalyserNodes(prev => new Map(prev).set(segmentId, analyser));
+            setSplitterNodes(prev => new Map(prev).set(segmentId, splitter));
+            
+            console.log('[AudioPlayback] Created audio graph for segment:', segmentId);
+          } catch (error) {
+            console.error('[AudioPlayback] Failed to create audio source:', error);
+          }
+        } else {
+          console.log('[AudioPlayback] Reusing existing audio graph for segment:', segmentId);
         }
         
         audio.onended = () => {
