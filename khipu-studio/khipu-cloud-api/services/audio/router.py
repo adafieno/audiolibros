@@ -2,6 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
+from sqlalchemy.orm import selectinload
 from sqlalchemy.orm.attributes import flag_modified
 from uuid import UUID
 import logging
@@ -760,7 +761,9 @@ async def get_chapter_audio_production_data(
     
     # Get chapter plan with segments
     result = await db.execute(
-        select(ChapterPlan).where(
+        select(ChapterPlan)
+        .options(selectinload(ChapterPlan.normalized_segments))
+        .where(
             and_(
                 ChapterPlan.project_id == project_id,
                 ChapterPlan.chapter_id == chapter.id
@@ -777,7 +780,7 @@ async def get_chapter_audio_production_data(
         select(AudioSegmentMetadata).where(
             and_(
                 AudioSegmentMetadata.project_id == project_id,
-                AudioSegmentMetadata.chapter_id == chapter_id
+                AudioSegmentMetadata.chapter_id == chapter.id
             )
         )
     )
@@ -790,7 +793,7 @@ async def get_chapter_audio_production_data(
         .where(
             and_(
                 SfxSegment.project_id == project_id,
-                SfxSegment.chapter_id == chapter_id
+                SfxSegment.chapter_id == chapter.id
             )
         )
         .order_by(SfxSegment.display_order)

@@ -28,8 +28,12 @@ class SfxSegment(Base):
         index=True
     )
     
-    # Chapter identification
-    chapter_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    # Chapter identification (FK to chapters table)
+    chapter_id: Mapped[UUID] = mapped_column(
+        ForeignKey("chapters.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
     
     # SFX file information
     filename: Mapped[str] = mapped_column(String(255), nullable=False)
