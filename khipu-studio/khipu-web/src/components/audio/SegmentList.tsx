@@ -14,6 +14,7 @@ interface SegmentListProps {
   onSegmentSelect: (segmentId: string) => void;
   onToggleRevision: (segmentId: string) => void;
   onDeleteSfx?: (segmentId: string) => void;
+  onMoveSfx?: (segmentId: string, direction: 'up' | 'down') => void;
   playingSegmentId?: string | null;
   disabled?: boolean;
 }
@@ -24,6 +25,7 @@ export function SegmentList({
   onSegmentSelect,
   onToggleRevision,
   onDeleteSfx,
+  onMoveSfx,
   playingSegmentId,
   disabled = false,
 }: SegmentListProps) {
@@ -129,9 +131,9 @@ export function SegmentList({
                 padding: '10px 12px', 
                 fontWeight: 500, 
                 color: '#999',
-                width: '50px',
+                width: '80px',
               }}>
-                {/* Delete column header (empty) */}
+                {/* Move up/down + Delete column */}
               </th>
               <th style={{ 
                 textAlign: 'left', 
@@ -191,7 +193,20 @@ export function SegmentList({
 
                     {/* Character Column */}
                     <td style={{ padding: '10px 12px' }}>
-                      {segment.character_name ? (
+                      {(segment as any).type === 'sfx' ? (
+                        <span style={{
+                          fontSize: '12px',
+                          color: '#fbbf24',
+                          fontWeight: 600,
+                          padding: '3px 8px',
+                          background: 'rgba(251, 191, 36, 0.15)',
+                          borderRadius: '3px',
+                          border: '1px solid rgba(251, 191, 36, 0.3)',
+                          display: 'inline-block',
+                        }}>
+                          🔊 SFX
+                        </span>
+                      ) : segment.character_name ? (
                         <span style={{
                           fontSize: '12px',
                           color: '#4a9eff',
@@ -248,44 +263,126 @@ export function SegmentList({
                       </button>
                     </td>
 
-                    {/* Delete SFX Button Column (only for SFX segments) */}
+                    {/* Move + Delete Column (only for SFX segments) */}
                     <td style={{ padding: '10px 12px', textAlign: 'center' }}>
-                      {(segment as any).type === 'sfx' && onDeleteSfx && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDeleteSfx(segment.id);
-                          }}
-                          disabled={disabled}
-                          title="Delete sound effect"
-                          style={{
-                            width: '28px',
-                            height: '28px',
-                            borderRadius: '4px',
-                            background: 'transparent',
-                            border: '1px solid #dc2626',
-                            color: '#dc2626',
-                            cursor: disabled ? 'not-allowed' : 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '14px',
-                            transition: 'all 0.2s',
-                            padding: 0,
-                          }}
-                          onMouseEnter={(e) => {
-                            if (!disabled) {
-                              e.currentTarget.style.background = 'rgba(220, 38, 38, 0.2)';
-                              e.currentTarget.style.borderColor = '#ef4444';
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'transparent';
-                            e.currentTarget.style.borderColor = '#dc2626';
-                          }}
-                        >
-                          🗑️
-                        </button>
+                      {(segment as any).type === 'sfx' && (onMoveSfx || onDeleteSfx) && (
+                        <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
+                          {onMoveSfx && (
+                            <>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onMoveSfx(segment.id, 'up');
+                                }}
+                                disabled={disabled}
+                                title="Move up"
+                                style={{
+                                  width: '24px',
+                                  height: '24px',
+                                  borderRadius: '3px',
+                                  background: 'transparent',
+                                  border: '1px solid #666',
+                                  color: '#999',
+                                  cursor: disabled ? 'not-allowed' : 'pointer',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '12px',
+                                  transition: 'all 0.2s',
+                                  padding: 0,
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (!disabled) {
+                                    e.currentTarget.style.background = 'rgba(74, 158, 255, 0.2)';
+                                    e.currentTarget.style.borderColor = '#4a9eff';
+                                    e.currentTarget.style.color = '#4a9eff';
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = 'transparent';
+                                  e.currentTarget.style.borderColor = '#666';
+                                  e.currentTarget.style.color = '#999';
+                                }}
+                              >
+                                ↑
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onMoveSfx(segment.id, 'down');
+                                }}
+                                disabled={disabled}
+                                title="Move down"
+                                style={{
+                                  width: '24px',
+                                  height: '24px',
+                                  borderRadius: '3px',
+                                  background: 'transparent',
+                                  border: '1px solid #666',
+                                  color: '#999',
+                                  cursor: disabled ? 'not-allowed' : 'pointer',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '12px',
+                                  transition: 'all 0.2s',
+                                  padding: 0,
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (!disabled) {
+                                    e.currentTarget.style.background = 'rgba(74, 158, 255, 0.2)';
+                                    e.currentTarget.style.borderColor = '#4a9eff';
+                                    e.currentTarget.style.color = '#4a9eff';
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = 'transparent';
+                                  e.currentTarget.style.borderColor = '#666';
+                                  e.currentTarget.style.color = '#999';
+                                }}
+                              >
+                                ↓
+                              </button>
+                            </>
+                          )}
+                          {onDeleteSfx && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDeleteSfx(segment.id);
+                              }}
+                              disabled={disabled}
+                              title="Delete sound effect"
+                              style={{
+                                width: '24px',
+                                height: '24px',
+                                borderRadius: '3px',
+                                background: 'transparent',
+                                border: '1px solid #dc2626',
+                                color: '#dc2626',
+                                cursor: disabled ? 'not-allowed' : 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '11px',
+                                transition: 'all 0.2s',
+                                padding: 0,
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!disabled) {
+                                  e.currentTarget.style.background = 'rgba(220, 38, 38, 0.2)';
+                                  e.currentTarget.style.borderColor = '#ef4444';
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = 'transparent';
+                                e.currentTarget.style.borderColor = '#dc2626';
+                              }}
+                            >
+                              🗑️
+                            </button>
+                          )}
+                        </div>
                       )}
                     </td>
 

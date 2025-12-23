@@ -636,11 +636,27 @@ async def upload_sfx(
         blob_filename = f"{file.filename}"
         blob_path = f"sfx/{project_id}/{chapter_id}/{blob_filename}"
         
-        # Upload to blob storage
-        blob_url = await blob_service.upload_audio(
-            blob_path=blob_path,
-            audio_data=file_content
-        )
+        # Check if blob already exists (from previous upload)
+        # If same filename and size, reuse it to save upload time
+        blob_url = None
+        blob_exists = False
+        try:
+            # Check if blob exists by trying to get its URL
+            existing_url = await blob_service.get_blob_url(blob_path)
+            if existing_url:
+                blob_exists = True
+                blob_url = existing_url
+                logger.info(f"♻️ Reusing existing blob: {blob_path}")
+        except:
+            pass
+        
+        # Upload to blob storage only if not already there
+        if not blob_exists:
+            blob_url = await blob_service.upload_audio(
+                blob_path=blob_path,
+                audio_data=file_content
+            )
+            logger.info(f"📤 Uploaded new blob: {blob_path}")
         
         # Extract audio duration
         duration_seconds = get_audio_duration_generic(file_content, file.filename or "audio.wav")
@@ -796,12 +812,9 @@ async def delete_sfx(
     if not sfx_segment:
         raise HTTPException(status_code=404, detail="SFX segment not found")
     
-    # Delete from blob storage
-    try:
-        blob_service = get_blob_storage_service(settings)
-        await blob_service.delete_audio(sfx_segment.blob_path)
-    except Exception as e:
-        logger.warning(f"⚠️ Failed to delete blob: {e}")
+    # Don't delete from blob storage - keep for potential reuse
+    # If the same SFX file is uploaded again, we can reuse the existing blob
+    logger.info(f"📦 Keeping blob {sfx_segment.blob_path} in storage for potential reuse")
     
     # Delete from database
     await db.delete(sfx_segment)

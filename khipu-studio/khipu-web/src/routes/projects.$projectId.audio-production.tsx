@@ -93,6 +93,7 @@ function AudioProductionPage() {
     toggleRevisionMark,
     updateProcessingChain,
     uploadSfx,
+    moveSfxSegment,
     deleteSfxSegment,
   } = useAudioProduction(projectId, chapterOrder, selectedChapterId);
 
@@ -396,6 +397,46 @@ function AudioProductionPage() {
     }
   }, [deleteSfxSegment, loadChapterData, selectedSegmentId]);
 
+  // Handle move SFX segment up/down
+  const handleMoveSfx = useCallback(async (segmentId: string, direction: 'up' | 'down') => {
+    const segmentIndex = segments.findIndex(s => s.segment_id === segmentId);
+    if (segmentIndex === -1) return;
+    
+    const targetIndex = direction === 'up' ? segmentIndex - 1 : segmentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= segments.length) return; // Can't move beyond bounds
+    
+    const currentSegment = segments[segmentIndex];
+    const targetSegment = segments[targetIndex];
+    
+    // Calculate new position (midpoint or beyond target)
+    let newPosition: number;
+    if (direction === 'up') {
+      // Moving up: place between target-1 and target
+      if (targetIndex === 0) {
+        newPosition = targetSegment.display_order - 50;
+      } else {
+        const beforeTarget = segments[targetIndex - 1];
+        newPosition = Math.floor((beforeTarget.display_order + targetSegment.display_order) / 2);
+      }
+    } else {
+      // Moving down: place between target and target+1
+      if (targetIndex === segments.length - 1) {
+        newPosition = targetSegment.display_order + 50;
+      } else {
+        const afterTarget = segments[targetIndex + 1];
+        newPosition = Math.floor((targetSegment.display_order + afterTarget.display_order) / 2);
+      }
+    }
+    
+    try {
+      await moveSfxSegment(segmentId, newPosition);
+      await loadChapterData(); // Reload to get proper sort order
+    } catch (error) {
+      console.error('Failed to move SFX:', error);
+      alert('Failed to move sound effect. Please try again.');
+    }
+  }, [segments, moveSfxSegment, loadChapterData]);
+
   // Handle processing chain changes
   const handleProcessingChainChange = useCallback((chain: AudioProcessingChain) => {
 
@@ -462,12 +503,30 @@ function AudioProductionPage() {
       return;
     }
     
-    // Get voice from character's assignment (same as orchestration)
-    const character = characters?.find(c => c.name === segment.character_name);
-    const voiceId = character?.voiceAssignment?.voiceId || 'es-MX-DaliaNeural';
-    const voiceSettings = character?.voiceAssignment;
-    
     try {
+      // SFX segments: play audio directly without TTS
+      if (segment.type === 'sfx') {
+        if (!segment.raw_audio_url) {
+          alert('SFX audio not available.');
+          return;
+        }
+        
+        await playSegment({
+          segment_id: segment.segment_id,
+          id: segment.segment_id,
+          has_audio: true,
+          raw_audio_url: segment.raw_audio_url,
+          text: segment.text || '[SFX]',
+          voice: 'SFX',
+        }, 'SFX');
+        return;
+      }
+      
+      // Regular segments: use TTS
+      const character = characters?.find(c => c.name === segment.character_name);
+      const voiceId = character?.voiceAssignment?.voiceId || 'es-MX-DaliaNeural';
+      const voiceSettings = character?.voiceAssignment;
+      
       // Always generate/fetch audio through API (returns Blob)
       // API handles caching internally (HIT or MISS)
       const result = await generateSegmentAudio(selectedSegmentId, {
@@ -568,12 +627,22 @@ function AudioProductionPage() {
         return;
       }
 
-      // Use the selected segment's display order as the target position
-      // Backend will handle inserting before this position and reordering
-      const displayOrder = Math.floor(selectedSegment.display_order);
+      // Calculate insertion position to place SFX BEFORE the selected segment
+      // Segments are sorted by display_order (e.g., 0, 100, 200, 300...)
+      const selectedIndex = segments.findIndex(s => s.segment_id === selectedSegmentId);
+      let insertPosition: number;
       
-      console.log('[SFX Upload] Inserting SFX before segment:', selectedSegmentId, 'at position:', displayOrder);
-      await uploadSfx(file, displayOrder);
+      if (selectedIndex === 0) {
+        // Inserting before the first segment - use negative position
+        insertPosition = selectedSegment.display_order - 50;
+      } else {
+        // Inserting between segments - use midpoint
+        const prevSegment = segments[selectedIndex - 1];
+        insertPosition = Math.floor((prevSegment.display_order + selectedSegment.display_order) / 2);
+      }
+      
+      console.log('[SFX Upload] Inserting SFX before segment at position', selectedSegment.display_order, '→ using position', insertPosition);
+      await uploadSfx(file, insertPosition);
       
       // Reload data to reflect new segment and reordering
       await loadChapterData();
@@ -1111,12 +1180,12 @@ function AudioProductionPage() {
             
             <div style={{ flex: 1, overflow: 'auto' }}>
               <SegmentList
-                segments={segments.map((seg) => {
+                segments={segments.map((seg, index) => {
                   const status: 'pending' | 'cached' | 'processed' | 'needs_revision' | null = 
                     seg.has_audio ? 'cached' : (seg.needs_revision ? 'needs_revision' : 'pending');
                   const mapped = {
                     id: seg.segment_id,  // Use UUID directly
-                    position: seg.display_order,
+                    position: index,  // Use array index for sequential numbering (0, 1, 2, ...)
                     text: seg.text || null,
                     character_name: seg.character_name || null,
                     audio_blob_path: seg.raw_audio_url || null,
@@ -1143,6 +1212,7 @@ function AudioProductionPage() {
                 onSegmentSelect={handleSegmentSelect}
 
                 onToggleRevision={handleToggleRevision}
+                onMoveSfx={handleMoveSfx}
                 onDeleteSfx={handleDeleteSfx}
                 playingSegmentId={playingSegmentId}
               />
