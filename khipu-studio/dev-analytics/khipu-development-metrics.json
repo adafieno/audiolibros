@@ -1,0 +1,177 @@
+{
+  "project": "Khipu Studio",
+  "tracking_start_date": "2025-12-23",
+  "sessions": [
+    {
+      "session_id": "2025-12-23-duration-sfx",
+      "date": "2025-12-23",
+      "duration_hours": 3.5,
+      "focus_areas": ["bug_fix", "feature_development"],
+      "features": [
+        {
+          "id": "duration-display-fix",
+          "name": "Audio Duration Display Bug Fix",
+          "category": "bug_fix",
+          "initial_problem": "Duration showing 00:00 in grid despite audio being playable",
+          "complexity": "high",
+          "estimated_time_hours": null,
+          "actual_time_hours": 1.0,
+          "iterations": 4,
+          "files_modified": [
+            "khipu-cloud-api/services/audio/router.py",
+            "khipu-web/src/routes/projects.$projectId.audio-production.tsx"
+          ],
+          "files_created": [],
+          "lines_changed": 45,
+          "tool_calls": {
+            "read_file": 8,
+            "grep_search": 4,
+            "replace_string_in_file": 6,
+            "run_in_terminal": 3
+          },
+          "blockers": [
+            {
+              "type": "architecture",
+              "description": "UUID vs string mismatch in metadata_dict lookup",
+              "resolution": "Changed to metadata_dict.get(segment_model.id)",
+              "iterations_to_resolve": 2
+            },
+            {
+              "type": "runtime",
+              "description": "BlobStorageService.account_name AttributeError",
+              "resolution": "Added safety checks for blob_service existence",
+              "iterations_to_resolve": 1
+            },
+            {
+              "type": "deployment",
+              "description": "Python bytecode cache prevented new code execution",
+              "resolution": "Full docker-compose rebuild",
+              "iterations_to_resolve": 1
+            }
+          ],
+          "dependencies_added": [],
+          "status": "completed",
+          "user_satisfaction": "positive"
+        },
+        {
+          "id": "sfx-import-system",
+          "name": "Sound Effects Import & Management",
+          "category": "feature_development",
+          "initial_problem": "Need to import custom SFX files into audiobook production",
+          "complexity": "high",
+          "estimated_time_hours": null,
+          "actual_time_hours": 2.5,
+          "iterations": 5,
+          "files_modified": [
+            "khipu-cloud-api/requirements.txt",
+            "khipu-cloud-api/services/audio/router.py",
+            "khipu-web/src/routes/projects.$projectId.audio-production.tsx",
+            "khipu-web/src/components/audio/SegmentList.tsx",
+            "khipu-web/src/components/audio/AudioWaveform.tsx"
+          ],
+          "files_created": [],
+          "lines_changed": 280,
+          "tool_calls": {
+            "read_file": 15,
+            "grep_search": 6,
+            "replace_string_in_file": 12,
+            "multi_replace_string_in_file": 2,
+            "semantic_search": 2
+          },
+          "sub_features": [
+            {
+              "name": "Duration Extraction",
+              "status": "completed",
+              "iterations": 2,
+              "blocker": "SFX duration always 0.0 seconds",
+              "solution": "Added mutagen library for multi-format audio metadata"
+            },
+            {
+              "name": "SFX Playback",
+              "status": "completed",
+              "iterations": 1,
+              "blocker": "SFX triggered TTS instead of playing file",
+              "solution": "Type check in handlePlaySegment to bypass TTS"
+            },
+            {
+              "name": "SFX Positioning",
+              "status": "completed",
+              "iterations": 2,
+              "blocker": "SFX inserted AFTER selected segment instead of BEFORE",
+              "solution": "Midpoint calculation between prev and selected segment"
+            },
+            {
+              "name": "Sequential Numbering",
+              "status": "completed",
+              "iterations": 1,
+              "blocker": "# column showed display_order (1, 101, 201) not sequence",
+              "solution": "Use array index instead of display_order value"
+            },
+            {
+              "name": "Blob Reuse System",
+              "status": "completed",
+              "iterations": 1,
+              "blocker": "Re-uploading same SFX created duplicate blobs",
+              "solution": "Check blob existence before upload, keep on deletion"
+            },
+            {
+              "name": "Move Buttons",
+              "status": "completed",
+              "iterations": 2,
+              "blocker": "UI added but callback not wired",
+              "solution": "Added handleMoveSfx with position recalculation logic"
+            }
+          ],
+          "blockers": [
+            {
+              "type": "library",
+              "description": "Generic audio duration extraction needed for MP3/FLAC/OGG",
+              "resolution": "Added mutagen library with fallback to wave module",
+              "iterations_to_resolve": 1
+            },
+            {
+              "type": "logic",
+              "description": "SFX positioning algorithm incorrect",
+              "resolution": "Implemented midpoint calculation between segments",
+              "iterations_to_resolve": 2
+            },
+            {
+              "type": "ui_wiring",
+              "description": "Move buttons visible but non-functional",
+              "resolution": "Connected handleMoveSfx callback to component props",
+              "iterations_to_resolve": 1
+            }
+          ],
+          "dependencies_added": ["mutagen==1.47.0"],
+          "status": "completed",
+          "user_satisfaction": "high",
+          "user_feedback": "Initially frustrated with 'half-done solutions', satisfied after completion"
+        }
+      ],
+      "overall_metrics": {
+        "total_tool_calls": 58,
+        "total_files_modified": 7,
+        "total_lines_changed": 325,
+        "success_rate": 0.85,
+        "failed_operations": 5,
+        "context_switches": 8,
+        "rebuilds_required": 1
+      },
+      "communication_patterns": {
+        "clarification_requests_from_ai": 2,
+        "user_correction_cycles": 4,
+        "trust_evolution": "skeptical → cautious → confident",
+        "critical_moment": "User stated: 'I am a bit tired of half-done solutions'"
+      }
+    }
+  ],
+  "cumulative_stats": {
+    "total_sessions": 1,
+    "total_features_completed": 2,
+    "total_bugs_fixed": 1,
+    "total_hours": 3.5,
+    "total_lines_changed": 325,
+    "average_iterations_per_feature": 4.5,
+    "most_common_blocker_type": "logic"
+  }
+}
