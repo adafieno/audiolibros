@@ -86,7 +86,7 @@ export const audioProductionApi = {
     chapterId: string,
     segmentId: string,
     request: SegmentAudioRequest
-  ): Promise<Blob> {
+  ): Promise<{ blob: Blob; duration: number | null }> {
     // Returns audio Blob directly (same pattern as auditionVoice)
     const response = await fetchWithAuth(
       `${API_BASE}/api/v1/projects/${projectId}/chapters/${chapterId}/segments/${segmentId}/audio`,
@@ -108,12 +108,12 @@ export const audioProductionApi = {
     // Get the audio blob
     const blob = await response.blob();
     
-    // Attach duration as metadata (for logging/debugging)
+    // Log for debugging
     if (duration) {
       console.log('[API] Audio generated with duration:', duration, 'seconds');
     }
     
-    return blob;
+    return { blob, duration };
   },
 
   /**

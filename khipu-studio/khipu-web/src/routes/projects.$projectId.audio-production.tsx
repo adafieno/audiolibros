@@ -482,12 +482,10 @@ function AudioProductionPage() {
         } : undefined,
       });
       
-      console.log('[AudioProduction] Audio fetched, object URL:', result.audioUrl);
-      
-      // Reload chapter data to get updated metadata from server (duration, etc.)
-      await loadChapterData();
+      console.log('[AudioProduction] Audio fetched, object URL:', result.audioUrl, 'duration:', result.duration);
       
       // Play the audio using the object URL
+      // Duration is already updated in state by generateSegmentAudio hook - no reload needed
       await playSegment({
         segment_id: segment.segment_id,
         id: segment.segment_id,
@@ -501,22 +499,12 @@ function AudioProductionPage() {
       console.error('[AudioProduction] Failed to play segment:', error);
       alert('Failed to play audio. Please try again.');
     }
-  }, [selectedSegmentId, isPlaying, playingSegmentId, segments, characters, playSegment, stopPlayback, generateSegmentAudio, loadChapterData]);
-
-  // Auto-select first segment when segments load
-  useEffect(() => {
-    if (segments.length > 0 && !selectedSegmentId) {
-      setTimeout(() => {
-        handleSegmentSelect(segments[0].segment_id);
-      }, 0);
-    }
-  }, [segments, selectedSegmentId, handleSegmentSelect]);
+  }, [selectedSegmentId, isPlaying, playingSegmentId, segments, characters, playSegment, stopPlayback, generateSegmentAudio]);
 
   // Auto-select first segment when segments load
   useEffect(() => {
     if (segments.length > 0 && !selectedSegmentId) {
       const firstSegmentId = segments[0].segment_id;
-      console.log('Auto-selecting first segment:', firstSegmentId);
       // Use setTimeout to avoid cascading renders
       setTimeout(() => {
         setSelectedSegmentId(firstSegmentId);
@@ -527,6 +515,18 @@ function AudioProductionPage() {
       }, 0);
     }
   }, [segments, selectedSegmentId, handleSegmentSelect]);
+
+  // Debug: Log segments when they change
+  useEffect(() => {
+    const segmentsWithAudio = segments.filter(s => s.has_audio);
+    if (segmentsWithAudio.length > 0) {
+      console.log('[AudioProduction] Segments with audio:', segmentsWithAudio.map(s => ({
+        id: s.segment_id,
+        duration: s.duration,
+        has_audio: s.has_audio
+      })));
+    }
+  }, [segments]);
 
   // Handle player controls
   // Handle toggle revision flag
@@ -1132,6 +1132,11 @@ function AudioProductionPage() {
                     needs_revision: seg.needs_revision,
                     type: seg.type,  // Include segment type
                   };
+
+                  // Debug log for segments with audio
+                  if (seg.has_audio && seg.duration) {
+                    console.log('[SegmentList] Mapping segment with duration:', seg.segment_id, 'duration:', seg.duration);
+                  }
 
                   return mapped;
                 })}

@@ -61,7 +61,6 @@ export class AudioProcessor {
     audioBuffer: AudioBuffer,
     processingChain: AudioProcessingChain
   ): Promise<ProcessedAudio> {
-    console.log('[AudioProcessor] Starting audio processing...');
     const startTime = performance.now();
     
     try {
@@ -81,49 +80,41 @@ export class AudioProcessor {
 
       // 1. Apply De-esser (if enabled)
       if (processingChain.noiseCleanup?.deEsser?.enabled) {
-        console.log('[AudioProcessor] Applying de-esser...');
         currentNode = this.applyDeEsser(currentNode, processingChain.noiseCleanup.deEsser, offlineContext);
       }
 
       // 2. Apply High-pass filter (if enabled)
       if (processingChain.eqShaping?.highPass?.enabled) {
-        console.log('[AudioProcessor] Applying high-pass filter...');
         currentNode = this.applyHighPass(currentNode, processingChain.eqShaping.highPass, offlineContext);
       }
 
       // 3. Apply Low-pass filter (if enabled)
       if (processingChain.eqShaping?.lowPass?.enabled) {
-        console.log('[AudioProcessor] Applying low-pass filter...');
         currentNode = this.applyLowPass(currentNode, processingChain.eqShaping.lowPass, offlineContext);
       }
 
       // 4. Apply Parametric EQ (if enabled)
       if (processingChain.eqShaping?.parametricEQ?.bands && processingChain.eqShaping.parametricEQ.bands.length > 0) {
-        console.log('[AudioProcessor] Applying parametric EQ with', processingChain.eqShaping.parametricEQ.bands.length, 'bands...');
         currentNode = this.applyParametricEQ(currentNode, processingChain.eqShaping.parametricEQ, offlineContext);
       }
 
       // 5. Apply Compression (if enabled)
       if (processingChain.dynamicControl?.compression?.enabled) {
-        console.log('[AudioProcessor] Applying compression...');
         currentNode = this.applyCompression(currentNode, processingChain.dynamicControl.compression, offlineContext);
       }
 
       // 6. Apply Reverb (if enabled)
       if (processingChain.spatialEnhancement?.reverb?.enabled) {
-        console.log('[AudioProcessor] Applying reverb...');
         currentNode = await this.applyReverb(currentNode, processingChain.spatialEnhancement.reverb, offlineContext);
       }
 
       // 7. Apply Normalization (if enabled)
       if (processingChain.consistencyMastering?.loudnessNormalization?.enabled) {
-        console.log('[AudioProcessor] Applying normalization...');
         currentNode = this.applyNormalization(currentNode, processingChain.consistencyMastering.loudnessNormalization, offlineContext);
       }
 
       // 8. Apply Limiter (if enabled)
       if (processingChain.dynamicControl?.limiting?.enabled) {
-        console.log('[AudioProcessor] Applying limiter...');
         currentNode = this.applyLimiter(currentNode, processingChain.dynamicControl.limiting, offlineContext);
       }
 
@@ -133,12 +124,8 @@ export class AudioProcessor {
       // Start processing
       source.start(0);
 
-      console.log('[AudioProcessor] Rendering audio...');
       // Render
       const renderedBuffer = await offlineContext.startRendering();
-
-      const elapsed = performance.now() - startTime;
-      console.log('[AudioProcessor] ✓ Processing complete in', elapsed.toFixed(0), 'ms');
 
       return {
         buffer: renderedBuffer,
@@ -147,7 +134,7 @@ export class AudioProcessor {
       };
     } catch (error) {
       const elapsed = performance.now() - startTime;
-      console.error('[AudioProcessor] ✗ Processing failed after', elapsed.toFixed(0), 'ms:', error);
+      console.error('[AudioProcessor] Processing failed after', elapsed.toFixed(0), 'ms:', error);
       throw error;
     }
   }
@@ -305,15 +292,12 @@ export class AudioProcessor {
     let impulseResponse = this.impulseResponseCache.get(cacheKey);
     
     if (!impulseResponse) {
-      console.log('[AudioProcessor] Generating new impulse response for reverb');
       impulseResponse = this.generateImpulseResponse(
         reverbConfig.roomSize,
         reverbConfig.damping,
         context
       );
       this.impulseResponseCache.set(cacheKey, impulseResponse);
-    } else {
-      console.log('[AudioProcessor] Using cached impulse response for reverb');
     }
     
     convolver.buffer = impulseResponse;

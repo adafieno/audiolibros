@@ -138,14 +138,11 @@ export function useAudioPlayback({ projectId, processingChain }: UseAudioPlaybac
       let rawAudioUrl = audioCache.get(segmentId);
 
       if (!rawAudioUrl) {
-        console.log('[AudioPlayback] Fetching/generating raw audio for segment:', segmentId);
-
         let rawAudioBlob: Blob;
         
         // Check if segment has audio URL (prioritize blob storage)
         if (segment.raw_audio_url) {
           // Fetch from blob storage
-          console.log('[AudioPlayback] Fetching from storage:', segment.raw_audio_url);
           const response = await fetch(segment.raw_audio_url);
           if (!response.ok) throw new Error(`Failed to fetch audio: ${response.status}`);
           rawAudioBlob = await response.blob();
@@ -154,7 +151,6 @@ export function useAudioPlayback({ projectId, processingChain }: UseAudioPlaybac
           if (!voiceId) {
             throw new Error('Voice ID required to generate audio');
           }
-          console.log('[AudioPlayback] No audio URL found, generating TTS for segment:', segmentId, 'voice:', voiceId);
           
           // Use audition endpoint (does not create metadata - suitable for quick previews)
           rawAudioBlob = await voicesApi.auditionVoice(projectId, voiceId, segment.text);
@@ -162,13 +158,11 @@ export function useAudioPlayback({ projectId, processingChain }: UseAudioPlaybac
 
         rawAudioUrl = URL.createObjectURL(rawAudioBlob);
         audioCache.set(segmentId, rawAudioUrl);
-        console.log('[AudioPlayback] Raw audio cached for segment:', segmentId);
       }
 
       // Step 2: Apply processing chain if provided (on-the-fly, not cached)
       let finalAudioUrl = rawAudioUrl;
       if (processingChain) {
-        console.log('[AudioPlayback] Applying processing chain on-the-fly...');
         await initializeAudioProcessor();
         const processor = getAudioProcessor();
 
@@ -182,7 +176,6 @@ export function useAudioPlayback({ projectId, processingChain }: UseAudioPlaybac
         const processedBlob = await processor.encodeToBlob(processed.buffer);
         
         finalAudioUrl = URL.createObjectURL(processedBlob);
-        console.log('[AudioPlayback] Processing complete (not cached)');
       }
 
       // Step 3: Play audio
@@ -194,7 +187,6 @@ export function useAudioPlayback({ projectId, processingChain }: UseAudioPlaybac
         
         await new Promise<void>((resolve) => {
           audio!.onloadedmetadata = () => {
-            console.log('[AudioPlayback] Audio metadata loaded');
             resolve();
           };
         });
@@ -238,8 +230,6 @@ export function useAudioPlayback({ projectId, processingChain }: UseAudioPlaybac
           } catch (error) {
             console.error('[AudioPlayback] Failed to create audio source:', error);
           }
-        } else {
-          console.log('[AudioPlayback] Reusing existing audio graph for segment:', segmentId);
         }
         
         audio.onended = () => {
@@ -263,12 +253,10 @@ export function useAudioPlayback({ projectId, processingChain }: UseAudioPlaybac
       } else {
         // Only update source if URL has actually changed
         if (audio.src !== finalAudioUrl) {
-          console.log('[AudioPlayback] Audio URL changed, updating source');
           audio.src = finalAudioUrl;
           audio.volume = volumeRef.current;
           audio.load();
         } else {
-          console.log('[AudioPlayback] Reusing existing audio element with same URL');
           audio.volume = volumeRef.current; // Still update volume
         }
       }

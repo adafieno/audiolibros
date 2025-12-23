@@ -43,12 +43,12 @@ export function useAudioProduction(projectId: string, chapterId: string, chapter
   const generateSegmentAudio = useCallback(async (
     segmentId: string,
     request: SegmentAudioRequest
-  ): Promise<{ audioUrl: string }> => {
+  ): Promise<{ audioUrl: string; duration: number | null }> => {
     try {
       setError(null);
       
-      // Get audio Blob from API (same pattern as auditionVoice)
-      const blob = await audioProductionApi.generateSegmentAudio(
+      // Get audio Blob and duration from API (same pattern as auditionVoice)
+      const { blob, duration } = await audioProductionApi.generateSegmentAudio(
         projectId,
         chapterId,
         segmentId,
@@ -57,12 +57,25 @@ export function useAudioProduction(projectId: string, chapterId: string, chapter
       
       // Create object URL from Blob (avoids CORS issues)
       const audioUrl = URL.createObjectURL(blob);
-      console.log('[useAudioProduction] Created object URL for segment audio:', audioUrl);
+      console.log('[useAudioProduction] Created object URL for segment audio:', audioUrl, 'duration:', duration);
       
-      // Note: We don't update segments here because the state is managed by the hook
-      // The caller will reload chapter data to get updated metadata from server
+      // Update segment duration in local state (avoids full reload)
+      if (duration !== null) {
+        console.log('[useAudioProduction] Updating segment', segmentId, 'with duration:', duration);
+        setSegments(prev => {
+          const updated = prev.map(seg => 
+            seg.segment_id === segmentId
+              ? { ...seg, duration, has_audio: true }
+              : seg
+          );
+          console.log('[useAudioProduction] Updated segments:', updated.find(s => s.segment_id === segmentId));
+          return updated;
+        });
+      } else {
+        console.warn('[useAudioProduction] Duration is null, not updating segment state');
+      }
       
-      return { audioUrl };
+      return { audioUrl, duration };
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate audio';
