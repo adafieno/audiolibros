@@ -50,6 +50,38 @@ def get_audio_duration(audio_bytes: bytes) -> Optional[float]:
     except Exception as e:
         logger.warning(f"Failed to extract audio duration: {e}")
         return None
+
+
+def get_audio_duration_generic(audio_bytes: bytes, filename: str = "") -> Optional[float]:
+    """
+    Extract duration from any audio format using mutagen.
+    Supports WAV, MP3, FLAC, OGG, and more.
+    """
+    try:
+        from mutagen import File as MutagenFile
+        
+        # Create a file-like object with a name attribute (mutagen uses this for format detection)
+        class BytesIOWithName(io.BytesIO):
+            def __init__(self, data: bytes, name: str):
+                super().__init__(data)
+                self.name = name
+        
+        audio_file = BytesIOWithName(audio_bytes, filename)
+        audio = MutagenFile(audio_file)
+        
+        if audio is not None and hasattr(audio.info, 'length'):
+            return float(audio.info.length)
+        
+        logger.warning(f"Could not extract duration from {filename}")
+        return None
+        
+    except Exception as e:
+        logger.warning(f"Failed to extract audio duration for {filename}: {e}")
+        # Fallback to WAV-only extraction if mutagen fails
+        try:
+            return get_audio_duration(audio_bytes)
+        except:
+            return None
 logger = logging.getLogger(__name__)
 
 
@@ -605,15 +637,18 @@ async def upload_sfx(
         blob_path = f"sfx/{project_id}/{chapter_id}/{blob_filename}"
         
         # Upload to blob storage
-        # TODO: Convert to WAV 44.1kHz stereo if needed
         blob_url = await blob_service.upload_audio(
             blob_path=blob_path,
             audio_data=file_content
         )
         
-        # TODO: Extract audio duration using audio processing library
-        # For now, use a placeholder
-        duration_seconds = 0.0
+        # Extract audio duration
+        duration_seconds = get_audio_duration_generic(file_content, file.filename or "audio.wav")
+        if duration_seconds is None:
+            logger.warning(f"⚠️ Could not extract duration for {file.filename}, using 0.0")
+            duration_seconds = 0.0
+        else:
+            logger.info(f"📏 Extracted duration: {duration_seconds:.2f}s for {file.filename}")
         
         # Insert BEFORE the target segment by shifting all segments >= displayOrder forward
         # First, get all SFX segments for this chapter that need reordering
