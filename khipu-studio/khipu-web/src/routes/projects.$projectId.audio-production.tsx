@@ -470,7 +470,6 @@ function AudioProductionPage() {
     try {
       // Always generate/fetch audio through API (returns Blob)
       // API handles caching internally (HIT or MISS)
-      console.log('[AudioProduction] Fetching audio for segment:', selectedSegmentId);
       const result = await generateSegmentAudio(selectedSegmentId, {
         text: segment.text || '',
         voice: voiceId,
@@ -481,8 +480,6 @@ function AudioProductionPage() {
           pitch_pct: voiceSettings.pitch_pct,
         } : undefined,
       });
-      
-      console.log('[AudioProduction] Audio fetched, object URL:', result.audioUrl, 'duration:', result.duration);
       
       // Play the audio using the object URL
       // Duration is already updated in state by generateSegmentAudio hook - no reload needed
@@ -515,18 +512,6 @@ function AudioProductionPage() {
       }, 0);
     }
   }, [segments, selectedSegmentId, handleSegmentSelect]);
-
-  // Debug: Log segments when they change
-  useEffect(() => {
-    const segmentsWithAudio = segments.filter(s => s.has_audio);
-    if (segmentsWithAudio.length > 0) {
-      console.log('[AudioProduction] Segments with audio:', segmentsWithAudio.map(s => ({
-        id: s.segment_id,
-        duration: s.duration,
-        has_audio: s.has_audio
-      })));
-    }
-  }, [segments]);
 
   // Handle player controls
   // Handle toggle revision flag
@@ -1057,7 +1042,16 @@ function AudioProductionPage() {
                         const secs = Math.floor(seconds % 60);
                         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
                       };
-                      return playingSegmentId ? `${formatTime(currentTime)} / ${formatTime(duration)}` : '--:-- / --:--';
+                      
+                      // Get duration from selected segment or playing segment
+                      const selectedSegment = segments.find(s => s.segment_id === selectedSegmentId);
+                      const displayDuration = playingSegmentId === selectedSegmentId ? duration : (selectedSegment?.duration || 0);
+                      
+                      return playingSegmentId === selectedSegmentId 
+                        ? `${formatTime(currentTime)} / ${formatTime(displayDuration)}`
+                        : displayDuration > 0 
+                          ? `--:-- / ${formatTime(displayDuration)}`
+                          : '--:-- / --:--';
                     })()}
                   </span>
 
@@ -1133,9 +1127,14 @@ function AudioProductionPage() {
                     type: seg.type,  // Include segment type
                   };
 
-                  // Debug log for segments with audio
-                  if (seg.has_audio && seg.duration) {
-                    console.log('[SegmentList] Mapping segment with duration:', seg.segment_id, 'duration:', seg.duration);
+                  // Temporary debug log
+                  if (seg.segment_id === selectedSegmentId) {
+                    console.log('[SegmentList Render] Selected segment:', {
+                      id: seg.segment_id,
+                      has_audio: seg.has_audio,
+                      duration: seg.duration,
+                      mapped_duration: mapped.duration
+                    });
                   }
 
                   return mapped;

@@ -907,7 +907,13 @@ async def get_chapter_audio_production_data(
         )
     )
     metadata_list = result.scalars().all()
+    # Use UUID for keys since segment_model.id is UUID
     metadata_dict = {m.segment_id: m for m in metadata_list}
+    
+    logger.info(f"📊 Found {len(metadata_list)} metadata records for chapter {chapter.id}")
+    for m in metadata_list:
+        logger.info(f"  - segment={m.segment_id}, duration={m.duration_seconds}s, cache_key={m.raw_audio_cache_key[:16] if m.raw_audio_cache_key else 'None'}...")
+    logger.info(f"📊 metadata_dict keys type: {type(list(metadata_dict.keys())[0]) if metadata_dict else 'empty'}")
     
     # Get SFX segments
     result = await db.execute(
@@ -949,8 +955,10 @@ async def get_chapter_audio_production_data(
         # segment_model is now a Segment ORM instance with proper UUIDs
         segment_id = str(segment_model.id)
         
-        # Get metadata using the segment UUID (proper FK relationship)
-        metadata = metadata_dict.get(segment_id)
+        # Get metadata using the segment UUID (not string - metadata_dict keys are UUIDs)
+        metadata = metadata_dict.get(segment_model.id)  # Use UUID directly, not string
+        
+        logger.info(f"🔍 Segment {segment_id}: metadata_found={metadata is not None}, segment_model.id type={type(segment_model.id)}")
         
         # Determine if audio exists and get URL from cache
         has_audio = metadata is not None and metadata.raw_audio_cache_key is not None
@@ -968,13 +976,15 @@ async def get_chapter_audio_production_data(
                 )
             )
             cache_entry = cache_result.scalar_one_or_none()
-            if cache_entry:
-                raw_audio_url = await blob_service.get_blob_url(cache_entry.audio_blob_path)
+            if cache_entry and cache_entry.audio_blob_path:
+                if blob_service and blob_service.is_configured:
+                    raw_audio_url = await blob_service.get_blob_url(cache_entry.audio_blob_path)
                 # Backfill duration if missing
                 if not duration and cache_entry.audio_duration_seconds:
                     duration = cache_entry.audio_duration_seconds
-                    metadata.duration_seconds = duration
-                    await db.commit()
+                    if metadata:
+                        metadata.duration_seconds = duration
+                        await db.commit()
         
         # FALLBACK: If no metadata, compute cache_key directly and check cache
         if not has_audio and not duration:
@@ -1042,7 +1052,7 @@ async def get_chapter_audio_production_data(
                             logger.info(f"✨ FALLBACK: Found cached audio for segment {segment_id} (character: {character_name} → {azure_voice_id}, duration: {cache_entry.audio_duration_seconds}s)")
                             has_audio = True
                             duration = cache_entry.audio_duration_seconds
-                            if cache_entry.audio_blob_path:
+                            if cache_entry.audio_blob_path and blob_service and blob_service.is_configured:
                                 raw_audio_url = await blob_service.get_blob_url(cache_entry.audio_blob_path)
                         else:
                             logger.warning(f"❌ Cache MISS for computed key: {computed_cache_key[:32]}...")

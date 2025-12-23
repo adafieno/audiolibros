@@ -57,22 +57,14 @@ export function useAudioProduction(projectId: string, chapterId: string, chapter
       
       // Create object URL from Blob (avoids CORS issues)
       const audioUrl = URL.createObjectURL(blob);
-      console.log('[useAudioProduction] Created object URL for segment audio:', audioUrl, 'duration:', duration);
       
       // Update segment duration in local state (avoids full reload)
       if (duration !== null) {
-        console.log('[useAudioProduction] Updating segment', segmentId, 'with duration:', duration);
-        setSegments(prev => {
-          const updated = prev.map(seg => 
-            seg.segment_id === segmentId
-              ? { ...seg, duration, has_audio: true }
-              : seg
-          );
-          console.log('[useAudioProduction] Updated segments:', updated.find(s => s.segment_id === segmentId));
-          return updated;
-        });
-      } else {
-        console.warn('[useAudioProduction] Duration is null, not updating segment state');
+        setSegments(prev => prev.map(seg => 
+          seg.segment_id === segmentId
+            ? { ...seg, duration, has_audio: true }
+            : seg
+        ));
       }
       
       return { audioUrl, duration };
@@ -127,11 +119,9 @@ export function useAudioProduction(projectId: string, chapterId: string, chapter
   ): Promise<void> => {
     try {
       setError(null);
-      console.log('[useAudioProduction] toggleRevisionMark called:', { segmentId, needsRevision, notes });
       
       // Use chapter UUID if available, otherwise fall back to chapterId (order)
       const chapterIdForApi = chapterUuid || chapterId;
-      console.log('[useAudioProduction] Using chapterId for API:', chapterIdForApi);
       
       await audioProductionApi.updateRevisionMark(
         projectId,
@@ -140,16 +130,12 @@ export function useAudioProduction(projectId: string, chapterId: string, chapter
         { needs_revision: needsRevision, notes }
       );
       
-      console.log('[useAudioProduction] API call successful, updating local state');
-      
       // Update segment in local state
       setSegments(prev => prev.map(seg => 
         seg.segment_id === segmentId
           ? { ...seg, needs_revision: needsRevision }
           : seg
       ));
-      
-      console.log('[useAudioProduction] Local state updated');
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update revision mark';

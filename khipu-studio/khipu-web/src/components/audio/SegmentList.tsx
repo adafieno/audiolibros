@@ -317,22 +317,6 @@ export function SegmentList({
                     </td>
                   </tr>
 
-                  {/* Mini Waveform Row (when selected) */}
-                  {isSelected && segment.audio_blob_path && (
-                    <tr key={`${segment.id}-waveform`}>
-                      <td colSpan={6} style={{
-                        padding: '12px',
-                        background: 'rgba(74, 158, 255, 0.05)',
-                        borderBottom: '1px solid #333',
-                      }}>
-                        <MiniWaveform
-                          audioData={null}
-                          currentPosition={0}
-                        />
-                      </td>
-                    </tr>
-                  )}
-
                   {/* Revision Notes Row (if needs revision) */}
                   {segment.status === 'needs_revision' && segment.revision_notes && (
                     <tr key={`${segment.id}-notes`}>

@@ -34,10 +34,17 @@ class BlobStorageService:
         
         self.is_configured = False
         self.blob_service_client = None
+        self.account_name = None
+        self.account_key = None
         
         # Initialize blob service client only if credentials are configured
         if self.connection_string:
             try:
+                # Parse account name and key from connection string
+                conn_parts = dict(part.split('=', 1) for part in self.connection_string.split(';') if '=' in part)
+                self.account_name = conn_parts.get('AccountName')
+                self.account_key = conn_parts.get('AccountKey')
+                
                 self.blob_service_client = BlobServiceClient.from_connection_string(
                     self.connection_string
                 )
