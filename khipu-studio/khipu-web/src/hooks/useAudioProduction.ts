@@ -43,25 +43,26 @@ export function useAudioProduction(projectId: string, chapterId: string, chapter
   const generateSegmentAudio = useCallback(async (
     segmentId: string,
     request: SegmentAudioRequest
-  ): Promise<SegmentAudioResponse> => {
+  ): Promise<{ audioUrl: string }> => {
     try {
       setError(null);
       
-      const response = await audioProductionApi.generateSegmentAudio(
+      // Get audio Blob from API (same pattern as auditionVoice)
+      const blob = await audioProductionApi.generateSegmentAudio(
         projectId,
         chapterId,
         segmentId,
         request
       );
       
-      // Update segment in local state
-      setSegments(prev => prev.map(seg => 
-        seg.segment_id === segmentId
-          ? { ...seg, has_audio: true, raw_audio_url: response.raw_audio_url, duration: response.duration }
-          : seg
-      ));
+      // Create object URL from Blob (avoids CORS issues)
+      const audioUrl = URL.createObjectURL(blob);
+      console.log('[useAudioProduction] Created object URL for segment audio:', audioUrl);
       
-      return response;
+      // Note: We don't update segments here because the state is managed by the hook
+      // The caller will reload chapter data to get updated metadata from server
+      
+      return { audioUrl };
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate audio';

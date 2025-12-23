@@ -16,6 +16,7 @@ class CharacterTraits(BaseModel):
 class VoiceAssignment(BaseModel):
     """Voice assignment for a character"""
     voiceId: str
+    tts_provider: Optional[str] = "azure"  # "azure", "google", "elevenlabs", etc.
     style: Optional[str] = None
     styledegree: Optional[float] = 1.0
     rate_pct: Optional[int] = 0

@@ -187,25 +187,42 @@ class BlobStorageService:
         """
         return f"audio-cache/{tenant_id}/{cache_key}.{extension}"
     
-    async def get_blob_url(self, blob_path: str) -> Optional[str]:
+    async def get_blob_url(self, blob_path: str, expires_in_hours: int = 24) -> Optional[str]:
         """
-        Get public URL for a blob.
+        Get SAS URL for a blob with time-limited access.
         
         Args:
             blob_path: Path in blob storage
+            expires_in_hours: Hours until SAS token expires (default: 24)
             
         Returns:
-            str: Public URL, or None if blob doesn't exist
+            str: SAS URL with authentication token, or None if blob doesn't exist
         """
         if not self.is_configured:
             logger.debug("Blob storage not configured, cannot get blob URL")
             return None
             
         try:
+            from azure.storage.blob import generate_blob_sas, BlobSasPermissions
+            from datetime import datetime, timedelta, timezone
+            
             blob_client = self._get_blob_client(blob_path)
-            if blob_client.exists():
-                return blob_client.url
-            return None
+            if not blob_client.exists():
+                return None
+            
+            # Generate SAS token for read access
+            sas_token = generate_blob_sas(
+                account_name=self.account_name,
+                container_name=self.container_name,
+                blob_name=blob_path,
+                account_key=self.account_key,
+                permission=BlobSasPermissions(read=True),
+                expiry=datetime.now(timezone.utc) + timedelta(hours=expires_in_hours)
+            )
+            
+            # Return URL with SAS token
+            return f"{blob_client.url}?{sas_token}"
+            
         except AzureError as e:
             logger.error(f"Failed to get blob URL for {blob_path}: {e}")
             return None

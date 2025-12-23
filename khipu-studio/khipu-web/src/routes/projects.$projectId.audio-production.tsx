@@ -89,6 +89,7 @@ function AudioProductionPage() {
     loading,
     error,
     loadChapterData,
+    generateSegmentAudio,
     toggleRevisionMark,
     updateProcessingChain,
     uploadSfx,
@@ -445,7 +446,7 @@ function AudioProductionPage() {
     // Don't auto-load audio - wait for user to click play
   }, [segments]);
 
-  // Handle audio playback - use unified hook
+  // Handle audio playback - generate audio using proper endpoint that creates metadata
   const handlePlaySegment = useCallback(async () => {
     if (!selectedSegmentId) return;
     
@@ -464,21 +465,43 @@ function AudioProductionPage() {
     // Get voice from character's assignment (same as orchestration)
     const character = characters?.find(c => c.name === segment.character_name);
     const voiceId = character?.voiceAssignment?.voiceId || 'es-MX-DaliaNeural';
+    const voiceSettings = character?.voiceAssignment;
     
-
-    
-    await playSegment({
-      segment_id: segment.segment_id,
-      id: segment.segment_id,
-      has_audio: segment.has_audio,
-      raw_audio_url: segment.raw_audio_url || undefined,
-      text: segment.text || '',
-      voice: voiceId,
-    }, voiceId);
-    
-    // Reload chapter data to get updated duration
-    await loadChapterData();
-  }, [selectedSegmentId, isPlaying, playingSegmentId, segments, characters, playSegment, stopPlayback, loadChapterData]);
+    try {
+      // Always generate/fetch audio through API (returns Blob)
+      // API handles caching internally (HIT or MISS)
+      console.log('[AudioProduction] Fetching audio for segment:', selectedSegmentId);
+      const result = await generateSegmentAudio(selectedSegmentId, {
+        text: segment.text || '',
+        voice: voiceId,
+        prosody: voiceSettings ? {
+          style: voiceSettings.style,
+          styledegree: voiceSettings.styledegree,
+          rate_pct: voiceSettings.rate_pct,
+          pitch_pct: voiceSettings.pitch_pct,
+        } : undefined,
+      });
+      
+      console.log('[AudioProduction] Audio fetched, object URL:', result.audioUrl);
+      
+      // Reload chapter data to get updated metadata from server (duration, etc.)
+      await loadChapterData();
+      
+      // Play the audio using the object URL
+      await playSegment({
+        segment_id: segment.segment_id,
+        id: segment.segment_id,
+        has_audio: true,
+        raw_audio_url: result.audioUrl,
+        text: segment.text || '',
+        voice: voiceId,
+      }, voiceId);
+      
+    } catch (error) {
+      console.error('[AudioProduction] Failed to play segment:', error);
+      alert('Failed to play audio. Please try again.');
+    }
+  }, [selectedSegmentId, isPlaying, playingSegmentId, segments, characters, playSegment, stopPlayback, generateSegmentAudio, loadChapterData]);
 
   // Auto-select first segment when segments load
   useEffect(() => {

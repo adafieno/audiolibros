@@ -86,7 +86,8 @@ export const audioProductionApi = {
     chapterId: string,
     segmentId: string,
     request: SegmentAudioRequest
-  ): Promise<SegmentAudioResponse> {
+  ): Promise<Blob> {
+    // Returns audio Blob directly (same pattern as auditionVoice)
     const response = await fetchWithAuth(
       `${API_BASE}/api/v1/projects/${projectId}/chapters/${chapterId}/segments/${segmentId}/audio`,
       {
@@ -100,7 +101,19 @@ export const audioProductionApi = {
       throw new Error(error.detail || 'Failed to generate segment audio');
     }
     
-    return response.json();
+    // Extract duration from response headers
+    const durationHeader = response.headers.get('X-Audio-Duration');
+    const duration = durationHeader ? parseFloat(durationHeader) : null;
+    
+    // Get the audio blob
+    const blob = await response.blob();
+    
+    // Attach duration as metadata (for logging/debugging)
+    if (duration) {
+      console.log('[API] Audio generated with duration:', duration, 'seconds');
+    }
+    
+    return blob;
   },
 
   /**

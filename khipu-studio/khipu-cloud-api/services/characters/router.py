@@ -677,7 +677,7 @@ async def audition_character_voice(
             blob_service = BlobStorageService(settings)
             logger.info("📦 Using global blob storage settings")
         
-        audio_cache_service = get_audio_cache_service(blob_service, settings)
+        audio_cache_service = await get_audio_cache_service(current_user.tenant_id, blob_service, settings)
         use_cache = blob_service.is_configured
         
         if use_cache:

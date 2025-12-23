@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 async def cleanup_audio_cache_task():
     """Background task to cleanup expired and LRU audio cache entries"""
     from shared.services.audio_cache import get_audio_cache_service
+    from shared.services.blob_storage import BlobStorageService
     
     while True:
         try:
@@ -39,7 +40,12 @@ async def cleanup_audio_cache_task():
             
             # Get database session
             async for db in get_db():
-                audio_cache_service = get_audio_cache_service()
+                # Create audio cache service with global blob storage for cleanup tasks
+                # Use a system tenant ID for cleanup (operates across all tenants)
+                from uuid import UUID
+                system_tenant_id = UUID('00000000-0000-0000-0000-000000000000')
+                blob_service = BlobStorageService(settings)
+                audio_cache_service = await get_audio_cache_service(system_tenant_id, blob_service, settings)
                 
                 # Cleanup expired entries
                 deleted_expired = await audio_cache_service.cleanup_expired_cache(db)

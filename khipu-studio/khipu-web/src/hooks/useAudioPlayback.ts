@@ -155,6 +155,8 @@ export function useAudioPlayback({ projectId, processingChain }: UseAudioPlaybac
             throw new Error('Voice ID required to generate audio');
           }
           console.log('[AudioPlayback] No audio URL found, generating TTS for segment:', segmentId, 'voice:', voiceId);
+          
+          // Use audition endpoint (does not create metadata - suitable for quick previews)
           rawAudioBlob = await voicesApi.auditionVoice(projectId, voiceId, segment.text);
         }
 

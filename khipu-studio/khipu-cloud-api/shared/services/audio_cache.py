@@ -2,10 +2,11 @@
 import logging
 import hashlib
 import json
+import asyncio
 from typing import Optional, Dict, Any
 from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
+from sqlalchemy import select, update, and_
 from uuid import UUID
 
 from shared.models.audio_cache import AudioCache
@@ -39,24 +40,47 @@ class AudioCacheService:
     def generate_cache_key(
         text: str,
         voice_id: str,
-        voice_settings: Optional[Dict[str, Any]] = None
+        voice_settings: Optional[Dict[str, Any]] = None,
+        tenant_id: Optional[UUID] = None,
+        tts_provider: str = "azure"
     ) -> str:
         """
-        Generate deterministic cache key from input parameters.
+        Generate deterministic cache key with tenant and provider isolation.
         
         Args:
             text: Text to synthesize
-            voice_id: Voice identifier
+            voice_id: Voice identifier from TTS provider
             voice_settings: Optional voice settings (style, rate, pitch, etc.)
+            tenant_id: Tenant UUID for cache isolation (required for multi-tenant)
+            tts_provider: TTS provider identifier ("azure", "google", "elevenlabs", etc.)
             
         Returns:
             str: SHA256 hash as cache key
         """
-        # Create deterministic representation
+        # Normalize voice settings keys (handle camelCase and snake_case)
+        normalized_settings = {}
+        if voice_settings:
+            key_mappings = {
+                "styledegree": "style_degree",
+                "styleDegree": "style_degree",
+                "rate_pct": "rate_pct",
+                "ratePct": "rate_pct",
+                "pitch_pct": "pitch_pct",
+                "pitchPct": "pitch_pct",
+            }
+            for key, value in voice_settings.items():
+                normalized_key = key_mappings.get(key, key)
+                # Only include non-null values in cache key
+                if value is not None:
+                    normalized_settings[normalized_key] = value
+        
+        # Create deterministic representation with tenant and provider isolation
         cache_input = {
-            "text": text,
+            "tenant_id": str(tenant_id) if tenant_id else "global",
+            "tts_provider": tts_provider,
             "voice_id": voice_id,
-            "settings": voice_settings or {}
+            "text": text.strip(),  # Normalize whitespace
+            "settings": normalized_settings
         }
         
         # Sort keys for deterministic JSON
@@ -73,7 +97,8 @@ class AudioCacheService:
         tenant_id: UUID,
         text: str,
         voice_id: str,
-        voice_settings: Optional[Dict[str, Any]] = None
+        voice_settings: Optional[Dict[str, Any]] = None,
+        tts_provider: str = "azure"
     ) -> Optional[bytes]:
         """
         Get cached audio from L2 cache (Database + Blob).
@@ -84,11 +109,12 @@ class AudioCacheService:
             text: Text that was synthesized
             voice_id: Voice identifier
             voice_settings: Voice settings used
+            tts_provider: TTS provider identifier ("azure", "google", "elevenlabs", etc.)
             
         Returns:
             bytes: Audio data if found and not expired, None otherwise
         """
-        cache_key = self.generate_cache_key(text, voice_id, voice_settings)
+        cache_key = self.generate_cache_key(text, voice_id, voice_settings, tenant_id, tts_provider)
         
         try:
             # Query database for cache entry
@@ -148,7 +174,8 @@ class AudioCacheService:
         voice_settings: Optional[Dict[str, Any]],
         audio_data: bytes,
         ssml: Optional[str] = None,
-        audio_duration_seconds: Optional[float] = None
+        audio_duration_seconds: Optional[float] = None,
+        tts_provider: str = "azure"
     ) -> AudioCache:
         """
         Store audio in L2 cache (Database + Blob Storage).
@@ -162,11 +189,27 @@ class AudioCacheService:
             audio_data: Generated audio bytes
             ssml: Optional SSML representation
             audio_duration_seconds: Optional audio duration
+            tts_provider: TTS provider identifier
             
         Returns:
             AudioCache: Created cache entry
         """
-        cache_key = self.generate_cache_key(text, voice_id, voice_settings)
+        cache_key = self.generate_cache_key(text, voice_id, voice_settings, tenant_id, tts_provider)
+        
+        # Check if entry already exists (prevent duplicate key errors)
+        existing_result = await db.execute(
+            select(AudioCache).where(
+                and_(
+                    AudioCache.tenant_id == tenant_id,
+                    AudioCache.cache_key == cache_key
+                )
+            )
+        )
+        existing_entry = existing_result.scalar_one_or_none()
+        
+        if existing_entry:
+            logger.info(f"💾 Cache entry already exists: {cache_key[:16]}... (reusing)")
+            return existing_entry
         
         try:
             # Generate blob path
@@ -352,10 +395,51 @@ class AudioCacheService:
             }
 
 
-# Dependency injection
-def get_audio_cache_service(
+# Tenant-aware singleton registry: (tenant_id, storage_account_name) -> service instance
+_cache_service_registry: Dict[tuple, AudioCacheService] = {}
+_registry_lock = None  # Will be initialized as asyncio.Lock() when needed
+
+
+async def get_audio_cache_service(
+    tenant_id: UUID,
     blob_service: BlobStorageService,
     settings: Settings
 ) -> AudioCacheService:
-    """Get audio cache service instance."""
-    return AudioCacheService(blob_service, settings)
+    """
+    Get or create tenant-specific AudioCacheService instance (singleton registry pattern).
+    
+    This implements connection pooling per tenant/storage account combination:
+    - Same tenant + same storage account = reuse service instance
+    - Different tenant or storage account = create new instance
+    
+    Args:
+        tenant_id: Tenant UUID for cache isolation
+        blob_service: Project-specific or global blob storage service
+        settings: Application settings
+        
+    Returns:
+        AudioCacheService instance configured for the tenant/storage combination
+    """
+    global _registry_lock
+    
+    # Initialize lock on first use
+    if _registry_lock is None:
+        _registry_lock = asyncio.Lock()
+    
+    # Create registry key from tenant_id and storage account name
+    # Extract account name from blob_service connection string or use default
+    storage_key = getattr(blob_service, 'account_name', 'default')
+    registry_key = (str(tenant_id), storage_key)
+    
+    # Check if instance exists (read operation, no lock needed)
+    if registry_key in _cache_service_registry:
+        return _cache_service_registry[registry_key]
+    
+    # Create new instance (write operation, needs lock)
+    async with _registry_lock:
+        # Double-check after acquiring lock (another coroutine might have created it)
+        if registry_key not in _cache_service_registry:
+            _cache_service_registry[registry_key] = AudioCacheService(blob_service, settings)
+            logger.info(f"✨ Created new AudioCacheService instance for tenant {tenant_id}, storage {storage_key}")
+        
+        return _cache_service_registry[registry_key]
