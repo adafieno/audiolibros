@@ -96,12 +96,6 @@ export function useAudioLevelAnalysis(
       splitterRef.current = externalSplitter;
       audioContextRef.current = externalAudioContext;
       connectedElementRef.current = audioElement;
-      console.log('[AudioLevelAnalysis] Using external audio nodes from useAudioPlayback', {
-        hasAnalyser: !!externalAnalyser,
-        hasSplitter: !!externalSplitter,
-        hasContext: !!externalAudioContext,
-        contextState: externalAudioContext?.state
-      });
     } else {
       // Fallback: Create own audio context and analyzer (legacy behavior)
       // Initialize audio context and analyzer
@@ -149,7 +143,6 @@ export function useAudioLevelAnalysis(
         // If element is already connected, just mark it as connected
         // This happens when replaying audio - the element is already routed through the graph
         if (error instanceof Error && error.name === 'InvalidStateError') {
-          console.log('[AudioLevelAnalysis] Audio element already connected, reusing existing connection');
           connectedElementRef.current = audioElement;
         } else {
           console.warn('Could not create new audio source:', error);
@@ -166,15 +159,6 @@ export function useAudioLevelAnalysis(
     const bufferLength = analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
     
-    console.log('[AudioLevelAnalysis] Starting analysis loop with bufferLength:', bufferLength);
-    console.log('[AudioLevelAnalysis] Audio element state:', {
-      paused: audioElement.paused,
-      ended: audioElement.ended,
-      currentTime: audioElement.currentTime,
-      duration: audioElement.duration,
-      readyState: audioElement.readyState
-    });
-
     const startTime = Date.now();
 
     const analyze = () => {
@@ -189,16 +173,6 @@ export function useAudioLevelAnalysis(
       // Calculate RMS in dBFS
       const dbfs = calculateRmsDbfs(dataArray);
       
-      // Debug: log samples more frequently initially to see if data arrives
-      const now = Date.now();
-      const elapsed = now - startTime;
-      if (elapsed < 3000) { // First 3 seconds
-        console.log('[AudioLevelAnalysis] Sample data at', elapsed, 'ms:', {
-          first5: Array.from(dataArray.slice(0, 5)),
-          dbfs
-        });
-      }
-      
       // For stereo, we're getting a mix - set both channels to same value
       // In a real implementation with channel splitting, you'd analyze each separately
       setLeftDbfs(dbfs);
@@ -210,11 +184,8 @@ export function useAudioLevelAnalysis(
 
     // Resume audio context if suspended
     if (audioContextRef.current?.state === 'suspended') {
-      console.log('[AudioLevelAnalysis] Resuming suspended AudioContext');
       audioContextRef.current.resume();
     }
-    
-    console.log('[AudioLevelAnalysis] AudioContext state:', audioContextRef.current?.state);
 
     analyze();
 

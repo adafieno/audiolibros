@@ -71,13 +71,6 @@ export function Layout({ children }: LayoutProps) {
         manuscript: manuscriptComplete,
       };
       
-      console.log('[Layout] Syncing project state:', {
-        projectId,
-        workflowCompleted: updatedWorkflow,
-        fullWorkflow: JSON.stringify(updatedWorkflow),
-        chaptersCount: chaptersData?.items?.length || 0
-      });
-      
       setProjectState({
         currentProjectId: projectId,
         root: project.root,
@@ -99,13 +92,6 @@ export function Layout({ children }: LayoutProps) {
     // Add workflow routes when we have a project loaded
     const availableRoutes = projectRoutes.filter((route) => {
       const available = isStepAvailable(route.workflowStep, projectState.workflowCompleted);
-      if (route.to === 'casting') {
-        console.log('[Layout] Casting availability check:', {
-          available,
-          workflowCompleted: projectState.workflowCompleted,
-          manuscriptComplete: projectState.workflowCompleted?.manuscript
-        });
-      }
       return available;
     });
     navItems.push(...availableRoutes);
