@@ -180,12 +180,12 @@ export function ProjectLayout({ children }: { children: ReactNode }) {
             <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)' }}>{t('app.title')}</div>
             <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t('app.subtitle')}</div>
           </div>
-          {/* Undo/Redo Controls - right after app title */}
-          {projectId ? (
+          {/* Undo/Redo Controls - DISABLED */}
+          {/* {projectId ? (
             <UndoRedo projectId={projectId} />
           ) : (
             <div style={{ color: 'var(--text-muted)', fontSize: 12, marginLeft: 24 }}>No project</div>
-          )}
+          )} */}
         </div>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>

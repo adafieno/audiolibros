@@ -130,8 +130,8 @@ export function Layout({ children }: LayoutProps) {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          {/* Undo/Redo Controls */}
-          {projectId && <UndoRedo projectId={projectId} />}
+          {/* Undo/Redo Controls - DISABLED */}
+          {/* {projectId && <UndoRedo projectId={projectId} />} */}
           <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
             {user?.email}
           </div>

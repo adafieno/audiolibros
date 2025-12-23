@@ -20,10 +20,8 @@ export function UndoRedo({ projectId, className = '' }: UndoRedoProps) {
   const { data: actions = [], refetch, error, isLoading } = useQuery({
     queryKey: ['actionHistory', projectId],
     queryFn: async () => {
-      console.log('[UndoRedo] Fetching action history for project:', projectId);
       try {
         const result = await actionsApi.getHistory(projectId, 20);
-        console.log('[UndoRedo] Action history fetched:', result);
         return result;
       } catch (err) {
         console.error('[UndoRedo] Failed to fetch action history:', err);
@@ -33,9 +31,6 @@ export function UndoRedo({ projectId, className = '' }: UndoRedoProps) {
     refetchInterval: 5000, // Refetch every 5 seconds to stay updated
     enabled: !!projectId,
   });
-
-  // Debug logging
-  console.log('[UndoRedo] State:', { projectId, actions, error, isLoading, isProcessing });
 
   // Find the most recent undoable and redoable actions
   const canUndo = actions.some(a => !a.is_undone);
