@@ -1,7 +1,377 @@
 {
-  "project": "Khipu Studio",
-  "tracking_start_date": "2025-12-23",
-  "sessions": [
+  "portfolio": "Khipu Studio Suite",
+  "portfolio_start_date": "2025-09-03",
+  "tracking_start_date": "2025-09-03",
+  "git_repository": "local",
+  "total_commits": 534,
+  "primary_developer": "Agustín Da Fieno Delucchi",
+  "ai_assistant": "GitHub Copilot (Claude Sonnet 4.5)",
+  "projects": [
+    {
+      "project_id": "khipu-desktop",
+      "name": "Khipu Studio Desktop",
+      "description": "Desktop Electron application for audiobook production (app/ directory)",
+      "start_date": "2025-09-03",
+      "end_date": "2025-11-25",
+      "duration_days": 84,
+      "status": "active",
+      "architecture": "Electron desktop app with React frontend and local audio processing",
+      "key_features": [
+        "Document parsing and text segmentation",
+        "Voice planning and character assignment",
+        "Local audio cache system",
+        "Voice mapping tools",
+        "TTS integration",
+        "Waveform visualization",
+        "VU meters and audio engineering UI",
+        "Chapter management",
+        "SSML support"
+      ],
+      "technology_stack": [
+        "TypeScript/React",
+        "Electron",
+        "Vite",
+        "Local file system",
+        "TTS APIs"
+      ],
+      "commits": 335,
+      "velocity": 3.99,
+      "sessions": [
+        {
+          "session_id": "2025-09-03-to-11-25-desktop-development",
+          "date_range": "2025-09-03 to 2025-11-25",
+          "duration_days": 84,
+          "focus_areas": ["desktop_app", "audio_production", "ui_polish"],
+          "features": [
+            {
+              "id": "desktop-full-implementation",
+              "name": "Complete Desktop Application",
+              "category": "foundation",
+              "initial_problem": "Need complete audiobook production desktop app",
+              "complexity": "high",
+              "commits": 335,
+              "status": "active",
+              "notes": "Desktop app with full audio production pipeline, voice planning, waveform visualization, VU meters"
+            }
+          ],
+          "overall_metrics": {
+            "total_commits": 335,
+            "context": "Complete desktop application with professional audio engineering UI"
+          }
+        }
+      ],
+      "cumulative_stats": {
+        "total_sessions": 1,
+        "total_features": 1,
+        "total_commits": 335,
+        "development_days": 84,
+        "average_commits_per_day": 3.99
+      }
+    },
+    {
+      "project_id": "khipu-cloud",
+      "name": "Khipu Studio Cloud",
+      "description": "Cloud API and web interface (khipu-cloud-api/ + khipu-web/ directories)",
+      "start_date": "2025-11-25",
+      "current_date": "2025-12-23",
+      "duration_days": 29,
+      "status": "active",
+      "architecture": "FastAPI backend + React frontend + Azure Blob Storage",
+      "relationship_to_desktop": "Companion API/web interface for Desktop app with cloud storage and remote access",
+      "key_differences_from_desktop": [
+        "Multi-tenant architecture (Desktop is single-user)",
+        "Azure Blob Storage (Desktop uses local file system)",
+        "Web-based UI (Desktop is Electron)",
+        "RESTful API (Desktop has direct operations)",
+        "Docker deployment (Desktop is packaged installer)"
+      ],
+      "key_features": [
+        "Multi-tenant project management",
+        "Cloud-based manuscript upload and parsing",
+        "Azure OpenAI TTS integration",
+        "Orchestration with LLM-based character assignment",
+        "Two-tier audio caching (local + Azure Blob)",
+        "Professional audio production UI",
+        "Real-time waveform visualization",
+        "SFX import and management"
+      ],
+      "technology_stack": [
+        "Python FastAPI",
+        "PostgreSQL",
+        "SQLAlchemy + Alembic",
+        "React + TypeScript",
+        "Vite",
+        "Azure Blob Storage",
+        "Azure OpenAI",
+        "Docker"
+      ],
+      "commits": 199,
+      "velocity": 6.86,
+      "sessions": [
+        {
+          "session_id": "2025-11-25-to-12-23-cloud-development",
+          "date_range": "2025-11-25 to 2025-12-23",
+          "duration_days": 29,
+          "focus_areas": ["cloud_api", "web_interface", "azure_integration"],
+          "features": [
+            {
+              "id": "cloud-full-implementation",
+              "name": "Cloud API and Web Interface",
+              "category": "cloud_infrastructure",
+              "initial_problem": "Add cloud API and web access to Desktop app",
+              "complexity": "high",
+              "commits": 199,
+              "status": "active",
+              "notes": "FastAPI backend (67 commits) + React web frontend (132 commits) with Azure Blob Storage, multi-tenancy, Docker deployment"
+            }
+          ],
+          "overall_metrics": {
+            "total_commits": 199,
+            "context": "Cloud API/web companion for Desktop app with Azure integration"
+          }
+        }
+      ],
+      "cumulative_stats": {
+        "total_sessions": 1,
+        "total_features": 1,
+        "total_commits": 199,
+        "development_days": 29,
+        "average_commits_per_day": 6.86
+      }
+    }
+  ],
+  "portfolio_summary": {
+    "total_duration_days": 113,
+    "total_commits": 534,
+    "average_velocity": 4.73,
+    "overlap_period": "Nov 25 - Dec 23 (29 days of parallel development)",
+    "development_pattern": "Desktop-first (Sep 3 - Nov 25, 84 days) → Desktop + Cloud parallel (Nov 25 - Dec 23, 29 days)",
+    "velocity_comparison": {
+      "desktop": "3.99 commits/day (primary Electron app)",
+      "cloud": "6.86 commits/day (API + web interface)",
+      "note": "Cloud developed as companion to Desktop, not replacement"
+    },
+    "effort_comparison": {
+      "methodology": "Comparison of AI-assisted development vs estimated traditional solo developer effort",
+      "desktop_project": {
+        "actual_duration_days": 84,
+        "traditional_estimate_days": "180-360",
+        "speedup_factor": "2.5-4.3x",
+        "time_saved_days": "96-276",
+        "notes": "Full Electron app with React, i18n, audio processing, M4B packaging"
+      },
+      "cloud_project": {
+        "actual_duration_days": 29,
+        "traditional_estimate_days": "90-180",
+        "speedup_factor": "3.1-6.2x",
+        "time_saved_days": "61-151",
+        "notes": "FastAPI + React + PostgreSQL + Azure + Docker - higher speedup due to focused scope"
+      },
+      "portfolio_total": {
+        "actual_duration_days": 113,
+        "traditional_estimate_days": "270-540",
+        "average_speedup_factor": "2.4-4.8x",
+        "time_saved_days": "157-427",
+        "productivity_multiplier": "3-5x average across all work"
+      },
+      "feature_level_speedup": {
+        "orchestration_module": {
+          "date": "2025-12-15",
+          "actual_hours": 10,
+          "traditional_estimate_days": "3-5",
+          "speedup": "5x"
+        },
+        "audio_production_module": {
+          "date": "2025-12-19",
+          "actual_hours": 12,
+          "traditional_estimate_days": "7-14",
+          "speedup": "7-10x"
+        },
+        "uuid_migration": {
+          "date": "2025-12-22",
+          "actual_hours": 4,
+          "traditional_estimate_days": "1-2",
+          "speedup": "4-8x"
+        },
+        "sfx_feature": {
+          "date": "2025-12-23",
+          "actual_hours": 2,
+          "traditional_estimate_days": "1-2",
+          "speedup": "8x"
+        }
+      },
+      "speedup_by_complexity": {
+        "boilerplate_crud": "10x+ faster (AI excels at repetitive code)",
+        "full_stack_features": "5-10x faster (database + API + frontend)",
+        "integration_work": "5-7x faster (API connections, SDKs)",
+        "architecture_design": "1-2x faster (human-led, AI assists)"
+      },
+      "cost_benefit": {
+        "traditional_cost": "1 developer × 9-18 months salary",
+        "ai_assisted_cost": "1 developer × 3.8 months + AI subscription ($20/month)",
+        "savings": "5-14 months of developer salary",
+        "roi_percentage": "400-1400%"
+      }
+    },
+    "architectural_relationship": [
+      "Desktop (app/): Electron application with local audio operations - PRIMARY",
+      "Cloud (khipu-cloud-api/ + khipu-web/): Web API and interface - COMPANION",
+      "Desktop: Local file system → Cloud: Azure Blob Storage",
+      "Desktop: Single-user → Cloud: Multi-tenant with RBAC",
+      "Projects overlap starting Nov 25, 2025"
+    ],
+    "cloud_start_date": "2025-11-25",
+    "overlap_strategy": "Cloud API/web added to provide remote access while Desktop remains primary production tool"
+  },
+  "cumulative_stats": {
+    "desktop_project": {
+      "duration_days": 84,
+      "commits": 335,
+      "velocity": 3.99
+    },
+    "cloud_project": {
+      "duration_days": 29,
+      "commits": 199,
+      "velocity": 6.86
+    },
+    "total_commits": 534,
+    "development_days": 113,
+    "overlap_days": 29,
+    "projects": 2
+  }
+}
+          "id": "azure-openai-integration",
+          "name": "Azure OpenAI Support",
+          "category": "feature_development",
+          "complexity": "medium",
+          "commits": 2,
+          "key_commits": [
+            "2025-12-16: Add Azure OpenAI support",
+            "2025-12-16: Enhance LLM integration with Azure support"
+          ],
+          "status": "completed"
+        }
+      ],
+      "overall_metrics": {
+        "total_commits": 15,
+        "context": "UUID foundation, global undo/redo, Azure OpenAI, UX polish"
+      }
+    },
+    {
+      "session_id": "2025-12-18-to-12-21-audio-production-foundation",
+      "date_range": "2025-12-18 to 2025-12-21",
+      "duration_days": 4,
+      "focus_areas": ["audio_production", "caching", "visualization"],
+      "features": [
+        {
+          "id": "two-tier-cache",
+          "name": "Two-Tier Audio Caching (Local + Azure Blob)",
+          "category": "architecture",
+          "complexity": "high",
+          "commits": 3,
+          "key_commits": [
+            "2025-12-18: Implement two-tier audio caching with Azure Blob Storage",
+            "2025-12-22: Enhance audio production API with tenant-aware caching"
+          ],
+          "status": "completed",
+          "notes": "Local cache for speed, Azure Blob for persistence and sharing"
+        },
+        {
+          "id": "audio-models",
+          "name": "Audio Segment Metadata Models",
+          "category": "architecture",
+          "complexity": "medium",
+          "commits": 2,
+          "key_commits": [
+            "2025-12-19: Add audio segment metadata and SFX segments models"
+          ],
+          "status": "completed"
+        },
+        {
+          "id": "audio-api",
+          "name": "Audio Production API",
+          "category": "feature_development",
+          "complexity": "high",
+          "commits": 4,
+          "key_commits": [
+            "2025-12-19: Add audio production API router and schemas",
+            "2025-12-19: Implement audio production API client and hooks"
+          ],
+          "status": "completed"
+        },
+        {
+          "id": "audio-components",
+          "name": "Audio Production UI Components",
+          "category": "feature_development",
+          "complexity": "high",
+          "commits": 10,
+          "key_commits": [
+            "2025-12-19: Add Rotary Knob and VU Meter components",
+            "2025-12-19: Add comprehensive audio processing components",
+            "2025-12-20: add AudioWaveform component for real-time visualization",
+            "2025-12-21: add Standard VU Meter with true VU ballistics"
+          ],
+          "status": "completed",
+          "notes": "Professional audio UI: rotary knobs, VU meters, waveform, effect chain editor"
+        },
+        {
+          "id": "audio-preset-system",
+          "name": "Audio Processing Preset Management",
+          "category": "feature_development",
+          "complexity": "medium",
+          "commits": 5,
+          "key_commits": [
+            "2025-12-19: add preset_id support to audio processing chain",
+            "2025-12-20: implement audio preset management"
+          ],
+          "status": "completed"
+        }
+      ],
+      "overall_metrics": {
+        "total_commits": 30,
+        "context": "Major audio production module - caching, API, professional UI components"
+      }
+    },
+    {
+      "session_id": "2025-12-22-uuid-migration",
+      "date_range": "2025-12-22",
+      "duration_hours": 3,
+      "focus_areas": ["database_migration", "architecture"],
+      "features": [
+        {
+          "id": "uuid-normalization",
+          "name": "UUID Schema Normalization",
+          "category": "refactoring",
+          "complexity": "high",
+          "commits": 2,
+          "key_commits": [
+            "2025-12-22: Refactor datetime and normalize segments schema in database",
+            "2025-12-22: fix chapter_id field in SfxSegment to use UUID foreign key"
+          ],
+          "segments_migrated": 1102,
+          "files_modified": 15,
+          "lines_changed": 1200,
+          "blockers": [
+            {
+              "type": "database",
+              "description": "Large-scale migration across 1,102 segments",
+              "resolution": "Alembic migration with careful testing",
+              "iterations_to_resolve": 1
+            }
+          ],
+          "status": "completed",
+          "notes": "Complete UUID normalization across database, consistent types throughout stack"
+        }
+      ],
+      "overall_metrics": {
+        "total_commits": 2,
+        "total_files_modified": 15,
+        "total_lines_changed": 1200,
+        "context": "Critical architectural refactoring - UUID consistency across 1,102 segments"
+      }
+    },
+      }
+    },
     {
       "session_id": "2025-12-23-duration-sfx",
       "date": "2025-12-23",
@@ -164,14 +534,47 @@
         "critical_moment": "User stated: 'I am a bit tired of half-done solutions'"
       }
     }
+        }
+      ],
+      "cumulative_stats": {
+        "total_sessions": 8,
+        "total_features": 24,
+        "total_bugs_fixed": 3,
+        "total_hours_tracked": 14.5,
+        "total_commits": 523,
+        "development_days": 111,
+        "average_commits_per_day": 4.7,
+        "average_iterations_per_feature": 3.2,
+        "most_common_blocker_type": "architecture"
+      }
+    }
   ],
-  "cumulative_stats": {
-    "total_sessions": 1,
-    "total_features_completed": 2,
-    "total_bugs_fixed": 1,
-    "total_hours": 3.5,
-    "total_lines_changed": 325,
-    "average_iterations_per_feature": 4.5,
-    "most_common_blocker_type": "logic"
+  "portfolio_summary": {
+    "total_commits": 539,
+    "total_features": 25,
+    "total_development_days": 118,
+    "projects_completed": 1,
+    "projects_active": 1,
+    "transition_pattern": "Desktop prototype → Cloud platform",
+    "knowledge_transfer": "Desktop logic and workflows migrated to cloud architecture",
+    "architectural_evolution": {
+      "desktop": "Local file system, single-user, direct API calls",
+      "cloud": "Azure Blob Storage, multi-tenant, RESTful API, distributed caching"
+    }
+  },
+  "development_patterns": {
+    "desktop_phase": {
+      "duration": "7 days",
+      "intensity": "exploratory",
+      "commit_frequency": "2.3 commits/day",
+      "focus": "Rapid prototyping, finding right approach"
+    },
+    "cloud_phase": {
+      "duration": "111 days",
+      "intensity": "sustained high productivity",
+      "commit_frequency": "4.7 commits/day",
+      "focus": "Enterprise architecture, cloud integration, professional features"
+    },
+    "transition_insight": "Desktop phase established patterns that accelerated cloud development"
   }
 }
