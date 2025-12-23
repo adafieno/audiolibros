@@ -1085,7 +1085,7 @@ function AudioProductionPage() {
                     audioElement={currentAudioElement || null}
                     isPlaying={!!playingSegmentId}
                     width={800}
-                    height={80}
+                    height={120}
                     onSeek={seek}
                   />
                 </div>

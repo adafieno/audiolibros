@@ -185,6 +185,33 @@ export function AudioWaveform({ audioElement, isPlaying, width = 800, height = 8
       ctx.lineTo(width, halfHeight);
       ctx.stroke();
 
+      // Draw peak threshold reference lines
+      // -6dB threshold (~0.5 amplitude) - yellow
+      const threshold6dB = halfHeight * 0.5; // 50% of half height
+      ctx.strokeStyle = 'rgba(251, 191, 36, 0.3)';
+      ctx.setLineDash([4, 4]);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, halfHeight - threshold6dB);
+      ctx.lineTo(width, halfHeight - threshold6dB);
+      ctx.moveTo(0, halfHeight + threshold6dB);
+      ctx.lineTo(width, halfHeight + threshold6dB);
+      ctx.stroke();
+      
+      // -3dB threshold (~0.707 amplitude) - orange
+      const threshold3dB = halfHeight * 0.707; // 70.7% of half height
+      ctx.strokeStyle = 'rgba(251, 113, 33, 0.4)';
+      ctx.setLineDash([2, 2]);
+      ctx.beginPath();
+      ctx.moveTo(0, halfHeight - threshold3dB);
+      ctx.lineTo(width, halfHeight - threshold3dB);
+      ctx.moveTo(0, halfHeight + threshold3dB);
+      ctx.lineTo(width, halfHeight + threshold3dB);
+      ctx.stroke();
+      
+      // Reset line dash
+      ctx.setLineDash([]);
+
       // Draw playback cursor with time display
       if (progress > 0 && progress < 1) {
         const cursorX = progress * width;
