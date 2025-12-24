@@ -17,6 +17,7 @@ from services.characters.router import router as characters_router
 from services.planning.router import router as planning_router
 from services.actions.router import router as actions_router
 from services.audio.router import router as audio_router
+from services.packaging.router import router as packaging_router
 
 # Configure logging
 logging.basicConfig(
@@ -124,6 +125,7 @@ app.include_router(audio_router, prefix="/api/v1", tags=["Audio Production"])
 app.include_router(voices_router, prefix="/api/v1", tags=["Voices"])
 app.include_router(characters_router, prefix="/api/v1", tags=["Characters"])
 app.include_router(actions_router, prefix="/api/v1", tags=["Actions"])
+app.include_router(packaging_router, prefix="/api/v1", tags=["Packaging"])
 
 
 @app.get("/")
