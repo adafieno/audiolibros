@@ -467,7 +467,9 @@ function OrchestrationPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {localSegments.map((segment) => (
+                  {localSegments
+                    .filter(segment => !filterNoCharacter || !segment.voice)
+                    .map((segment) => (
                     <tr
                       key={segment.id}
                       onClick={() => setSelectedSegmentId(segment.id)}
