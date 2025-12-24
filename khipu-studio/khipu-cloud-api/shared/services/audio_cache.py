@@ -41,6 +41,7 @@ class AudioCacheService:
         text: str,
         voice_id: str,
         voice_settings: Optional[Dict[str, Any]] = None,
+        pause_config: Optional[Dict[str, int]] = None,
         tenant_id: Optional[UUID] = None,
         tts_provider: str = "azure"
     ) -> str:
@@ -51,6 +52,7 @@ class AudioCacheService:
             text: Text to synthesize
             voice_id: Voice identifier from TTS provider
             voice_settings: Optional voice settings (style, rate, pitch, etc.)
+            pause_config: Optional pause configuration (sentenceMs, paragraphMs, commaMs, etc.)
             tenant_id: Tenant UUID for cache isolation (required for multi-tenant)
             tts_provider: TTS provider identifier ("azure", "google", "elevenlabs", etc.)
             
@@ -80,7 +82,8 @@ class AudioCacheService:
             "tts_provider": tts_provider,
             "voice_id": voice_id,
             "text": text.strip(),  # Normalize whitespace
-            "settings": normalized_settings
+            "settings": normalized_settings,
+            "pause_config": pause_config if pause_config else None
         }
         
         # Sort keys for deterministic JSON
@@ -98,6 +101,7 @@ class AudioCacheService:
         text: str,
         voice_id: str,
         voice_settings: Optional[Dict[str, Any]] = None,
+        pause_config: Optional[Dict[str, int]] = None,
         tts_provider: str = "azure"
     ) -> Optional[bytes]:
         """
@@ -109,12 +113,13 @@ class AudioCacheService:
             text: Text that was synthesized
             voice_id: Voice identifier
             voice_settings: Voice settings used
+            pause_config: Pause configuration used (sentenceMs, paragraphMs, etc.)
             tts_provider: TTS provider identifier ("azure", "google", "elevenlabs", etc.)
             
         Returns:
             bytes: Audio data if found and not expired, None otherwise
         """
-        cache_key = self.generate_cache_key(text, voice_id, voice_settings, tenant_id, tts_provider)
+        cache_key = self.generate_cache_key(text, voice_id, voice_settings, pause_config, tenant_id, tts_provider)
         
         try:
             # Query database for cache entry
@@ -175,6 +180,7 @@ class AudioCacheService:
         audio_data: bytes,
         ssml: Optional[str] = None,
         audio_duration_seconds: Optional[float] = None,
+        pause_config: Optional[Dict[str, int]] = None,
         tts_provider: str = "azure"
     ) -> AudioCache:
         """
@@ -189,12 +195,13 @@ class AudioCacheService:
             audio_data: Generated audio bytes
             ssml: Optional SSML representation
             audio_duration_seconds: Optional audio duration
+            pause_config: Pause configuration used (sentenceMs, paragraphMs, etc.)
             tts_provider: TTS provider identifier
             
         Returns:
             AudioCache: Created cache entry
         """
-        cache_key = self.generate_cache_key(text, voice_id, voice_settings, tenant_id, tts_provider)
+        cache_key = self.generate_cache_key(text, voice_id, voice_settings, pause_config, tenant_id, tts_provider)
         
         # Check if entry already exists (prevent duplicate key errors)
         existing_result = await db.execute(

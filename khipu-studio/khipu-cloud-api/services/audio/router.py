@@ -154,6 +154,21 @@ async def generate_segment_audio(
         # Get audio cache service with project-specific blob storage (tenant-aware singleton)
         audio_cache_service = await get_audio_cache_service(current_user.tenant_id, blob_service, settings)
         
+        # Extract pause configuration from project settings
+        pause_config = None
+        if project.settings:
+            pauses = project.settings.get("pauses")
+            if pauses:
+                pause_config = {
+                    "sentenceMs": pauses.get("sentenceMs", 500),
+                    "paragraphMs": pauses.get("paragraphMs", 1000),
+                    "chapterMs": pauses.get("chapterMs", 3000),
+                    "commaMs": pauses.get("commaMs", 300),
+                    "colonMs": pauses.get("colonMs", 400),
+                    "semicolonMs": pauses.get("semicolonMs", 350)
+                }
+                logger.info(f"🎵 Using project pause config: {pause_config}")
+        
         # Prepare voice settings
         voice_settings = request.prosody or {}
         
@@ -166,6 +181,7 @@ async def generate_segment_audio(
             text=request.text,
             voice_id=request.voice,
             voice_settings=voice_settings,
+            pause_config=pause_config,
             tts_provider="azure"
         )
         
@@ -177,6 +193,7 @@ async def generate_segment_audio(
                 text=request.text,
                 voice_id=request.voice,
                 voice_settings=voice_settings,
+                pause_config=pause_config,
                 tenant_id=current_user.tenant_id,
                 tts_provider="azure"  # TODO: Get from voice assignment in future
             )
@@ -272,6 +289,7 @@ async def generate_segment_audio(
             voice_settings=voice_settings,
             audio_data=audio_bytes,
             audio_duration_seconds=audio_duration,
+            pause_config=pause_config,
             tts_provider="azure"
         )
         
@@ -282,6 +300,7 @@ async def generate_segment_audio(
             text=request.text,
             voice_id=request.voice,
             voice_settings=voice_settings,
+            pause_config=pause_config,
             tenant_id=current_user.tenant_id,
             tts_provider="azure"  # TODO: Get from voice assignment in future
         )
@@ -914,6 +933,21 @@ async def get_chapter_audio_production_data(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     
+    # Extract pause configuration from project settings
+    pause_config = None
+    if project.settings:
+        pauses = project.settings.get("pauses")
+        if pauses:
+            pause_config = {
+                "sentenceMs": pauses.get("sentenceMs", 500),
+                "paragraphMs": pauses.get("paragraphMs", 1000),
+                "chapterMs": pauses.get("chapterMs", 3000),
+                "commaMs": pauses.get("commaMs", 300),
+                "colonMs": pauses.get("colonMs", 400),
+                "semicolonMs": pauses.get("semicolonMs", 350)
+            }
+            logger.info(f"🎵 Using project pause config: {pause_config}")
+    
     # First, get the chapter by order to get its UUID
     from shared.models.chapter import Chapter
     result = await db.execute(
@@ -1079,6 +1113,7 @@ async def get_chapter_audio_production_data(
                             text=text,
                             voice_id=azure_voice_id,
                             voice_settings=voice_settings,
+                            pause_config=pause_config,
                             tenant_id=current_user.tenant_id,
                             tts_provider=tts_provider
                         )

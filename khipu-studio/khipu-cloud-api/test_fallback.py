@@ -48,7 +48,8 @@ async def test():
                 cache_key = AudioCacheService.generate_cache_key(
                     text=text,
                     voice_id=azure_voice_id,
-                    voice_settings={'style': None, 'style_degree': None, 'rate_pct': None, 'pitch_pct': None}
+                    voice_settings={'style': None, 'style_degree': None, 'rate_pct': None, 'pitch_pct': None},
+                    pause_config=None  # Use None for test - will use cache key without pause config
                 )
                 
                 print(f'Computed cache_key: {cache_key}')
