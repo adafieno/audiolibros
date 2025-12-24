@@ -17,6 +17,7 @@ import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
 import { Route as ProjectsProjectIdRouteImport } from './routes/projects.$projectId'
 import { Route as ProjectsProjectIdIndexRouteImport } from './routes/projects.$projectId.index'
 import { Route as ProjectsProjectIdPropertiesRouteImport } from './routes/projects.$projectId.properties'
+import { Route as ProjectsProjectIdPackagingRouteImport } from './routes/projects.$projectId.packaging'
 import { Route as ProjectsProjectIdOrchestrationRouteImport } from './routes/projects.$projectId.orchestration'
 import { Route as ProjectsProjectIdManuscriptRouteImport } from './routes/projects.$projectId.manuscript'
 import { Route as ProjectsProjectIdExportRouteImport } from './routes/projects.$projectId.export'
@@ -65,6 +66,12 @@ const ProjectsProjectIdPropertiesRoute =
   ProjectsProjectIdPropertiesRouteImport.update({
     id: '/properties',
     path: '/properties',
+    getParentRoute: () => ProjectsProjectIdRoute,
+  } as any)
+const ProjectsProjectIdPackagingRoute =
+  ProjectsProjectIdPackagingRouteImport.update({
+    id: '/packaging',
+    path: '/packaging',
     getParentRoute: () => ProjectsProjectIdRoute,
   } as any)
 const ProjectsProjectIdOrchestrationRoute =
@@ -128,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/export': typeof ProjectsProjectIdExportRoute
   '/projects/$projectId/manuscript': typeof ProjectsProjectIdManuscriptRoute
   '/projects/$projectId/orchestration': typeof ProjectsProjectIdOrchestrationRoute
+  '/projects/$projectId/packaging': typeof ProjectsProjectIdPackagingRoute
   '/projects/$projectId/properties': typeof ProjectsProjectIdPropertiesRoute
   '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
 }
@@ -144,6 +152,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/export': typeof ProjectsProjectIdExportRoute
   '/projects/$projectId/manuscript': typeof ProjectsProjectIdManuscriptRoute
   '/projects/$projectId/orchestration': typeof ProjectsProjectIdOrchestrationRoute
+  '/projects/$projectId/packaging': typeof ProjectsProjectIdPackagingRoute
   '/projects/$projectId/properties': typeof ProjectsProjectIdPropertiesRoute
   '/projects/$projectId': typeof ProjectsProjectIdIndexRoute
 }
@@ -163,6 +172,7 @@ export interface FileRoutesById {
   '/projects/$projectId/export': typeof ProjectsProjectIdExportRoute
   '/projects/$projectId/manuscript': typeof ProjectsProjectIdManuscriptRoute
   '/projects/$projectId/orchestration': typeof ProjectsProjectIdOrchestrationRoute
+  '/projects/$projectId/packaging': typeof ProjectsProjectIdPackagingRoute
   '/projects/$projectId/properties': typeof ProjectsProjectIdPropertiesRoute
   '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
 }
@@ -183,6 +193,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/export'
     | '/projects/$projectId/manuscript'
     | '/projects/$projectId/orchestration'
+    | '/projects/$projectId/packaging'
     | '/projects/$projectId/properties'
     | '/projects/$projectId/'
   fileRoutesByTo: FileRoutesByTo
@@ -199,6 +210,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/export'
     | '/projects/$projectId/manuscript'
     | '/projects/$projectId/orchestration'
+    | '/projects/$projectId/packaging'
     | '/projects/$projectId/properties'
     | '/projects/$projectId'
   id:
@@ -217,6 +229,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/export'
     | '/projects/$projectId/manuscript'
     | '/projects/$projectId/orchestration'
+    | '/projects/$projectId/packaging'
     | '/projects/$projectId/properties'
     | '/projects/$projectId/'
   fileRoutesById: FileRoutesById
@@ -284,6 +297,13 @@ declare module '@tanstack/react-router' {
       path: '/properties'
       fullPath: '/projects/$projectId/properties'
       preLoaderRoute: typeof ProjectsProjectIdPropertiesRouteImport
+      parentRoute: typeof ProjectsProjectIdRoute
+    }
+    '/projects/$projectId/packaging': {
+      id: '/projects/$projectId/packaging'
+      path: '/packaging'
+      fullPath: '/projects/$projectId/packaging'
+      preLoaderRoute: typeof ProjectsProjectIdPackagingRouteImport
       parentRoute: typeof ProjectsProjectIdRoute
     }
     '/projects/$projectId/orchestration': {
@@ -354,6 +374,7 @@ interface ProjectsProjectIdRouteChildren {
   ProjectsProjectIdExportRoute: typeof ProjectsProjectIdExportRoute
   ProjectsProjectIdManuscriptRoute: typeof ProjectsProjectIdManuscriptRoute
   ProjectsProjectIdOrchestrationRoute: typeof ProjectsProjectIdOrchestrationRoute
+  ProjectsProjectIdPackagingRoute: typeof ProjectsProjectIdPackagingRoute
   ProjectsProjectIdPropertiesRoute: typeof ProjectsProjectIdPropertiesRoute
   ProjectsProjectIdIndexRoute: typeof ProjectsProjectIdIndexRoute
 }
@@ -367,6 +388,7 @@ const ProjectsProjectIdRouteChildren: ProjectsProjectIdRouteChildren = {
   ProjectsProjectIdExportRoute: ProjectsProjectIdExportRoute,
   ProjectsProjectIdManuscriptRoute: ProjectsProjectIdManuscriptRoute,
   ProjectsProjectIdOrchestrationRoute: ProjectsProjectIdOrchestrationRoute,
+  ProjectsProjectIdPackagingRoute: ProjectsProjectIdPackagingRoute,
   ProjectsProjectIdPropertiesRoute: ProjectsProjectIdPropertiesRoute,
   ProjectsProjectIdIndexRoute: ProjectsProjectIdIndexRoute,
 }

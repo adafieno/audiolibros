@@ -28,7 +28,7 @@ const projectRoutes: RouteItem[] = [
   { to: 'characters', key: 'nav.characters', icon: '🎭', workflowStep: 'characters' },
   { to: 'planning', key: 'nav.planning', icon: '🪄', workflowStep: 'planning' },
   { to: 'voice', key: 'nav.voice', icon: '🎙️', workflowStep: 'voice' },
-  { to: 'export', key: 'nav.packaging', icon: '📦', workflowStep: 'export' },
+  { to: 'packaging', key: 'nav.packaging', icon: '📦', workflowStep: 'export' },
   { to: 'cost', key: 'nav.cost', icon: '💰' },
 ];
 
