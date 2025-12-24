@@ -1,7 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { packagingApi, type PlatformReadiness, type PackagingJobResponse } from '../lib/api/packaging';
+import { packagingApi, type PlatformReadiness, type PackagingJobResponse, type PackageResponse } from '../lib/api/packaging';
 
 export const Route = createFileRoute('/projects/$projectId/packaging')({
   component: PackagingPage,
@@ -10,7 +9,6 @@ export const Route = createFileRoute('/projects/$projectId/packaging')({
 function PackagingPage() {
   const { projectId } = Route.useParams();
   const queryClient = useQueryClient();
-  const [activeJobs, setActiveJobs] = useState<PackagingJobResponse[]>([]);
 
   // Query packaging readiness
   const { data: readiness, isLoading: isLoadingReadiness, error: readinessError } = useQuery({
@@ -20,7 +18,7 @@ function PackagingPage() {
   });
 
   // Query packages list
-  const { data: packagesData, isLoading: isLoadingPackages } = useQuery({
+  const { data: packagesData } = useQuery({
     queryKey: ['packages', projectId],
     queryFn: () => packagingApi.listPackages(projectId),
     refetchInterval: 10000, // Refresh every 10 seconds
@@ -33,15 +31,11 @@ function PackagingPage() {
     refetchInterval: 2000, // Poll every 2 seconds for job updates
   });
 
-  // Update active jobs
-  useEffect(() => {
-    if (jobs) {
-      const active = jobs.filter(
-        (j) => j.status !== 'completed' && j.status !== 'failed'
-      );
-      setActiveJobs(active);
-    }
-  }, [jobs]);
+  // Track active jobs for UI - derived from query data
+  const activeJobsList =
+    jobs?.filter(
+      (j) => j.status !== 'completed' && j.status !== 'failed'
+    ) || [];
 
   // Create packages mutation
   const createPackagesMutation = useMutation({
@@ -143,11 +137,11 @@ function PackagingPage() {
       )}
 
       {/* Active Jobs */}
-      {activeJobs.length > 0 && (
+      {activeJobsList.length > 0 && (
         <div className="mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-3">Active Jobs</h2>
           <div className="space-y-3">
-            {activeJobs.map((job) => (
+            {activeJobsList.map((job) => (
               <JobProgressCard key={job.id} job={job} />
             ))}
           </div>
@@ -158,14 +152,14 @@ function PackagingPage() {
       <div className="mb-6">
         <button
           onClick={handleCreateAll}
-          disabled={!isProjectReady || createPackagesMutation.isPending || activeJobs.length > 0}
+          disabled={!isProjectReady || createPackagesMutation.isPending || activeJobsList.length > 0}
           className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-colors ${
-            isProjectReady && activeJobs.length === 0
+            isProjectReady && activeJobsList.length === 0
               ? 'bg-indigo-600 hover:bg-indigo-700'
               : 'bg-gray-300 cursor-not-allowed'
           }`}
         >
-          {activeJobs.length > 0
+          {activeJobsList.length > 0
             ? 'Packaging in Progress...'
             : createPackagesMutation.isPending
             ? 'Creating Packages...'
@@ -181,7 +175,7 @@ function PackagingPage() {
             platform={platform}
             onCreatePackage={handleCreatePlatform}
             isCreating={createPackagesMutation.isPending}
-            hasActiveJob={activeJobs.some((j) => j.platform_id === platform.platform_id)}
+            hasActiveJob={activeJobsList.some((j: PackagingJobResponse) => j.platform_id === platform.platform_id)}
           />
         ))}
       </div>
@@ -387,7 +381,7 @@ function PackageRow({
   onArchive,
   isArchiving,
 }: {
-  package: any;
+  package: PackageResponse;
   onArchive: () => void;
   isArchiving: boolean;
 }) {

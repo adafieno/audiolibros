@@ -16,8 +16,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.db.database import get_db
-from shared.auth import get_current_user, User
-from shared.models import Package
+from shared.auth import get_current_active_user
+from shared.models import Package, User
 from .schemas import (
     PackagingReadinessResponse,
     CreatePackagesRequest,
@@ -55,7 +55,7 @@ router = APIRouter(
 async def get_packaging_readiness(
     project_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_active_user)
 ):
     """
     Check if project meets requirements for packaging.
@@ -97,7 +97,7 @@ async def create_all_packages(
     project_id: UUID,
     request: CreatePackagesRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_active_user)
 ):
     """
     Create packaging jobs for multiple platforms.
@@ -202,7 +202,7 @@ async def get_packaging_job(
     project_id: UUID,
     job_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_active_user)
 ):
     """
     Get current status of a packaging job.
@@ -261,7 +261,7 @@ async def list_packages(
     storage_tier: Optional[str] = None,
     limit: int = 50,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_active_user)
 ):
     """
     List all packages for a project.
@@ -347,7 +347,7 @@ async def archive_package(
     package_id: UUID,
     request: ArchivePackageRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_active_user)
 ):
     """
     Move a package from temp to archive tier.
@@ -403,7 +403,7 @@ async def validate_package(
     project_id: UUID,
     package_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_active_user)
 ):
     """
     Validate package against platform requirements.
@@ -493,7 +493,7 @@ async def list_packaging_jobs(
     status_filter: Optional[str] = None,
     limit: int = 50,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_active_user)
 ):
     """
     List all packaging jobs for a project.

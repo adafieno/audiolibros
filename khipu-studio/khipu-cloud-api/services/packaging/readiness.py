@@ -12,7 +12,7 @@ from uuid import UUID
 from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shared.models import Project, Segment, Book
+from shared.models import Project, Segment
 from .platform_configs import get_all_platforms, PlatformConfig
 from .schemas import (
     PlatformRequirement,
@@ -52,9 +52,6 @@ async def check_project_readiness(
     # Get audio completion stats
     audio_stats = await get_audio_completion_stats(db, project_id)
     
-    # Get book metadata (for ISBN, cover)
-    book = await get_book_metadata(db, project)
-    
     # Check readiness for each platform
     platform_readiness: List[PlatformReadiness] = []
     
@@ -62,7 +59,6 @@ async def check_project_readiness(
         readiness = await check_platform_readiness(
             platform_config,
             project,
-            book,
             audio_stats
         )
         platform_readiness.append(readiness)
@@ -132,20 +128,9 @@ async def get_audio_completion_stats(
     }
 
 
-async def get_book_metadata(db: AsyncSession, project: Project) -> Optional[Book]:
-    """Get book metadata associated with the project."""
-    if not project.book_id:
-        return None
-    
-    book_query = select(Book).where(Book.id == project.book_id)
-    result = await db.execute(book_query)
-    return result.scalar_one_or_none()
-
-
 async def check_platform_readiness(
     platform_config: PlatformConfig,
     project: Project,
-    book: Optional[Book],
     audio_stats: Dict[str, any]
 ) -> PlatformReadiness:
     """
@@ -214,12 +199,12 @@ async def check_platform_readiness(
     
     # Check ISBN requirement
     if platform_config.requires_isbn:
-        has_isbn = bool(book and book.isbn)
+        has_isbn = bool(project.isbn)
         requirements.append(PlatformRequirement(
             requirement_id="isbn",
             description="ISBN-13 identifier",
             is_met=has_isbn,
-            current_value=book.isbn if (book and book.isbn) else "Not set",
+            current_value=project.isbn if project.isbn else "Not set",
             required_value="ISBN-13 required"
         ))
         

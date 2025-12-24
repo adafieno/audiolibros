@@ -4,6 +4,13 @@ import api from '../api';
 // Types
 // ============================================================================
 
+export interface ValidationResults {
+  is_valid: boolean;
+  errors?: string[];
+  warnings?: string[];
+  metadata?: Record<string, unknown>;
+}
+
 export interface AudioSpec {
   codec: string;
   bitrate_kbps: number;
@@ -84,7 +91,7 @@ export interface PackageResponse {
   size_bytes: number;
   audio_spec: AudioSpec;
   is_validated: boolean;
-  validation_results?: any;
+  validation_results?: ValidationResults;
   same_as_package_id?: string;
   expires_at?: string;
   created_at: string;
@@ -198,7 +205,7 @@ export const packagingApi = {
   /**
    * Validate a package
    */
-  validatePackage: async (projectId: string, packageId: string): Promise<any> => {
+  validatePackage: async (projectId: string, packageId: string): Promise<ValidationResults> => {
     const response = await api.post(`/projects/${projectId}/packages/${packageId}/validate`);
     return response.data;
   },
