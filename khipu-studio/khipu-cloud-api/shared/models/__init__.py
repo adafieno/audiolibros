@@ -16,6 +16,8 @@ from .audio_cache import AudioCache
 from .audio_segment_metadata import AudioSegmentMetadata
 from .audio_preset import AudioPreset
 from .sfx_segments import SfxSegment
+from .package import Package
+from .packaging_job import PackagingJob
 
 
 class Tenant(Base):
@@ -132,6 +134,8 @@ class Project(Base):
     members = relationship("ProjectMember", back_populates="project", cascade="all, delete-orphan")
     chapters = relationship("Chapter", back_populates="project", cascade="all, delete-orphan", order_by="Chapter.order")
     chapter_plans = relationship("ChapterPlan", back_populates="project", cascade="all, delete-orphan")
+    packages = relationship("Package", back_populates="project", cascade="all, delete-orphan")
+    packaging_jobs = relationship("PackagingJob", back_populates="project", cascade="all, delete-orphan")
 
 
 class ProjectMember(Base):
