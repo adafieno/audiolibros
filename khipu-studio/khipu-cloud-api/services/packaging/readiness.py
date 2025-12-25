@@ -7,18 +7,17 @@ Determines if a project is ready for packaging by checking:
 - Required metadata is present (ISBN if needed)
 """
 
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shared.models import Project, Segment
+from shared.models import Project, Segment, ChapterPlan, AudioSegmentMetadata
 from .platform_configs import get_all_platforms, PlatformConfig
 from .schemas import (
     PlatformRequirement,
     PlatformReadiness,
-    PackagingReadinessResponse,
-    ValidationIssue
+    PackagingReadinessResponse
 )
 
 
@@ -64,20 +63,32 @@ async def check_project_readiness(
         platform_readiness.append(readiness)
     
     # Overall readiness: at least one platform is ready
-    overall_ready = any(pr.is_ready for pr in platform_readiness)
+    overall_ready = any(pr.ready for pr in platform_readiness)
+    
+    # Build completion stats
+    completion_stats = {
+        "total_chapters": 1,  # TODO: Get actual chapter count
+        "chapters_with_complete_audio": 1 if audio_stats["completion_percentage"] == 100 else 0,
+        "total_segments": audio_stats["total_segments"],
+        "segments_with_audio": audio_stats["segments_with_audio"],
+        "percent_complete": audio_stats["completion_percentage"]
+    }
     
     return PackagingReadinessResponse(
-        project_id=project_id,
-        is_ready=overall_ready,
+        overall_ready=overall_ready,
+        completion_stats=completion_stats,
         platforms=platform_readiness,
-        audio_completion=audio_stats
+        missing_audio={
+            "chapterIds": [],
+            "segmentIds": audio_stats["missing_segment_ids"]
+        }
     )
 
 
 async def get_audio_completion_stats(
     db: AsyncSession,
     project_id: UUID
-) -> Dict[str, any]:
+) -> Dict[str, Any]:
     """
     Get statistics about audio segment completion.
     
@@ -90,29 +101,36 @@ async def get_audio_completion_stats(
         }
     """
     
-    # Count total segments
-    total_query = select(func.count(Segment.id)).where(
-        Segment.project_id == project_id
+    # Count total segments for this project (join through ChapterPlan)
+    total_query = select(func.count(Segment.id)).join(
+        ChapterPlan, Segment.chapter_plan_id == ChapterPlan.id
+    ).where(
+        ChapterPlan.project_id == project_id
     )
     total_result = await db.execute(total_query)
     total_segments = total_result.scalar() or 0
     
-    # Count segments with audio (blob_path is not null)
-    with_audio_query = select(func.count(Segment.id)).where(
+    # Count segments with audio metadata (raw_audio_cache_key is not null)
+    with_audio_query = select(func.count(AudioSegmentMetadata.segment_id.distinct())).where(
         and_(
-            Segment.project_id == project_id,
-            Segment.blob_path.isnot(None),
-            Segment.blob_path != ''
+            AudioSegmentMetadata.project_id == project_id,
+            AudioSegmentMetadata.raw_audio_cache_key.isnot(None),
+            AudioSegmentMetadata.raw_audio_cache_key != ''
         )
     )
     with_audio_result = await db.execute(with_audio_query)
     segments_with_audio = with_audio_result.scalar() or 0
     
-    # Get list of segments missing audio
-    missing_query = select(Segment.id).where(
+    # Get list of segments missing audio (segments without metadata records or null cache keys)
+    missing_query = select(Segment.id).join(
+        ChapterPlan, Segment.chapter_plan_id == ChapterPlan.id
+    ).outerjoin(
+        AudioSegmentMetadata, Segment.id == AudioSegmentMetadata.segment_id
+    ).where(
         and_(
-            Segment.project_id == project_id,
-            (Segment.blob_path.is_(None) | (Segment.blob_path == ''))
+            ChapterPlan.project_id == project_id,
+            (AudioSegmentMetadata.raw_audio_cache_key.is_(None) | 
+             (AudioSegmentMetadata.raw_audio_cache_key == ''))
         )
     )
     missing_result = await db.execute(missing_query)
@@ -131,109 +149,56 @@ async def get_audio_completion_stats(
 async def check_platform_readiness(
     platform_config: PlatformConfig,
     project: Project,
-    audio_stats: Dict[str, any]
+    audio_stats: Dict[str, Any]
 ) -> PlatformReadiness:
     """
     Check if project meets requirements for a specific platform.
     """
     
     requirements: List[PlatformRequirement] = []
-    missing_items: List[str] = []
-    validation_issues: List[ValidationIssue] = []
     
     # Check audio completion
     audio_complete = audio_stats["completion_percentage"] == 100
     requirements.append(PlatformRequirement(
-        requirement_id="audio_completion",
-        description="All segments have generated audio",
-        is_met=audio_complete,
-        current_value=f"{audio_stats['segments_with_audio']}/{audio_stats['total_segments']}",
-        required_value=f"{audio_stats['total_segments']}/{audio_stats['total_segments']}"
+        id="audio_completion",
+        met=audio_complete,
+        details="All segments have generated audio" if audio_complete else f"{audio_stats['total_segments'] - audio_stats['segments_with_audio']} segments missing audio",
+        expected=audio_stats['total_segments'],
+        actual=audio_stats['segments_with_audio']
     ))
-    
-    if not audio_complete:
-        missing_items.append(
-            f"{audio_stats['total_segments'] - audio_stats['segments_with_audio']} segments need audio generation"
-        )
-        validation_issues.append(ValidationIssue(
-            issue_id="missing_audio",
-            severity="error",
-            message=f"Missing audio for {len(audio_stats['missing_segment_ids'])} segments",
-            affected_items=audio_stats['missing_segment_ids'][:10]  # Limit to first 10
-        ))
     
     # Check cover image
     if platform_config.requires_cover:
-        has_cover = bool(project.cover_image_path)
-        
-        # Check cover dimensions if specified
-        cover_meets_size = True
-        if has_cover and (platform_config.min_cover_width or platform_config.min_cover_height):
-            # TODO: Implement actual cover size validation
-            # For now, assume cover meets requirements if it exists
-            cover_meets_size = True
+        has_cover = bool(project.cover_image_url or project.cover_image_blob_path)
         
         requirements.append(PlatformRequirement(
-            requirement_id="cover_image",
-            description=f"Cover image ({platform_config.min_cover_width or 'any'}x{platform_config.min_cover_height or 'any'})",
-            is_met=has_cover and cover_meets_size,
-            current_value="Present" if has_cover else "Missing",
-            required_value=f"Minimum {platform_config.min_cover_width}x{platform_config.min_cover_height}" if platform_config.min_cover_width else "Required"
+            id="cover_image",
+            met=has_cover,
+            details="Cover image present" if has_cover else "Cover image required",
+            expected=f"{platform_config.min_cover_width}x{platform_config.min_cover_height}" if platform_config.min_cover_width else "Any size",
+            actual="Present" if has_cover else "Missing"
         ))
-        
-        if not has_cover:
-            missing_items.append("Cover image")
-            validation_issues.append(ValidationIssue(
-                issue_id="missing_cover",
-                severity="error",
-                message="Cover image is required",
-                affected_items=[]
-            ))
-        elif not cover_meets_size and platform_config.min_cover_width:
-            validation_issues.append(ValidationIssue(
-                issue_id="cover_size",
-                severity="warning",
-                message=f"Cover should be at least {platform_config.min_cover_width}x{platform_config.min_cover_height}",
-                affected_items=[]
-            ))
     
     # Check ISBN requirement
     if platform_config.requires_isbn:
         has_isbn = bool(project.isbn)
         requirements.append(PlatformRequirement(
-            requirement_id="isbn",
-            description="ISBN-13 identifier",
-            is_met=has_isbn,
-            current_value=project.isbn if project.isbn else "Not set",
-            required_value="ISBN-13 required"
+            id="isbn",
+            met=has_isbn,
+            details="ISBN present" if has_isbn else "ISBN required",
+            expected="ISBN-13",
+            actual=project.isbn if project.isbn else "Not set"
         ))
-        
-        if not has_isbn:
-            missing_items.append("ISBN")
-            validation_issues.append(ValidationIssue(
-                issue_id="missing_isbn",
-                severity="error",
-                message=f"ISBN required for {platform_config.display_name}",
-                affected_items=[]
-            ))
-    
-    # Check chapter duration limits (for Spotify)
-    if platform_config.max_chapter_duration_seconds:
-        # TODO: Implement chapter duration check
-        # This would require querying actual audio file durations
-        pass
     
     # Overall readiness: all requirements met
-    is_ready = all(req.is_met for req in requirements)
+    is_ready = all(req.met for req in requirements)
     
     return PlatformReadiness(
-        platform_id=platform_config.platform_id,
-        platform_name=platform_config.display_name,
-        is_ready=is_ready,
-        requirements=requirements,
-        missing_items=missing_items,
-        validation_issues=validation_issues,
-        estimated_size_mb=estimate_package_size(audio_stats, platform_config)
+        id=platform_config.platform_id,
+        name=platform_config.display_name,
+        enabled=True,
+        ready=is_ready,
+        requirements=requirements
     )
 
 
@@ -276,7 +241,7 @@ def estimate_package_size(
 async def check_storage_quota(
     db: AsyncSession,
     tenant_id: UUID
-) -> Dict[str, any]:
+) -> Dict[str, Any]:
     """
     Check tenant's storage quota usage.
     

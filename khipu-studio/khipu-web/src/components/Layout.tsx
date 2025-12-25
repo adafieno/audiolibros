@@ -31,7 +31,7 @@ const projectRoutes: NavItem[] = [
   { to: 'characters', label: 'nav.characters', icon: '🎭', workflowStep: 'characters' },
   { to: 'orchestration', label: 'nav.orchestration', icon: '🪄', workflowStep: 'orchestration' },
   { to: 'audio-production', label: 'nav.audioProduction', icon: '🎙️', workflowStep: 'audio-production' },
-  { to: 'export', label: 'nav.export', icon: '📦', workflowStep: 'export' },
+  { to: 'packaging', label: 'nav.packaging', icon: '📦' },
   { to: 'cost', label: 'nav.cost', icon: '💰' },
 ];
 

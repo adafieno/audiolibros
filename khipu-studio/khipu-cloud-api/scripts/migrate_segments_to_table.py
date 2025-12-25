@@ -100,7 +100,7 @@ async def migrate_segments():
         final_count = result.scalar()
         
         print(f"\n{'='*60}")
-        print(f"Migration complete!")
+        print("Migration complete!")
         print(f"  Total segments in JSONB: {total_segments}")
         print(f"  Segments migrated: {migrated_segments}")
         print(f"  Segments in table: {final_count}")

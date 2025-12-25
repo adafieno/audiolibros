@@ -199,9 +199,10 @@ class ValidatePackageResponse(BaseModel):
 
 class StorageQuota(BaseModel):
     """Storage quota information."""
-    used: float = Field(..., description="Used storage in MB")
-    limit: float = Field(..., description="Storage limit in MB")
-    unit: str = Field(default="MB")
+    used_mb: float = Field(..., description="Used storage in MB")
+    limit_mb: float = Field(..., description="Storage limit in MB")
+    available_mb: float = Field(..., description="Available storage in MB")
+    percentage_used: float = Field(..., description="Percentage of storage used")
 
 
 class PackageListResponse(BaseModel):

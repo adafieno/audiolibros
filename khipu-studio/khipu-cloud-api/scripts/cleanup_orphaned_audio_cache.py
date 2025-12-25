@@ -31,24 +31,24 @@ import asyncio
 import argparse
 import sys
 import os
+import logging
 from datetime import datetime, timezone, timedelta
 from uuid import UUID
 from typing import Optional
+
+from sqlalchemy import select, and_
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # Add parent directory to path for imports
 script_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(script_dir)
 sys.path.insert(0, parent_dir)
 
-from sqlalchemy import select, and_
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from shared.db.database import AsyncSessionLocal
-from shared.models import AudioCache
-from shared.services.blob_storage import BlobStorageService
-from shared.config import get_settings
-
-import logging
+# pylint: disable=wrong-import-position
+from shared.db.database import AsyncSessionLocal  # noqa: E402
+from shared.models import AudioCache  # noqa: E402
+from shared.services.blob_storage import BlobStorageService  # noqa: E402
+from shared.config import get_settings  # noqa: E402
 
 # Configure logging
 logging.basicConfig(

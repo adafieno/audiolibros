@@ -12,6 +12,9 @@ Endpoints:
 
 from typing import List, Optional
 from uuid import UUID
+import logging
+import traceback
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -38,6 +41,8 @@ from .job_manager import (
 )
 from .storage_tier_manager import StorageTierManager
 from .platform_configs import get_platform_config
+
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter(
@@ -80,6 +85,8 @@ async def get_packaging_readiness(
             detail=str(e)
         )
     except Exception as e:
+        logger.error(f"Error in get_packaging_readiness: {e}")
+        logger.error(traceback.format_exc())
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error checking readiness: {str(e)}"
@@ -186,6 +193,8 @@ async def create_all_packages(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Error in create_all_packages: {e}")
+        logger.error(traceback.format_exc())
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error creating packages: {str(e)}"
@@ -243,6 +252,8 @@ async def get_packaging_job(
             detail=str(e)
         )
     except Exception as e:
+        logger.error(f"Error in get_job_status: {e}")
+        logger.error(traceback.format_exc())
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error getting job status: {str(e)}"
@@ -308,14 +319,13 @@ async def list_packages(
                 blob_path=pkg.blob_path,
                 blob_container=pkg.blob_container,
                 storage_tier=pkg.storage_tier,
-                size_bytes=pkg.size_bytes,
+                file_size_bytes=pkg.file_size_bytes,
                 audio_spec=pkg.audio_spec,
                 is_validated=pkg.is_validated,
                 validation_results=pkg.validation_results,
                 same_as_package_id=pkg.same_as_package_id,
                 expires_at=pkg.expires_at,
-                created_at=pkg.created_at,
-                updated_at=pkg.updated_at
+                created_at=pkg.created_at
             )
             for pkg in packages
         ]
@@ -330,6 +340,8 @@ async def list_packages(
         )
     
     except Exception as e:
+        logger.error(f"Error in list_packages: {e}")
+        logger.error(traceback.format_exc())
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error listing packages: {str(e)}"
@@ -450,16 +462,18 @@ async def validate_package(
         from .schemas import ValidationIssue, ValidationResult
         
         validation_result = ValidationResult(
-            is_valid=True,
-            issues=[],
-            warnings=[
+            valid=True,
+            platform=package.platform_id,
+            package_path=package.blob_path or "",
+            issues=[
                 ValidationIssue(
-                    issue_id="validation_pending",
                     severity="warning",
+                    category="validation",
                     message="Full validation not yet implemented",
-                    affected_items=[]
+                    details="Validation logic is pending implementation"
                 )
-            ]
+            ],
+            specs={}
         )
         
         # Update package validation status
@@ -468,9 +482,8 @@ async def validate_package(
         await db.commit()
         
         return ValidatePackageResponse(
-            package_id=package.id,
-            platform_id=package.platform_id,
-            validation_result=validation_result
+            success=True,
+            result=validation_result
         )
     
     except HTTPException:

@@ -132,7 +132,7 @@ async def extract_durations():
         await db.commit()
         
         logger.info("=" * 60)
-        logger.info(f"✅ Migration complete!")
+        logger.info("✅ Migration complete!")
         logger.info(f"   Success: {success_count}")
         logger.info(f"   Errors: {error_count}")
         logger.info("=" * 60)

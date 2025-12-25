@@ -8,7 +8,7 @@ This script should be run periodically (e.g., daily via cron job) to:
 """
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List
 from uuid import UUID
 

@@ -140,18 +140,7 @@
       }
     }
   ],
-  "portfolio_summary": {
-    "total_duration_days": 113,
-    "total_commits": 534,
-    "average_velocity": 4.73,
-    "overlap_period": "Nov 25 - Dec 23 (29 days of parallel development)",
-    "development_pattern": "Desktop-first (Sep 3 - Nov 25, 84 days) → Desktop + Cloud parallel (Nov 25 - Dec 23, 29 days)",
-    "velocity_comparison": {
-      "desktop": "3.99 commits/day (primary Electron app)",
-      "cloud": "6.86 commits/day (API + web interface)",
-      "note": "Cloud developed as companion to Desktop, not replacement"
-    },
-    "effort_comparison": {
+  "effort_comparison": {
       "methodology": "Comparison of AI-assisted development vs estimated traditional solo developer effort",
       "desktop_project": {
         "actual_duration_days": 84,
@@ -213,33 +202,20 @@
         "roi_percentage": "400-1400%"
       }
     },
-    "architectural_relationship": [
-      "Desktop (app/): Electron application with local audio operations - PRIMARY",
-      "Cloud (khipu-cloud-api/ + khipu-web/): Web API and interface - COMPANION",
-      "Desktop: Local file system → Cloud: Azure Blob Storage",
-      "Desktop: Single-user → Cloud: Multi-tenant with RBAC",
-      "Projects overlap starting Nov 25, 2025"
-    ],
-    "cloud_start_date": "2025-11-25",
-    "overlap_strategy": "Cloud API/web added to provide remote access while Desktop remains primary production tool"
-  },
-  "cumulative_stats": {
-    "desktop_project": {
-      "duration_days": 84,
-      "commits": 335,
-      "velocity": 3.99
-    },
-    "cloud_project": {
-      "duration_days": 29,
-      "commits": 199,
-      "velocity": 6.86
-    },
-    "total_commits": 534,
-    "development_days": 113,
-    "overlap_days": 29,
-    "projects": 2
-  }
-}
+  "architectural_relationship": [
+    "Desktop (app/): Electron application with local audio operations - PRIMARY",
+    "Cloud (khipu-cloud-api/ + khipu-web/): Web API and interface - COMPANION",
+    "Desktop: Local file system → Cloud: Azure Blob Storage",
+    "Desktop: Single-user → Cloud: Multi-tenant with RBAC",
+    "Projects overlap starting Nov 25, 2025"
+  ],
+  "cloud_start_date": "2025-11-25",
+  "overlap_strategy": "Cloud API/web added to provide remote access while Desktop remains primary production tool",
+  "detailed_session_tracking": {
+  "sessions": [
+    {
+      "features": [
+        {
           "id": "azure-openai-integration",
           "name": "Azure OpenAI Support",
           "category": "feature_development",
@@ -368,8 +344,6 @@
         "total_files_modified": 15,
         "total_lines_changed": 1200,
         "context": "Critical architectural refactoring - UUID consistency across 1,102 segments"
-      }
-    },
       }
     },
     {
@@ -534,8 +508,7 @@
         "critical_moment": "User stated: 'I am a bit tired of half-done solutions'"
       }
     }
-        }
-      ],
+  ],
       "cumulative_stats": {
         "total_sessions": 8,
         "total_features": 24,
@@ -547,8 +520,7 @@
         "average_iterations_per_feature": 3.2,
         "most_common_blocker_type": "architecture"
       }
-    }
-  ],
+  },
   "portfolio_summary": {
     "total_commits": 539,
     "total_features": 25,
