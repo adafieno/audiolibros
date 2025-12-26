@@ -157,19 +157,33 @@ async def check_platform_readiness(
     
     requirements: List[PlatformRequirement] = []
     
-    # Check audio completion
+    # Check audio completion (INFO ONLY - does not block packaging in cloud)
+    # Missing audio will be generated on-the-fly during packaging if requested
     audio_complete = audio_stats["completion_percentage"] == 100
+    missing_count = audio_stats['total_segments'] - audio_stats['segments_with_audio']
+    
     requirements.append(PlatformRequirement(
         id="audio_completion",
-        met=audio_complete,
-        details="All segments have generated audio" if audio_complete else f"{audio_stats['total_segments'] - audio_stats['segments_with_audio']} segments missing audio",
+        met=True,  # Always true - missing audio doesn't block cloud packaging
+        details="All segments have audio" if audio_complete else f"{missing_count} segment(s) will be generated during packaging",
         expected=audio_stats['total_segments'],
         actual=audio_stats['segments_with_audio']
     ))
     
     # Check cover image
     if platform_config.requires_cover:
-        has_cover = bool(project.cover_image_url or project.cover_image_blob_path)
+        # Check both Project model fields AND settings.book fields
+        has_cover_direct = bool(project.cover_image_url or project.cover_image_blob_path)
+        has_cover_settings = False
+        
+        if project.settings and isinstance(project.settings, dict):
+            book_settings = project.settings.get('book', {})
+            has_cover_settings = bool(
+                book_settings.get('cover_image_b64') or 
+                book_settings.get('cover_image_url')
+            )
+        
+        has_cover = has_cover_direct or has_cover_settings
         
         requirements.append(PlatformRequirement(
             id="cover_image",

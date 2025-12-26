@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { packagingApi, type PlatformReadiness, type PackagingJobResponse, type PackageResponse } from '../lib/api/packaging';
+import { Button } from '../components/Button';
 
 export const Route = createFileRoute('/projects/$projectId/packaging')({
   component: PackagingPage,
@@ -55,21 +56,6 @@ function PackagingPage() {
     },
   });
 
-  const handleCreateAll = () => {
-    if (!readiness) return;
-    
-    const readyPlatforms = readiness.platforms
-      .filter((p) => p.is_ready)
-      .map((p) => p.platform_id);
-    
-    if (readyPlatforms.length === 0) {
-      alert('No platforms are ready for packaging');
-      return;
-    }
-    
-    createPackagesMutation.mutate(readyPlatforms);
-  };
-
   const handleCreatePlatform = (platformId: string) => {
     createPackagesMutation.mutate([platformId]);
   };
@@ -96,50 +82,31 @@ function PackagingPage() {
     );
   }
 
-  const audioCompletion = readiness?.audio_completion;
-  const isProjectReady = readiness?.is_ready || false;
+  const isProjectReady = readiness?.overall_ready || false;
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Packaging</h1>
-        <p className="text-gray-600">Create downloadable packages for distribution platforms</p>
-      </div>
-
-      {/* Audio Completion Status */}
-      {audioCompletion && (
-        <div className="mb-6 bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Audio Completion</h2>
-            <span className={`text-2xl font-bold ${
-              audioCompletion.completion_percentage === 100
-                ? 'text-green-600'
-                : 'text-orange-600'
-            }`}>
-              {audioCompletion.completion_percentage.toFixed(1)}%
+    <div className="p-6">
+      {/* Header Panel */}
+      <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border p-6 mb-6">
+        <div className="flex items-center gap-3 mb-1">
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--text)', margin: 0 }}>
+            Packaging
+          </h1>
+          {isProjectReady && (
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium shadow" style={{ background: '#22c55e', color: '#052e12' }}>
+              Ready
             </span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
-            <div
-              className={`h-3 rounded-full transition-all ${
-                audioCompletion.completion_percentage === 100
-                  ? 'bg-green-600'
-                  : 'bg-orange-500'
-              }`}
-              style={{ width: `${audioCompletion.completion_percentage}%` }}
-            />
-          </div>
-          <p className="text-sm text-gray-600">
-            {audioCompletion.segments_with_audio} of {audioCompletion.total_segments} segments
-          </p>
+          )}
         </div>
-      )}
+        <p className="text-sm" style={{ color: 'var(--text-muted)', margin: 0 }}>
+          Prepare your audiobook for delivery to platforms. Review requirements and create packages when ready.
+        </p>
+      </div>
 
       {/* Active Jobs */}
       {activeJobsList.length > 0 && (
         <div className="mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">Active Jobs</h2>
+          <h2 className="text-lg font-semibold mb-3" style={{ color: 'var(--text)' }}>Active Jobs</h2>
           <div className="space-y-3">
             {activeJobsList.map((job) => (
               <JobProgressCard key={job.id} job={job} />
@@ -148,34 +115,15 @@ function PackagingPage() {
         </div>
       )}
 
-      {/* Create All Button */}
-      <div className="mb-6">
-        <button
-          onClick={handleCreateAll}
-          disabled={!isProjectReady || createPackagesMutation.isPending || activeJobsList.length > 0}
-          className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-colors ${
-            isProjectReady && activeJobsList.length === 0
-              ? 'bg-indigo-600 hover:bg-indigo-700'
-              : 'bg-gray-300 cursor-not-allowed'
-          }`}
-        >
-          {activeJobsList.length > 0
-            ? 'Packaging in Progress...'
-            : createPackagesMutation.isPending
-            ? 'Creating Packages...'
-            : 'Create All Ready Packages'}
-        </button>
-      </div>
-
       {/* Platform Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         {readiness?.platforms.map((platform) => (
           <PlatformCard
-            key={platform.platform_id}
+            key={platform.id}
             platform={platform}
             onCreatePackage={handleCreatePlatform}
             isCreating={createPackagesMutation.isPending}
-            hasActiveJob={activeJobsList.some((j: PackagingJobResponse) => j.platform_id === platform.platform_id)}
+            hasActiveJob={activeJobsList.some((j: PackagingJobResponse) => j.platform_id === platform.id)}
           />
         ))}
       </div>
@@ -183,37 +131,37 @@ function PackagingPage() {
       {/* Existing Packages */}
       {packagesData && packagesData.packages.length > 0 && (
         <div className="mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">Existing Packages</h2>
+          <h2 className="text-lg font-semibold mb-3" style={{ color: 'var(--text)' }}>Existing Packages</h2>
           
           {/* Storage Quota */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+          <div className="rounded-lg border p-4 mb-4" style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }}>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-blue-900">Storage Usage</span>
-              <span className="text-sm text-blue-700">
+              <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>Storage Usage</span>
+              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                 {packagesData.storage_quota.used_mb.toFixed(2)} MB / {packagesData.storage_quota.limit_mb} MB
               </span>
             </div>
-            <div className="w-full bg-blue-200 rounded-full h-2">
+            <div className="w-full rounded-full h-2" style={{ backgroundColor: 'var(--border)' }}>
               <div
-                className="bg-blue-600 h-2 rounded-full transition-all"
-                style={{ width: `${Math.min(packagesData.storage_quota.percentage_used, 100)}%` }}
+                className="h-2 rounded-full transition-all"
+                style={{ backgroundColor: 'var(--primary)', width: `${Math.min(packagesData.storage_quota.percentage_used, 100)}%` }}
               />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+          <div className="rounded-lg shadow border overflow-hidden" style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }}>
+            <table className="min-w-full" style={{ borderColor: 'var(--border)' }}>
+              <thead style={{ backgroundColor: 'var(--surface)' }}>
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Platform</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Version</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Size</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tier</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expires</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase" style={{ color: 'var(--text-secondary)' }}>Platform</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase" style={{ color: 'var(--text-secondary)' }}>Version</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase" style={{ color: 'var(--text-secondary)' }}>Size</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase" style={{ color: 'var(--text-secondary)' }}>Tier</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase" style={{ color: 'var(--text-secondary)' }}>Expires</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase" style={{ color: 'var(--text-secondary)' }}>Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }}>
                 {packagesData.packages.map((pkg) => (
                   <PackageRow
                     key={pkg.id}
@@ -246,75 +194,63 @@ function PlatformCard({
   isCreating: boolean;
   hasActiveJob: boolean;
 }) {
-  const platformIcons: Record<string, string> = {
-    apple: '🍎',
-    google: '📚',
-    spotify: '🎵',
-    acx: '🎧',
-    kobo: '📖',
-  };
-
   return (
-    <div className={`bg-white rounded-lg shadow p-6 ${
-      platform.is_ready ? 'border-2 border-green-500' : 'border border-gray-200'
-    }`}>
+    <div
+      className="rounded-lg shadow border p-6"
+      style={{
+        backgroundColor: 'var(--panel)',
+        borderColor: platform.ready ? 'var(--success)' : 'var(--border)',
+        borderWidth: platform.ready ? '2px' : '1px',
+      }}
+    >
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center">
-          <span className="text-3xl mr-3">{platformIcons[platform.platform_id] || '📦'}</span>
-          <h3 className="text-lg font-semibold text-gray-900">{platform.platform_name}</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-semibold" style={{ color: 'var(--text)' }}>{platform.name}</h3>
+          {platform.ready ? (
+            <span 
+              className="px-2 py-1 rounded-full text-xs font-medium"
+              style={{ 
+                backgroundColor: 'var(--success)', 
+                color: 'white'
+              }}
+            >
+              Ready
+            </span>
+          ) : (
+            <span 
+              className="px-2 py-1 rounded-full text-xs font-medium"
+              style={{ 
+                backgroundColor: 'var(--warning)', 
+                color: 'white'
+              }}
+            >
+              Not Ready
+            </span>
+          )}
         </div>
-        {platform.is_ready ? (
-          <span className="text-green-600 text-sm font-medium">✓ Ready</span>
-        ) : (
-          <span className="text-orange-600 text-sm font-medium">⚠ Not Ready</span>
-        )}
+        <Button
+          variant={platform.ready && !hasActiveJob ? 'primary' : 'secondary'}
+          size="compact"
+          onClick={() => onCreatePackage(platform.id)}
+          disabled={!platform.ready || isCreating || hasActiveJob}
+        >
+          {hasActiveJob ? 'Packaging...' : isCreating ? 'Creating...' : 'Create'}
+        </Button>
       </div>
 
       {/* Requirements */}
-      <div className="space-y-2 mb-4">
-        {platform.requirements.map((req) => (
-          <div key={req.requirement_id} className="flex items-start text-sm">
-            <span className={`mr-2 ${req.is_met ? 'text-green-600' : 'text-red-600'}`}>
-              {req.is_met ? '✓' : '✗'}
+      <div className="space-y-2">
+        {platform.requirements?.map((req) => (
+          <div key={req.id} className="flex items-start text-sm">
+            <span style={{ marginRight: '8px', color: req.met ? 'var(--success)' : 'var(--error)' }}>
+              {req.met ? '✓' : '✗'}
             </span>
-            <span className={req.is_met ? 'text-gray-600' : 'text-red-600'}>
-              {req.description}
+            <span style={{ color: req.met ? 'var(--text-secondary)' : 'var(--error)' }}>
+              {req.details || req.id}
             </span>
           </div>
         ))}
       </div>
-
-      {/* Missing Items */}
-      {platform.missing_items.length > 0 && (
-        <div className="mb-4 p-3 bg-orange-50 rounded text-sm">
-          <p className="font-medium text-orange-900 mb-1">Missing:</p>
-          <ul className="list-disc list-inside text-orange-700">
-            {platform.missing_items.map((item, idx) => (
-              <li key={idx}>{item}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Estimated Size */}
-      {platform.estimated_size_mb && (
-        <p className="text-sm text-gray-600 mb-4">
-          Estimated size: {platform.estimated_size_mb.toFixed(2)} MB
-        </p>
-      )}
-
-      {/* Create Button */}
-      <button
-        onClick={() => onCreatePackage(platform.platform_id)}
-        disabled={!platform.is_ready || isCreating || hasActiveJob}
-        className={`w-full py-2 px-4 rounded font-medium transition-colors ${
-          platform.is_ready && !hasActiveJob
-            ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-            : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-        }`}
-      >
-        {hasActiveJob ? 'Packaging...' : isCreating ? 'Creating...' : 'Create Package'}
-      </button>
     </div>
   );
 }
@@ -342,9 +278,12 @@ function JobProgressCard({ job }: { job: PackagingJobResponse }) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-4">
+    <div
+      className="rounded-lg shadow border p-4"
+      style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }}
+    >
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-gray-900">
+        <h3 className="font-semibold" style={{ color: 'var(--text)' }}>
           {platformNames[job.platform_id] || job.platform_id}
         </h3>
         <span className={`px-3 py-1 rounded-full text-white text-sm ${statusColors[job.status]}`}>
@@ -353,14 +292,14 @@ function JobProgressCard({ job }: { job: PackagingJobResponse }) {
       </div>
 
       <div className="mb-2">
-        <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+        <div className="flex items-center justify-between text-sm mb-1" style={{ color: 'var(--text-secondary)' }}>
           <span>{job.current_step}</span>
           <span>{job.progress_percent}%</span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full rounded-full h-2" style={{ backgroundColor: 'var(--border)' }}>
           <div
-            className="bg-indigo-600 h-2 rounded-full transition-all"
-            style={{ width: `${job.progress_percent}%` }}
+            className="h-2 rounded-full transition-all"
+            style={{ backgroundColor: 'var(--primary)', width: `${job.progress_percent}%` }}
           />
         </div>
       </div>
@@ -419,24 +358,28 @@ function PackageRow({
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
         {formatDate(pkg.expires_at)}
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-        <a
-          href={packagingApi.getDownloadUrl(pkg)}
-          className="text-indigo-600 hover:text-indigo-900"
-          download
-        >
-          Download
-        </a>
-        {pkg.storage_tier === 'temp' && (
-          <button
-            onClick={onArchive}
-            disabled={isArchiving}
-            className="text-blue-600 hover:text-blue-900 disabled:text-gray-400"
+      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <Button
+            variant="outline"
+            size="compact"
+            onClick={() => window.open(packagingApi.getDownloadUrl(pkg), '_blank')}
           >
-            {isArchiving ? 'Archiving...' : 'Archive'}
-          </button>
-        )}
+            Download
+          </Button>
+          {pkg.storage_tier === 'temp' && (
+            <Button
+              variant="secondary"
+              size="compact"
+              onClick={onArchive}
+              disabled={isArchiving}
+            >
+              {isArchiving ? 'Archiving...' : 'Archive'}
+            </Button>
+          )}
+        </div>
       </td>
     </tr>
   );
 }
+

@@ -19,39 +19,34 @@ export interface AudioSpec {
 }
 
 export interface PlatformRequirement {
-  requirement_id: string;
-  description: string;
-  is_met: boolean;
-  current_value: string;
-  required_value: string;
-}
-
-export interface ValidationIssue {
-  issue_id: string;
-  severity: 'error' | 'warning';
-  message: string;
-  affected_items: string[];
+  id: string;
+  met: boolean;
+  details?: string;
+  expected?: unknown;
+  actual?: unknown;
 }
 
 export interface PlatformReadiness {
-  platform_id: string;
-  platform_name: string;
-  is_ready: boolean;
+  id: string;
+  name: string;
+  enabled: boolean;
+  ready: boolean;
   requirements: PlatformRequirement[];
-  missing_items: string[];
-  validation_issues: ValidationIssue[];
-  estimated_size_mb?: number;
 }
 
 export interface PackagingReadinessResponse {
-  project_id: string;
-  is_ready: boolean;
-  platforms: PlatformReadiness[];
-  audio_completion: {
+  overall_ready: boolean;
+  completion_stats: {
+    total_chapters: number;
+    chapters_with_complete_audio: number;
     total_segments: number;
     segments_with_audio: number;
-    completion_percentage: number;
-    missing_segment_ids: string[];
+    percent_complete: number;
+  };
+  platforms: PlatformReadiness[];
+  missing_audio: {
+    chapterIds: string[];
+    segmentIds: string[];
   };
 }
 
