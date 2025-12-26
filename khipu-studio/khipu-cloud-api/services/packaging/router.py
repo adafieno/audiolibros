@@ -413,7 +413,7 @@ async def archive_package(
     summary="Validate package",
     description="Run quality validation checks on a package"
 )
-async def validate_package(
+async def validate_package_endpoint(
     project_id: UUID,
     package_id: UUID,
     db: AsyncSession = Depends(get_db),
@@ -426,7 +426,7 @@ async def validate_package(
     - Audio format compliance
     - File size limits
     - Cover image requirements
-    - ISBN requirements
+    - Metadata completeness
     - Platform-specific rules (RMS levels for ACX, chapter duration for Spotify, etc.)
     
     Returns validation results with errors and warnings.
@@ -434,6 +434,9 @@ async def validate_package(
     
     try:
         from sqlalchemy import select, and_
+        from .validator import validate_package
+        import tempfile
+        import os
         
         # Get package
         query = select(Package).where(
@@ -452,41 +455,94 @@ async def validate_package(
                 detail="Package not found"
             )
         
-        # TODO: Implement actual validation logic
-        # This would involve:
-        # 1. Download package from blob storage (or just analyze metadata)
-        # 2. Check audio specs against platform requirements
-        # 3. For ACX: run audio analysis (RMS, peak, noise floor)
-        # 4. For Spotify: check chapter duration limits
-        # 5. For all: verify cover image exists and meets size requirements
+        if not package.blob_path:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Package has no blob path"
+            )
         
-        # Placeholder validation result
-        from .schemas import ValidationIssue, ValidationResult
+        # Download package from blob storage to temp file
+        from shared.services.blob_storage import get_blob_storage_service
+        from shared.config import get_settings
         
-        validation_result = ValidationResult(
-            valid=True,
-            platform=package.platform_id,
-            package_path=package.blob_path or "",
-            issues=[
-                ValidationIssue(
-                    severity="warning",
-                    category="validation",
-                    message="Full validation not yet implemented",
-                    details="Validation logic is pending implementation"
-                )
-            ],
-            specs={}
-        )
+        settings = get_settings()
+        blob_service = get_blob_storage_service(settings)
         
-        # Update package validation status
-        package.is_validated = True
-        package.validation_results = validation_result.dict()
-        await db.commit()
+        # Determine file extension based on platform
+        file_ext = {
+            'apple': '.m4b',
+            'google': '.zip',
+            'spotify': '.zip',
+            'acx': '.zip',
+            'kobo': '.epub'
+        }.get(package.platform_id, '.bin')
         
-        return ValidatePackageResponse(
-            success=True,
-            result=validation_result
-        )
+        # Create temp file
+        temp_fd, temp_path = tempfile.mkstemp(suffix=file_ext, prefix='khipu_validate_')
+        
+        try:
+            # Download blob to temp file
+            os.close(temp_fd)  # Close fd, we'll write with blob client
+            
+            await blob_service.download_blob_to_file(
+                container=package.blob_container,
+                blob_name=package.blob_path,
+                file_path=temp_path
+            )
+            
+            # Get expected specs from platform config
+            from .platform_configs import PLATFORM_CONFIGS
+            platform_config = PLATFORM_CONFIGS.get(package.platform_id)
+            expected_specs = None
+            if platform_config:
+                expected_specs = {
+                    'bitrate': platform_config.audio_spec.bitrate,
+                    'sampleRate': platform_config.audio_spec.sample_rate,
+                    'channels': platform_config.audio_spec.channels
+                }
+            
+            # Run validation
+            validation_result = await validate_package(
+                platform_id=package.platform_id,
+                package_path=temp_path,
+                expected_specs=expected_specs
+            )
+            
+            # Update package validation status
+            package.is_validated = True
+            package.validation_results = validation_result.to_dict()
+            await db.commit()
+            
+            # Convert to schema format
+            from .schemas import ValidationIssue, ValidationResult as ValidationResultSchema
+            
+            schema_result = ValidationResultSchema(
+                valid=validation_result.valid,
+                platform=validation_result.platform,
+                package_path=validation_result.package_path,
+                issues=[
+                    ValidationIssue(
+                        severity=issue.severity,
+                        category=issue.category,
+                        message=issue.message,
+                        details=issue.details
+                    )
+                    for issue in validation_result.issues
+                ],
+                specs=validation_result.specs
+            )
+            
+            return ValidatePackageResponse(
+                success=True,
+                result=schema_result
+            )
+        
+        finally:
+            # Clean up temp file
+            try:
+                os.unlink(temp_path)
+            except Exception:
+                pass
     
     except HTTPException:
         raise

@@ -4,11 +4,19 @@ import api from '../api';
 // Types
 // ============================================================================
 
+export interface ValidationIssue {
+  severity: 'error' | 'warning' | 'info';
+  category: string;
+  message: string;
+  details?: string;
+}
+
 export interface ValidationResults {
-  is_valid: boolean;
-  errors?: string[];
-  warnings?: string[];
-  metadata?: Record<string, unknown>;
+  valid: boolean;
+  platform: string;
+  packagePath: string;
+  issues: ValidationIssue[];
+  specs: Record<string, unknown>;
 }
 
 export interface AudioSpec {

@@ -139,6 +139,37 @@ class BlobStorageService:
             logger.error(f"Failed to download audio from blob {blob_path}: {e}")
             raise
     
+    async def download_blob_to_file(self, container: str, blob_name: str, file_path: str) -> None:
+        """
+        Download blob directly to file.
+        
+        Args:
+            container: Container name
+            blob_name: Blob path in container
+            file_path: Local file path to write to
+        """
+        if not self.is_configured:
+            raise ValueError("Blob storage not configured")
+        
+        try:
+            blob_client = self.blob_service_client.get_blob_client(
+                container=container,
+                blob=blob_name
+            )
+            
+            with open(file_path, 'wb') as f:
+                stream = blob_client.download_blob()
+                f.write(stream.readall())
+            
+            logger.info(f"Downloaded blob {blob_name} to {file_path}")
+            
+        except ResourceNotFoundError:
+            logger.error(f"Blob not found: {blob_name}")
+            raise
+        except AzureError as e:
+            logger.error(f"Failed to download blob {blob_name}: {e}")
+            raise
+    
     async def delete_audio(self, blob_path: str) -> bool:
         """
         Delete audio file from blob storage.

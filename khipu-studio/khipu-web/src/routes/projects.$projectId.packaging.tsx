@@ -12,6 +12,7 @@ function PackagingPage() {
   const { projectId } = Route.useParams();
   const queryClient = useQueryClient();
   const [showManifest, setShowManifest] = useState(false);
+  const [validatingPackageIds, setValidatingPackageIds] = useState<Set<string>>(new Set());
 
   // Query packaging readiness
   const { data: readiness, isLoading: isLoadingReadiness, error: readinessError } = useQuery({
@@ -64,6 +65,27 @@ function PackagingPage() {
     },
   });
 
+  // Validate package mutation
+  const validatePackageMutation = useMutation({
+    mutationFn: ({ packageId }: { packageId: string }) =>
+      packagingApi.validatePackage(projectId, packageId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['packages', projectId] });
+      setValidatingPackageIds(prev => {
+        const next = new Set(prev);
+        next.delete(variables.packageId);
+        return next;
+      });
+    },
+    onError: (_, variables) => {
+      setValidatingPackageIds(prev => {
+        const next = new Set(prev);
+        next.delete(variables.packageId);
+        return next;
+      });
+    },
+  });
+
   const handleCreatePlatform = (platformId: string) => {
     // Refresh manifest when packaging starts
     queryClient.invalidateQueries({ queryKey: ['packaging-manifest', projectId] });
@@ -72,6 +94,11 @@ function PackagingPage() {
 
   const handleViewManifest = () => {
     setShowManifest(!showManifest);
+  };
+
+  const handleValidatePackage = (packageId: string) => {
+    setValidatingPackageIds(prev => new Set(prev).add(packageId));
+    validatePackageMutation.mutate({ packageId });
   };
 
   if (isLoadingReadiness) {
@@ -204,15 +231,23 @@ function PackagingPage() {
 
       {/* Platform Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {readiness?.platforms.map((platform) => (
-          <PlatformCard
-            key={platform.id}
-            platform={platform}
-            onCreatePackage={handleCreatePlatform}
-            isCreating={createPackagesMutation.isPending}
-            hasActiveJob={activeJobsList.some((j: PackagingJobResponse) => j.platform_id === platform.id)}
-          />
-        ))}
+        {readiness?.platforms.map((platform) => {
+          // Find package for this platform
+          const platformPackage = packagesData?.packages.find(pkg => pkg.platform_id === platform.id);
+          
+          return (
+            <PlatformCard
+              key={platform.id}
+              platform={platform}
+              package={platformPackage}
+              onCreatePackage={handleCreatePlatform}
+              onValidatePackage={handleValidatePackage}
+              isCreating={createPackagesMutation.isPending}
+              isValidating={platformPackage ? validatingPackageIds.has(platformPackage.id) : false}
+              hasActiveJob={activeJobsList.some((j: PackagingJobResponse) => j.platform_id === platform.id)}
+            />
+          );
+        })}
       </div>
 
       {/* Existing Packages */}
@@ -272,15 +307,23 @@ function PackagingPage() {
 
 function PlatformCard({
   platform,
+  package: pkg,
   onCreatePackage,
+  onValidatePackage,
   isCreating,
+  isValidating,
   hasActiveJob,
 }: {
   platform: PlatformReadiness;
+  package?: PackageResponse;
   onCreatePackage: (platformId: string) => void;
+  onValidatePackage: (packageId: string) => void;
   isCreating: boolean;
+  isValidating: boolean;
   hasActiveJob: boolean;
 }) {
+  const [showValidationDetails, setShowValidationDetails] = useState(false);
+
   return (
     <div
       className="rounded-lg shadow border p-6"
@@ -314,15 +357,130 @@ function PlatformCard({
             </span>
           )}
         </div>
-        <Button
-          variant={platform.ready && !hasActiveJob ? 'primary' : 'secondary'}
-          size="compact"
-          onClick={() => onCreatePackage(platform.id)}
-          disabled={!platform.ready || isCreating || hasActiveJob}
-        >
-          {hasActiveJob ? 'Packaging...' : isCreating ? 'Creating...' : 'Create'}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant={platform.ready && !hasActiveJob ? 'primary' : 'secondary'}
+            size="compact"
+            onClick={() => onCreatePackage(platform.id)}
+            disabled={!platform.ready || isCreating || hasActiveJob}
+          >
+            {hasActiveJob ? 'Packaging...' : isCreating ? 'Creating...' : pkg ? 'Re-create' : 'Create'}
+          </Button>
+          {pkg && (
+            <Button
+              variant="secondary"
+              size="compact"
+              onClick={() => onValidatePackage(pkg.id)}
+              disabled={isValidating}
+              title="Validate package quality"
+            >
+              {isValidating ? '⏳' : '🔍'}
+            </Button>
+          )}
+        </div>
       </div>
+
+      {/* Package Info */}
+      {pkg && (
+        <div 
+          className="mb-3 p-3 rounded text-sm"
+          style={{ 
+            backgroundColor: 'var(--surface)',
+            border: '1px solid var(--border)'
+          }}
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <span style={{ color: 'var(--success)', fontSize: '16px' }}>✓</span>
+            <span className="font-medium" style={{ color: 'var(--text)' }}>
+              Package created
+            </span>
+          </div>
+          <div style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
+            {(pkg.size_bytes / (1024 * 1024)).toFixed(1)} MB • v{pkg.version_number}
+          </div>
+          
+          {/* Validation Status */}
+          {pkg.is_validated && pkg.validation_results && (
+            <div 
+              className="mt-2 p-2 rounded cursor-pointer"
+              style={{ 
+                backgroundColor: pkg.validation_results.valid ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)',
+                border: `1px solid ${pkg.validation_results.valid ? 'var(--success)' : 'var(--error)'}`
+              }}
+              onClick={() => setShowValidationDetails(!showValidationDetails)}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span style={{ fontSize: '14px' }}>
+                    {pkg.validation_results.valid ? '✅' : '❌'}
+                  </span>
+                  <span className="font-medium text-xs" style={{ color: 'var(--text)' }}>
+                    {pkg.validation_results.valid ? 'Validation Passed' : 'Validation Failed'}
+                  </span>
+                </div>
+                <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>
+                  {showValidationDetails ? '▼' : '▶'}
+                </span>
+              </div>
+              
+              {showValidationDetails && pkg.validation_results.issues && pkg.validation_results.issues.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {pkg.validation_results.issues.map((issue, idx: number) => (
+                    <div 
+                      key={idx}
+                      className="p-2 rounded text-xs"
+                      style={{ 
+                        backgroundColor: 'var(--panel)',
+                        borderLeft: `3px solid ${
+                          issue.severity === 'error' ? 'var(--error)' : 
+                          issue.severity === 'warning' ? 'var(--warning)' : 
+                          'var(--primary)'
+                        }`
+                      }}
+                    >
+                      <div className="font-medium" style={{ color: 'var(--text)' }}>
+                        {issue.severity === 'error' ? '❌' : issue.severity === 'warning' ? '⚠️' : 'ℹ️'} {issue.message}
+                      </div>
+                      {issue.details && (
+                        <div className="mt-1" style={{ color: 'var(--text-muted)' }}>
+                          {issue.details}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {showValidationDetails && pkg.validation_results.specs && (() => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const specs = pkg.validation_results.specs as any;
+                return (
+                  <div className="mt-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                    <div className="font-medium mb-1">Technical Specs:</div>
+                    <div className="grid grid-cols-2 gap-1">
+                      {specs.codec && (
+                        <div>Codec: {String(specs.codec)}</div>
+                      )}
+                      {specs.bitrate && (
+                        <div>Bitrate: {String(specs.bitrate)}kbps</div>
+                      )}
+                      {specs.sampleRate && (
+                        <div>Sample Rate: {String(specs.sampleRate)}Hz</div>
+                      )}
+                      {specs.channels && (
+                        <div>Channels: {String(specs.channels)}</div>
+                      )}
+                      {specs.chapterCount && (
+                        <div>Chapters: {String(specs.chapterCount)}</div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Requirements */}
       <div className="space-y-2">
