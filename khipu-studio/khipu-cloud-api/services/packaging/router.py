@@ -31,9 +31,11 @@ from .schemas import (
     ArchivePackageRequest,
     ArchivePackageResponse,
     ValidatePackageResponse,
+    ManifestResponse,
     StorageQuota
 )
 from .readiness import check_project_readiness, check_storage_quota
+from .manifest import generate_manifest
 from .job_manager import (
     create_jobs_for_platforms,
     get_job_status,
@@ -548,3 +550,39 @@ async def list_packaging_jobs(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error listing jobs: {str(e)}"
         )
+
+
+@router.get(
+    "/{project_id}/packaging/manifest",
+    response_model=ManifestResponse,
+    summary="Generate universal manifest",
+    description="Generate a universal manifest aggregating all project metadata, chapters, and audio information"
+)
+async def get_manifest(
+    project_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+) -> ManifestResponse:
+    """
+    Generate universal packaging manifest.
+    
+    The manifest aggregates:
+    - Project and book metadata
+    - Chapter structure with segment details
+    - Audio completion statistics
+    - Blob storage paths for audio segments
+    
+    Unlike desktop version, this is generated dynamically from database
+    rather than from filesystem files.
+    """
+    try:
+        manifest = await generate_manifest(db, project_id)
+        return ManifestResponse(
+            success=True,
+            manifest=manifest
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"Manifest generation error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))

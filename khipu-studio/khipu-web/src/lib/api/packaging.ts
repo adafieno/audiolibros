@@ -118,6 +118,68 @@ export interface ArchivePackageResponse {
   storage_quota: StorageQuota;
 }
 
+export interface UniversalManifest {
+  version: string;
+  generated: string;
+  project: {
+    id: string;
+    name: string;
+  };
+  book: {
+    title: string;
+    subtitle?: string;
+    authors: string[];
+    narrators: string[];
+    description?: string;
+    language: string;
+    publisher?: string;
+    publicationDate?: string;
+    isbn?: string;
+    genres: string[];
+    keywords: string[];
+    copyright?: string;
+  };
+  cover: {
+    imageUrl?: string;
+    imageBase64?: string;
+  };
+  audio: {
+    totalDuration?: number;
+    totalDurationFormatted?: string;
+    chapterCount: number;
+    chaptersWithCompleteAudio: number;
+    totalSegments: number;
+    segmentsWithAudio: number;
+    completionPercentage: number;
+    missingChapters: string[];
+  };
+  chapters: Array<{
+    id: string;
+    title: string;
+    index: number;
+    segmentCount: number;
+    hasCompleteAudio: boolean;
+    duration?: number;
+    segments: Array<{
+      id: string;
+      sequenceNumber: number;
+      hasAudio: boolean;
+      duration?: number;
+      blobPath?: string;
+    }>;
+  }>;
+  cloud: {
+    storageType: string;
+    requiresOnDemandConcatenation: boolean;
+    note: string;
+  };
+}
+
+export interface ManifestResponse {
+  success: boolean;
+  manifest: UniversalManifest;
+}
+
 // ============================================================================
 // API Functions
 // ============================================================================
@@ -203,6 +265,14 @@ export const packagingApi = {
   validatePackage: async (projectId: string, packageId: string): Promise<ValidationResults> => {
     const response = await api.post(`/projects/${projectId}/packages/${packageId}/validate`);
     return response.data;
+  },
+
+  /**
+   * Get universal manifest for project
+   */
+  getManifest: async (projectId: string): Promise<UniversalManifest> => {
+    const response = await api.get(`/projects/${projectId}/packaging/manifest`);
+    return response.data.manifest;
   },
 
   /**

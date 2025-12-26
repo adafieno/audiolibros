@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { packagingApi, type PlatformReadiness, type PackagingJobResponse, type PackageResponse } from '../lib/api/packaging';
 import { Button } from '../components/Button';
 
@@ -10,12 +11,19 @@ export const Route = createFileRoute('/projects/$projectId/packaging')({
 function PackagingPage() {
   const { projectId } = Route.useParams();
   const queryClient = useQueryClient();
+  const [showManifest, setShowManifest] = useState(false);
 
   // Query packaging readiness
   const { data: readiness, isLoading: isLoadingReadiness, error: readinessError } = useQuery({
     queryKey: ['packaging-readiness', projectId],
     queryFn: () => packagingApi.getReadiness(projectId),
     refetchInterval: 5000, // Refresh every 5 seconds
+  });
+
+  // Query manifest (always available, auto-generated from database)
+  const { data: manifest, isLoading: isLoadingManifest } = useQuery({
+    queryKey: ['packaging-manifest', projectId],
+    queryFn: () => packagingApi.getManifest(projectId),
   });
 
   // Query packages list
@@ -57,7 +65,13 @@ function PackagingPage() {
   });
 
   const handleCreatePlatform = (platformId: string) => {
+    // Refresh manifest when packaging starts
+    queryClient.invalidateQueries({ queryKey: ['packaging-manifest', projectId] });
     createPackagesMutation.mutate([platformId]);
+  };
+
+  const handleViewManifest = () => {
+    setShowManifest(!showManifest);
   };
 
   if (isLoadingReadiness) {
@@ -101,6 +115,79 @@ function PackagingPage() {
         <p className="text-sm" style={{ color: 'var(--text-muted)', margin: 0 }}>
           Prepare your audiobook for delivery to platforms. Review requirements and create packages when ready.
         </p>
+      </div>
+
+      {/* Universal Manifest Section */}
+      <div 
+        className="mb-6 rounded-lg shadow border p-6" 
+        style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }}
+      >
+        <h2 className="text-lg font-semibold mb-1" style={{ color: 'var(--text)' }}>
+          Universal Manifest
+          <span className="text-xs font-normal ml-2" style={{ color: 'var(--text-muted)' }}>(Optional)</span>
+        </h2>
+        <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
+          The universal manifest aggregates all book metadata, chapter information, and audio file paths into a single file needed for platform-specific packaging.
+        </p>
+        
+        {/* Status Indicator */}
+        <div 
+          className="flex items-center gap-3 mb-4 p-3 rounded" 
+          style={{ 
+            backgroundColor: 'var(--surface)',
+            border: '1px solid var(--border)'
+          }}
+        >
+          <span style={{ 
+            color: manifest ? 'var(--success)' : 'var(--text-muted)', 
+            fontSize: '20px',
+            lineHeight: 1
+          }}>
+            {manifest ? '✓' : isLoadingManifest ? '⟳' : '○'}
+          </span>
+          <div className="flex-1">
+            <div className="font-medium" style={{ color: 'var(--text)' }}>
+              {manifest ? 'Manifest generated' : 'Manifest not loaded'}
+            </div>
+            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              {isLoadingManifest ? 'Loading...' : 'Ready for platform packaging'}
+            </div>
+          </div>
+        </div>
+
+        {/* Action Button */}
+        <div>
+          <Button
+            variant="primary"
+            onClick={handleViewManifest}
+            disabled={isLoadingManifest || !manifest}
+          >
+            {showManifest ? 'Hide Manifest' : 'View Manifest'}
+          </Button>
+        </div>
+
+        {/* Manifest Viewer */}
+        {showManifest && manifest && (
+          <div 
+            className="mt-4 rounded border p-4" 
+            style={{ 
+              backgroundColor: 'var(--surface)', 
+              borderColor: 'var(--border)'
+            }}
+          >
+            <pre 
+              className="text-xs overflow-auto" 
+              style={{ 
+                color: 'var(--text)', 
+                maxHeight: '400px',
+                margin: 0,
+                fontFamily: 'monospace'
+              }}
+            >
+              {JSON.stringify(manifest, null, 2)}
+            </pre>
+          </div>
+        )}
       </div>
 
       {/* Active Jobs */}
@@ -199,8 +286,7 @@ function PlatformCard({
       className="rounded-lg shadow border p-6"
       style={{
         backgroundColor: 'var(--panel)',
-        borderColor: platform.ready ? 'var(--success)' : 'var(--border)',
-        borderWidth: platform.ready ? '2px' : '1px',
+        borderColor: 'var(--border)',
       }}
     >
       <div className="flex items-center justify-between mb-4">

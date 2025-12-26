@@ -195,6 +195,12 @@ class ValidatePackageResponse(BaseModel):
     result: ValidationResult
 
 
+class ManifestResponse(BaseModel):
+    """Universal manifest response."""
+    success: bool
+    manifest: Dict[str, Any]
+
+
 # ============= Storage Quota =============
 
 class StorageQuota(BaseModel):
