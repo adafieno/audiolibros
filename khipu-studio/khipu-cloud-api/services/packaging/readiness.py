@@ -2,9 +2,13 @@
 Packaging readiness checker.
 
 Determines if a project is ready for packaging by checking:
-- All chapters have audio segments generated
+- All audio segments have been generated at least once (REQUIRED for responsible AI)
 - Cover image exists and meets requirements
 - Required metadata is present (ISBN if needed)
+
+Responsible AI Policy:
+All audio segments must be generated and available before packaging.
+This ensures human review and listening to AI-generated content before distribution.
 """
 
 from typing import Any, Dict, List, Optional
@@ -19,6 +23,44 @@ from .schemas import (
     PlatformReadiness,
     PackagingReadinessResponse
 )
+
+
+def get_enabled_platform_ids(project: Project) -> List[str]:
+    """
+    Extract enabled platform IDs from project settings.
+    
+    Platforms are stored in settings.export.platforms as:
+    {
+        "apple": true,
+        "google": false,
+        "spotify": true,
+        ...
+    }
+    
+    Returns list of platform IDs where value is True.
+    If no platforms are configured, returns all platform IDs by default.
+    """
+    if not project.settings or not isinstance(project.settings, dict):
+        # No settings - return all platforms by default
+        return [p.platform_id for p in get_all_platforms()]
+    
+    export_settings = project.settings.get('export', {})
+    if not isinstance(export_settings, dict):
+        return [p.platform_id for p in get_all_platforms()]
+    
+    platforms_settings = export_settings.get('platforms', {})
+    if not isinstance(platforms_settings, dict):
+        return [p.platform_id for p in get_all_platforms()]
+    
+    # Extract enabled platform IDs
+    enabled = [
+        platform_id 
+        for platform_id, enabled in platforms_settings.items() 
+        if enabled is True
+    ]
+    
+    # If no platforms are enabled, return all by default
+    return enabled if enabled else [p.platform_id for p in get_all_platforms()]
 
 
 async def check_project_readiness(
@@ -51,10 +93,17 @@ async def check_project_readiness(
     # Get audio completion stats
     audio_stats = await get_audio_completion_stats(db, project_id)
     
-    # Check readiness for each platform
+    # Get enabled platforms from project settings
+    enabled_platform_ids = get_enabled_platform_ids(project)
+    
+    # Check readiness for each enabled platform only
     platform_readiness: List[PlatformReadiness] = []
     
     for platform_config in get_all_platforms():
+        # Skip platforms not enabled in project settings
+        if platform_config.platform_id not in enabled_platform_ids:
+            continue
+            
         readiness = await check_platform_readiness(
             platform_config,
             project,
@@ -157,15 +206,15 @@ async def check_platform_readiness(
     
     requirements: List[PlatformRequirement] = []
     
-    # Check audio completion (INFO ONLY - does not block packaging in cloud)
-    # Missing audio will be generated on-the-fly during packaging if requested
+    # Check audio completion (REQUIRED - blocks packaging for responsible AI)
+    # All audio segments must be generated at least once to ensure human review
     audio_complete = audio_stats["completion_percentage"] == 100
     missing_count = audio_stats['total_segments'] - audio_stats['segments_with_audio']
     
     requirements.append(PlatformRequirement(
         id="audio_completion",
-        met=True,  # Always true - missing audio doesn't block cloud packaging
-        details="All segments have audio" if audio_complete else f"{missing_count} segment(s) will be generated during packaging",
+        met=audio_complete,  # Must be true - all segments must have audio for responsible AI
+        details="All segments have audio generated" if audio_complete else f"{missing_count} segment(s) need audio generation before packaging",
         expected=audio_stats['total_segments'],
         actual=audio_stats['segments_with_audio']
     ))
