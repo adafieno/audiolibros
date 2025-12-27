@@ -326,9 +326,26 @@ function OrchestrationPage() {
       >
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
           <div>
-            <h1 className="text-2xl font-bold" style={{ color: 'var(--text)', margin: 0, marginBottom: '0.25rem' }}>
-              {t('orchestration.title', 'Orchestration')}
-            </h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
+              <h1 className="text-2xl font-bold" style={{ color: 'var(--text)', margin: 0 }}>
+                {t('orchestration.title', 'Orchestration')}
+              </h1>
+              {selectedChapterId && plan && (() => {
+                const chapter = chaptersData?.items.find(c => c.id === selectedChapterId);
+                const isComplete = (chapter as typeof chapter & { orchestration_complete?: boolean })?.orchestration_complete;
+                return isComplete ? (
+                  <span 
+                    className="px-2 py-1 rounded-full text-xs font-medium"
+                    style={{ 
+                      backgroundColor: 'var(--success)', 
+                      color: 'white'
+                    }}
+                  >
+                    Complete
+                  </span>
+                ) : null;
+              })()}
+            </div>
             <p className="text-sm" style={{ color: 'var(--text-muted)', margin: 0 }}>
               {t('orchestration.description', 'TTS-compliant chunk breakdown and character voice assignment - work chapter by chapter.')}
             </p>
@@ -403,8 +420,8 @@ function OrchestrationPage() {
       )}
       {/* Main Content */}
       <div className="flex gap-4" style={{ height: 'calc(100vh - 280px)' }}>
-        {/* Left Panel - Segments Table (50% width) */}
-        <div className="flex flex-col overflow-hidden" style={{ flex: '0 0 50%' }}>
+        {/* Left Panel - Segments Table (40% width) */}
+        <div className="flex flex-col overflow-hidden" style={{ flex: '0 0 40%' }}>
           {/* Table Header */}
           <div className="px-4 py-3 border rounded-t-lg" style={{ borderColor: 'var(--border)', background: 'var(--panel)' }}>
             <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
@@ -566,10 +583,10 @@ function OrchestrationPage() {
           </div>
         </div>
 
-        {/* Right Panel - Segment Details (50% width) */}
+        {/* Right Panel - Segment Details (takes remaining space) */}
         <div 
           className="flex flex-col border rounded-lg overflow-hidden"
-          style={{ flex: '0 0 50%', borderColor: 'var(--border)', background: 'var(--panel)' }}
+          style={{ flex: '1', borderColor: 'var(--border)', background: 'var(--panel)' }}
         >
           <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
             <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
