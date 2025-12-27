@@ -309,90 +309,90 @@ function ProjectPropertiesPage() {
           
           {/* Project Status & Management */}
           <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border p-6">
-            <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--text)' }}>
-              {t('projectProperties.statusManagement', 'Project Status & Management')}
-            </h2>
-            
-            <div className="space-y-6">
-              {/* Current Status Display */}
-              <div>
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>
-                    {t('projectProperties.projectStatus', 'Project Status')}:
-                  </span>
-                  <span 
-                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
-                    style={{ 
-                      backgroundColor: projectStatus === 'archived' ? 'var(--error-subtle)' :
-                                      projectStatus === 'review' ? '#fbbf24' :
-                                      projectStatus === 'completed' ? '#22c55e' :
-                                      projectStatus === 'published' ? '#3b82f6' :
-                                      'var(--border)',
-                      color: projectStatus === 'archived' ? 'var(--error)' :
-                            projectStatus === 'review' ? '#78350f' :
-                            projectStatus === 'completed' ? '#052e12' :
-                            projectStatus === 'published' ? '#ffffff' :
-                            'var(--text)'
-                    }}
-                  >
-                    {projectStatus === 'draft' && t('projects.statusDraft', 'Draft')}
-                    {projectStatus === 'in_progress' && t('projects.statusInProgress', 'In Progress')}
-                    {projectStatus === 'review' && t('projects.statusReview', 'Review')}
-                    {projectStatus === 'completed' && t('projects.statusCompleted', 'Completed')}
-                    {projectStatus === 'published' && t('projects.statusPublished', 'Published')}
-                    {projectStatus === 'archived' && t('projects.statusArchived', 'Archived')}
-                  </span>
-                </div>
-                {project?.archived_at && (
-                  <p className="text-sm mb-3" style={{ color: 'var(--warning)' }}>
-                    ⚠️ {t('projects.archivedReadOnly', 'This project is archived and read-only.')}
-                  </p>
-                )}
-                
-                {/* Action Buttons */}
-                <div className="flex flex-wrap gap-3">
-                  <Button
-                    variant="primary"
-                    onClick={() => {
-                      if (projectStatus === 'review') {
-                        // Check if workflow is complete to determine next status
-                        const workflow = project?.workflow_completed || {};
-                        const keyStepsComplete = ['manuscript', 'book', 'characters', 'casting', 'orchestration', 'production']
-                          .every(step => workflow[step] === true);
-                        handleStatusChange(keyStepsComplete ? 'completed' : 'in_progress');
-                      } else {
-                        handleStatusChange('review');
-                      }
-                    }}
-                    disabled={updateMutation.isPending || !!project?.archived_at}
-                    style={{ flex: '1', minWidth: '140px' }}
-                  >
-                    {projectStatus === 'review' 
-                      ? t('projectProperties.reviewCompleted', 'Review Completed')
-                      : t('projectProperties.setForReview', 'Set for Review')
+            <div className="flex items-center justify-between mb-4 gap-4">
+              <h2 className="text-lg font-semibold" style={{ color: 'var(--text)' }}>
+                {t('projectProperties.statusManagement', 'Project Status & Management')}
+              </h2>
+              
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                <Button
+                  variant="primary"
+                  size="compact"
+                  onClick={() => {
+                    if (projectStatus === 'review') {
+                      // Check if workflow is complete to determine next status
+                      const workflow = project?.workflow_completed || {};
+                      const keyStepsComplete = ['manuscript', 'book', 'characters', 'casting', 'orchestration', 'production']
+                        .every(step => workflow[step] === true);
+                      handleStatusChange(keyStepsComplete ? 'completed' : 'in_progress');
+                    } else {
+                      handleStatusChange('review');
                     }
-                  </Button>
-                  <Button
-                    variant="primary"
-                    onClick={() => handleStatusChange('archived')}
-                    disabled={updateMutation.isPending || !!project?.archived_at}
-                    style={{ flex: '1', minWidth: '140px' }}
-                  >
-                    {t('projectProperties.archive', 'Archive')}
-                  </Button>
-                  <Button
-                    variant="danger"
-                    onClick={handleDeleteProject}
-                    disabled={deleteMutation.isPending || !!project?.archived_at}
-                    style={{ flex: '1', minWidth: '140px' }}
-                  >
-                    {deleteMutation.isPending ? t('projectProperties.deleting', 'Deleting...') : t('projectProperties.deleteProject', 'Delete')}
-                  </Button>
-                </div>
-                <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
-                  {t('projectProperties.statusActionsHint', 'Set to Review for QA or Archive to make read-only. Delete permanently removes the project.')}
-                </p>
+                  }}
+                  disabled={updateMutation.isPending || !!project?.archived_at}
+                >
+                  {projectStatus === 'review' 
+                    ? t('projectProperties.reviewCompleted', 'Review Completed')
+                    : t('projectProperties.setForReview', 'Set for Review')
+                  }
+                </Button>
+                <Button
+                  variant="primary"
+                  size="compact"
+                  onClick={() => handleStatusChange('archived')}
+                  disabled={updateMutation.isPending || !!project?.archived_at}
+                >
+                  {t('projectProperties.archive', 'Archive')}
+                </Button>
+                <Button
+                  variant="danger"
+                  size="compact"
+                  onClick={handleDeleteProject}
+                  disabled={deleteMutation.isPending || !!project?.archived_at}
+                >
+                  {deleteMutation.isPending ? t('projectProperties.deleting', 'Deleting...') : t('projectProperties.deleteProject', 'Delete')}
+                </Button>
               </div>
+            </div>
+            
+            <div>
+              {/* Current Status Display */}
+              <div className="flex items-center gap-3 mb-2">
+                <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>
+                  {t('projectProperties.projectStatus', 'Project Status')}:
+                </span>
+                <span 
+                  className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                  style={{ 
+                    backgroundColor: projectStatus === 'archived' ? 'var(--error-subtle)' :
+                                    projectStatus === 'review' ? '#fbbf24' :
+                                    projectStatus === 'completed' ? '#22c55e' :
+                                    projectStatus === 'published' ? '#3b82f6' :
+                                    'var(--border)',
+                    color: projectStatus === 'archived' ? 'var(--error)' :
+                          projectStatus === 'review' ? '#78350f' :
+                          projectStatus === 'completed' ? '#052e12' :
+                          projectStatus === 'published' ? '#ffffff' :
+                          'var(--text)'
+                  }}
+                >
+                  {projectStatus === 'draft' && t('projects.statusDraft', 'Draft')}
+                  {projectStatus === 'in_progress' && t('projects.statusInProgress', 'In Progress')}
+                  {projectStatus === 'review' && t('projects.statusReview', 'Review')}
+                  {projectStatus === 'completed' && t('projects.statusCompleted', 'Completed')}
+                  {projectStatus === 'published' && t('projects.statusPublished', 'Published')}
+                  {projectStatus === 'archived' && t('projects.statusArchived', 'Archived')}
+                </span>
+              </div>
+              {project?.archived_at && (
+                <p className="text-sm mb-2" style={{ color: 'var(--warning)' }}>
+                  ⚠️ {t('projects.archivedReadOnly', 'This project is archived and read-only.')}
+                </p>
+              )}
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                {t('projectProperties.statusActionsHint', 'Set to Review for QA or Archive to make read-only. Delete permanently removes the project.')}
+              </p>
             </div>
           </div>
 
@@ -404,7 +404,7 @@ function ProjectPropertiesPage() {
             <p className="text-sm mb-3" style={{ color: 'var(--text-muted)' }}>
               {t('project.pauseUnitsInfo', 'Pause values are in milliseconds.')}
             </p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <label>
                 <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
                   {t('project.sentencePause', 'Sentence Pause')}
@@ -638,167 +638,164 @@ function ProjectPropertiesPage() {
             <h3 className="text-lg font-semibold mb-3" style={{ color: 'var(--text)' }}>
               {t('project.llm', 'LLM Engine')}
             </h3>
-            <div className="grid grid-cols-[140px_1fr] gap-2 items-center mb-4">
-              <Select
-                value={settings.llm?.engine?.name || 'openai'}
-                onChange={(e) => {
-                  const name = e.target.value;
-                  if (name === 'openai') {
-                    updateSettings(['llm', 'engine'], { name: 'openai', model: settings.llm?.engine?.model || 'gpt-4o' });
-                  } else if (name === 'azure-openai') {
-                    updateSettings(['llm', 'engine'], { name: 'azure-openai', model: settings.llm?.engine?.model || 'gpt-4o' });
-                  } else {
-                    updateSettings(['llm', 'engine'], { name: 'anthropic', model: settings.llm?.engine?.model || 'claude-3-opus' });
-                  }
-                }}
-                style={{ minWidth: '140px' }}
-              >
-                <option value="openai">OpenAI</option>
-                <option value="azure-openai">Azure OpenAI</option>
-                <option value="anthropic">Anthropic</option>
-              </Select>
-              <TextInput
-                type="text"
-                value={settings.llm?.engine?.model || ''}
-                onChange={(e) => updateSettings(['llm', 'engine', 'model'], e.target.value)}
-                style={{ minWidth: '200px' }}
-                placeholder="gpt-4o"
-              />
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <label>
+                <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
+                  {t('project.llmEngine', 'Engine')}
+                </div>
+                <Select
+                  value={settings.llm?.engine?.name || 'openai'}
+                  onChange={(e) => {
+                    const name = e.target.value;
+                    if (name === 'openai') {
+                      updateSettings(['llm', 'engine'], { name: 'openai', model: settings.llm?.engine?.model || 'gpt-4o' });
+                    } else if (name === 'azure-openai') {
+                      updateSettings(['llm', 'engine'], { name: 'azure-openai', model: settings.llm?.engine?.model || 'gpt-4o' });
+                    } else {
+                      updateSettings(['llm', 'engine'], { name: 'anthropic', model: settings.llm?.engine?.model || 'claude-3-opus' });
+                    }
+                  }}
+                  style={{ width: '100%' }}
+                >
+                  <option value="openai">OpenAI</option>
+                  <option value="azure-openai">Azure OpenAI</option>
+                  <option value="anthropic">Anthropic</option>
+                </Select>
+              </label>
+              <label>
+                <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
+                  {t('project.llmModel', 'Deployment')}
+                </div>
+                <TextInput
+                  type="text"
+                  value={settings.llm?.engine?.model || ''}
+                  onChange={(e) => updateSettings(['llm', 'engine', 'model'], e.target.value)}
+                  style={{ width: '100%' }}
+                  placeholder="gpt-4o"
+                />
+              </label>
+              {settings.llm?.engine?.name === 'azure-openai' && (
+                <PasswordField
+                  label={t('project.azureOpenaiApiKey', 'Azure OpenAI API Key')}
+                  value={settings.creds?.llm?.azure?.apiKey || ''}
+                  onChange={(value) => updateSettings(['creds', 'llm', 'azure', 'apiKey'], value)}
+                  placeholder="••••••••"
+                />
+              )}
+              {settings.llm?.engine?.name === 'openai' && (
+                <PasswordField
+                  label={t('project.openaiApiKey', 'OpenAI API Key')}
+                  value={settings.creds?.llm?.openai?.apiKey || ''}
+                  onChange={(value) => updateSettings(['creds', 'llm', 'openai', 'apiKey'], value)}
+                  placeholder="sk-..."
+                />
+              )}
             </div>
             
             {/* OpenAI Credentials */}
             {settings.llm?.engine?.name === 'openai' && (
               <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
-                <h4 className="text-base font-semibold mb-3" style={{ color: 'var(--text)' }}>
-                  {t('project.openaiCredentials', 'OpenAI Credentials')}
-                </h4>
-                <div className="grid grid-cols-[1fr_1fr] gap-3 items-start">
-                  <PasswordField
-                    label={t('project.openaiApiKey', 'OpenAI API Key')}
-                    value={settings.creds?.llm?.openai?.apiKey || ''}
-                    onChange={(value) => updateSettings(['creds', 'llm', 'openai', 'apiKey'], value)}
-                    placeholder="sk-..."
+                <label>
+                  <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
+                    {t('project.openaiBaseUrl', 'OpenAI Base URL (optional)')}
+                  </div>
+                  <TextInput
+                    type="text"
+                    value={settings.creds?.llm?.openai?.baseUrl || ''}
+                    onChange={(e) => updateSettings(['creds', 'llm', 'openai', 'baseUrl'], e.target.value)}
+                    style={{ width: '100%' }}
+                    placeholder="https://api.openai.com/v1"
                   />
-                  <label>
-                    <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
-                      {t('project.openaiBaseUrl', 'OpenAI Base URL (optional)')}
-                    </div>
-                    <TextInput
-                      type="text"
-                      value={settings.creds?.llm?.openai?.baseUrl || ''}
-                      onChange={(e) => updateSettings(['creds', 'llm', 'openai', 'baseUrl'], e.target.value)}
-                      style={{ width: '100%' }}
-                      placeholder="https://api.openai.com/v1"
-                    />
-                  </label>
-                </div>
+                </label>
               </div>
             )}
             
             {/* Azure OpenAI Credentials */}
             {settings.llm?.engine?.name === 'azure-openai' && (
               <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
-                <h4 className="text-base font-semibold mb-3" style={{ color: 'var(--text)' }}>
-                  {t('project.azureOpenaiCredentials', 'Azure OpenAI Credentials')}
-                </h4>
-                <div className="space-y-3">
-                  <PasswordField
-                    label={t('project.azureOpenaiApiKey', 'Azure OpenAI API Key')}
-                    value={settings.creds?.llm?.azure?.apiKey || ''}
-                    onChange={(value) => updateSettings(['creds', 'llm', 'azure', 'apiKey'], value)}
-                    placeholder="••••••••"
+                <label>
+                  <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
+                    {t('project.azureOpenaiEndpoint', 'Azure OpenAI Endpoint')}
+                  </div>
+                  <TextInput
+                    type="text"
+                    value={settings.creds?.llm?.azure?.endpoint || ''}
+                    onChange={(e) => updateSettings(['creds', 'llm', 'azure', 'endpoint'], e.target.value)}
+                    style={{ width: '100%' }}
+                    placeholder="https://your-resource.openai.azure.com"
                   />
-                  <label>
-                    <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
-                      {t('project.azureOpenaiEndpoint', 'Azure OpenAI Endpoint')}
-                    </div>
-                    <TextInput
-                      type="text"
-                      value={settings.creds?.llm?.azure?.endpoint || ''}
-                      onChange={(e) => updateSettings(['creds', 'llm', 'azure', 'endpoint'], e.target.value)}
-                      style={{ width: '100%' }}
-                      placeholder="https://your-resource.openai.azure.com"
-                    />
-                  </label>
-                  <label>
-                    <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
-                      {t('project.azureOpenaiApiVersion', 'API Version (optional)')}
-                    </div>
-                    <TextInput
-                      type="text"
-                      value={settings.creds?.llm?.azure?.apiVersion || ''}
-                      onChange={(e) => updateSettings(['creds', 'llm', 'azure', 'apiVersion'], e.target.value)}
-                      style={{ width: '100%' }}
-                      placeholder="2024-10-21"
-                    />
-                  </label>
-                </div>
+                </label>
               </div>
             )}
           </div>
 
           {/* TTS Engine */}
           <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border p-6">
-            <h3 className="text-lg font-semibold mb-3" style={{ color: 'var(--text)' }}>
+            <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--text)' }}>
               {t('project.tts', 'TTS Engine')}
             </h3>
-            <div className="grid grid-cols-[140px_1fr] gap-2 items-center mb-3">
-              <Select
-                value={settings.tts?.engine?.name || 'azure'}
-                onChange={(e) => {
-                  const name = e.target.value;
-                  if (name === 'azure') {
-                    updateSettings(['tts', 'engine'], { name: 'azure', voice: settings.tts?.engine?.voice || '' });
-                  } else if (name === 'elevenlabs') {
-                    updateSettings(['tts', 'engine'], { name: 'elevenlabs', voice: settings.tts?.engine?.voice || '' });
-                  } else {
-                    updateSettings(['tts', 'engine'], { name: 'openai', voice: settings.tts?.engine?.voice || '' });
-                  }
-                }}
-                style={{ minWidth: '140px' }}
-              >
-                <option value="azure">Azure</option>
-                <option value="elevenlabs">ElevenLabs</option>
-                <option value="openai">OpenAI TTS</option>
-              </Select>
-              <TextInput
-                type="text"
-                value={settings.tts?.engine?.voice || ''}
-                onChange={(e) => updateSettings(['tts', 'engine', 'voice'], e.target.value)}
-                style={{ minWidth: '200px' }}
-                placeholder="es-PE-CamilaNeural"
-              />
-            </div>
             <p className="text-sm mb-3" style={{ color: 'var(--text-muted)' }}>
               {t('project.ttsCachingInfo', 'TTS caching is always enabled for optimal performance.')}
             </p>
+            <div className="grid grid-cols-3 gap-3 mb-3">
+              <label>
+                <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
+                  {t('project.ttsEngine', 'Engine')}
+                </div>
+                <Select
+                  value={settings.tts?.engine?.name || 'azure'}
+                  onChange={(e) => {
+                    const name = e.target.value;
+                    if (name === 'azure') {
+                      updateSettings(['tts', 'engine'], { name: 'azure', voice: settings.tts?.engine?.voice || '' });
+                    } else if (name === 'elevenlabs') {
+                      updateSettings(['tts', 'engine'], { name: 'elevenlabs', voice: settings.tts?.engine?.voice || '' });
+                    } else {
+                      updateSettings(['tts', 'engine'], { name: 'openai', voice: settings.tts?.engine?.voice || '' });
+                    }
+                  }}
+                  style={{ width: '100%' }}
+                >
+                  <option value="azure">Azure</option>
+                  <option value="elevenlabs">ElevenLabs</option>
+                  <option value="openai">OpenAI TTS</option>
+                </Select>
+              </label>
+              <label>
+                <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
+                  {t('project.ttsVoice', 'Default Voice')}
+                </div>
+                <TextInput
+                  type="text"
+                  value={settings.tts?.engine?.voice || ''}
+                  onChange={(e) => updateSettings(['tts', 'engine', 'voice'], e.target.value)}
+                  style={{ width: '100%' }}
+                  placeholder="es-PE-CamilaNeural"
+                />
+              </label>
+              <label>
+                <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
+                  {t('project.azureRegion', 'Azure Region')}
+                </div>
+                <TextInput
+                  type="text"
+                  value={settings.creds?.tts?.azure?.region || ''}
+                  onChange={(e) => updateSettings(['creds', 'tts', 'azure', 'region'], e.target.value)}
+                  style={{ width: '100%' }}
+                  placeholder="eastus"
+                />
+              </label>
+            </div>
             
             {/* Azure TTS Credentials */}
             {settings.tts?.engine?.name === 'azure' && (
               <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
-                <h4 className="text-base font-semibold mb-3" style={{ color: 'var(--text)' }}>
-                  {t('project.azureTtsCredentials', 'Azure TTS Credentials')}
-                </h4>
-                <div className="grid grid-cols-[1fr_200px] gap-3 items-start">
-                  <PasswordField
-                    label={t('project.azureTtsKey', 'Azure TTS Key')}
-                    value={settings.creds?.tts?.azure?.key || ''}
-                    onChange={(value) => updateSettings(['creds', 'tts', 'azure', 'key'], value)}
-                    placeholder="••••••••"
-                  />
-                  <label>
-                    <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
-                      {t('project.azureRegion', 'Azure Region')}
-                    </div>
-                    <TextInput
-                      type="text"
-                      value={settings.creds?.tts?.azure?.region || ''}
-                      onChange={(e) => updateSettings(['creds', 'tts', 'azure', 'region'], e.target.value)}
-                      style={{ width: '100%' }}
-                      placeholder="eastus"
-                    />
-                  </label>
-                </div>
+                <PasswordField
+                  label={t('project.azureTtsKey', 'Azure TTS Key')}
+                  value={settings.creds?.tts?.azure?.key || ''}
+                  onChange={(value) => updateSettings(['creds', 'tts', 'azure', 'key'], value)}
+                  placeholder="••••••••"
+                />
               </div>
             )}
           </div>
@@ -812,48 +809,50 @@ function ProjectPropertiesPage() {
               {t('project.blobStorageInfo', 'Configure Azure Blob Storage for voice caching and audio file storage.')}
             </p>
             <div className="space-y-3">
-              <label>
-                <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
-                  {t('project.azureStorageAccountName', 'Storage Account Name')}
-                </div>
-                <TextInput
-                  type="text"
-                  value={settings.creds?.storage?.azure?.accountName || ''}
-                  onChange={(e) => updateSettings(['creds', 'storage', 'azure', 'accountName'], e.target.value)}
-                  style={{ width: '100%' }}
-                  placeholder="mystorageaccount"
-                />
-              </label>
+              <div className="grid grid-cols-3 gap-3">
+                <label>
+                  <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
+                    {t('project.azureStorageAccountName', 'Storage Account Name')}
+                  </div>
+                  <TextInput
+                    type="text"
+                    value={settings.creds?.storage?.azure?.accountName || ''}
+                    onChange={(e) => updateSettings(['creds', 'storage', 'azure', 'accountName'], e.target.value)}
+                    style={{ width: '100%' }}
+                    placeholder="mystorageaccount"
+                  />
+                </label>
+                <label>
+                  <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
+                    {t('project.azureStorageContainerName', 'Container Name')}
+                  </div>
+                  <TextInput
+                    type="text"
+                    value={settings.creds?.storage?.azure?.containerName || ''}
+                    onChange={(e) => updateSettings(['creds', 'storage', 'azure', 'containerName'], e.target.value)}
+                    style={{ width: '100%' }}
+                    placeholder="audio-cache"
+                  />
+                </label>
+                <label>
+                  <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
+                    {t('project.azureStorageEndpoint', 'Endpoint (optional)')}
+                  </div>
+                  <TextInput
+                    type="text"
+                    value={settings.creds?.storage?.azure?.endpoint || ''}
+                    onChange={(e) => updateSettings(['creds', 'storage', 'azure', 'endpoint'], e.target.value)}
+                    style={{ width: '100%' }}
+                    placeholder="https://mystorageaccount.blob.core.windows.net"
+                  />
+                </label>
+              </div>
               <PasswordField
                 label={t('project.azureStorageAccessKey', 'Storage Access Key')}
                 value={settings.creds?.storage?.azure?.accessKey || ''}
                 onChange={(value) => updateSettings(['creds', 'storage', 'azure', 'accessKey'], value)}
                 placeholder="••••••••"
               />
-              <label>
-                <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
-                  {t('project.azureStorageContainerName', 'Container Name')}
-                </div>
-                <TextInput
-                  type="text"
-                  value={settings.creds?.storage?.azure?.containerName || ''}
-                  onChange={(e) => updateSettings(['creds', 'storage', 'azure', 'containerName'], e.target.value)}
-                  style={{ width: '100%' }}
-                  placeholder="audio-cache"
-                />
-              </label>
-              <label>
-                <div className="text-sm mb-1" style={{ color: 'var(--text)' }}>
-                  {t('project.azureStorageEndpoint', 'Endpoint (optional)')}
-                </div>
-                <TextInput
-                  type="text"
-                  value={settings.creds?.storage?.azure?.endpoint || ''}
-                  onChange={(e) => updateSettings(['creds', 'storage', 'azure', 'endpoint'], e.target.value)}
-                  style={{ width: '100%' }}
-                  placeholder="https://mystorageaccount.blob.core.windows.net"
-                />
-              </label>
             </div>
           </div>
 

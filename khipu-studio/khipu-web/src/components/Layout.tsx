@@ -7,6 +7,7 @@ import { projectsApi } from '../lib/projects';
 import { getChapters } from '../api/chapters';
 import { setProjectState, useProjectState, isStepAvailable, isStepCompleted } from '../store/project';
 import { UndoRedo } from './UndoRedo';
+import { Button } from './Button';
 import type { ReactNode } from 'react';
 
 interface LayoutProps {
@@ -121,13 +122,13 @@ export function Layout({ children }: LayoutProps) {
           <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
             {user?.email}
           </div>
-          <button
+          <Button
             onClick={handleLogout}
-            className="text-sm hover:opacity-80"
-            style={{ color: 'var(--text-muted)' }}
+            variant="secondary"
+            size="compact"
           >
             {t('nav.logout')}
-          </button>
+          </Button>
         </div>
       </header>
 

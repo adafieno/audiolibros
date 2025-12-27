@@ -6,6 +6,7 @@ import { projectsApi } from '../lib/projects';
 import { useAuth } from '../hooks/useAuthHook';
 import { setProjectState } from '../store/project';
 import { UndoRedo } from './UndoRedo';
+import { Button } from './Button';
 import type { ReactNode } from 'react';
 
 const STRIP_W = 88;
@@ -190,13 +191,13 @@ export function ProjectLayout({ children }: { children: ReactNode }) {
         
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{user?.email}</div>
-          <button
+          <Button
             onClick={handleLogout}
-            style={{ fontSize: 13, color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
-            className="hover:opacity-80"
+            variant="secondary"
+            size="compact"
           >
             {t('nav.logout')}
-          </button>
+          </Button>
         </div>
       </header>
 

@@ -34,6 +34,7 @@
   "projects.statusReview": { "string": "Review", "comment": "Review status" },
   "projects.statusCompleted": { "string": "Completed", "comment": "Completed status" },
   "projects.statusPublished": { "string": "Published", "comment": "Published status" },
+  "projects.statusArchived": { "string": "Archived", "comment": "Archived status" },
   "projects.loading": { "string": "Loading projects...", "comment": "Loading message" },
   "projects.loadError": { "string": "Failed to load projects. Please try again.", "comment": "Load error" },
   "projects.noProjects": { "string": "No projects", "comment": "No projects title" },

@@ -49,7 +49,7 @@ function ProjectsIndexPage() {
               placeholder={t('projects.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              style={{ width: '200px' }}
+              style={{ width: '280px' }}
             />
             
             {/* Status filter */}
@@ -60,11 +60,12 @@ function ProjectsIndexPage() {
               style={{ minWidth: '150px' }}
             >
               <option value="">{t('projects.allStatuses')}</option>
+              <option value="archived">{t('projects.statusArchived')}</option>
+              <option value="completed">{t('projects.statusCompleted')}</option>
               <option value="draft">{t('projects.statusDraft')}</option>
               <option value="in_progress">{t('projects.statusInProgress')}</option>
-              <option value="review">{t('projects.statusReview')}</option>
-              <option value="completed">{t('projects.statusCompleted')}</option>
               <option value="published">{t('projects.statusPublished')}</option>
+              <option value="review">{t('projects.statusReview')}</option>
             </Select>
             
             {/* New Project button */}

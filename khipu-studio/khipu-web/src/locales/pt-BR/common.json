@@ -34,6 +34,7 @@
   "projects.statusReview": { "string": "Em revisão", "comment": "Status em revisão" },
   "projects.statusCompleted": { "string": "Concluído", "comment": "Status concluído" },
   "projects.statusPublished": { "string": "Publicado", "comment": "Status publicado" },
+  "projects.statusArchived": { "string": "Arquivado", "comment": "Status arquivado" },
   "projects.loading": { "string": "Carregando projetos...", "comment": "Mensagem de carregamento" },
   "projects.loadError": { "string": "Falha ao carregar projetos. Por favor, tente novamente.", "comment": "Erro de carregamento" },
   "projects.noProjects": { "string": "Sem projetos", "comment": "Título de sem projetos" },
