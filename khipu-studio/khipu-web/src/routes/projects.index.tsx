@@ -123,7 +123,14 @@ function ProjectsIndexPage() {
 
         {data && data.items.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {data.items.map((project) => (
+            {data.items.map((project) => {
+              // Get cover image from settings.book or top-level field
+              const bookSettings = (project.settings as any)?.book;
+              const coverImageUrl = bookSettings?.cover_image_b64 
+                ? `data:image/jpeg;base64,${bookSettings.cover_image_b64}`
+                : (bookSettings?.cover_image_url || project.cover_image_url);
+
+              return (
               <Link
                 key={project.id}
                 to="/projects/$projectId"
@@ -131,17 +138,44 @@ function ProjectsIndexPage() {
                 style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }}
                 className="rounded-lg shadow border hover:shadow-md transition-shadow p-6"
               >
-                <div className="flex items-start justify-between mb-3">
-                  <h3 className="text-lg font-semibold line-clamp-2" style={{ color: 'var(--text)' }}>
-                    {project.title}
-                  </h3>
-                  <StatusPill 
-                    type="project-status" 
-                    status={project.status as ProjectStatus}
-                    style={{ marginLeft: '8px' }}
+                <div className="flex gap-4 mb-3">
+                  {/* Cover thumbnail */}
+                  <div 
+                    className="flex-shrink-0 rounded overflow-hidden"
+                    style={{ 
+                      width: '80px', 
+                      height: '80px',
+                      backgroundColor: 'var(--surface)',
+                      border: '1px solid var(--border)'
+                    }}
                   >
-                    {project.status.replace('_', ' ')}
-                  </StatusPill>
+                    {coverImageUrl ? (
+                      <img 
+                        src={coverImageUrl} 
+                        alt={project.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-3xl">
+                        📚
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Title and status */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between mb-1">
+                      <h3 className="text-lg font-semibold line-clamp-2" style={{ color: 'var(--text)' }}>
+                        {project.title}
+                      </h3>
+                    </div>
+                    <StatusPill 
+                      type="project-status" 
+                      status={project.status as ProjectStatus}
+                    >
+                      {project.status.replace('_', ' ')}
+                    </StatusPill>
+                  </div>
                 </div>
 
                 {project.subtitle && (
@@ -167,7 +201,8 @@ function ProjectsIndexPage() {
                   <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{project.language}</span>
                 </div>
               </Link>
-            ))}
+            );
+            })}
           </div>
         )}
 
