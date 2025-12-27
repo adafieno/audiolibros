@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { projectsApi } from '../lib/projects';
@@ -141,6 +141,7 @@ type ProjectSettings = {
 
 function ProjectPropertiesPage() {
   const { projectId } = Route.useParams();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
 
@@ -151,6 +152,7 @@ function ProjectPropertiesPage() {
 
   // Local state for settings
   const [settings, setSettings] = useState<ProjectSettings>({});
+  const [projectStatus, setProjectStatus] = useState<'draft' | 'in_progress' | 'review' | 'completed' | 'published' | 'archived'>('draft');
   const [error, setError] = useState('');
   const initializedRef = useRef(false);
   const autosaveTimer = useRef<number | null>(null);
@@ -158,16 +160,19 @@ function ProjectPropertiesPage() {
   const tRef = useRef(t);
   const mutateRef = useRef<(data: { settings: ProjectSettings }) => void>(() => {});
 
-  // Load settings from project when available
+  // Load settings and status from project when available
   useEffect(() => {
     if (project?.settings && !initializedRef.current) {
       initializedRef.current = true;
-      setTimeout(() => setSettings(project.settings as ProjectSettings), 0);
+      setTimeout(() => {
+        setSettings(project.settings as ProjectSettings);
+        setProjectStatus(project.status || 'draft');
+      }, 0);
     }
   }, [project]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: { settings: ProjectSettings; workflow_completed?: Record<string, boolean> }) => projectsApi.update(projectId, data),
+    mutationFn: (data: { settings: ProjectSettings; workflow_completed?: Record<string, boolean>; status?: string }) => projectsApi.update(projectId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project', projectId] });
       queryClient.invalidateQueries({ queryKey: ['projects'] });
@@ -184,6 +189,25 @@ function ProjectPropertiesPage() {
       setError(error.response?.data?.detail || error.message || t('projectProperties.saveError', 'Failed to save settings'));
     },
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => projectsApi.delete(projectId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      navigate({ to: '/projects' });
+    },
+  });
+
+  const handleStatusChange = (newStatus: 'draft' | 'in_progress' | 'review' | 'completed' | 'published' | 'archived') => {
+    setProjectStatus(newStatus);
+    updateMutation.mutate({ settings, status: newStatus });
+  };
+
+  const handleDeleteProject = () => {
+    if (window.confirm(t('projectProperties.confirmDelete', 'Are you sure you want to delete this project? This action cannot be undone.'))) {
+      deleteMutation.mutate();
+    }
+  };
 
   // Stable refs to avoid effect dependency warnings
   useEffect(() => { tRef.current = t; }, [t]);
@@ -277,14 +301,103 @@ function ProjectPropertiesPage() {
         </div>
       )}
 
-      {/* Two-column layout: Left (Orchestration + Packaging), Right (LLM + TTS) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      {/* Two-column layout with all sections styled as panels */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         
-        {/* LEFT COLUMN: Orchestration + Packaging */}
+        {/* LEFT COLUMN: Project Status & Management, Orchestration, Packaging, Pronunciation Map */}
         <div className="space-y-6">
           
+          {/* Project Status & Management */}
+          <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border p-6">
+            <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--text)' }}>
+              {t('projectProperties.statusManagement', 'Project Status & Management')}
+            </h2>
+            
+            <div className="space-y-6">
+              {/* Current Status Display */}
+              <div>
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>
+                    {t('projectProperties.projectStatus', 'Project Status')}:
+                  </span>
+                  <span 
+                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                    style={{ 
+                      backgroundColor: projectStatus === 'archived' ? 'var(--error-subtle)' :
+                                      projectStatus === 'review' ? '#fbbf24' :
+                                      projectStatus === 'completed' ? '#22c55e' :
+                                      projectStatus === 'published' ? '#3b82f6' :
+                                      'var(--border)',
+                      color: projectStatus === 'archived' ? 'var(--error)' :
+                            projectStatus === 'review' ? '#78350f' :
+                            projectStatus === 'completed' ? '#052e12' :
+                            projectStatus === 'published' ? '#ffffff' :
+                            'var(--text)'
+                    }}
+                  >
+                    {projectStatus === 'draft' && t('projects.statusDraft', 'Draft')}
+                    {projectStatus === 'in_progress' && t('projects.statusInProgress', 'In Progress')}
+                    {projectStatus === 'review' && t('projects.statusReview', 'Review')}
+                    {projectStatus === 'completed' && t('projects.statusCompleted', 'Completed')}
+                    {projectStatus === 'published' && t('projects.statusPublished', 'Published')}
+                    {projectStatus === 'archived' && t('projects.statusArchived', 'Archived')}
+                  </span>
+                </div>
+                {project?.archived_at && (
+                  <p className="text-sm mb-3" style={{ color: 'var(--warning)' }}>
+                    ⚠️ {t('projects.archivedReadOnly', 'This project is archived and read-only.')}
+                  </p>
+                )}
+                
+                {/* Action Buttons */}
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    variant="primary"
+                    onClick={() => {
+                      if (projectStatus === 'review') {
+                        // Check if workflow is complete to determine next status
+                        const workflow = project?.workflow_completed || {};
+                        const keyStepsComplete = ['manuscript', 'book', 'characters', 'casting', 'orchestration', 'production']
+                          .every(step => workflow[step] === true);
+                        handleStatusChange(keyStepsComplete ? 'completed' : 'in_progress');
+                      } else {
+                        handleStatusChange('review');
+                      }
+                    }}
+                    disabled={updateMutation.isPending || !!project?.archived_at}
+                    style={{ flex: '1', minWidth: '140px' }}
+                  >
+                    {projectStatus === 'review' 
+                      ? t('projectProperties.reviewCompleted', 'Review Completed')
+                      : t('projectProperties.setForReview', 'Set for Review')
+                    }
+                  </Button>
+                  <Button
+                    variant="primary"
+                    onClick={() => handleStatusChange('archived')}
+                    disabled={updateMutation.isPending || !!project?.archived_at}
+                    style={{ flex: '1', minWidth: '140px' }}
+                  >
+                    {t('projectProperties.archive', 'Archive')}
+                  </Button>
+                  <Button
+                    variant="danger"
+                    onClick={handleDeleteProject}
+                    disabled={deleteMutation.isPending || !!project?.archived_at}
+                    style={{ flex: '1', minWidth: '140px' }}
+                  >
+                    {deleteMutation.isPending ? t('projectProperties.deleting', 'Deleting...') : t('projectProperties.deleteProject', 'Delete')}
+                  </Button>
+                </div>
+                <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
+                  {t('projectProperties.statusActionsHint', 'Set to Review for QA or Archive to make read-only. Delete permanently removes the project.')}
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Orchestration (Pause Configuration) */}
-          <section>
+          <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border p-6">
             <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text)' }}>
               {t('project.planning', 'Orchestration')}
             </h3>
@@ -359,10 +472,10 @@ function ProjectPropertiesPage() {
                 />
               </label>
             </div>
-          </section>
+          </div>
 
           {/* Packaging */}
-          <section>
+          <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border p-6">
             <h3 className="text-lg font-semibold mb-3" style={{ color: 'var(--text)' }}>
               {t('project.packaging', 'Packaging')}
             </h3>
@@ -418,10 +531,10 @@ function ProjectPropertiesPage() {
                 </label>
               </div>
             </div>
-          </section>
+          </div>
 
           {/* Pronunciation Map */}
-          <section>
+          <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border p-6">
             <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text)' }}>
               {t('project.pronunciationMap', 'Pronunciation Map')}
             </h3>
@@ -513,15 +626,15 @@ function ProjectPropertiesPage() {
                 </Button>
               </div>
             </div>
-          </section>
+          </div>
 
         </div>
 
-        {/* RIGHT COLUMN: LLM + TTS Engines */}
+        {/* RIGHT COLUMN: LLM, TTS, Azure Blob Storage */}
         <div className="space-y-6">
 
           {/* LLM Engine */}
-          <section>
+          <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border p-6">
             <h3 className="text-lg font-semibold mb-3" style={{ color: 'var(--text)' }}>
               {t('project.llm', 'LLM Engine')}
             </h3>
@@ -622,10 +735,10 @@ function ProjectPropertiesPage() {
                 </div>
               </div>
             )}
-          </section>
+          </div>
 
           {/* TTS Engine */}
-          <section>
+          <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border p-6">
             <h3 className="text-lg font-semibold mb-3" style={{ color: 'var(--text)' }}>
               {t('project.tts', 'TTS Engine')}
             </h3>
@@ -688,10 +801,10 @@ function ProjectPropertiesPage() {
                 </div>
               </div>
             )}
-          </section>
+          </div>
 
           {/* Azure Blob Storage Configuration */}
-          <section>
+          <div style={{ backgroundColor: 'var(--panel)', borderColor: 'var(--border)' }} className="rounded-lg shadow border p-6">
             <h3 className="text-lg font-semibold mb-3" style={{ color: 'var(--text)' }}>
               {t('project.azureBlobStorage', 'Azure Blob Storage')}
             </h3>
@@ -742,7 +855,7 @@ function ProjectPropertiesPage() {
                 />
               </label>
             </div>
-          </section>
+          </div>
 
         </div>
       </div>

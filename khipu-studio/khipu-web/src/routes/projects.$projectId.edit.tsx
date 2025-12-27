@@ -71,6 +71,20 @@ function ProjectEditPage() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: () => projectsApi.delete(projectId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      navigate({ to: '/projects' });
+    },
+  });
+
+  const handleDelete = () => {
+    if (window.confirm(t('projectForm.confirmDelete', 'Are you sure you want to delete this project? This action cannot be undone.'))) {
+      deleteMutation.mutate();
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const payload = {
@@ -224,15 +238,15 @@ function ProjectEditPage() {
                 {/* In Progress: always available, or auto-set when user edits */}
                 <option value="in_progress">{t('projects.statusInProgress')}</option>
                 
-                {/* Review: Pending implementation */}
-                <option value="review" disabled>{t('projects.statusReview')} (Coming Soon)</option>
+                {/* Review: Manual status for QA/validation */}
+                <option value="review">{t('projects.statusReview')}</option>
                 
-                {/* Completed: only if all workflow steps are done */}
+                {/* Completed: only if key workflow steps are done */}
                 {(() => {
                   const workflow = project.workflow_completed || {};
-                  const allStepsComplete = ['project', 'manuscript', 'casting', 'characters', 'planning', 'voice', 'export']
+                  const keyStepsComplete = ['manuscript', 'book', 'characters', 'casting', 'orchestration', 'production']
                     .every(step => workflow[step] === true);
-                  return allStepsComplete ? (
+                  return keyStepsComplete ? (
                     <option value="completed">{t('projects.statusCompleted')}</option>
                   ) : null;
                 })()}
@@ -277,20 +291,30 @@ function ProjectEditPage() {
               </div>
             )}
 
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-between gap-3">
               <Button
                 variant="secondary"
-                onClick={() => navigate({ to: `/projects/${projectId}` })}
+                onClick={handleDelete}
+                disabled={deleteMutation.isPending || !!project.archived_at}
+                style={{ backgroundColor: 'var(--error)', color: 'white', borderColor: 'var(--error)' }}
               >
-                {t('projectForm.cancel')}
+                {deleteMutation.isPending ? t('projectForm.deleting', 'Deleting...') : t('projectForm.deleteProject', 'Delete Project')}
               </Button>
-              <Button
-                variant="primary"
-                type="submit"
-                disabled={updateMutation.isPending}
-              >
-                {updateMutation.isPending ? t('projectForm.saving') : t('projectForm.saveChanges')}
-              </Button>
+              <div className="flex gap-3">
+                <Button
+                  variant="secondary"
+                  onClick={() => navigate({ to: `/projects/${projectId}` })}
+                >
+                  {t('projectForm.cancel')}
+                </Button>
+                <Button
+                  variant="primary"
+                  type="submit"
+                  disabled={updateMutation.isPending || !!project.archived_at}
+                >
+                  {updateMutation.isPending ? t('projectForm.saving') : t('projectForm.saveChanges')}
+                </Button>
+              </div>
             </div>
           </form>
         </div>
