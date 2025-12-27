@@ -335,10 +335,10 @@ function OrchestrationPage() {
                 const isComplete = (chapter as typeof chapter & { orchestration_complete?: boolean })?.orchestration_complete;
                 return isComplete ? (
                   <span 
-                    className="px-2 py-1 rounded-full text-xs font-medium"
+                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium shadow"
                     style={{ 
-                      backgroundColor: 'var(--success)', 
-                      color: 'white'
+                      background: '#22c55e', 
+                      color: '#052e12'
                     }}
                   >
                     Complete
