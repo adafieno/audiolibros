@@ -14,6 +14,8 @@ interface PresetSelectorProps {
   onPresetSelect: (presetId: string) => void;
   onCustomToggle: () => void;
   onApplyToAll?: () => void;
+  onAutoOptimize?: () => void;
+  isOptimizing?: boolean;
   customPresets?: Array<{
     id: string;
     name: string;
@@ -33,6 +35,8 @@ export function PresetSelector({
   onPresetSelect,
   onCustomToggle,
   onApplyToAll,
+  onAutoOptimize,
+  isOptimizing = false,
   customPresets = [],
   presetFilter = 'all',
   onFilterChange,
@@ -98,9 +102,36 @@ export function PresetSelector({
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 600 }}>
-          Processing Presets
+          Processing
         </h3>
         <div style={{ display: 'flex', gap: '8px' }}>
+          {/* Auto-Optimize Button */}
+          {onAutoOptimize && (
+            <button
+              onClick={onAutoOptimize}
+              disabled={isOptimizing}
+              style={{
+                padding: '4px 8px',
+                fontSize: '14px',
+                background: isOptimizing ? '#666' : '#22c55e',
+                color: '#fff',
+                border: `1px solid ${isOptimizing ? '#666' : '#22c55e'}`,
+                borderRadius: '4px',
+                cursor: isOptimizing ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s',
+                opacity: isOptimizing ? 0.6 : 1,
+              }}
+              onMouseEnter={(e) => {
+                if (!isOptimizing) e.currentTarget.style.background = '#34d870';
+              }}
+              onMouseLeave={(e) => {
+                if (!isOptimizing) e.currentTarget.style.background = '#22c55e';
+              }}
+              title="Auto-optimize audio based on analysis"
+            >
+              {isOptimizing ? '⏳' : '🤖'}
+            </button>
+          )}
           {/* Apply to All Button */}
           {onApplyToAll && (
             <button
@@ -144,7 +175,7 @@ export function PresetSelector({
               e.currentTarget.style.background = '#4a9eff';
             }}
           >
-            Customize
+            {customSettingsEnabled ? 'Preset' : 'Customize'}
           </button>
         </div>
       </div>

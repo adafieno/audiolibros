@@ -99,7 +99,7 @@ export function createProcessingChain(params: ProcessingChainParams = {}): Audio
  */
 const cleanPolished: AudioPreset = {
   id: 'clean_polished',
-  name: '✨ Clean & Polished',
+  name: '💎 Clean & Polished',
   description: 'Professional audiobook quality with clarity and warmth',
   processingChain: {
     noiseCleanup: {

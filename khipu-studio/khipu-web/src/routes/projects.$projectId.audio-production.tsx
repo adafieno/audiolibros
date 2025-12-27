@@ -13,6 +13,7 @@ import { useAudioProduction } from '../hooks/useAudioProduction';
 import { useAudioPlayback } from '../hooks/useAudioPlayback';
 import { AUDIO_PRESETS } from '../config/audioPresets';
 import { getChapters } from '../api/chapters';
+import { autoOptimizeSegment } from '../utils/audioAnalyzer';
 import { charactersApi } from '../lib/api/characters';
 import { audioProductionApi } from '../api/audio-production';
 import type { AudioProcessingChain } from '../types/audio-production';
@@ -122,6 +123,7 @@ function AudioProductionPage() {
   const [selectedPresetId, setSelectedPresetId] = useState<string>('raw_unprocessed');
   const [showSfxDialog, setShowSfxDialog] = useState(false);
   const [showSavePresetModal, setShowSavePresetModal] = useState(false);
+  const [isOptimizing, setIsOptimizing] = useState(false);
   const [presetName, setPresetName] = useState('');
   const [presetDescription, setPresetDescription] = useState('');
   const [presetIcon, setPresetIcon] = useState('');
@@ -250,19 +252,22 @@ function AudioProductionPage() {
       
 
       
-      // Save to backend
-      try {
-        await updateProcessingChain(selectedSegmentId, preset.processingChain, presetId);
+      // Save to backend (skip for SFX segments as they may not have metadata records)
+      const segment = segments.find(s => s.segment_id === selectedSegmentId);
+      if (segment?.type !== 'sfx') {
+        try {
+          await updateProcessingChain(selectedSegmentId, preset.processingChain, presetId);
 
-      } catch (error) {
+        } catch (error) {
 
+        }
       }
     } else {
       if (!preset) console.error('[AudioProduction] ✗ Preset not found:', presetId);
       if (!selectedSegmentId) console.error('[AudioProduction] ✗ No segment selected');
     }
 
-  }, [selectedSegmentId, updateProcessingChain, clearCache, customPresets]);
+  }, [selectedSegmentId, updateProcessingChain, clearCache, customPresets, segments]);
 
   // Handle custom mode toggle
   const handleCustomModeToggle = useCallback(() => {
@@ -326,6 +331,58 @@ function AudioProductionPage() {
       alert('Failed to apply processing chain to all segments');
     }
   }, [processingChain, customMode, selectedPresetId, segments, updateProcessingChain, clearCache]);
+
+  // Handle auto-optimize
+  const handleAutoOptimize = useCallback(async () => {
+    if (!selectedSegmentId) {
+      alert('Please select a segment first');
+      return;
+    }
+
+    const segment = segments.find(s => s.segment_id === selectedSegmentId);
+    if (!segment) {
+      alert('Segment not found');
+      return;
+    }
+
+    // Get audio URL
+    let audioUrl: string | null = null;
+    if (segment.raw_audio_url) {
+      audioUrl = segment.raw_audio_url;
+    } else {
+      // For TTS segments, we need to generate audio first
+      alert('Please generate audio for this segment first by playing it');
+      return;
+    }
+
+    setIsOptimizing(true);
+    try {
+      const result = await autoOptimizeSegment(audioUrl);
+      
+      // Apply the optimized processing chain
+      setProcessingChain(result.processingChain);
+      setCustomMode(true);
+      setSelectedPresetId('');
+      
+      // Clear cache so it re-processes
+      clearCache(selectedSegmentId);
+      
+      // Save to backend (skip for SFX segments)
+      if (segment.type !== 'sfx') {
+        await updateProcessingChain(selectedSegmentId, result.processingChain, undefined);
+      }
+      
+      // Show what was done
+      const summary = result.summary.join('\n• ');
+      alert(`✨ Auto-Optimization Complete!\n\n• ${summary}`);
+      
+    } catch (error) {
+      console.error('Auto-optimization failed:', error);
+      alert('Failed to auto-optimize audio. Please try again.');
+    } finally {
+      setIsOptimizing(false);
+    }
+  }, [selectedSegmentId, segments, clearCache, updateProcessingChain]);
 
   // Handle save custom preset
   const handleSaveAsPreset = useCallback(async (name: string, description: string, icon: string) => {
@@ -504,7 +561,7 @@ function AudioProductionPage() {
     }
     
     try {
-      // SFX segments: play audio directly without TTS
+      // SFX segments: play audio with processing chain
       if (segment.type === 'sfx') {
         if (!segment.raw_audio_url) {
           alert('SFX audio not available.');
@@ -1242,6 +1299,8 @@ function AudioProductionPage() {
               presetFilter={presetFilter}
               onFilterChange={setPresetFilter}
               onDeletePreset={handleDeletePreset}
+              onAutoOptimize={handleAutoOptimize}
+              isOptimizing={isOptimizing}
             />
           </div>
         </div>
