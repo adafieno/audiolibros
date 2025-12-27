@@ -5,7 +5,6 @@ import { useEffect } from 'react';
 import { projectsApi } from '../lib/projects';
 import { useAuth } from '../hooks/useAuthHook';
 import { setProjectState } from '../store/project';
-import { UndoRedo } from './UndoRedo';
 import { Button } from './Button';
 import type { ReactNode } from 'react';
 
@@ -27,7 +26,7 @@ const projectRoutes: RouteItem[] = [
   { to: 'manuscript', key: 'nav.manuscript', icon: '✍️', workflowStep: 'manuscript' },
   { to: 'casting', key: 'nav.casting', icon: '🗣️', workflowStep: 'casting' },
   { to: 'characters', key: 'nav.characters', icon: '🎭', workflowStep: 'characters' },
-  { to: 'orchestration', key: 'nav.planning', icon: '🪄', workflowStep: 'planning' },
+  { to: 'orchestration', key: 'nav.planning', icon: '🎬', workflowStep: 'planning' },
   { to: 'audio-production', key: 'nav.voice', icon: '🎙️', workflowStep: 'voice' },
   { to: 'packaging', key: 'nav.packaging', icon: '📦' },
   { to: 'cost', key: 'nav.cost', icon: '💰' },

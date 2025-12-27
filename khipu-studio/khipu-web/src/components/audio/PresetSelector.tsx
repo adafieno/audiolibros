@@ -6,6 +6,7 @@
 
 import { useState } from 'react';
 import { AUDIO_PRESETS } from '../../config/audioPresets';
+import { Button } from '../Button';
 import type { AudioProcessingChain } from '../../types/audio-production';
 
 interface PresetSelectorProps {
@@ -53,9 +54,16 @@ export function PresetSelector({
       description: cp.description || 'Custom preset',
       processingChain: cp.processing_chain,
       isCustom: true,
-      icon: (cp as any).icon || '⚙️', // Default icon for custom presets
+      icon: (cp as { icon?: string }).icon || '⚙️', // Default icon for custom presets
     }))
-  ];
+  ] as Array<{
+    id: string;
+    name: string;
+    description: string;
+    processingChain: AudioProcessingChain;
+    isCustom: boolean;
+    icon?: string;
+  }>;
   
   // Apply filter
   const filteredPresets = allPresets.filter(p => {
@@ -107,30 +115,15 @@ export function PresetSelector({
         <div style={{ display: 'flex', gap: '8px' }}>
           {/* Auto-Optimize Button */}
           {onAutoOptimize && (
-            <button
+            <Button
               onClick={onAutoOptimize}
               disabled={isOptimizing}
-              style={{
-                padding: '4px 8px',
-                fontSize: '14px',
-                background: isOptimizing ? '#666' : '#22c55e',
-                color: '#fff',
-                border: `1px solid ${isOptimizing ? '#666' : '#22c55e'}`,
-                borderRadius: '4px',
-                cursor: isOptimizing ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s',
-                opacity: isOptimizing ? 0.6 : 1,
-              }}
-              onMouseEnter={(e) => {
-                if (!isOptimizing) e.currentTarget.style.background = '#34d870';
-              }}
-              onMouseLeave={(e) => {
-                if (!isOptimizing) e.currentTarget.style.background = '#22c55e';
-              }}
+              variant="primary"
+              size="compact"
               title="Auto-optimize audio based on analysis"
             >
-              {isOptimizing ? '⏳' : '🤖'}
-            </button>
+              🪄 Auto
+            </Button>
           )}
           {/* Apply to All Button */}
           {onApplyToAll && (
